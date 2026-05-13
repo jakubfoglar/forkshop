@@ -1,0 +1,28 @@
+import { MANIFEST_SCHEMA_VERSION, type Manifest } from "./manifest-schema.js"
+
+export async function fetchManifest(registryUrl: string): Promise<Manifest> {
+  const url = registryUrl.endsWith("/") ? `${registryUrl}registry.json` : `${registryUrl}/registry.json`
+  let response: Response
+  try {
+    response = await fetch(url)
+  } catch (error) {
+    throw new Error(
+      `Could not reach the Fogma registry at ${url} (${(error as Error).message}). ` +
+        `Retry, or pass --registry <url> for local development.`
+    )
+  }
+  if (!response.ok) {
+    throw new Error(
+      `Registry returned HTTP ${response.status} for ${url}. ` +
+        `Retry, or pass --registry <url> for local development.`
+    )
+  }
+  const manifest = (await response.json()) as Manifest
+  if (manifest.version !== MANIFEST_SCHEMA_VERSION) {
+    throw new Error(
+      `Your fogma CLI is incompatible with this registry (CLI: ${MANIFEST_SCHEMA_VERSION}, manifest: ${manifest.version}). ` +
+        `Update with npm i -g fogma@latest.`
+    )
+  }
+  return manifest
+}
