@@ -11,18 +11,12 @@ import { ChevronDown, ChevronRight, Info, File } from "lucide-react";
 import { cn } from "@forkshop/lib/cn";
 import { buildPageTree, type PageTreeNode } from "@forkshop/components/sidebar/page-tree";
 import { HelpModal } from "@forkshop/components/sidebar/help-modal";
-
-// TODO: deferred — agent-activity-state (Task 13). These hooks will be
-// wired up once the agent-activity context shell is ported.
-function useAgentSeenPagePaths(): ReadonlySet<string> {
-  return new Set();
-}
-function useAgentActivePages(): ReadonlySet<string> {
-  return new Set();
-}
-function useAgentActiveBlocks(): ReadonlySet<string> {
-  return new Set();
-}
+import {
+  useAgentSeenPagePaths,
+  useAgentActivePages,
+  useAgentActiveBlocks,
+  useAgentActivePrimitives,
+} from "@forkshop/components/agent-activity-context";
 
 type LucideComponent = ComponentType<
   SVGProps<SVGSVGElement> & { strokeWidth?: number | string }
@@ -121,6 +115,7 @@ export function ForkshopSidebar({
 
   const activePages = useAgentActivePages();
   const activeBlocks = useAgentActiveBlocks();
+  const activePrimitives = useAgentActivePrimitives();
 
   // Auto-expand a section when the active selection is one of its entries.
   useEffect(() => {
@@ -213,7 +208,7 @@ export function ForkshopSidebar({
                           selection.kind === "block" &&
                           selection.slug === entry.slug
                         }
-                        agentActive={activeBlocks.has(entry.slug)}
+                        agentActive={activeBlocks.has(entry.slug) || activePrimitives.has(entry.slug)}
                         agentFileLabel={`${entry.slug}.tsx`}
                         onClick={() =>
                           onSelect({ kind: "block", slug: entry.slug })
