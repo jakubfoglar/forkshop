@@ -1,0 +1,35 @@
+{
+  "name": "@fogma/registry",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./tailwind": "./tailwind/fogma-preset.ts",
+    "./fogma.css": "./tailwind/fogma.css"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18",
+    "next": ">=14",
+    "tailwindcss": ">=3"
+  },
+  "dependencies": {
+    "iconoir-react": "^7.0.0",
+    "motion": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "next": "^14.2.0",
+    "tailwindcss": "^3.4.0",
+    "vitest": "^2.0.0"
+  }
+}

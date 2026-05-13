@@ -1,0 +1,10 @@
+{
+  "name": "fogma",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": { "fogma": "./src/index.ts" },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
+}
