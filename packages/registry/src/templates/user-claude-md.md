@@ -87,6 +87,39 @@ export function MyDesignBoard({ tailwindConfig, tokenRegistry }) {
 
 Each kit accepts typed props — see the `*Props` types exported alongside each kit.
 
+### Kit icon + title defaults
+
+Every kit ships with a  and  static property so you get sensible zero-config sidebar wiring:
+
+```tsx
+import { DesignSystemBoard, IframeGallery, PageTree } from "@fogma/registry"
+
+// In your FogmaSidebar sections array:
+sections={[
+  { id: "design-system", title: DesignSystemBoard.defaultTitle, icon: DesignSystemBoard.icon },
+  { id: "components",   title: IframeGallery.defaultTitle,    icon: IframeGallery.icon },
+  { id: "pages",        title: PageTree.defaultTitle,         icon: PageTree.icon },
+]}
+```
+
+Override either prop freely —  is just a string and  is a Lucide icon component.
+
+### fogmaIcons catalog
+
+ is a preselected set of Lucide icons for Fogma's known concepts. Use it instead of importing from  directly to keep the visual identity consistent:
+
+```tsx
+import { FogmaIcon, fogmaIcons } from "@fogma/registry"
+
+// Render an icon:
+<FogmaIcon icon={fogmaIcons.designSystem} className="size-4" />
+
+// Pass to a sidebar section directly:
+{ id: "navigation", title: "Navigation", icon: fogmaIcons.navigation }
+```
+
+Available keys: , , , , , , , , , , , , , , , , .
+
 ---
 
 ## How to add a new node type
