@@ -453,6 +453,51 @@ Steps are idempotent enough that re-running a single step after the user manuall
 
 ## Phase 7 — Final summary
 
+After Phase 6 completes (or partially completes with failures), render the summary verbatim:
+
+```
+Fogma is set up. Here's what you have:
+
+  Mount:   <aliases.mount, abbreviated>  →  http://localhost:3000/fogma
+  Config:  <aliases.mount>/fogma.config.ts
+  Boards:  <comma-separated section names>
+  Opt-ins: <✓ Locator.js | ✗ Locator.js (skipped)>   <✓ Live-AI hook | ✗ Live-AI hook (skipped)>   <✓ Cadence note | ✗ Cadence note (skipped)>
+
+Try this first:
+  1. pnpm dev   (or your package manager's dev command)
+  2. Open /fogma in your browser
+  3. Click any text on a block → edit in place → save
+  4. <if Locator opted in:> Option-click any element → opens the file at the right line
+
+Customize Fogma:
+  • Rename a board       → edit the section title in fogma.config.ts
+  • Add a board          → ask Claude: "add a Layouts board"
+  • Restyle the sidebar  → fork components/fogma/sidebar/
+  • Change kit defaults  → fork the kit in components/fogma/kits/
+  Everything Fogma generated is in your repo. You own all of it.
+
+Sibling skills available:
+  • fogma-live-editing  — auto-applies cadence guidance when Claude edits
+                          Fogma-watched files (active without invocation)
+  • fogma-doc-sync      — invoke when app/fogma/CLAUDE.md drifts:
+                          "sync Fogma docs" or "/fogma-doc-sync"
+
+Notes for later:
+  • For previewing logged-out / locked / per-user states, see the Auth
+    section of <aliases.mount>/CLAUDE.md.
+  • Fogma updates aren't automatic. To compare your files against the
+    latest upstream: npx fogma diff <path>.
+  <if Tailwind v4 detected:> • Tailwind v4 detected — `presets:` wasn't auto-wired. Add the preset manually per <aliases.mount>/CLAUDE.md.
+  <if any Phase 6 step failed:> • <list the outstanding manual steps from failed Phase 6 actions>
+```
+
+### Rules
+
+- **"You own all of it" is mandatory.** That line lands the share-and-forget posture. Do not paraphrase or skip.
+- **Skipped opt-ins are surfaced as `✗ Name (skipped)`** so the user knows what they can opt into later via adjust mode.
+- **Sibling skills get named once with their invocation phrasing.** Beats discoverability gaps when the user comes back two weeks later.
+- **The Tailwind v4 line and the Phase 6 failure list only appear when relevant.** Drop the entire line if the condition isn't met — don't show empty bullets.
+
 ## Adjust mode (re-runs)
 
 ## Edge cases
