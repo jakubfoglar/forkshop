@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { filePathToRoute, fileToSelection } from "@forkshop/lib/file-to-selection"
+import type { FileMap } from "@forkshop/components/agent-activity-context"
 
 describe("filePathToRoute", () => {
   it("strips a single route group", () => {
@@ -20,63 +21,91 @@ describe("filePathToRoute", () => {
 })
 
 describe("fileToSelection", () => {
-  const root = "/projects/myapp"
-  const slugs = ["hero-display", "features-grid"]
+  const fileMap: FileMap = {
+    primitives: [
+      { id: "button", sourcePath: "components/ui/button.tsx" },
+      { id: "badge", sourcePath: "components/ui/badge.tsx" },
+    ],
+    blocks: [
+      { slug: "hero", sourcePath: "components/marketing/hero.tsx" },
+      { slug: "cta-band", sourcePath: "components/blocks/cta-band.tsx" },
+    ],
+  }
 
   it("maps an app page to { kind: page }", () => {
-    expect(fileToSelection("/projects/myapp/app/about/page.tsx", root, slugs)).toEqual({
+    expect(fileToSelection("app/about/page.tsx", fileMap)).toEqual({
       kind: "page",
       path: "/about",
     })
   })
 
   it("maps a root page to { kind: page, path: / }", () => {
-    expect(fileToSelection("/projects/myapp/app/page.tsx", root, slugs)).toEqual({
-      kind: "page",
-      path: "/",
-    })
+    expect(fileToSelection("app/page.tsx", fileMap)).toEqual({ kind: "page", path: "/" })
   })
 
   it("strips route groups for page files", () => {
-    expect(
-      fileToSelection("/projects/myapp/app/(marketing)/pricing/page.tsx", root, slugs),
-    ).toEqual({ kind: "page", path: "/pricing" })
+    expect(fileToSelection("app/(marketing)/pricing/page.tsx", fileMap)).toEqual({
+      kind: "page",
+      path: "/pricing",
+    })
   })
 
   it("maps an MDX content file to { kind: page }", () => {
-    expect(fileToSelection("/projects/myapp/content/blog/my-post.mdx", root, slugs)).toEqual({
+    expect(fileToSelection("content/blog/my-post.mdx", fileMap)).toEqual({
       kind: "page",
       path: "/blog/my-post",
     })
   })
 
-  it("maps a known block file to { kind: block }", () => {
-    expect(
-      fileToSelection("/projects/myapp/components/blocks/hero-display.tsx", root, slugs),
-    ).toEqual({ kind: "block", slug: "hero-display" })
+  it("maps a configured block (custom folder) to { kind: block }", () => {
+    expect(fileToSelection("components/marketing/hero.tsx", fileMap)).toEqual({
+      kind: "block",
+      slug: "hero",
+    })
   })
 
-  it("returns site-wide for unrecognised blocks (slug not in list)", () => {
-    expect(
-      fileToSelection("/projects/myapp/components/blocks/unknown-block.tsx", root, slugs),
-    ).toBe("site-wide")
+  it("maps a configured block (default folder) to { kind: block }", () => {
+    expect(fileToSelection("components/blocks/cta-band.tsx", fileMap)).toEqual({
+      kind: "block",
+      slug: "cta-band",
+    })
   })
 
-  it("returns undefined for files outside the project root", () => {
-    expect(fileToSelection("/other/project/app/page.tsx", root, slugs)).toBeUndefined()
+  it("maps a configured primitive to { kind: primitive }", () => {
+    expect(fileToSelection("components/ui/button.tsx", fileMap)).toEqual({
+      kind: "primitive",
+      id: "button",
+    })
+  })
+
+  it("returns site-wide for components/blocks/* when slug is not configured", () => {
+    expect(fileToSelection("components/blocks/unknown.tsx", fileMap)).toBe("site-wide")
+  })
+
+  it("legacy-default: resolves components/blocks/<slug>.tsx when slug exists in fileMap but no sourcePath matches", () => {
+    const legacyMap: FileMap = {
+      primitives: [],
+      blocks: [{ slug: "legacy-block", sourcePath: "components/old-location/legacy-block.tsx" }],
+    }
+    expect(fileToSelection("components/blocks/legacy-block.tsx", legacyMap)).toEqual({
+      kind: "block",
+      slug: "legacy-block",
+    })
   })
 
   it("returns undefined for node_modules", () => {
-    expect(fileToSelection("/projects/myapp/node_modules/react/index.js", root, slugs)).toBeUndefined()
+    expect(fileToSelection("node_modules/react/index.js", fileMap)).toBeUndefined()
   })
 
-  it("returns site-wide for non-page ts files", () => {
-    expect(fileToSelection("/projects/myapp/lib/utils.ts", root, slugs)).toBe("site-wide")
+  it("returns undefined for .next", () => {
+    expect(fileToSelection(".next/server/app/page.js", fileMap)).toBeUndefined()
   })
 
-  it("maps navigation files to { kind: section, sectionId: navigation }", () => {
-    expect(
-      fileToSelection("/projects/myapp/components/navigation/header.tsx", root, slugs),
-    ).toEqual({ kind: "section", sectionId: "navigation" })
+  it("returns undefined for .git", () => {
+    expect(fileToSelection(".git/HEAD", fileMap)).toBeUndefined()
+  })
+
+  it("returns site-wide for non-page TS files outside the fileMap", () => {
+    expect(fileToSelection("lib/utils.ts", fileMap)).toBe("site-wide")
   })
 })
