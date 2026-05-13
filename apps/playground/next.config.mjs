@@ -7,7 +7,7 @@ const registrySrc = path.resolve(__dirname, "../../packages/registry/src")
 // Map every top-level dir under packages/registry/src/ to its @fogma/* alias.
 // Done per-subdir (not a single "@fogma" prefix alias) so we don't accidentally
 // shadow the "@fogma/registry" workspace package itself.
-const fogmaSubdirs = ["api", "components", "hooks", "kits", "lib", "templates"]
+const fogmaSubdirs = ["api", "components", "hooks", "kits", "lib"]
 const fogmaAliases = Object.fromEntries(
   fogmaSubdirs.map((dir) => [`@fogma/${dir}`, path.join(registrySrc, dir)])
 )

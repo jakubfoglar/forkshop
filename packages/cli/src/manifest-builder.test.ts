@@ -95,6 +95,24 @@ describe("buildManifest", () => {
       expect(manifest.files[item], `${item} missing from files`).toBeDefined()
     }
   })
+
+  it("every bundle item resolves to a known files entry", () => {
+    for (const [name, bundle] of Object.entries(manifest.bundles)) {
+      if (bundle.kind === "composite") continue
+      for (const item of bundle.items) {
+        expect(manifest.files[item], `bundle "${name}" references missing file ${item}`).toBeDefined()
+      }
+    }
+  })
+
+  it("includes the CLAUDE.md template with destOverride", () => {
+    const file = manifest.files["@fogma/templates/claude-md"]
+    expect(file).toBeDefined()
+    if (file && file.kind === "text") {
+      expect(file.ext).toBe("md")
+      expect(file.destOverride).toBe("{aliases.mount}/CLAUDE.md")
+    }
+  })
 })
 
 describe("manifest snapshot", () => {
