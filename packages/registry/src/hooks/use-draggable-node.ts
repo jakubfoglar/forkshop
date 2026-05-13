@@ -1,8 +1,8 @@
 "use client"
 
 import { useCallback, useRef, type PointerEvent as ReactPointerEvent, type RefObject } from "react"
-import type { NodePosition } from "../node-positions.js"
-import { applySnap, snapPixelsAt, type SnapGuide, type SnapTarget } from "../system-snap.js"
+import type { NodePosition } from "../lib/node-positions.js"
+import { applySnap, snapPixelsAt, type SnapGuide, type SnapTarget } from "../lib/system-snap.js"
 
 export type Transform = { zoom: number; panX: number; panY: number }
 

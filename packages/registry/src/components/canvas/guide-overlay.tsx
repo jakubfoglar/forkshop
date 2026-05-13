@@ -1,6 +1,6 @@
 "use client"
 
-import type { SnapGuide } from "../../system-snap.js"
+import type { SnapGuide } from "../../lib/system-snap.js"
 import { useFogmaCanvas } from "./fogma-canvas.js"
 
 // Red snap-alignment guide lines, rendered over the stage during a drag.

@@ -6,8 +6,8 @@ import {
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
 } from "react"
-import type { NodePosition } from "../../node-positions.js"
-import type { SnapGuide } from "../../system-snap.js"
+import type { NodePosition } from "../../lib/node-positions.js"
+import type { SnapGuide } from "../../lib/system-snap.js"
 import { CanvasLabel } from "./canvas-label.js"
 import { useFogmaCanvas } from "./fogma-canvas.js"
 import { useDraggableNode, type GetSnapTargets } from "../../hooks/use-draggable-node.js"
