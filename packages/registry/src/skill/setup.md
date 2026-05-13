@@ -500,6 +500,43 @@ Notes for later:
 
 ## Adjust mode (re-runs)
 
+If Phase 0's Check 4 detected a non-empty `fogma.config.ts`, you are in adjust mode. Skip Phases 1–7. Render:
+
+```
+Looks like Fogma is already set up. Here's your current config:
+
+  Mount:   <aliases.mount>
+  Boards:  <comma-separated section names from current fogma.config.ts>
+  Opt-ins: <state observed: ✓/✗ for Locator (presence of next.config.ts turbopack rule),
+            ✓/✗ for hook (presence of .claude/hooks/post-tool-use.sh + matching entry in settings.json),
+            ✓/✗ for cadence note (presence of the marker in root CLAUDE.md)>
+
+What would you like to change?
+  • "add Layouts board"           → propose a new board
+  • "remove Blocks"               → drop a board
+  • "install hook"                → walk Phase 5b again
+  • "install cadence note"        → walk Phase 5c again
+  • "rescan components"           → re-run Phase 2 and propose a diff
+  • "open config"                 → just open fogma.config.ts, do nothing
+
+Or describe what you want.
+```
+
+### Adjust-mode actions
+
+- **Add a board** → Run Phase 2 against the relevant folder (ask the user *"where should I scan?"* if non-obvious), produce a single-section proposal, walk the user through it, and on accept: write a new `*-board.tsx` file, append an entry to `fogma.config.ts` (`designSystem.primitives`, `components.entries`, or a new top-level board section), update `<aliases.mount>/page.tsx` to import and mount the new board.
+- **Remove a board** → Delete the `*-board.tsx` file, remove the entry from `fogma.config.ts`, remove the import/mount from `<aliases.mount>/page.tsx`. Confirm before deleting.
+- **Install an opt-in** → Walk the corresponding Phase 5 prompt (5a / 5b / 5c). On accept, apply the Phase 6 step for that opt-in. Do not re-run other Phase 6 steps.
+- **Rescan components** → Run Phase 2. Diff the new scan against the current `fogma.config.ts`. Show: *"I found 3 new primitives (Avatar, Tabs, Card) and 1 missing (Skeleton was removed). Update fogma.config.ts to add/remove?"*
+- **Open config** → Just print the path. Do not modify anything.
+- **A free-form description** → Interpret as best you can. If unclear, ask one short clarifying question.
+
+### Rules for adjust mode
+
+- **Never re-run Phase 6 wholesale.** Only the specific changes requested.
+- **Never re-write `fogma.config.ts` from scratch.** Always patch in place. If the user edited fields beyond what you wrote, preserve their edits.
+- **For a full reset:** tell the user to delete `fogma.config.ts` (or move it aside) and re-run the skill — Phase 0's re-run detection will see the stub and run the full first-time flow.
+
 ## Edge cases
 
 ## What this skill never does
