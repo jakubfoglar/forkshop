@@ -50,4 +50,61 @@ describe("buildTokenRegistry", () => {
     if (entry?.kind !== "fontSize") throw new Error("expected fontSize")
     expect(entry.value).toBe("1rem")
   })
+
+  it("filters fogma-* tokens by default", () => {
+    const registry = buildTokenRegistry({
+      content: [],
+      theme: {
+        colors: {
+          brand: "#abcdef",
+          "fogma-accent": "#fefefe",
+        },
+        spacing: { "4": "1rem", "fogma-gutter": "1.5rem" },
+        borderRadius: { md: "0.375rem", "fogma-card": "0.75rem" },
+      },
+    })
+    const colorNames = registry.colors.map((entry) => entry.name)
+    expect(colorNames).toContain("brand")
+    expect(colorNames).not.toContain("fogma-accent")
+
+    const spacingNames = registry.spacing.map((entry) => entry.name)
+    expect(spacingNames).toContain("4")
+    expect(spacingNames).not.toContain("fogma-gutter")
+
+    const radiusNames = registry.radii.map((entry) => entry.name)
+    expect(radiusNames).toContain("md")
+    expect(radiusNames).not.toContain("fogma-card")
+  })
+
+  it("includes fogma-* tokens when opted in", () => {
+    const registry = buildTokenRegistry(
+      {
+        content: [],
+        theme: {
+          colors: {
+            brand: "#abcdef",
+            "fogma-accent": "#fefefe",
+          },
+        },
+      },
+      { includeFogmaTokens: true },
+    )
+    expect(registry.colors.map((entry) => entry.name)).toContain("fogma-accent")
+  })
+
+  it("filters tokens whose family is fogma", () => {
+    const registry = buildTokenRegistry({
+      content: [],
+      theme: {
+        colors: {
+          fogma: { accent: "#fefefe", canvas: "#111111" },
+          brand: { 500: "#abcdef" },
+        },
+      },
+    })
+    const names = registry.colors.map((entry) => entry.name)
+    expect(names).toContain("brand-500")
+    expect(names).not.toContain("fogma-accent")
+    expect(names).not.toContain("fogma-canvas")
+  })
 })

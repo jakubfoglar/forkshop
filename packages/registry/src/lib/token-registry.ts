@@ -150,13 +150,25 @@ function remToPx(value: string): number | undefined {
 // Category builders
 // ---------------------------------------------------------------------------
 
+const FOGMA_TOKEN_PREFIX = "fogma-"
+
+function isFogmaToken(name: string, family?: string): boolean {
+  if (name.startsWith(FOGMA_TOKEN_PREFIX)) return true
+  if (family && (family === "fogma" || family.startsWith(FOGMA_TOKEN_PREFIX))) return true
+  return false
+}
+
 function buildColors(
   theme: AnyRecord,
   themeExtend: AnyRecord,
   semanticFamilies: Set<string>,
+  includeFogmaTokens: boolean,
 ): TokenEntry[] {
   const colorsConfig = (themeExtend["colors"] ?? theme["colors"] ?? {}) as AnyRecord
-  const flat = flattenColors(colorsConfig, "")
+  let flat = flattenColors(colorsConfig, "")
+  if (!includeFogmaTokens) {
+    flat = flat.filter((entry) => !isFogmaToken(entry.name, entry.family))
+  }
   const seen = new Set<string>()
   const entries: TokenEntry[] = []
   for (const { name, hex, family } of flat) {
@@ -179,24 +191,29 @@ function buildColors(
   return entries
 }
 
-function buildSpacing(theme: AnyRecord, themeExtend: AnyRecord): TokenEntry[] {
+function buildSpacing(
+  theme: AnyRecord,
+  themeExtend: AnyRecord,
+  includeFogmaTokens: boolean,
+): TokenEntry[] {
   const spacingConfig = (theme["spacing"] ?? {}) as Record<string, string>
   const extendPadding = (themeExtend["padding"] ?? {}) as Record<string, string>
   const merged: Record<string, string> = { ...spacingConfig, ...extendPadding }
-  return Object.entries(merged).map<TokenEntry>(([name, rem]) => ({
+  const entries = Object.entries(merged).map<TokenEntry>(([name, rem]) => ({
     kind: "spacing",
     name,
     rem,
     px: remToPx(rem),
   }))
+  return includeFogmaTokens ? entries : entries.filter((entry) => !isFogmaToken(entry.name))
 }
 
-function buildFontSizes(theme: AnyRecord): TokenEntry[] {
+function buildFontSizes(theme: AnyRecord, includeFogmaTokens: boolean): TokenEntry[] {
   const fontSizeConfig = (theme["fontSize"] ?? {}) as Record<
     string,
     string | [string, { lineHeight?: string; letterSpacing?: string }]
   >
-  return Object.entries(fontSizeConfig).map<TokenEntry>(([name, value]) => {
+  const entries = Object.entries(fontSizeConfig).map<TokenEntry>(([name, value]) => {
     if (typeof value === "string") {
       return { kind: "fontSize", name, value, lineHeight: undefined, letterSpacing: undefined }
     }
@@ -209,47 +226,60 @@ function buildFontSizes(theme: AnyRecord): TokenEntry[] {
       letterSpacing: options?.letterSpacing,
     }
   })
+  return includeFogmaTokens ? entries : entries.filter((entry) => !isFogmaToken(entry.name))
 }
 
-function buildFontWeights(theme: AnyRecord): TokenEntry[] {
+function buildFontWeights(theme: AnyRecord, includeFogmaTokens: boolean): TokenEntry[] {
   const fontWeightConfig = (theme["fontWeight"] ?? {}) as Record<string, string>
-  return Object.entries(fontWeightConfig).map<TokenEntry>(([name, weight]) => ({
+  const entries = Object.entries(fontWeightConfig).map<TokenEntry>(([name, weight]) => ({
     kind: "fontWeight",
     name,
     weight: Number.parseInt(weight, 10),
   }))
+  return includeFogmaTokens ? entries : entries.filter((entry) => !isFogmaToken(entry.name))
 }
 
-function buildRadii(theme: AnyRecord, themeExtend: AnyRecord): TokenEntry[] {
+function buildRadii(
+  theme: AnyRecord,
+  themeExtend: AnyRecord,
+  includeFogmaTokens: boolean,
+): TokenEntry[] {
   const baseRadii = (theme["borderRadius"] ?? {}) as Record<string, string>
   const extendRadii = (themeExtend["borderRadius"] ?? {}) as Record<string, string>
   const merged: Record<string, string> = { ...baseRadii, ...extendRadii }
-  return Object.entries(merged).map<TokenEntry>(([name, value]) => ({
+  const entries = Object.entries(merged).map<TokenEntry>(([name, value]) => ({
     kind: "radius",
     name,
     value,
   }))
+  return includeFogmaTokens ? entries : entries.filter((entry) => !isFogmaToken(entry.name))
 }
 
-function buildShadows(theme: AnyRecord): TokenEntry[] {
+function buildShadows(theme: AnyRecord, includeFogmaTokens: boolean): TokenEntry[] {
   const shadowConfig = (theme["boxShadow"] ?? {}) as Record<string, string>
-  return Object.entries(shadowConfig).map<TokenEntry>(([name, value]) => ({
+  const entries = Object.entries(shadowConfig).map<TokenEntry>(([name, value]) => ({
     kind: "shadow",
     name,
     value,
   }))
+  return includeFogmaTokens ? entries : entries.filter((entry) => !isFogmaToken(entry.name))
 }
 
-function buildContainers(theme: AnyRecord, themeExtend: AnyRecord): TokenEntry[] {
+function buildContainers(
+  theme: AnyRecord,
+  themeExtend: AnyRecord,
+  includeFogmaTokens: boolean,
+): TokenEntry[] {
   const maxWidthConfig = (themeExtend["maxWidth"] ?? theme["maxWidth"] ?? {}) as Record<
     string,
     string
   >
-  return Object.entries(maxWidthConfig).map<TokenEntry>(([name, value]) => ({
+  const entries = Object.entries(maxWidthConfig).map<TokenEntry>(([name, value]) => ({
     kind: "container",
     name,
     value,
   }))
+  return includeFogmaTokens ? entries : entries.filter((entry) => !isFogmaToken(entry.name))
 }
 
 function buildClassLookup(
@@ -307,6 +337,22 @@ function buildClassLookup(
 // Public API
 // ---------------------------------------------------------------------------
 
+export type BuildTokenRegistryOptions = {
+  /**
+   * Color family names that should be treated as raw scale families
+   * (non-semantic). Defaults to an empty set so all colors are treated as
+   * semantic unless you specify otherwise.
+   */
+  rawScaleFamilies?: Set<string>
+  /**
+   * When true, tokens whose names start with `fogma-` (or whose family is
+   * `fogma`) are kept in the registry. Defaults to `false` so Fogma's own
+   * chrome tokens — wired in by the setup skill via `fogma-preset` — don't
+   * leak into the user-facing design system view.
+   */
+  includeFogmaTokens?: boolean
+}
+
 /**
  * Builds a complete TokenRegistry from any Tailwind CSS config.
  *
@@ -314,14 +360,13 @@ function buildClassLookup(
  * theme values are merged before extraction.
  *
  * @param tailwindConfig - Your project's Tailwind config object.
- * @param rawScaleFamilies - Optional set of color family names that should be
- *   treated as raw scale families (non-semantic). Defaults to an empty set so
- *   all colors are treated as semantic unless you specify otherwise.
+ * @param options - Optional configuration. See `BuildTokenRegistryOptions`.
  */
 export function buildTokenRegistry(
   tailwindConfig: Config,
-  rawScaleFamilies: Set<string> = new Set(),
+  options: BuildTokenRegistryOptions = {},
 ): TokenRegistry {
+  const { rawScaleFamilies = new Set<string>(), includeFogmaTokens = false } = options
   const resolved = resolveConfig(tailwindConfig)
   const theme = (resolved.theme ?? {}) as AnyRecord
   // `resolveConfig` merges `extend` into the top-level theme, so there is no
@@ -330,13 +375,13 @@ export function buildTokenRegistry(
   const themeExtend: AnyRecord = {}
 
   const partial = {
-    colors: buildColors(theme, themeExtend, rawScaleFamilies),
-    spacing: buildSpacing(theme, themeExtend),
-    fontSizes: buildFontSizes(theme),
-    fontWeights: buildFontWeights(theme),
-    radii: buildRadii(theme, themeExtend),
-    shadows: buildShadows(theme),
-    containers: buildContainers(theme, themeExtend),
+    colors: buildColors(theme, themeExtend, rawScaleFamilies, includeFogmaTokens),
+    spacing: buildSpacing(theme, themeExtend, includeFogmaTokens),
+    fontSizes: buildFontSizes(theme, includeFogmaTokens),
+    fontWeights: buildFontWeights(theme, includeFogmaTokens),
+    radii: buildRadii(theme, themeExtend, includeFogmaTokens),
+    shadows: buildShadows(theme, includeFogmaTokens),
+    containers: buildContainers(theme, themeExtend, includeFogmaTokens),
   }
 
   return { ...partial, classLookup: buildClassLookup(partial) }
