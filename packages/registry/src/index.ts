@@ -13,3 +13,8 @@ export type { FogmaSelection, SidebarSection, SidebarEntry } from "./components/
 export { buildPageTree } from "./components/sidebar/page-tree.js"
 export type { PageTreeNode } from "./components/sidebar/page-tree.js"
 export { serializeSelection, parseSelection } from "./components/sidebar/selection-hash.js"
+export { useIframePreview } from "./hooks/use-iframe-preview.js"
+export { useIframeEditWiring } from "./hooks/use-iframe-edit-wiring.js"
+export { useIframeSpacingWiring } from "./hooks/use-iframe-spacing-wiring.js"
+export type { SpacingZoneTarget, SpacingSide } from "./hooks/use-iframe-spacing-wiring.js"
+export { useIframeBlockDoubleClick } from "./hooks/use-iframe-block-dblclick.js"
