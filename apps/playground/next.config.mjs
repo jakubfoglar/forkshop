@@ -3,6 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ["@fogma/registry"],
   turbopack: {
+    resolveExtensions: [".tsx", ".ts", ".jsx", ".js", ".mjs", ".json"],
     rules: {
       "**/*.{tsx,jsx}": {
         loaders: [
@@ -10,6 +11,13 @@ const nextConfig = {
         ],
       },
     },
+  },
+  webpack: (config) => {
+    config.resolve.extensionAlias = {
+      ".js": [".ts", ".tsx", ".js"],
+      ".jsx": [".tsx", ".jsx"],
+    }
+    return config
   },
 }
 
