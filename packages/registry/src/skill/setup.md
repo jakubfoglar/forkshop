@@ -539,6 +539,58 @@ Or describe what you want.
 
 ## Edge cases
 
+Explicit guidance for situations Claude is likely to hit. Each row has one canonical response.
+
+### Empty `components/` or no primitives found
+
+Skip the Foundations section in the proposal. Mention in the narrative: *"I didn't find any primitives — start by `npx fogma add kits/design-system-board` once you have a few components, then say 'rescan components' and I'll add the board."*
+
+### Empty `components/blocks/` (or equivalent) found
+
+Skip the Blocks section. Same kind of recovery hint in the narrative.
+
+### Too many discovered entries
+
+If Phase 2 finds more than ~30 primitives or ~50 blocks, propose the top 12 / 20 by import-count and tell the user in the proposal: *"I capped Foundations at 12 primitives sorted by import-count. You can add the rest manually in `fogma.config.ts` or ask me to use different criteria."*
+
+### Dynamic-only routes (`[slug]` without statics)
+
+In the Pages section, set `autoDiscover: true` and add a TODO comment in `fogma.config.ts`:
+
+```ts
+pages: {
+  autoDiscover: true,
+  // TODO: dynamic routes detected. Add an `entries: [...]` array with explicit
+  // slugs to render, or wire your enumeration source into the page-tree kit.
+},
+```
+
+In the proposal, mention: *"All routes under <group> are dynamic — I'll set `autoDiscover` and leave a TODO for you to add enumeration."*
+
+### `tailwind.config.*` missing (likely Tailwind v4)
+
+Proceed with everything else. Skip the Phase 6 Step 4 write. Surface in the Phase 7 summary: *"Tailwind v4 detected — `presets:` wasn't auto-wired. To style Fogma, add `@import "./lib/fogma/tailwind/fogma-preset.css"` to your CSS (or follow the v4 migration guide in <aliases.mount>/CLAUDE.md)."*
+
+### Monorepo (no repo-root `app/`, but `pnpm-workspace.yaml` or `turbo.json`)
+
+In Phase 0 / 1, ask the user: *"This looks like a monorepo. Which workspace should I scan and mount in?"* Wait for the answer. Adjust every path lookup (Phase 1 docs, Phase 2 scans, `aliases.mount`) to that workspace.
+
+If the user already has `aliases.mount` pointing into a workspace in `fogma.json`, skip the question.
+
+### `<aliases.mount>/` already populated with non-stub content
+
+If Phase 0's re-run check found a populated config, this is the adjust-mode path. But if `<aliases.mount>/` has user-written files that don't match Fogma's expected layout (e.g., the user repurposed the folder), refuse and exit:
+
+> *"`<aliases.mount>/` already contains files that aren't from Fogma. Move them aside or set `aliases.mount` in `fogma.json` to a different path, then re-run."*
+
+### `fogma.json` present but no `<aliases.mount>/CLAUDE.md`
+
+Exit (Phase 0 Check 2). Already handled. Re-state here for completeness.
+
+### Pages Router / Vite / Remix detected
+
+Hard bail. Phase 0 Check 3 handles. Re-state here for completeness.
+
 ## What this skill never does
 
 This skill never:
