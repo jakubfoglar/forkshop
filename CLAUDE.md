@@ -8,8 +8,8 @@ Fogma is an OSS Figma-style canvas + sidebar tool for Next.js + Tailwind project
 
 ```
 packages/
-  cli/          Stub. CLI implementation lives in a separate future spec.
-                When implemented: `fogma init`, `fogma add`, `fogma sync`.
+  cli/          The published `fogma` npm CLI. Commands: `fogma init`,
+                `fogma add`, `fogma diff`. See "packages/cli" section below.
 
   registry/     The source. All components, hooks, lib utilities, API routes,
                 and kits live here. Published as @fogma/registry.
@@ -31,8 +31,60 @@ apps/
   playground/   Minimal Next.js demo that mounts a Fogma installation.
                 The canonical "does it work?" check. Mount all three kits here.
 
-  docs/         Skeleton. Content lives in a separate future spec.
+  docs/         Serves the static registry at `/r/registry.json`. See
+                "apps/docs" section below. Marketing content TBD.
 ```
+
+---
+
+## `packages/cli`
+
+The published `fogma` npm CLI. Commands:
+
+- `fogma init` — copies the `init` bundle's files into the user's project, rewrites
+  `@fogma/*` imports to the user's project aliases, installs runtime deps via the
+  user's detected package manager, writes `fogma.json` recording what was installed
+  and where.
+- `fogma add <bundle>` — installs an additional kit (one of `kits/iframe-gallery`,
+  `kits/page-tree`, `kits/design-system-board`) or feature bundle.
+- `fogma diff <path>` — shows a unified diff of the user's local copy vs the
+  upstream version, with path rewriting applied so alias-only churn doesn't appear.
+
+Bundled with esbuild into a single ESM file at `dist/index.js`. Tests in
+`packages/cli/src/**/*.test.ts` (and `tests/e2e.test.ts` — `.skip`'d, needs docs
+dev server). The path-rewriter (`src/rewrite.ts`) is the heart of the install flow:
+it does a longest-prefix-match swap from `@fogma/*` to the user's `fogma.json` aliases.
+
+Build: `pnpm --filter fogma build`. Test: `pnpm --filter fogma test`.
+
+---
+
+## `apps/docs`
+
+Serves the static registry at `/r/registry.json` (and binary assets under
+`/r/fonts/*.woff2`). The route handler at `apps/docs/app/r/registry.json/route.ts`
+calls `buildManifest()` (exported from the CLI package's `manifest-builder.ts`),
+which walks `packages/registry/{src,tailwind,templates}` and emits the manifest.
+
+A pre-build validator (`apps/docs/scripts/validate-registry.ts`) ensures every
+`@fogma/...` import in registry source resolves to a known canonical address.
+It also confirms every bundle's items exist in the files map. Run via
+`pnpm --filter docs validate-registry`. Wired into `next build` automatically.
+
+---
+
+## Canonical-alias convention
+
+Every cross-file import inside `packages/registry/src/**` must use the `@fogma/*`
+alias (e.g., `import { foo } from "@fogma/lib/edit-mode"`), never a relative path.
+The CLI's path-rewriter assumes this. A lint check at
+`packages/registry/scripts/check-canonical-imports.ts` enforces it as part of
+`pnpm --filter @fogma/registry lint`.
+
+The registry's own `tsconfig.json` maps `@fogma/*` → `./src/*` so local typecheck
+and Vitest resolve correctly. The playground (`apps/playground`) needs additional
+per-subdir webpack/turbopack alias entries in `next.config.mjs` to resolve those
+imports across the workspace boundary.
 
 ---
 
@@ -153,7 +205,13 @@ When porting any path-related code from ravineo-web, verify there are no hardcod
 
 ## Registry build + manifest format
 
-TBD — see future spec. The manifest will enumerate all exportable primitives and kits for the CLI's `fogma add` command.
+Shipped. The manifest is generated dynamically by `buildManifest()` in
+`packages/cli/src/manifest-builder.ts`, served by `apps/docs` at
+`/r/registry.json`, and consumed by the CLI's `init` / `add` / `diff` commands.
+
+Schema lives in `packages/cli/src/manifest-schema.ts`. Bundles enumerate files
+plus their runtime deps; the builder reads `packages/registry/package.json` for
+version pins.
 
 ---
 
@@ -161,7 +219,7 @@ TBD — see future spec. The manifest will enumerate all exportable primitives a
 
 No schedule. Manual.
 
-1. Bump versions in `packages/registry/package.json` (and `packages/cli/package.json` when implemented).
+1. Bump versions in `packages/registry/package.json` and `packages/cli/package.json`.
 2. `git tag v0.x.y`
 3. `git push && git push --tags`
 4. GitHub Actions auto-publishes to npm (when Actions workflow is set up).
@@ -205,12 +263,10 @@ These are **not** in v0 and should not be built until there's a dedicated spec:
 
 | Deferred item             | Notes |
 |---------------------------|-------|
-| CLI implementation        | `packages/cli/` is a stub. `fogma init`, `fogma add`, `fogma sync`. |
 | Live AI awareness         | SSE endpoint + Claude Code hook script. The `AgentActivityProvider` shell is wired but the stream is a no-op. |
 | Compose mode              | Page composer (drag-to-reorder sections). Deferred from v0. |
 | Flow-graph kit            | Node-and-edge flow diagrams. Deferred from v0. |
-| Docs site content         | `apps/docs/` is a skeleton. |
-| Registry manifest + build | `fogma add` needs a manifest enumerating primitives. |
+| Docs site content         | `apps/docs/` serves the registry but has no marketing content yet. |
 | GitHub Actions publish    | npm publish workflow. |
 
 Do not start work on deferred items during Tasks 25-27 (docs + release tag pass).
