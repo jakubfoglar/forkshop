@@ -42,6 +42,7 @@ export {
 export type { ActivityEntry } from "./components/agent-activity-context.js"
 export type { ActivityEntry as AgentActivityStateEntry } from "./lib/agent-activity-state.js"
 export { recordActivity, subscribe } from "./lib/agent-activity-state.js"
+export { filePathToRoute, fileToSelection } from "./lib/file-to-selection.js"
 export {
   buildTokenRegistry,
   setActiveTokenRegistry,

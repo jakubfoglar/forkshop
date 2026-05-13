@@ -203,7 +203,10 @@ export function useIsNavigationActive(): boolean {
       entries.some((entry) => {
         const selection = fileToSelection(entry.filePath, projectRoot, blockSlugs)
         return (
-          selection !== undefined && selection !== "site-wide" && selection.kind === "navigation"
+          selection !== undefined &&
+          selection !== "site-wide" &&
+          selection.kind === "section" &&
+          selection.sectionId === "navigation"
         )
       }),
     [entries, blockSlugs, projectRoot],
