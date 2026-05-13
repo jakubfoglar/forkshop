@@ -241,17 +241,41 @@ If you want to set initial positions for new nodes, add entries to `layouts/syst
 
 ## Live AI awareness
 
-> Currently a no-op. The plumbing is wired but the SSE endpoint is not yet active.
+When Claude Code edits a file in this project, Forkshop visually shows where:
 
-`<AgentActivityProvider>` wraps your Forkshop installation and consumes activity events from `/api/forkshop/agent-activity/stream`. When the live AI awareness spec is wired up, this will show real-time indicators in the sidebar as Claude Code touches files in your project.
+- **Sidebar leaf pulse** — the entry that maps to the edited file pulses (block, primitive, or page).
+- **Frame glow** — when the affected entry is the currently-selected node, its `CanvasNode` glows with an indigo ring and shows a `Claude · <filename>` chip.
+- **Iframe outline** — inside any page iframe that composes the edited block, the block instance gets an outlined glow.
+- **Text pulse** — the specific text Claude changed (via `Edit`/`MultiEdit`) flashes inside the iframe.
 
-What it will do when active:
-- Pulsing dot in the sidebar next to the row matching the file being edited
-- Purple ring on the canvas node matching the touched page or block
-- In-iframe outline pulse on the specific element being changed
-- Top-center chip: "Claude editing `<filename>`"
+The loop is `.claude/hooks/post-tool-use.sh` → POST `/api/forkshop/agent-activity` → in-memory state → SSE → React provider → visual decorations. All wiring is dev-only — production builds return 403 from the API routes and the client provider never opens its EventSource.
 
-The `AgentActivityProvider` is already mounted. The `fileToSelection` utility (from `@forkshop/registry`) maps file paths to sidebar entries. No changes needed on your end — wiring it up is a separate spec.
+### Configuring file mapping
+
+The provider needs to know which on-disk file maps to which sidebar entry. Edit `forkshop.config.ts` and add `sourcePath` (project-relative) to each primitive and block:
+
+```ts
+primitives: [
+  { id: "button", name: "Button", sourcePath: "components/ui/button.tsx", render: () => <Button /> },
+],
+blocks: [
+  { slug: "hero", name: "Hero", iframeSrc: "/", sourcePath: "components/marketing/hero.tsx" },
+],
+```
+
+The mount page derives a `FileMap` from these entries and hands it to `AgentActivityProvider`. Pages are filesystem-routed — no `sourcePath` needed for them. Files without a configured mapping fall back to a "site-wide" indicator in the sidebar header.
+
+### Consumer hooks
+
+- `useAgentActivePages()` — pages currently being edited.
+- `useAgentActiveBlocks()` — blocks currently being edited (includes blocks identified by `<ComponentName>` mentions in page edits).
+- `useAgentActivePrimitives()` — primitives currently being edited.
+- `usePageActiveFallback(path)` — true when a page edit can't be attributed to a specific block (drives the soft all-blocks pulse).
+- `useSiteWideActivity()` — `{ active, recentBasename }` for unmapped file edits.
+
+### Production behavior
+
+`/api/forkshop/agent-activity` (POST) and `/stream` (GET) both return 403 when `NODE_ENV === "production"`. The `AgentActivityProvider`'s `EventSource` never opens in production. The `.claude/hooks/post-tool-use.sh` script's `curl --max-time 1` fails silently if no dev server is running. None of this code path is reachable from a production deploy.
 
 ---
 
