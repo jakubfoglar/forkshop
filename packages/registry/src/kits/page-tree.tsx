@@ -7,6 +7,7 @@ import { CanvasNode } from "@forkshop/components/canvas/canvas-node"
 import { GuideOverlay } from "@forkshop/components/canvas/guide-overlay"
 import { LazyIframe } from "@forkshop/components/canvas/lazy-iframe"
 import { ResponsiveFrameView } from "@forkshop/components/canvas/responsive-frame-view"
+import { useRegisterIframe } from "@forkshop/components/iframe-registry"
 import { useForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
 import type { GetSnapTargets } from "@forkshop/hooks/use-draggable-node"
 import type { NodePosition, NodePositions } from "@forkshop/lib/node-positions"
@@ -333,6 +334,8 @@ function PageTileInner({
   onIsolate: (path: string) => void
 }) {
   const { applyWheelInput, transformRef } = useForkshopCanvas()
+  const iframeRef = useRef<HTMLIFrameElement | null>(null)
+  useRegisterIframe(iframeRef)
   const label = entry.label ?? humanize(entry.path)
 
   const handleIframeWheel = useCallback(
@@ -375,6 +378,7 @@ function PageTileInner({
         desktopWidth={1440}
         onIframeWheel={handleIframeWheel}
         onIframeDblClick={() => onIsolate(entry.path)}
+        iframeRef={(element) => { iframeRef.current = element ?? null }}
         className="bg-white shadow-md"
       />
     </CanvasNode>

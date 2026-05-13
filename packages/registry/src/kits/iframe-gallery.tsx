@@ -4,6 +4,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { CanvasNode } from "@forkshop/components/canvas/canvas-node"
 import { GuideOverlay } from "@forkshop/components/canvas/guide-overlay"
 import { LazyIframe } from "@forkshop/components/canvas/lazy-iframe"
+import { useRegisterIframe } from "@forkshop/components/iframe-registry"
 import { useForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
 import type { GetSnapTargets } from "@forkshop/hooks/use-draggable-node"
 import type { NodePosition, NodePositions } from "@forkshop/lib/node-positions"
@@ -295,6 +296,8 @@ function GalleryNodeInner({
   onHeightChange: (slug: string, height: number) => void
 }) {
   const { applyWheelInput, transformRef } = useForkshopCanvas()
+  const iframeRef = useRef<HTMLIFrameElement | null>(null)
+  useRegisterIframe(iframeRef)
 
   const handleBodyHeightSync = useCallback(
     (height: number) => onHeightChange(entry.slug, height),
@@ -339,6 +342,7 @@ function GalleryNodeInner({
         heightCap={cell.height}
         onBodyHeightSync={handleBodyHeightSync}
         onIframeWheel={handleIframeWheel}
+        iframeRef={(element) => { iframeRef.current = element ?? null }}
         className="bg-white shadow-md"
       />
     </CanvasNode>

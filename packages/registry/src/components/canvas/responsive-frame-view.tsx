@@ -1,7 +1,8 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { CanvasLabel } from "@forkshop/components/canvas/canvas-label"
+import { useRegisterIframe } from "@forkshop/components/iframe-registry"
 
 const BLOCK_VIEWPORT_GAP = 32
 const ISOLATION_LABEL_HEIGHT = 80
@@ -203,6 +204,8 @@ function Viewport({
   onIframeWheel: (event: WheelEvent, iframe: HTMLIFrameElement) => void
 }) {
   const [iframeElement, setIframeElement] = useState<HTMLIFrameElement>()
+  const iframeRef = useRef<HTMLIFrameElement | null>(null)
+  useRegisterIframe(iframeRef)
   const [shouldLoad, setShouldLoad] = useState(false)
 
   useEffect(() => {
@@ -340,7 +343,7 @@ function Viewport({
         <CanvasLabel style={{ pointerEvents: "none" }}>{viewport.label}</CanvasLabel>
       </div>
       <iframe
-        ref={(element) => setIframeElement(element ?? undefined)}
+        ref={(element) => { iframeRef.current = element; setIframeElement(element ?? undefined) }}
         src={shouldLoad ? source : undefined}
         title={title}
         scrolling="no"
