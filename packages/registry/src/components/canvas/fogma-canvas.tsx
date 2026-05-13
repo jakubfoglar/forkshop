@@ -225,7 +225,7 @@ export function FogmaCanvas({
     const container = containerRef.current
     if (!container) return
     const handleWheel = (event: WheelEvent) => {
-      if (event.ctrlKey || event.metaKey) event.preventDefault()
+      event.preventDefault() // always — wheel inside canvas is canvas-only
       applyWheel({
         deltaX: event.deltaX,
         deltaY: event.deltaY,
@@ -419,7 +419,7 @@ export function FogmaCanvas({
     <FogmaCanvasContext.Provider value={contextValue}>
       <div
         ref={containerRef as React.RefObject<HTMLDivElement>}
-        className="relative flex-1 select-none overflow-hidden bg-fogma-canvas"
+        className="relative flex-1 select-none overflow-hidden overscroll-contain bg-fogma-canvas"
         style={{ cursor: containerCursor, touchAction: "none" }}
         onClick={onContainerClick}
       >
