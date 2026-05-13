@@ -61,6 +61,60 @@ Once all four checks pass, continue to Phase 1.
 
 ## Phase 1 — Read the project, build understanding
 
+You will gather context *first*, then reason. Produce a narrative description of what kind of project this is — never a category lookup. Two sentences of "this is the marketing site for X" beats any dependency-graph inference.
+
+### Step 1 — Read the project's own words
+
+In order, whatever exists:
+
+- Repo-root `CLAUDE.md`, `AGENTS.md`, or `GEMINI.md`
+- Repo-root `README.md` (first ~150 lines)
+- The index file of `docs/` if present (`docs/README.md`, `docs/index.md`, or the alphabetically first `.md`)
+
+**If the project's own docs describe what it is, trust them.** A line like "Ravineo's marketing surface and a few internal tools" is worth more than the entire `package.json`.
+
+### Step 2 — Read structural hints
+
+Five quick reads:
+
+1. `package.json` — dependencies, `name`, `description`, `scripts`.
+2. `app/layout.tsx` — fonts loaded, head exports, metadata pattern.
+3. `app/page.tsx` if present — is this a landing page or a redirect?
+4. `tailwind.config.{ts,js,mjs}` — is the theme defaults-only or heavily customized (many semantic tokens, custom font families)?
+5. `next.config.{ts,js,mjs}` — bundler, redirects, output mode, anything unusual.
+
+### Step 3 — Scan two directories one level deep
+
+`ls app/` and `ls components/`. Note route-group names (parentheses), subfolder names. **Do not recurse yet** — Phase 2 will do that.
+
+### Step 4 — Signals to weigh, not rules to fire
+
+The following observations are *inputs to your reasoning*. Let any one of them update your picture; never let one of them decide for you.
+
+- **Auth packages** (any of these) suggests an authenticated surface: `@clerk/nextjs`, `next-auth`, `@auth/core`, `lucia`, `@lucia-auth/*`, `iron-session`, `@auth0/nextjs-auth0`, `@workos-inc/authkit-nextjs`, `@supabase/auth-helpers-nextjs`, `@supabase/ssr`.
+- **Authenticated-style route groups**: `(auth)`, `(authenticated)`, `(dashboard)`, `(app)`, `(protected)`, `(private)`.
+- **Marketing-style route groups**: `(marketing)`, `(public)`, `(home)`, `(www)`.
+- **Both kinds of route groups present** → this is most likely a hybrid project, which is the norm in production codebases, not an edge case.
+- **Mobile-web signals** — in `app/layout.tsx` or a `viewport` export: `maximumScale: 1` AND `userScalable: false`, plus breakpoint usage in the top-edited TSX files staying under `md:`. If both fire, set a *mobile profile* flag (changes `iframe-gallery` default to single-width 375 px).
+
+### Step 5 — Produce a narrative
+
+Write a 2–3 sentence description of the project. This is what the user sees in Phase 3's proposal — make it concrete and observable.
+
+**Good (concrete, observable):**
+
+> *"This is a hybrid: a `(marketing)` surface (~8 static pages + blog MDX) plus an `(authenticated)` surface using Clerk (~12 routes). Tailwind config is heavily customized with semantic tokens. The README emphasizes the marketing site; CLAUDE.md documents the design system."*
+
+**Bad (categorical, abstract):**
+
+> *"This is a SaaS marketing hybrid."*
+
+The narrative is the proposal's first paragraph. Users correct narratives faster than they correct sidebar trees.
+
+### Step 6 — Carry the narrative forward
+
+Hold the narrative + the raw signals (auth lib name, route-group names, mobile-profile flag, Tailwind v3-vs-v4) as Phase 2's input. Do not show the user the signal list — show the narrative.
+
 ## Phase 2 — Scan for primitives, blocks, routes
 
 ## Phase 3 — Build the consolidated proposal
