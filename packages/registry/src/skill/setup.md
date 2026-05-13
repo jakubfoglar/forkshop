@@ -342,7 +342,7 @@ The full-diff content for each:
 
 **Locator.js full diff** — `next.config.{ts,js,mjs}` turbopack rule (or merge proposal if `experimental` already exists), plus the new `<aliases.mount>/layout.tsx` mounting `<LocatorInit />` (or merged into existing file if present), plus the two devDependencies for `package.json`.
 
-**Live-AI hook full diff** — the new `.claude/hooks/post-tool-use.sh` (~30 lines, see Template 6), plus the new entry in `.claude/settings.json` (or merge proposal if a `PostToolUse` matcher already exists).
+**Live-AI hook full diff** — render the full `.claude/hooks/post-tool-use.sh` content (Template 6) as a code-fenced block. Then render the proposed merged `.claude/settings.json` content as a code-fenced JSON block, with the Forkshop additions prefixed `+` for visibility. If `.claude/settings.json` is absent, the diff shows the to-be-created file. If a hook referencing `post-tool-use.sh` already exists, show *"Hook already wired — no changes needed."* and skip the diff.
 
 **Cadence note full snippet** — the bracketed `<!-- forkshop:cadence-note start ... -->` block (see Template 8).
 
@@ -417,8 +417,37 @@ Detect the package manager from lockfile presence (`pnpm-lock.yaml` → pnpm, `y
 
 ### Step 7 — Live-AI hook installation (only if opt-in 5b was consented)
 
-Write `.claude/hooks/post-tool-use.sh` from Template 6 — make it executable (`chmod +x`).
-Apply the matcher-merge logic from Phase 5b to `.claude/settings.json` (create it if absent).
+Two writes — both idempotent.
+
+**Step 7a — Write `.claude/hooks/post-tool-use.sh`** from Template 6. After write, `chmod +x .claude/hooks/post-tool-use.sh`.
+
+**Step 7b — Merge `.claude/settings.json`** with this algorithm:
+
+The Forkshop hook entry shape:
+
+```json
+{
+  "matcher": "Edit|Write|MultiEdit",
+  "hooks": [
+    {
+      "type": "command",
+      "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/post-tool-use.sh",
+      "timeout": 5
+    }
+  ]
+}
+```
+
+Algorithm:
+
+1. **File absent** → write a fresh `{ "hooks": { "PostToolUse": [<entry>] } }`.
+2. **File present but JSON parse fails** → refuse the write; print: *"`.claude/settings.json` is not valid JSON. Fix the file and run setup again, or add the hook entry manually."* Continue to next setup step.
+3. **File present, no `hooks.PostToolUse` array** → add the array containing the Forkshop entry.
+4. **Idempotency check** — scan every `hooks.PostToolUse[*].hooks[*].command` string for the substring `post-tool-use.sh`. If found, skip the write; print: *"Hook already wired — no changes."*
+5. **Matching matcher exists** (exact string `"Edit|Write|MultiEdit"`) → append Forkshop's `{ type: "command", command: …, timeout: 5 }` to that matcher's `hooks` array.
+6. **No matching matcher** → append the entire Forkshop entry (matcher + hooks array) as a new element of `PostToolUse`.
+
+Write the result back with `JSON.stringify(merged, null, 2)`.
 
 ### Step 8 — Root `CLAUDE.md` cadence note (only if opt-in 5c was consented)
 
