@@ -66,3 +66,74 @@ describe("preflightInit", () => {
     if (!result.ok) expect(result.reason).toMatch(/@\/\*/)
   })
 })
+
+describe("preflightInit JSONC handling", () => {
+  it("succeeds for a tsconfig that uses @/* path alias", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "fogma-preflight-jsonc-"))
+    try {
+      await fs.mkdir(path.join(root, "app"))
+      await fs.writeFile(path.join(root, "next.config.js"), "module.exports = {}")
+      // Pretty-printed tsconfig with @/* path alias AND include patterns containing *
+      await fs.writeFile(
+        path.join(root, "tsconfig.json"),
+        `{
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx"]
+}`
+      )
+      const result = await preflightInit(root, {})
+      expect(result.ok).toBe(true)
+    } finally {
+      await fs.rm(root, { recursive: true, force: true })
+    }
+  })
+
+  it("handles block comments inside tsconfig", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "fogma-preflight-jsonc-"))
+    try {
+      await fs.mkdir(path.join(root, "app"))
+      await fs.writeFile(path.join(root, "next.config.js"), "module.exports = {}")
+      await fs.writeFile(
+        path.join(root, "tsconfig.json"),
+        `{
+  /* main config */
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./*"] // <-- magic alias
+    }
+  }
+}`
+      )
+      const result = await preflightInit(root, {})
+      expect(result.ok).toBe(true)
+    } finally {
+      await fs.rm(root, { recursive: true, force: true })
+    }
+  })
+
+  it("handles trailing commas", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "fogma-preflight-jsonc-"))
+    try {
+      await fs.mkdir(path.join(root, "app"))
+      await fs.writeFile(path.join(root, "next.config.js"), "module.exports = {}")
+      await fs.writeFile(
+        path.join(root, "tsconfig.json"),
+        `{
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./*"],
+    },
+  },
+}`
+      )
+      const result = await preflightInit(root, {})
+      expect(result.ok).toBe(true)
+    } finally {
+      await fs.rm(root, { recursive: true, force: true })
+    }
+  })
+})

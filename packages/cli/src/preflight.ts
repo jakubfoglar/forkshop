@@ -16,15 +16,71 @@ async function exists(p: string): Promise<boolean> {
   }
 }
 
+function stripJsonComments(text: string): string {
+  let out = ""
+  let i = 0
+  let inString = false
+  let stringChar = ""
+
+  while (i < text.length) {
+    const ch = text[i]
+    const next = text[i + 1]
+
+    if (inString) {
+      if (ch === "\\") {
+        // copy the backslash and the next char verbatim
+        out += ch
+        if (i + 1 < text.length) out += text[i + 1]
+        i += 2
+        continue
+      }
+      if (ch === stringChar) {
+        inString = false
+      }
+      out += ch
+      i++
+      continue
+    }
+
+    // Not in a string
+    if (ch === '"' || ch === "'") {
+      inString = true
+      stringChar = ch as string
+      out += ch
+      i++
+      continue
+    }
+
+    // Line comment: //...
+    if (ch === "/" && next === "/") {
+      // skip to end of line
+      while (i < text.length && text[i] !== "\n") i++
+      continue
+    }
+
+    // Block comment: /* ... */
+    if (ch === "/" && next === "*") {
+      i += 2
+      while (i < text.length - 1 && !(text[i] === "*" && text[i + 1] === "/")) i++
+      i += 2 // skip past */
+      continue
+    }
+
+    out += ch
+    i++
+  }
+
+  return out
+}
+
 async function readJsonOrNull(p: string): Promise<Record<string, unknown> | undefined> {
   try {
     const text = await fs.readFile(p, "utf8")
-    // Strip line comments and trailing commas — Next.js tsconfig files often have them.
-    const cleaned = text
-      .replace(/\/\*[\s\S]*?\*\//g, "")
-      .replace(/\/\/[^\n]*/g, "")
-      .replace(/,\s*([}\]])/g, "$1")
-    return JSON.parse(cleaned) as Record<string, unknown>
+    const noComments = stripJsonComments(text)
+    // Strip trailing commas: works correctly even when strings have commas, because
+    // a trailing comma can only appear before } or ].
+    const noTrailingCommas = noComments.replace(/,(\s*[}\]])/g, "$1")
+    return JSON.parse(noTrailingCommas) as Record<string, unknown>
   } catch {
     return undefined
   }
