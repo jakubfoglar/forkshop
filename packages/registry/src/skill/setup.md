@@ -591,67 +591,100 @@ Templates use `{{snake_case}}` placeholder substitution. Multi-line placeholders
 
 ### Substitution rules
 
-- **`{{board_name}}`** — PascalCase from the user's section title (e.g., "Foundations" → `Foundations`; "Design System" → `DesignSystem`; "Marketing Blocks" → `MarketingBlocks`).
-- **`{{board_slug}}`** — kebab-case from the user's section title ("Marketing Blocks" → `marketing-blocks`).
+- **`{{board_name}}`** — PascalCase from the user's section title (e.g., "Foundations" → `Foundations`; "Design System" → `DesignSystem`; "Marketing Blocks" → `MarketingBlocks`). The rendered function/component name is `{{board_name}}BoardView` — the `View` suffix is baked into the templates.
+- **`{{board_slug}}`** — kebab-case from the user's section title ("Marketing Blocks" → `marketing-blocks`). The board file lives at `<aliases.mount>/<board_slug>-board.tsx`.
 - **`{{primitive_imports}}`** — one named import per line. Prefer a barrel `import { Button, Badge } from "@/components/ui"` if `components/ui/index.ts` exports them; otherwise per-file imports.
-- **`{{block_imports}}`** — same grouping logic, scoped to the blocks folder.
-- **`{{primitive_entries}}`** — comma-terminated, 6-space indented, one entry per line.
-- **`{{block_entries}}`** — comma-terminated, 6-space indented, one entry per line, with the fixture inlined as object literal props.
-- **`{{components_layout}}`** — `"stack"` by default; `"grid"` if user opted into matrix layout during iteration.
-- **`{{pages_overrides}}`** — empty by default; populated with `excludePaths: [...]` if user said "skip these routes" during iteration; populated with a TODO comment if dynamic routes detected.
-- **`{{sidebar_entries}}`** — one `{ id: "<slug>", title: "<title>", Component: <BoardName>Board }` per line, comma-terminated, 8-space indented.
-- **`{{board_imports}}`** — derived from accepted sidebar order; one `import { <BoardName>Board } from "./<slug>-board"` per line.
-- **`{{board_renders}}`** — derived from accepted sidebar order; one `<<BoardName>Board />` per line.
+- **`{{primitive_entries}}`** — comma-terminated, 4-space indented, one entry per line. Each entry is `{ id: "<kebab-id>", name: "<Name>", render: () => <Name /> },` (with usage JSX appropriate to the primitive — e.g., `<Button>Click me</Button>`, `<Badge>Label</Badge>`, `<Input placeholder="Type here..." />`). The `id` is kebab-case from `name`.
+- **`{{block_entries}}`** — comma-terminated, 4-space indented, one entry per line. Each entry is `{ slug: "<kebab-slug>", name: "<Name>", iframeSrc: "<route>" },`. `iframeSrc` is the route on the user's site where the block exists standalone — `"/"` (home) is the default if a block is used on the home page. If a block lives on a different route, point `iframeSrc` at that route (e.g., the first usage captured in Phase 2).
+- **`{{page_entries}}`** — comma-terminated, 4-space indented, one `{ path: "<route>" },` per static route discovered in Phase 2 Scan C.
+- **`{{page_routes}}`** — comma-separated list of route strings for the `PAGE_ROUTES` `as const` array in the mount page: `"/", "/about", "/pricing"`. Quoted, no surrounding brackets.
+- **`{{block_slugs}}`** — comma-separated list of block slug strings for the `BLOCK_SLUGS` `as const` array: `"hero", "cta-band", "feature-row"`. Quoted, no surrounding brackets.
+- **`{{first_section_id}}`** — the kebab-case id of the first accepted sidebar section (e.g., `"design-system"`, `"foundations"`, `"components"`). Used as the initial `selection.sectionId` and as the fallback in the discriminated `view` expression.
+- **`{{view_union}}`** — TypeScript union of every accepted section id plus `"pages"`, e.g. `"design-system" | "components" | "pages"`.
+- **`{{sidebar_sections}}`** — one entry per accepted section, comma-terminated, 12-space indented. Each line is `{ id: "<slug>", title: <BoardKit>.defaultTitle, icon: <BoardKit>.icon },` where `<BoardKit>` is `DesignSystemBoard` for the foundations kit, `IframeGallery` for the blocks/components kit, and `PageTree` for the pages kit. (These imports are listed in the mount page's top import block.)
+- **`{{board_imports}}`** — one `import {{board_name}}BoardView from "./{{board_slug}}-board"` per accepted section. Default imports, in sidebar order.
+- **`{{board_renders}}`** — one conditional render per accepted section, 10-space indented. Pattern: `{view === "<slug>" && <{{board_name}}BoardView />}`. The pages board gets the extra `isolatedPath` + `onBack` props (see Template 5).
 - **`{{aliases.mount}}`** — resolved from `fogma.json` aliases at write time; defaults to `app/fogma` if absent.
 
-### Template 1 — `fogma.config.ts` (or `.tsx` if blocks have JSX fixtures)
+**Note on the tailwind config import path in Template 1:** the templates assume the typical mount path `app/fogma/`, where `@/../tailwind.config` resolves to the repo-root `tailwind.config.{ts,js}`. If the user's `aliases.mount` is nested deeper (e.g., `app/(tools)/fogma/`), adjust the relative segments accordingly — `@/../tailwind.config` should always resolve to the repo-root tailwind config. If the project's `@` alias maps somewhere other than the repo root, use the explicit relative path that lands on `tailwind.config.{ts,js}` from the mount directory.
+
+### Template 1 — `fogma.config.tsx` (always `.tsx` — primitives use JSX)
 
 ```tsx
-import type { FogmaConfig } from "@/components/fogma"
+import type { Config } from "tailwindcss"
+import tailwindConfig from "@/../tailwind.config"
 {{primitive_imports}}
-{{block_imports}}
 
-export const config: FogmaConfig = {
-  designSystem: {
-    primitives: [
+export const fogmaConfig = {
+  tailwindConfig: tailwindConfig as Config,
+  primitives: [
 {{primitive_entries}}
-    ],
-  },
-  components: {
-    layout: "{{components_layout}}",
-    entries: [
+  ],
+  blocks: [
 {{block_entries}}
-    ],
-  },
-  pages: {
-    autoDiscover: true,
-{{pages_overrides}}
-  },
-}
+  ],
+  pages: [
+{{page_entries}}
+  ],
+} as const
 ```
 
 `primitive_entries` example expansion:
 
 ```
-      { name: "Button", render: () => <Button>Click me</Button> },
-      { name: "Badge", render: () => <Badge>Label</Badge> },
+    { id: "button", name: "Button", render: () => <Button>Click me</Button> },
+    { id: "badge", name: "Badge", render: () => <Badge>Label</Badge> },
+    { id: "input", name: "Input", render: () => <Input placeholder="Type here..." /> },
 ```
 
-`block_entries` example expansion (fixture inlined):
+`block_entries` example expansion:
 
 ```
-      { slug: "hero", name: "Hero",
-        render: () => <Hero title="Welcome" eyebrow="The hub" cta={{label: "Try it", href: "#"}} /> },
+    { slug: "hero", name: "Hero", iframeSrc: "/" },
+    { slug: "cta-band", name: "CTA Band", iframeSrc: "/" },
+    { slug: "feature-row", name: "Feature Row", iframeSrc: "/" },
+```
+
+`page_entries` example expansion:
+
+```
+    { path: "/" },
+    { path: "/about" },
+    { path: "/pricing" },
 ```
 
 ### Template 2 — Board file (design-system-board kit)
 
 ```tsx
 "use client"
-import { DesignSystemBoard } from "@/components/fogma/kits/design-system-board"
-import { config } from "./fogma.config"
-export function {{board_name}}Board() {
-  return <DesignSystemBoard {...config.designSystem} />
+
+import { useRef } from "react"
+import { FogmaCanvas, DesignSystemBoard } from "@fogma/registry"
+import { fogmaConfig } from "./fogma.config"
+
+// Stage dimensions for the design system board.
+// 3000x2400 fits the default token set + primitives at zoom-to-fit.
+const STAGE_W = 3000
+const STAGE_H = 2400
+
+export default function {{board_name}}BoardView() {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const stageRef = useRef<HTMLDivElement>(null)
+
+  return (
+    <FogmaCanvas
+      containerRef={containerRef}
+      stageRef={stageRef}
+      stageWidth={STAGE_W}
+      stageHeight={STAGE_H}
+      fitMode="both"
+    >
+      <DesignSystemBoard
+        tailwindConfig={fogmaConfig.tailwindConfig}
+        primitives={[...fogmaConfig.primitives]}
+      />
+    </FogmaCanvas>
+  )
 }
 ```
 
@@ -659,10 +692,30 @@ export function {{board_name}}Board() {
 
 ```tsx
 "use client"
-import { IframeGallery } from "@/components/fogma/kits/iframe-gallery"
-import { config } from "./fogma.config"
-export function {{board_name}}Board() {
-  return <IframeGallery {...config.components} />
+
+import { useRef } from "react"
+import { FogmaCanvas, IframeGallery } from "@fogma/registry"
+import { fogmaConfig } from "./fogma.config"
+
+// Stack layout: viewport width 1200, blocks stacked ~600px each.
+const STAGE_W = 1200
+const STAGE_H = 2200
+
+export default function {{board_name}}BoardView() {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const stageRef = useRef<HTMLDivElement>(null)
+
+  return (
+    <FogmaCanvas
+      containerRef={containerRef}
+      stageRef={stageRef}
+      stageWidth={STAGE_W}
+      stageHeight={STAGE_H}
+      fitMode="width"
+    >
+      <IframeGallery entries={[...fogmaConfig.blocks]} layout="stack" />
+    </FogmaCanvas>
+  )
 }
 ```
 
@@ -670,10 +723,65 @@ export function {{board_name}}Board() {
 
 ```tsx
 "use client"
-import { PageTree } from "@/components/fogma/kits/page-tree"
-import { config } from "./fogma.config"
-export function {{board_name}}Board() {
-  return <PageTree {...config.pages} />
+
+import { useRef, useState } from "react"
+import { FogmaCanvas, PageTree, responsiveFrameStageDimensions } from "@fogma/registry"
+import { fogmaConfig } from "./fogma.config"
+
+// Grid view dimensions auto-scale with entries; pick generous defaults.
+const GRID_STAGE_W = 1800
+const GRID_STAGE_H = 1400
+
+// Isolation view: responsive-frame stage width for default viewports [1440, 768, 375].
+const { width: ISOLATION_STAGE_W, height: ISOLATION_STAGE_H } = responsiveFrameStageDimensions(
+  undefined,
+  [1440, 768, 375],
+)
+
+export default function {{board_name}}BoardView({
+  isolatedPath: controlledIsolatedPath,
+  onBack: onBackProp,
+}: {
+  isolatedPath?: string
+  onBack?: () => void
+}) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const stageRef = useRef<HTMLDivElement>(null)
+
+  // Track internal isolation state from PageTree (double-click) so we can
+  // switch stageWidth and trigger FogmaCanvas's auto-fit-on-width-change.
+  const [internalIsolated, setInternalIsolated] = useState<string | null>(null)
+
+  // Effective isolation: external prop wins when defined (sidebar nav).
+  // Uncontrolled: driven by internal state (double-click).
+  const isIsolated =
+    controlledIsolatedPath !== undefined ? true : internalIsolated !== null
+
+  const stageWidth = isIsolated ? ISOLATION_STAGE_W : GRID_STAGE_W
+  const stageHeight = isIsolated ? ISOLATION_STAGE_H : GRID_STAGE_H
+  const fitMode = isIsolated ? "width" : "both"
+
+  const handleBack = () => {
+    setInternalIsolated(null)
+    onBackProp?.()
+  }
+
+  return (
+    <FogmaCanvas
+      containerRef={containerRef}
+      stageRef={stageRef}
+      stageWidth={stageWidth}
+      stageHeight={stageHeight}
+      fitMode={fitMode}
+    >
+      <PageTree
+        entries={[...fogmaConfig.pages]}
+        isolatedPath={controlledIsolatedPath}
+        onBack={handleBack}
+        onIsolatedPathChange={setInternalIsolated}
+      />
+    </FogmaCanvas>
+  )
 }
 ```
 
@@ -682,21 +790,87 @@ export function {{board_name}}Board() {
 ```tsx
 "use client"
 
-import { FogmaCanvas, FogmaSidebar } from "@/components/fogma"
+import { useState } from "react"
+import {
+  FogmaSidebar,
+  LocatorInit,
+  AgentActivityProvider,
+  type FogmaSelection,
+  DesignSystemBoard,
+  IframeGallery,
+  PageTree,
+} from "@fogma/registry"
 {{board_imports}}
+import { fogmaConfig } from "./fogma.config"
+
+const PAGE_ROUTES = [{{page_routes}}] as const
+const BLOCK_SLUGS = [{{block_slugs}}] as const
 
 export default function FogmaPage() {
+  const [selection, setSelection] = useState<FogmaSelection>({
+    kind: "section",
+    sectionId: "{{first_section_id}}",
+  })
+
+  // Determine which main view to show.
+  const view: {{view_union}} =
+    selection.kind === "page"
+      ? "pages"
+      : selection.kind === "section"
+        ? (selection.sectionId as {{view_union}})
+        : "{{first_section_id}}"
+
+  // When the user clicked a page leaf in the sidebar, isolate that page.
+  const isolatedPath = selection.kind === "page" ? selection.path : undefined
+
   return (
-    <div className="flex h-screen bg-fogma-surface">
-      <FogmaSidebar sections={[
-{{sidebar_entries}}
-      ]} />
-      <FogmaCanvas>
+    <AgentActivityProvider blockSlugs={BLOCK_SLUGS} projectRoot="">
+      <LocatorInit mountPath="/fogma" />
+      <div className="flex h-screen overflow-hidden">
+        <FogmaSidebar
+          selection={selection}
+          onSelect={setSelection}
+          sections={[
+{{sidebar_sections}}
+          ]}
+          routes={PAGE_ROUTES}
+        />
+        <div className="relative flex flex-1 overflow-hidden">
 {{board_renders}}
-      </FogmaCanvas>
-    </div>
+        </div>
+      </div>
+    </AgentActivityProvider>
   )
 }
+```
+
+`board_imports` example expansion (default imports, in sidebar order):
+
+```
+import DesignSystemBoardView from "./design-system-board"
+import ComponentsBoardView from "./components-board"
+import PagesBoardView from "./pages-board"
+```
+
+`sidebar_sections` example expansion:
+
+```
+            { id: "design-system", title: DesignSystemBoard.defaultTitle, icon: DesignSystemBoard.icon },
+            { id: "components", title: IframeGallery.defaultTitle, icon: IframeGallery.icon },
+            { id: "pages", title: PageTree.defaultTitle, icon: PageTree.icon },
+```
+
+`board_renders` example expansion (the pages board gets `isolatedPath` + `onBack`):
+
+```tsx
+          {view === "design-system" && <DesignSystemBoardView />}
+          {view === "components" && <ComponentsBoardView />}
+          {view === "pages" && (
+            <PagesBoardView
+              isolatedPath={isolatedPath}
+              onBack={() => setSelection({ kind: "section", sectionId: "pages" })}
+            />
+          )}
 ```
 
 ### Template 6 — `.claude/hooks/post-tool-use.sh`
