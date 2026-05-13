@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowRight } from "iconoir-react"
+import { ArrowRight } from "lucide-react"
 import { FogmaIcon } from "@fogma/registry"
 
 export default function Home() {

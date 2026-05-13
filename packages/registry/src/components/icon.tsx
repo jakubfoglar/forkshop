@@ -1,9 +1,12 @@
 import type { ComponentType, SVGProps } from "react"
 
-type IconoirComponent = ComponentType<SVGProps<SVGSVGElement> & { strokeWidth?: number | string }>
+// Compatible with Lucide icons (and any icon library that follows the same shape).
+export type FogmaIconComponent = ComponentType<
+  SVGProps<SVGSVGElement> & { strokeWidth?: number | string; size?: number | string }
+>
 
 type FogmaIconProps = {
-  icon: IconoirComponent
+  icon: FogmaIconComponent
   className?: string
   "aria-label"?: string
   "aria-hidden"?: boolean

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react"
 import { FogmaIcon } from "../icon.js"
-import { Xmark } from "iconoir-react"
+import { X } from "lucide-react"
 
 export function HelpModal({
   open,
@@ -60,7 +60,7 @@ export function HelpModal({
           className="rounded-fogma-lg p-fogma-2 text-fogma-fg-muted transition-colors hover:bg-fogma-surface-2 hover:text-fogma-fg"
           aria-label="Close"
         >
-          <FogmaIcon icon={Xmark} className="size-fogma-4" />
+          <FogmaIcon icon={X} className="size-fogma-4" />
         </button>
       </div>
       <p className="sr-only">Quick reference for editing in fogma.</p>

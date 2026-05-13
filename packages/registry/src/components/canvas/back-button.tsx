@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeft } from "iconoir-react"
+import { ArrowLeft } from "lucide-react"
 import { FogmaIcon } from "../icon.js"
 
 export function BackButton({

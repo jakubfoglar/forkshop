@@ -27,7 +27,7 @@
   "dependencies": {
     "@locator/runtime": "^0.5.1",
     "clsx": "^2.1.1",
-    "iconoir-react": "^7.0.0",
+    "lucide-react": "^1.14.0",
     "motion": "^11.0.0"
   },
   "devDependencies": {

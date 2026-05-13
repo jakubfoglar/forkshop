@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Check, Xmark } from "iconoir-react"
+import { Check, X } from "lucide-react"
 import { createPortal } from "react-dom"
 import { cn } from "../../lib/cn.js"
 import { FogmaIcon } from "../icon.js"
@@ -79,7 +79,7 @@ export function EditPopover({
               className="rounded-fogma-full p-fogma-0.5 text-fogma-fg-muted hover:bg-fogma-surface-2 hover:text-fogma-fg"
               aria-label="Dismiss error"
             >
-              <FogmaIcon icon={Xmark} className="size-fogma-4" />
+              <FogmaIcon icon={X} className="size-fogma-4" />
             </button>
           </>
         )}
@@ -96,7 +96,7 @@ export function EditPopover({
           aria-label="Discard edit"
           title="Discard (esc)"
         >
-          <FogmaIcon icon={Xmark} className="size-fogma-5" />
+          <FogmaIcon icon={X} className="size-fogma-5" />
         </button>
         <button
           type="button"
