@@ -117,6 +117,51 @@ Hold the narrative + the raw signals (auth lib name, route-group names, mobile-p
 
 ## Phase 2 — Scan for primitives, blocks, routes
 
+Three scans, all silent. Output is data for Phase 3 — do not show progress to the user.
+
+### Scan A — Primitives
+
+1. If `components/ui/` exists (the shadcn convention), list its direct `.tsx` files. Filter out filenames that are clearly not primitives (`use-toast.ts`, `index.ts`, `utils.ts`, anything under a `_` prefix).
+2. Otherwise, grep `components/**/*.tsx` for filenames matching this canonical set (case-insensitive): `button`, `badge`, `input`, `select`, `card`, `dialog`, `tooltip`, `avatar`, `tabs`, `switch`, `checkbox`, `radio`, `label`, `textarea`, `separator`, `skeleton`, `popover`, `dropdown`, `typography`, `heading`.
+3. For each candidate, briefly open the file (head ~30 lines) and confirm there's a default or named export of the same name. This guards against false positives like `button-helpers.ts`, `dialog-context.ts`.
+4. Cap at ~12 primitives. If more candidates exist, sort by import-count across `app/**/*.tsx` and keep the top 12. Note the cap in the proposal so the user knows you trimmed.
+
+### Scan B — Blocks
+
+1. Look for any of: `components/blocks/`, `components/sections/`, `components/marketing/`, `components/site/`. If multiple match, prefer `blocks/` over `sections/` over the others.
+2. List direct `.tsx` exports of the chosen folder.
+3. For each block, find its first usage in `app/**/*.tsx`. Capture the *literal* props passed in that usage — those become the **fixture** the proposal references. If no usage exists, mark the block as "no fixture; will use empty props."
+4. If none of the candidate folders exist, skip the Blocks section in the proposal. Note this in the narrative ("I didn't find an obvious blocks folder").
+
+### Scan C — Routes
+
+1. Recurse `app/**` for `page.tsx`. Group by the closest enclosing route group (the nearest parent directory wrapped in parentheses).
+2. Static routes (no `[slug]` in the path) → list directly.
+3. Dynamic routes (`[slug]`, `[id]`, etc.) → flag as needing an enumeration source. The proposal will offer `autoDiscover: true` with a TODO marker for the user to add explicit enumeration if needed.
+4. Surface in the proposal as **counts only** ("8 routes under `(marketing)`"). The per-route list will render in the actual sidebar after install — no need to dump it into the proposal.
+
+### Output shape
+
+After Phase 2, you hold an internal data structure roughly like:
+
+```
+narrative: "<2-3 sentence narrative from Phase 1>"
+projectFlags: { mobileProfile: false, tailwindMajor: 3, monorepo: false }
+primitives: [
+  { name: "Button", path: "@/components/ui/button" },
+  { name: "Badge", path: "@/components/ui/badge" },
+]
+blocks: [
+  { name: "Hero", path: "@/components/blocks/hero", fixture: "title=\"...\" eyebrow=\"...\"" },
+]
+routes: [
+  { group: "(marketing)", count: 8, hasDynamic: false },
+  { group: "(authenticated)", count: 12, hasDynamic: true },
+]
+```
+
+Do not render this to the user. It is the input to Phase 3.
+
 ## Phase 3 — Build the consolidated proposal
 
 ## Phase 4 — Iterate
