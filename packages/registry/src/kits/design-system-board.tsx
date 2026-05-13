@@ -217,7 +217,7 @@ function DesignSystemBoardInner({
           style={{ height: p.height, transition: "box-shadow 120ms ease-out" }}
           className="border border-fogma-border bg-fogma-surface shadow-xs"
         >
-          <div className="p-4">{p.render()}</div>
+          <div className="p-fogma-4">{p.render()}</div>
         </CanvasNode>
       ))}
 
@@ -470,7 +470,7 @@ function ColorCardInner({
         outline: outlineFor(isSelected, isHovered),
         outlineOffset: 0,
       }}
-      className="flex items-center gap-1 rounded border border-fogma-border bg-fogma-surface px-1 shadow-xs"
+      className="flex items-center gap-fogma-1 rounded-fogma-xxs border border-fogma-border bg-fogma-surface px-fogma-1 shadow-xs"
     >
       <span
         aria-hidden="true"
@@ -478,9 +478,9 @@ function ColorCardInner({
           background: node.hex,
           boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.08)",
         }}
-        className="size-4 shrink-0 rounded"
+        className="size-fogma-4 shrink-0 rounded-fogma-xxs"
       />
-      <span className="truncate text-xs text-fogma-fg-muted">{node.name}</span>
+      <span className="truncate text-fogma-xs text-fogma-fg-muted">{node.name}</span>
     </div>
   )
 }

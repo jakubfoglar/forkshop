@@ -129,24 +129,24 @@ export function FogmaSidebar({
   return (
     <aside className="flex h-full w-[240px] shrink-0 flex-col border-r border-fogma-border bg-fogma-surface">
       {/* Header */}
-      <div className="flex shrink-0 items-center justify-between gap-1.5 border-b border-fogma-border bg-fogma-surface px-3 pb-2 pt-2.5">
-        <div className="flex items-center gap-1.5">
-          <span className="text-sm font-semibold tracking-tight text-fogma-fg">Fogma</span>
+      <div className="flex shrink-0 items-center justify-between gap-fogma-1.5 border-b border-fogma-border bg-fogma-surface px-fogma-3 pb-fogma-2 pt-fogma-2.5">
+        <div className="flex items-center gap-fogma-1.5">
+          <span className="text-fogma-sm font-fogma-semibold tracking-fogma-tight text-fogma-fg">Fogma</span>
         </div>
         <button
           type="button"
           onClick={() => setHelpOpen(true)}
-          className="rounded-lg p-2 text-fogma-fg-muted transition-colors hover:bg-fogma-surface-2 hover:text-fogma-fg"
+          className="rounded-fogma-lg p-fogma-2 text-fogma-fg-muted transition-colors hover:bg-fogma-surface-2 hover:text-fogma-fg"
           aria-label="How to use fogma"
           title="How to use fogma"
         >
-          <InfoCircle className="size-4" strokeWidth={2} />
+          <InfoCircle className="size-fogma-4" strokeWidth={2} />
         </button>
         <HelpModal open={helpOpen} onOpenChange={setHelpOpen} />
       </div>
 
       {/* Body */}
-      <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-2 pb-2">
+      <div className="flex min-h-0 flex-1 flex-col gap-fogma-1 overflow-y-auto px-fogma-2 pb-fogma-2">
         {/* Design sections */}
         {sections.length > 0 && (
           <>
@@ -251,7 +251,7 @@ export function FogmaSidebar({
 
 function SectionHeader({ children }: { children: string }) {
   return (
-    <div className="mt-2 shrink-0 px-1 pb-2 text-[10px] font-medium uppercase tracking-wider text-fogma-fg-muted">
+    <div className="mt-fogma-2 shrink-0 px-fogma-1 pb-fogma-2 text-[10px] font-fogma-medium uppercase tracking-fogma-wider text-fogma-fg-muted">
       {children}
     </div>
   )
@@ -288,7 +288,7 @@ function SidebarRow({
     <div className="shrink-0">
       <div
         className={cn(
-          "flex items-center rounded py-2 text-xs",
+          "flex items-center rounded-fogma-xxs py-fogma-2 text-fogma-xs",
           rowVariant(agentActive, active),
         )}
         style={{ paddingLeft: `${Math.max(0, depth - 1) * 0.75}rem` }}
@@ -299,25 +299,25 @@ function SidebarRow({
             type="button"
             onClick={onToggleExpand}
             aria-label={expanded ? "Collapse" : "Expand"}
-            className="mr-1 flex size-4 items-center justify-center text-current opacity-70 hover:opacity-100"
+            className="mr-fogma-1 flex size-fogma-4 items-center justify-center text-current opacity-70 hover:opacity-100"
           >
             {expanded ? (
-              <NavArrowDown className="size-4" strokeWidth={2} />
+              <NavArrowDown className="size-fogma-4" strokeWidth={2} />
             ) : (
-              <NavArrowRight className="size-4" strokeWidth={2} />
+              <NavArrowRight className="size-fogma-4" strokeWidth={2} />
             )}
           </button>
         ) : (
-          <span className="mr-1 size-4" />
+          <span className="mr-fogma-1 size-fogma-4" />
         )}
         {/* icon column */}
-        <span className="mr-1.5 flex size-3.5 shrink-0 items-center justify-center text-current opacity-60">
+        <span className="mr-fogma-1.5 flex size-fogma-3.5 shrink-0 items-center justify-center text-current opacity-60">
           {Icon && <Icon className="size-full" strokeWidth={2} />}
         </span>
         {agentActive && (
           <span
             aria-hidden="true"
-            className="mr-1 inline-block size-1.5 shrink-0 rounded-full bg-fogma-accent"
+            className="mr-fogma-1 inline-block size-fogma-1.5 shrink-0 rounded-fogma-full bg-fogma-accent"
             style={{ animation: "fogma-agent-pulse 1.2s infinite" }}
           />
         )}
@@ -325,25 +325,25 @@ function SidebarRow({
         <button
           type="button"
           onClick={onClick}
-          className="min-w-0 flex-1 truncate py-2 pr-1 text-left"
+          className="min-w-0 flex-1 truncate py-fogma-2 pr-fogma-1 text-left"
         >
           {label}
         </button>
         {agentActive && agentFileLabel !== undefined && (
-          <span className="mr-1 shrink-0 truncate text-[9px] text-fogma-accent">
+          <span className="mr-fogma-1 shrink-0 truncate text-[9px] text-fogma-accent">
             {agentFileLabel}
           </span>
         )}
         {isNew && (
           <span
-            className="mr-1 shrink-0 rounded-lg px-1 py-[1px] text-[9px] font-medium uppercase tracking-wider"
+            className="mr-fogma-1 shrink-0 rounded-fogma-lg px-fogma-1 py-[1px] text-[9px] font-fogma-medium uppercase tracking-fogma-wider"
             style={{ background: "oklch(0.62 0.22 280)", color: "white" }}
           >
             New
           </span>
         )}
         {draft && (
-          <span className="mr-2 shrink-0 rounded-lg bg-fogma-surface-2 px-1 py-[1px] text-[9px] font-medium uppercase tracking-wider text-fogma-fg-muted">
+          <span className="mr-fogma-2 shrink-0 rounded-fogma-lg bg-fogma-surface-2 px-fogma-1 py-[1px] text-[9px] font-fogma-medium uppercase tracking-fogma-wider text-fogma-fg-muted">
             Draft
           </span>
         )}

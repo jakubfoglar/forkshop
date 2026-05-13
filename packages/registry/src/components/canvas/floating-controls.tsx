@@ -18,8 +18,8 @@ export function FloatingControls({
   onToggleCompose?: () => void
 }) {
   return (
-    <div className="pointer-events-none absolute bottom-4 right-4 z-10 flex flex-col items-end gap-1">
-      <div className="pointer-events-auto flex items-center gap-0.5 rounded-full border border-fogma-border bg-fogma-surface px-1 py-0.5 shadow-sm">
+    <div className="pointer-events-none absolute bottom-fogma-4 right-fogma-4 z-10 flex flex-col items-end gap-fogma-1">
+      <div className="pointer-events-auto flex items-center gap-fogma-0.5 rounded-fogma-full border border-fogma-border bg-fogma-surface px-fogma-1 py-fogma-0.5 shadow-sm">
         {composeAvailable && (
           <button
             type="button"
@@ -27,7 +27,7 @@ export function FloatingControls({
             aria-pressed={composeEnabled}
             title="Toggle compose mode (drag to reorder, + to insert, × to remove)"
             className={cn(
-              "rounded-full px-2 py-0.5 text-xs font-medium transition-colors",
+              "rounded-fogma-full px-fogma-2 py-fogma-0.5 text-fogma-xs font-fogma-medium transition-colors",
               composeEnabled
                 ? "bg-fogma-accent/10 text-fogma-accent hover:bg-fogma-accent/20"
                 : "text-fogma-fg-muted hover:bg-fogma-surface-2 hover:text-fogma-fg",
@@ -39,17 +39,17 @@ export function FloatingControls({
         <button
           type="button"
           onClick={onFit}
-          className="rounded-full px-2 py-0.5 text-xs font-medium text-fogma-fg-muted hover:bg-fogma-surface-2 hover:text-fogma-fg"
+          className="rounded-fogma-full px-fogma-2 py-fogma-0.5 text-fogma-xs font-fogma-medium text-fogma-fg-muted hover:bg-fogma-surface-2 hover:text-fogma-fg"
         >
           Fit
         </button>
-        <span className="min-w-7 px-1 text-center text-xs tabular-nums text-fogma-fg-muted">
+        <span className="min-w-fogma-7 px-fogma-1 text-center text-fogma-xs tabular-nums text-fogma-fg-muted">
           {Math.round(zoom * 100)}%
         </span>
         <button
           type="button"
           onClick={onResetZoom}
-          className="rounded-full px-2 py-0.5 text-xs font-medium text-fogma-fg-muted hover:bg-fogma-surface-2 hover:text-fogma-fg"
+          className="rounded-fogma-full px-fogma-2 py-fogma-0.5 text-fogma-xs font-fogma-medium text-fogma-fg-muted hover:bg-fogma-surface-2 hover:text-fogma-fg"
         >
           100%
         </button>

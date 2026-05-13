@@ -67,19 +67,19 @@ export function EditPopover({
   return createPortal(
     <div
       style={{ position: "fixed", left: position.left, top: position.top, zIndex: 100 }}
-      className="-translate-y-full pl-1"
+      className="-translate-y-full pl-fogma-1"
     >
-      <div className="flex items-center gap-0.5 rounded-full border border-fogma-border bg-fogma-surface py-0.5 pl-1 pr-0.5 shadow-md">
+      <div className="flex items-center gap-fogma-0.5 rounded-fogma-full border border-fogma-border bg-fogma-surface py-fogma-0.5 pl-fogma-1 pr-fogma-0.5 shadow-md">
         {error && (
           <>
-            <span className="px-1 text-xs text-red-600">{error}</span>
+            <span className="px-fogma-1 text-fogma-xs text-red-600">{error}</span>
             <button
               type="button"
               onClick={onDismissError}
-              className="rounded-full p-0.5 text-fogma-fg-muted hover:bg-fogma-surface-2 hover:text-fogma-fg"
+              className="rounded-fogma-full p-fogma-0.5 text-fogma-fg-muted hover:bg-fogma-surface-2 hover:text-fogma-fg"
               aria-label="Dismiss error"
             >
-              <FogmaIcon icon={Xmark} className="size-4" />
+              <FogmaIcon icon={Xmark} className="size-fogma-4" />
             </button>
           </>
         )}
@@ -88,7 +88,7 @@ export function EditPopover({
           onClick={onDiscard}
           disabled={isSaving}
           className={cn(
-            "rounded-full p-0.5 hover:bg-fogma-surface-2",
+            "rounded-fogma-full p-fogma-0.5 hover:bg-fogma-surface-2",
             isSaving
               ? "cursor-not-allowed opacity-40"
               : "text-fogma-fg-muted hover:text-fogma-fg",
@@ -96,20 +96,20 @@ export function EditPopover({
           aria-label="Discard edit"
           title="Discard (esc)"
         >
-          <FogmaIcon icon={Xmark} className="size-5" />
+          <FogmaIcon icon={Xmark} className="size-fogma-5" />
         </button>
         <button
           type="button"
           onClick={onSave}
           disabled={isSaving}
           className={cn(
-            "rounded-full bg-fogma-fg p-0.5 text-fogma-surface hover:bg-fogma-fg/80",
+            "rounded-fogma-full bg-fogma-fg p-fogma-0.5 text-fogma-surface hover:bg-fogma-fg/80",
             isSaving && "cursor-not-allowed opacity-60",
           )}
           aria-label="Save edit"
           title="Save (⌘↵)"
         >
-          <FogmaIcon icon={Check} className="size-5" />
+          <FogmaIcon icon={Check} className="size-fogma-5" />
         </button>
       </div>
     </div>,

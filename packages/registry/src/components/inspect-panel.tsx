@@ -25,12 +25,12 @@ export function InspectPanel({
 }) {
   return (
     <aside className="flex w-[340px] flex-col border-l border-fogma-border bg-fogma-surface">
-      <div className="flex items-center justify-between border-b border-fogma-border px-4 py-3">
-        <h3 className="text-sm font-semibold text-fogma-fg">Inspect</h3>
+      <div className="flex items-center justify-between border-b border-fogma-border px-fogma-4 py-fogma-3">
+        <h3 className="text-fogma-sm font-fogma-semibold text-fogma-fg">Inspect</h3>
         <button
           type="button"
           onClick={onClose}
-          className="rounded px-2 py-1 text-xs text-fogma-fg-muted hover:text-fogma-fg"
+          className="rounded-fogma-xxs px-fogma-2 py-fogma-1 text-fogma-xs text-fogma-fg-muted hover:text-fogma-fg"
         >
           Close
         </button>
@@ -47,37 +47,37 @@ export function InspectPanel({
 function AppliedSection({ inspection }: { inspection: InspectionResult | undefined }) {
   if (!inspection) {
     return (
-      <div className="border-b border-fogma-border px-4 py-3">
-        <p className="text-xs text-fogma-fg-muted">
+      <div className="border-b border-fogma-border px-fogma-4 py-fogma-3">
+        <p className="text-fogma-xs text-fogma-fg-muted">
           Click any element in the desktop frame to inspect.
         </p>
       </div>
     )
   }
   return (
-    <div className="border-b border-fogma-border px-4 py-3">
-      <div className="mb-3 flex items-baseline justify-between">
-        <h4 className="text-xs font-semibold uppercase tracking-wider text-fogma-fg-muted">
+    <div className="border-b border-fogma-border px-fogma-4 py-fogma-3">
+      <div className="mb-fogma-3 flex items-baseline justify-between">
+        <h4 className="text-fogma-xs font-fogma-semibold uppercase tracking-fogma-wider text-fogma-fg-muted">
           Selected
         </h4>
-        <code className="text-xs text-fogma-fg">{`<${inspection.tagName}>`}</code>
+        <code className="text-fogma-xs text-fogma-fg">{`<${inspection.tagName}>`}</code>
       </div>
       {inspection.textPreview && (
-        <p className="mb-3 truncate text-xs text-fogma-fg">"{inspection.textPreview}"</p>
+        <p className="mb-fogma-3 truncate text-fogma-xs text-fogma-fg">"{inspection.textPreview}"</p>
       )}
       {inspection.applied.length === 0 && inspection.unknownClasses.length === 0 && (
-        <p className="text-xs text-fogma-fg-muted">No tokenized classes on this element.</p>
+        <p className="text-fogma-xs text-fogma-fg-muted">No tokenized classes on this element.</p>
       )}
-      <ul className="space-y-2">
+      <ul className="space-y-fogma-2">
         {inspection.applied.map((token) => (
           <li key={token.className}>
             <AppliedRow token={token} />
           </li>
         ))}
         {inspection.unknownClasses.map((className) => (
-          <li key={className} className="flex items-center gap-2">
-            <code className="text-xs text-fogma-fg-muted">{className}</code>
-            <span className="text-xs text-fogma-fg-muted">(non-token)</span>
+          <li key={className} className="flex items-center gap-fogma-2">
+            <code className="text-fogma-xs text-fogma-fg-muted">{className}</code>
+            <span className="text-fogma-xs text-fogma-fg-muted">(non-token)</span>
           </li>
         ))}
       </ul>
@@ -87,10 +87,10 @@ function AppliedSection({ inspection }: { inspection: InspectionResult | undefin
 
 function AppliedRow({ token }: { token: AppliedToken }) {
   return (
-    <div className="flex items-center justify-between gap-2 rounded px-2 py-1 hover:bg-gray-50">
-      <div className="flex min-w-0 items-center gap-2">
+    <div className="flex items-center justify-between gap-fogma-2 rounded-fogma-xxs px-fogma-2 py-fogma-1 hover:bg-gray-50">
+      <div className="flex min-w-0 items-center gap-fogma-2">
         <TokenSwatch entry={token.entry} />
-        <code className="truncate font-mono text-xs text-fogma-fg">{token.className}</code>
+        <code className="truncate font-mono text-fogma-xs text-fogma-fg">{token.className}</code>
       </div>
       <TokenValue entry={token.entry} />
     </div>
@@ -127,15 +127,15 @@ function CatalogCategory({
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-gray-50"
+        className="flex w-full items-center justify-between px-fogma-4 py-fogma-3 text-left hover:bg-gray-50"
       >
-        <span className="text-xs font-semibold text-fogma-fg">{label}</span>
-        <span className="text-xs text-fogma-fg-muted">
+        <span className="text-fogma-xs font-fogma-semibold text-fogma-fg">{label}</span>
+        <span className="text-fogma-xs text-fogma-fg-muted">
           {entries.length} {open ? "▾" : "▸"}
         </span>
       </button>
       {open && (
-        <ul className="space-y-2 px-4 pb-3">
+        <ul className="space-y-fogma-2 px-fogma-4 pb-fogma-3">
           {entries.map((entry) => (
             <li key={tokenKey(entry)}>
               <CatalogRow entry={entry} />
@@ -153,10 +153,10 @@ function tokenKey(entry: TokenEntry): string {
 
 function CatalogRow({ entry }: { entry: TokenEntry }) {
   return (
-    <div className="flex items-center justify-between gap-2 rounded px-2 py-1 hover:bg-gray-50">
-      <div className="flex min-w-0 items-center gap-2">
+    <div className="flex items-center justify-between gap-fogma-2 rounded-fogma-xxs px-fogma-2 py-fogma-1 hover:bg-gray-50">
+      <div className="flex min-w-0 items-center gap-fogma-2">
         <TokenSwatch entry={entry} />
-        <code className="truncate font-mono text-xs text-fogma-fg">{entry.name}</code>
+        <code className="truncate font-mono text-fogma-xs text-fogma-fg">{entry.name}</code>
       </div>
       <TokenValue entry={entry} />
     </div>
@@ -168,7 +168,7 @@ function TokenSwatch({ entry }: { entry: TokenEntry }) {
     return (
       <span
         aria-hidden
-        className="inline-block size-4 shrink-0 rounded-md border border-fogma-border"
+        className="inline-block size-fogma-4 shrink-0 rounded-fogma-md border border-fogma-border"
         style={{ background: entry.hex }}
       />
     )
@@ -187,7 +187,7 @@ function TokenSwatch({ entry }: { entry: TokenEntry }) {
     return (
       <span
         aria-hidden
-        className="inline-block w-6 shrink-0 text-center font-semibold text-fogma-fg"
+        className="inline-block w-fogma-6 shrink-0 text-center font-fogma-semibold text-fogma-fg"
         style={{ fontSize: "0.875rem", lineHeight: 1 }}
       >
         Aa
@@ -198,7 +198,7 @@ function TokenSwatch({ entry }: { entry: TokenEntry }) {
     return (
       <span
         aria-hidden
-        className="inline-block w-6 shrink-0 text-center text-fogma-fg"
+        className="inline-block w-fogma-6 shrink-0 text-center text-fogma-fg"
         style={{ fontSize: "0.875rem", lineHeight: 1, fontWeight: entry.weight }}
       >
         Aa
@@ -209,7 +209,7 @@ function TokenSwatch({ entry }: { entry: TokenEntry }) {
     return (
       <span
         aria-hidden
-        className="inline-block size-4 shrink-0 border border-fogma-border-strong"
+        className="inline-block size-fogma-4 shrink-0 border border-fogma-border-strong"
         style={{ borderTopLeftRadius: entry.value, background: "#f8fafc" }}
       />
     )
@@ -218,7 +218,7 @@ function TokenSwatch({ entry }: { entry: TokenEntry }) {
     return (
       <span
         aria-hidden
-        className="inline-block size-4 shrink-0 rounded-md"
+        className="inline-block size-fogma-4 shrink-0 rounded-fogma-md"
         style={{ background: "#fff", boxShadow: entry.value }}
       />
     )
@@ -238,37 +238,37 @@ function TokenSwatch({ entry }: { entry: TokenEntry }) {
 function TokenValue({ entry }: { entry: TokenEntry }) {
   switch (entry.kind) {
     case "color": {
-      return <span className="text-xs tabular-nums text-fogma-fg-muted">{entry.hex}</span>
+      return <span className="text-fogma-xs tabular-nums text-fogma-fg-muted">{entry.hex}</span>
     }
     case "spacing": {
       return (
-        <span className="text-xs tabular-nums text-fogma-fg-muted">
+        <span className="text-fogma-xs tabular-nums text-fogma-fg-muted">
           {entry.px === undefined ? entry.rem : `${entry.px}px`}
         </span>
       )
     }
     case "fontSize": {
       return (
-        <span className="truncate text-xs tabular-nums text-fogma-fg-muted" title={entry.value}>
+        <span className="truncate text-fogma-xs tabular-nums text-fogma-fg-muted" title={entry.value}>
           {entry.value.startsWith("clamp") ? "fluid" : entry.value}
         </span>
       )
     }
     case "fontWeight": {
-      return <span className="text-xs tabular-nums text-fogma-fg-muted">{entry.weight}</span>
+      return <span className="text-fogma-xs tabular-nums text-fogma-fg-muted">{entry.weight}</span>
     }
     case "radius": {
-      return <span className="text-xs tabular-nums text-fogma-fg-muted">{entry.value}</span>
+      return <span className="text-fogma-xs tabular-nums text-fogma-fg-muted">{entry.value}</span>
     }
     case "shadow": {
       return (
-        <span className="max-w-6 truncate text-xs text-fogma-fg-muted" title={entry.value}>
+        <span className="max-w-fogma-6 truncate text-fogma-xs text-fogma-fg-muted" title={entry.value}>
           shadow
         </span>
       )
     }
     case "container": {
-      return <span className="text-xs tabular-nums text-fogma-fg-muted">{entry.value}</span>
+      return <span className="text-fogma-xs tabular-nums text-fogma-fg-muted">{entry.value}</span>
     }
     default: {
       return <></>

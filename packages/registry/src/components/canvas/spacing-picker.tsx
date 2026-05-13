@@ -48,10 +48,10 @@ export function SpacingPicker({
   const isBlock = containingBlock !== undefined
   return createPortal(
     <>
-      <div className="fixed inset-0 z-[99]" onClick={onClose} />
+      <div className="fixed inset-fogma-0 z-[99]" onClick={onClose} />
       <div
         className={cn(
-          "fixed z-[100] flex flex-col gap-1 rounded-xl border bg-fogma-surface p-1.5 shadow-lg",
+          "fixed z-[100] flex flex-col gap-fogma-1 rounded-fogma-xl border bg-fogma-surface p-fogma-1.5 shadow-lg",
           // purple-300 / purple-100 / purple-700 are intentional overlay colours that
           // visually distinguish block-scoped spacing zones (purple) from page zones (fogma-border).
           isBlock ? "border-purple-300" : "border-fogma-border",
@@ -63,16 +63,16 @@ export function SpacingPicker({
         }}
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-center gap-1 px-1 pb-0.5 font-mono text-xs">
+        <div className="flex items-center gap-fogma-1 px-fogma-1 pb-fogma-0.5 font-mono text-fogma-xs">
           {isBlock && (
             // purple-100/purple-700: intentional block-scope indicator colour (see comment above)
-            <span className="rounded-lg bg-purple-100 px-1 py-[1px] text-[10px] font-medium uppercase tracking-wide text-purple-700">
+            <span className="rounded-fogma-lg bg-purple-100 px-fogma-1 py-[1px] text-[10px] font-fogma-medium uppercase tracking-wide text-purple-700">
               {containingBlock}
             </span>
           )}
           <span className="text-fogma-fg-muted">{currentClass}</span>
         </div>
-        <div className="flex max-w-[28rem] flex-wrap gap-0.5">
+        <div className="flex max-w-[28rem] flex-wrap gap-fogma-0.5">
           {entries.map((entry) => {
             const isCurrent = entry.name === currentName
             return (
@@ -81,7 +81,7 @@ export function SpacingPicker({
                 type="button"
                 onClick={() => onSelect(`${prefix}${entry.name}`)}
                 className={cn(
-                  "flex flex-col items-center rounded px-1.5 py-1 text-center font-mono text-xs leading-tight transition-colors",
+                  "flex flex-col items-center rounded-fogma-xxs px-fogma-1.5 py-fogma-1 text-center font-mono text-fogma-xs leading-tight transition-colors",
                   // purple-600: intentional block-scope selected state (see comment above)
                   isCurrent && isBlock && "bg-purple-600 text-fogma-surface",
                   isCurrent && !isBlock && "bg-fogma-fg text-fogma-surface",
