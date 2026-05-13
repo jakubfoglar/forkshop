@@ -5,6 +5,11 @@
   "type": "module",
   "bin": { "fogma": "./dist/index.js" },
   "files": ["dist"],
+  "exports": {
+    ".": "./dist/index.js",
+    "./manifest-builder": "./src/manifest-builder.ts",
+    "./manifest-schema": "./src/manifest-schema.ts"
+  },
   "scripts": {
     "build": "tsx scripts/build.ts",
     "dev": "tsx src/index.ts",
