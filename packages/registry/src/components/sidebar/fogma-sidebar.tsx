@@ -148,7 +148,7 @@ export function FogmaSidebar({
         <button
           type="button"
           onClick={() => setHelpOpen(true)}
-          className="rounded-fogma-lg p-fogma-2 text-fogma-fg-muted transition-colors hover:bg-fogma-surface-2 hover:text-fogma-fg"
+          className="rounded-fogma-sm p-fogma-2 text-fogma-fg-muted transition-colors hover:bg-fogma-surface-2 hover:text-fogma-fg"
           aria-label="How to use fogma"
           title="How to use fogma"
         >
@@ -312,7 +312,7 @@ function SidebarRow({
     <div className="shrink-0">
       <div
         className={cn(
-          "flex items-center rounded-fogma-lg text-fogma-xs",
+          "flex items-center rounded-fogma-md text-fogma-xs",
           rowVariant(agentActive, active),
         )}
         style={{ paddingLeft: `${Math.max(0, depth - 1) * 0.75}rem` }}
