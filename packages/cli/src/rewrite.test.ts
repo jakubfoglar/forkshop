@@ -16,7 +16,7 @@ const DEFAULT_ALIASES: AliasMap = {
   "@fogma/tailwind": "@/lib/fogma/tailwind",
 }
 
-const FIXTURES = ["plain", "dynamic", "type-only", "re-export", "mixed", "js-suffix"]
+const FIXTURES = ["plain", "dynamic", "type-only", "re-export", "mixed", "js-suffix", "unmatched"]
 
 describe("rewriteImports", () => {
   for (const fixture of FIXTURES) {
@@ -48,5 +48,14 @@ describe("rewriteImports", () => {
     const source = `import { X } from "@fogma/components/canvas/x"`
     const expected = `import { X } from "@/bar/canvas/x"`
     expect(rewriteImports(source, aliases)).toBe(expected)
+  })
+
+  it("returns empty string for empty input", () => {
+    expect(rewriteImports("", DEFAULT_ALIASES)).toBe("")
+  })
+
+  it("returns input unchanged when aliases map is empty", () => {
+    const source = `import { X } from "@fogma/lib/foo"`
+    expect(rewriteImports(source, {})).toBe(source)
   })
 })

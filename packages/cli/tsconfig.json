@@ -7,5 +7,7 @@
     "noEmit": true
   },
   "include": ["src/**/*"],
+  // Fixture files contain @fogma/* imports that intentionally don't resolve
+  // from this package — they're read as raw strings by the test suite.
   "exclude": ["node_modules", "dist", "src/__fixtures__"]
 }

@@ -14,18 +14,23 @@ export function rewriteImports(source: string, aliases: AliasMap): string {
 
   function rewriteSpecifier(spec: string): string {
     if (!spec.startsWith("@fogma/")) return spec
-    // Strip trailing .js
+    // Strip trailing .js so prefix matching ignores file-suffix style. Only used
+    // when an alias matches; unmatched specifiers retain their original form.
     const noJs = spec.replace(/\.js$/, "")
     for (const prefix of sortedPrefixes) {
       if (noJs === prefix || noJs.startsWith(`${prefix}/`)) {
         const replacement = aliases[prefix]
+        // Unreachable in practice: `prefix` came from Object.keys(aliases) so
+        // `aliases[prefix]` is always defined. The guard exists only to satisfy
+        // noUncheckedIndexedAccess; the `continue` is defensive.
         if (replacement === undefined) continue
         const suffix = noJs.slice(prefix.length) // includes leading "/" or empty
         return `${replacement}${suffix}`
       }
     }
-    // No alias matched — leave as-is (caller's responsibility to handle).
-    return noJs
+    // No alias matched — leave the specifier untouched, including any .js suffix.
+    // Callers (init/add) use this to detect missing aliases by string equality.
+    return spec
   }
 
   // Match: from "..." | from '...'
