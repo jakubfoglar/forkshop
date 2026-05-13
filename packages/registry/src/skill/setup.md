@@ -191,28 +191,34 @@ Also touching (automatic — required for Fogma to render right):
   • tailwind.config.ts — adds `presets: [require("./lib/fogma/tailwind/fogma-preset")]`
     so Fogma's UI styles itself via `fogma-*` tokens without leaking into your tokens.
 
-Opt-ins (I'll ask before touching each):
-  [1] Locator.js for option-click open-in-editor
-        Touches: next.config.ts (turbopack rule), <aliases.mount>/layout.tsx (mount)
-        Installs: @locator/runtime, @locator/webpack-loader (dev)
-  [2] Live-AI awareness hook
-        Touches: .claude/settings.json (one hook entry)
-        Writes:  .claude/hooks/post-tool-use.sh (new file)
-  [3] Live-editing cadence note in root CLAUDE.md
-        Appends ~20 lines describing how to break up edits when working on
-        Fogma-watched files. Snippet is preserved on doc-sync.
+Opt-ins (I'll confirm each one after you accept):
+  [1] Locator.js — Option-click any element to open its file in your editor
+  [2] Live-AI hook — sidebar pulses + canvas glows where Claude is editing
+  [3] Cadence note — teaches Claude to use small Edits on Fogma-watched files
 
-Reply with one of:
-  • "looks good" / "accept all"      → I'll proceed with everything above
-  • "rename <Section> to <Name>"     → I'll adjust section names
-  • "skip <Section>"                 → I'll drop a section
-  • "no Locator" / "yes hook"        → I'll toggle opt-ins
-  • "tools group" / "different path" → I'll switch mount path
-  • "pause"                          → I'll stop and not write anything
-
-You can also push back on the picture: "this is actually a SaaS, the (marketing)
-routes are stale" — I'll re-read and re-propose.
 ```
+
+### How to ask the user what's next
+
+After rendering the proposal template above, use the **`AskUserQuestion` tool** (not an inline text prompt) to collect the next action:
+
+```ts
+{
+  questions: [{
+    question: "Look right?",
+    header: "Proposal",
+    options: [
+      { label: "Accept all", description: "Proceed to consent prompts" },
+      { label: "Adjust",     description: "Refine sections, toggle opt-ins, change mount path" },
+      { label: "Pause",      description: "Stop, write nothing" },
+    ],
+  }],
+}
+```
+
+If "Adjust" → switch to free-form chat (Phase 4). Claude interprets natural language ("rename Foundations to Colors", "skip Blocks", "use the tools route group", "this is actually a SaaS — the marketing routes are stale") without requiring exact phrasings.
+
+If the user types a free-form change at any time instead of using the menu, just interpret it and re-render. The `AskUserQuestion` is a convenience, not a gate.
 
 ### Section composition rules
 
@@ -257,131 +263,107 @@ After rendering the Phase 3 proposal, wait for the user's reply. Loop:
 
 - **No writes during iteration.** All changes live in-memory until full acceptance. The user can experiment freely.
 - **Narrative pushback restarts Phase 1.** A correction to *what kind of project this is* invalidates downstream choices. Don't try to patch the narrative; re-derive it.
+- **After every re-render, re-invoke `AskUserQuestion`** with the same `Accept all / Adjust / Pause` options so the user can pick the next move without having to remember a phrasing. Free-form text replies are still accepted whenever the user prefers them.
 - **Soft cap at 5 iterations.** If you've re-rendered the proposal 5 times without acceptance, ask: *"We've gone back and forth a few times. Want to pause and come back, or keep refining?"* This is a check-in, not a hard stop — if the user says keep going, keep going.
 
 ## Phase 5 — Consent for config mutations
 
-Run **after** the user accepts the proposal in Phase 4, but **before** any writes. One prompt per opt-in the user kept after iteration. Each prompt opens with a one-line *why* (what the user gets), then the exact change preview, then a `Proceed?` question.
+Run *after* the user picks "Accept all" in Phase 3, but *before* any writes. **Use the `AskUserQuestion` tool** — never inline `y / n` prompts. All three opt-ins go in a **single** `AskUserQuestion` call with three questions; the user clicks through one panel and proceeds.
 
-If the user replies anything other than `y`, treat it as `n`. Each decline is local — declining one opt-in does not cancel the others. After all three prompts (or skips), proceed to Phase 6.
+Before the `AskUserQuestion` call, render a short markdown paragraph describing each opt-in's benefit + the brief what/where. No code diffs in the preamble. The user can request the full diff via the "Show me" option on any question.
 
-### 5a — Locator.js (only if opt-in [1] kept)
+### The consolidated consent panel
 
-Render verbatim:
-
-```
-I'm about to add Locator.js.
-
-Why: lets you Option-click any element in Fogma to jump to its source in
-your editor.
-
-Here's what I'll do:
-
-  next.config.ts — append turbopack rule:
-    ─────────────────────────────────────────
-    + experimental: {
-    +   turbopack: {
-    +     rules: {
-    +       "*.{js,jsx,ts,tsx}": {
-    +         loaders: ["@locator/webpack-loader"],
-    +       },
-    +     },
-    +   },
-    + },
-    ─────────────────────────────────────────
-
-  <aliases.mount>/layout.tsx — add LocatorInit mount:
-    ─────────────────────────────────────────
-    + import { LocatorInit } from "@/components/fogma/locator-init"
-      …
-    + <LocatorInit />
-    ─────────────────────────────────────────
-
-  package.json — add devDependencies:
-    @locator/runtime, @locator/webpack-loader
-
-Proceed? (y / n / show full file diff)
-```
-
-**If `next.config.ts` already has `experimental.turbopack.rules`:** instead of an append, show a *merge proposal* — what the merged block looks like with the new loader added to the existing rules object. Do not overwrite existing rules.
-
-**If the file is `.js` or `.mjs`:** convert the snippet to that module format. For `.mjs`, use ESM `export default`. For `.js` (CJS), use `module.exports =`.
-
-**If the user requests "show full file diff":** print a complete unified diff of the existing file + the proposed change.
-
-### 5b — Live-AI hook (only if opt-in [2] kept)
-
-Render verbatim:
+Render this preamble verbatim:
 
 ```
-I'm about to install the live-AI hook.
+Three opt-ins to confirm. I'll only touch the noted files for each one you
+say yes to.
 
-Why: highlights where Claude is editing right now — sidebar entry pulses,
-the rendered block in the canvas glows. Fogma already updates live on
-HMR; the hook adds the visual signal showing what's changing and where.
+  [1] Locator.js — Option-click any element to open its file at the right line.
+        Adds a turbopack rule to next.config.js, mounts <LocatorInit /> in
+        app/fogma/layout.tsx, installs @locator/runtime + @locator/webpack-loader.
 
-Here's what I'll do:
+  [2] Live-AI hook — sidebar pulses + canvas glows where Claude is editing.
+        Adds one hook entry to .claude/settings.json, writes a small
+        .claude/hooks/post-tool-use.sh script.
 
-  .claude/hooks/post-tool-use.sh — create (one new file, ~30 lines)
+  [3] Cadence note — teaches Claude to use many small Edits instead of one
+        big Write on Fogma-watched files, so you watch the page take shape
+        live instead of a single flash. Appends ~20 bracketed lines to your
+        root CLAUDE.md.
 
-  .claude/settings.json — add hook entry:
-    ─────────────────────────────────────────
-      "hooks": {
-        "PostToolUse": [
-          { "matcher": "Edit|Write|MultiEdit",
-    +       "hooks": [{
-    +         "type": "command",
-    +         "command": ".claude/hooks/post-tool-use.sh"
-    +       }]
-          }
-        ]
-      }
-    ─────────────────────────────────────────
-
-  If .claude/settings.json already has a PostToolUse hook, I'll append a
-  new entry alongside it (not overwrite).
-
-Proceed? (y / n / show full file diff)
+Pick for each — or "Show me" to see the exact changes first.
 ```
 
-**If `.claude/settings.json` does not exist:** create it with the minimal hooks block. Surface this in the preview: *"`.claude/settings.json` does not exist — I'll create it with just the hooks entry."*
+Then call `AskUserQuestion`:
 
-**If `.claude/settings.json` already has a `PostToolUse` matcher that includes `Edit|Write|MultiEdit`:** show a merge proposal that adds the Fogma hook entry alongside any existing entries in that matcher's `hooks` array.
-
-### 5c — Cadence note (only if opt-in [3] kept)
-
-Render verbatim:
-
+```ts
+{
+  questions: [
+    {
+      question: "Add Locator.js?",
+      header: "Locator.js",
+      options: [
+        { label: "Yes, add it",         description: "Option-click → editor jump" },
+        { label: "No, skip",            description: "Don't touch next.config.js" },
+        { label: "Show me the changes", description: "Render the diff first, then re-ask" },
+      ],
+    },
+    {
+      question: "Install the live-AI hook?",
+      header: "Live-AI hook",
+      options: [
+        { label: "Yes, install",        description: "Sidebar pulses + canvas glow on edits" },
+        { label: "No, skip",            description: "Don't touch .claude/settings.json" },
+        { label: "Show me the changes", description: "Render the diff first, then re-ask" },
+      ],
+    },
+    {
+      question: "Append the cadence note?",
+      header: "Cadence note",
+      options: [
+        { label: "Yes, append",         description: "Adds ~20 lines to root CLAUDE.md" },
+        { label: "No, skip",            description: "Don't touch root CLAUDE.md" },
+        { label: "Show me the snippet", description: "Render the snippet first, then re-ask" },
+      ],
+    },
+  ],
+}
 ```
-I'm about to append a Fogma cadence note to your root CLAUDE.md.
 
-Why: teaches Claude to break edits on Fogma-watched files into many small
-Edits instead of one big Write — so you watch the page take shape as the
-agent works, instead of a single flash at the end.
+### Handling "Show me…" answers
 
-Here's the snippet I'd append (~20 lines):
-  ## Fogma — editing cadence
-  …
+If any answer is `Show me…`, render the full code diff or snippet inline (the same `─────` boxed blocks used in v1 of this spec). Then re-call `AskUserQuestion` for **just that question** with only the `Yes` and `No` options (no third "Show me" — the user has already seen it).
 
-  I'll append, not rewrite. The snippet is bracketed with comment markers
-  so the fogma-doc-sync skill can refresh it later without touching your
-  other content.
+The full-diff content for each:
 
-Proceed? (y / n / show full snippet)
-```
+**Locator.js full diff** — `next.config.{ts,js,mjs}` turbopack rule (or merge proposal if `experimental` already exists), plus the new `<aliases.mount>/layout.tsx` mounting `<LocatorInit />` (or merged into existing file if present), plus the two devDependencies for `package.json`.
 
-**If root `CLAUDE.md` does not exist:** offer to create it with just the cadence note as a starter file. Surface in the preview: *"No root CLAUDE.md found — I'll create one with the cadence note as a starter."*
+**Live-AI hook full diff** — the new `.claude/hooks/post-tool-use.sh` (~30 lines, see Template 6), plus the new entry in `.claude/settings.json` (or merge proposal if a `PostToolUse` matcher already exists).
 
-**If root `CLAUDE.md` already contains a `<!-- fogma:cadence-note start -->` marker:** skip the prompt, mention in the summary that the note is already in place.
+**Cadence note full snippet** — the bracketed `<!-- fogma:cadence-note start ... -->` block (see Template 8).
 
-### Cross-prompt rules
+Render these as inline fenced code blocks with `─────` boxes around them so the user can see the proposed changes at the line level.
 
-- One short *Why* paragraph, never more. Justification, not tutorial.
-- Frame each *Why* as the user-visible benefit, not the technical mechanism.
-- Don't oversell. Honest opt-outs build trust.
-- Default to `n` on parse failure or unrecognized response. Safety over momentum.
-- "show full file diff" / "show full snippet" returns a verbatim diff or the full snippet without truncation. After showing, re-prompt `Proceed? (y / n)`.
-- The user can hand-edit a file after seeing the diff and reply *"I did it myself, skip this"* — accept and move on.
+### Edge cases
+
+- **If `next.config.ts` already has `experimental.turbopack.rules`:** the "Show me" diff shows a *merge proposal* (new loader added to existing rules object) rather than a raw append. The skill never overwrites existing rules.
+- **If the next config is `.js`/`.mjs`:** convert the turbopack rule snippet to that module format.
+- **If `.claude/settings.json` does not exist:** note this in the preamble for [2]: *"`.claude/settings.json` doesn't exist — I'll create it with just the hook entry."* The diff path shows the full file content.
+- **If `.claude/settings.json` already has a `PostToolUse` matcher covering `Edit|Write|MultiEdit`:** show a merge proposal that adds Fogma's hook entry alongside any existing entries.
+- **If root `CLAUDE.md` doesn't exist:** offer to create with just the cadence note. Note in the preamble: *"No root CLAUDE.md found — I'll create it with the cadence note as a starter."*
+- **If root `CLAUDE.md` already contains a `<!-- fogma:cadence-note start -->` marker:** skip the cadence question entirely (don't include it in the `AskUserQuestion` call). Mention in the Phase 7 summary that the note is already in place.
+
+### Rules for the consent panel
+
+- **One short benefit line per opt-in in the preamble**, never more. A justification, not a tutorial.
+- **Frame each benefit as the user-visible win**, not the technical mechanism. The user is trading a config mutation for a feature; name the feature.
+- **Don't oversell.** Honest opt-outs build trust; the skill is for share-and-forget, not lock-in.
+- **Use `AskUserQuestion` for the consent step** — single call, three questions, three options each. Never inline `y / n` prompts.
+- **Each "No" is local.** Skipping Locator doesn't cancel the hook or cadence questions.
+- **"Show me…" renders the full diff inline, then re-asks just that question** with `Yes` / `No` (no third "Show me" — the user has already seen it).
+- **The user can also hand-edit the file before answering** and say *"I did it myself, skip this"*. Accept and move on.
 
 ## Phase 6 — Write the artifacts
 
