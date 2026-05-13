@@ -148,17 +148,19 @@ After Phase 2, you hold an internal data structure roughly like:
 narrative: "<2-3 sentence narrative from Phase 1>"
 projectFlags: { mobileProfile: false, tailwindMajor: 3, monorepo: false }
 primitives: [
-  { name: "Button", path: "@/components/ui/button" },
-  { name: "Badge", path: "@/components/ui/badge" },
+  { name: "Button", sourcePath: "components/ui/button.tsx" },
+  { name: "Badge", sourcePath: "components/ui/badge.tsx" },
 ]
 blocks: [
-  { name: "Hero", path: "@/components/blocks/hero", fixture: "title=\"...\" eyebrow=\"...\"" },
+  { name: "Hero", sourcePath: "components/blocks/hero.tsx", fixture: "title=\"...\" eyebrow=\"...\"" },
 ]
 routes: [
   { group: "(marketing)", count: 8, hasDynamic: false },
   { group: "(authenticated)", count: 12, hasDynamic: true },
 ]
 ```
+
+> `sourcePath` is project-relative (no `@/` alias). The live-AI loop uses it to map file edits back to sidebar entries.
 
 Do not render this to the user. It is the input to Phase 3.
 
@@ -594,11 +596,10 @@ Templates use `{{snake_case}}` placeholder substitution. Multi-line placeholders
 - **`{{board_name}}`** — PascalCase from the user's section title (e.g., "Foundations" → `Foundations`; "Design System" → `DesignSystem`; "Marketing Blocks" → `MarketingBlocks`). The rendered function/component name is `{{board_name}}BoardView` — the `View` suffix is baked into the templates.
 - **`{{board_slug}}`** — kebab-case from the user's section title ("Marketing Blocks" → `marketing-blocks`). The board file lives at `<aliases.mount>/<board_slug>-board.tsx`.
 - **`{{primitive_imports}}`** — one named import per line. Prefer a barrel `import { Button, Badge } from "@/components/ui"` if `components/ui/index.ts` exports them; otherwise per-file imports.
-- **`{{primitive_entries}}`** — comma-terminated, 4-space indented, one entry per line. Each entry is `{ id: "<kebab-id>", name: "<Name>", render: () => <Name /> },` (with usage JSX appropriate to the primitive — e.g., `<Button>Click me</Button>`, `<Badge>Label</Badge>`, `<Input placeholder="Type here..." />`). The `id` is kebab-case from `name`.
-- **`{{block_entries}}`** — comma-terminated, 4-space indented, one entry per line. Each entry is `{ slug: "<kebab-slug>", name: "<Name>", iframeSrc: "<route>" },`. `iframeSrc` is the route on the user's site where the block exists standalone — `"/"` (home) is the default if a block is used on the home page. If a block lives on a different route, point `iframeSrc` at that route (e.g., the first usage captured in Phase 2).
+- **`{{primitive_entries}}`** — comma-terminated, 4-space indented, one entry per line. Each entry is `{ id: "<kebab-id>", name: "<Name>", render: () => <Name /> },` (with usage JSX appropriate to the primitive — e.g., `<Button>Click me</Button>`, `<Badge>Label</Badge>`, `<Input placeholder="Type here..." />`). The `id` is kebab-case from `name`. Each entry includes `sourcePath: "<relative-path>"` immediately after the `id` field. The path is what Phase 2's Scan A captured.
+- **`{{block_entries}}`** — comma-terminated, 4-space indented, one entry per line. Each entry is `{ slug: "<kebab-slug>", name: "<Name>", iframeSrc: "<route>" },`. `iframeSrc` is the route on the user's site where the block exists standalone — `"/"` (home) is the default if a block is used on the home page. If a block lives on a different route, point `iframeSrc` at that route (e.g., the first usage captured in Phase 2). Each entry includes `sourcePath: "<relative-path>"` after the `slug` field.
 - **`{{page_entries}}`** — comma-terminated, 4-space indented, one `{ path: "<route>" },` per static route discovered in Phase 2 Scan C.
 - **`{{page_routes}}`** — comma-separated list of route strings for the `PAGE_ROUTES` `as const` array in the mount page: `"/", "/about", "/pricing"`. Quoted, no surrounding brackets.
-- **`{{block_slugs}}`** — comma-separated list of block slug strings for the `BLOCK_SLUGS` `as const` array: `"hero", "cta-band", "feature-row"`. Quoted, no surrounding brackets.
 - **`{{first_section_id}}`** — the kebab-case id of the first accepted sidebar section (e.g., `"design-system"`, `"foundations"`, `"components"`). Used as the initial `selection.sectionId` and as the fallback in the discriminated `view` expression.
 - **`{{view_union}}`** — TypeScript union of every accepted section id plus `"pages"`, e.g. `"design-system" | "components" | "pages"`.
 - **`{{sidebar_sections}}`** — one entry per accepted section, comma-terminated, 12-space indented. Each line is `{ id: "<slug>", title: <BoardKit>.defaultTitle, icon: <BoardKit>.icon },` where `<BoardKit>` is `DesignSystemBoard` for the foundations kit, `IframeGallery` for the blocks/components kit, and `PageTree` for the pages kit. (These imports are listed in the mount page's top import block.)
@@ -632,17 +633,17 @@ export const forkshopConfig = {
 `primitive_entries` example expansion:
 
 ```
-    { id: "button", name: "Button", render: () => <Button>Click me</Button> },
-    { id: "badge", name: "Badge", render: () => <Badge>Label</Badge> },
-    { id: "input", name: "Input", render: () => <Input placeholder="Type here..." /> },
+    { id: "button", name: "Button", sourcePath: "components/ui/button.tsx", render: () => <Button>Click me</Button> },
+    { id: "badge", name: "Badge", sourcePath: "components/ui/badge.tsx", render: () => <Badge>Label</Badge> },
+    { id: "input", name: "Input", sourcePath: "components/ui/input.tsx", render: () => <Input placeholder="Type here..." /> },
 ```
 
 `block_entries` example expansion:
 
 ```
-    { slug: "hero", name: "Hero", iframeSrc: "/" },
-    { slug: "cta-band", name: "CTA Band", iframeSrc: "/" },
-    { slug: "feature-row", name: "Feature Row", iframeSrc: "/" },
+    { slug: "hero", name: "Hero", sourcePath: "components/blocks/hero.tsx", iframeSrc: "/" },
+    { slug: "cta-band", name: "CTA Band", sourcePath: "components/blocks/cta-band.tsx", iframeSrc: "/" },
+    { slug: "feature-row", name: "Feature Row", sourcePath: "components/blocks/feature-row.tsx", iframeSrc: "/" },
 ```
 
 `page_entries` example expansion:
@@ -804,7 +805,15 @@ import {
 import { forkshopConfig } from "./forkshop.config"
 
 const PAGE_ROUTES = [{{page_routes}}] as const
-const BLOCK_SLUGS = [{{block_slugs}}] as const
+
+const FILE_MAP = {
+  primitives: forkshopConfig.primitives
+    .filter((p) => p.sourcePath !== undefined)
+    .map((p) => ({ id: p.id, sourcePath: p.sourcePath! })),
+  blocks: forkshopConfig.blocks
+    .filter((b) => b.sourcePath !== undefined)
+    .map((b) => ({ slug: b.slug, sourcePath: b.sourcePath! })),
+} as const
 
 export default function ForkshopPage() {
   const [selection, setSelection] = useState<ForkshopSelection>({
@@ -824,7 +833,7 @@ export default function ForkshopPage() {
   const isolatedPath = selection.kind === "page" ? selection.path : undefined
 
   return (
-    <AgentActivityProvider blockSlugs={BLOCK_SLUGS} projectRoot="">
+    <AgentActivityProvider fileMap={FILE_MAP}>
       <LocatorInit mountPath="/forkshop" />
       <div className="flex h-screen overflow-hidden">
         <ForkshopSidebar
