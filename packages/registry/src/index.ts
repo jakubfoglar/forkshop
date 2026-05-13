@@ -114,3 +114,8 @@ export {
   type IframeGalleryProps,
   type IframeGalleryEntry,
 } from "./kits/iframe-gallery.js"
+export {
+  PageTree,
+  type PageTreeProps,
+  type PageTreeEntry,
+} from "./kits/page-tree.js"
