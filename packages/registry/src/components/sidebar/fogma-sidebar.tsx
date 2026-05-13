@@ -29,11 +29,7 @@ type IconComponent = ComponentType<{ className?: string }>
 // ---------------------------------------------------------------------------
 
 export type FogmaSelection =
-  | { kind: "flow" }
-  | { kind: "foundations" }
-  | { kind: "blocks" }
-  | { kind: "navigation" }
-  | { kind: "sitemap" }
+  | { kind: "section"; sectionId: string }
   | { kind: "page"; path: string }
   | { kind: "block"; slug: string }
 
@@ -136,12 +132,12 @@ export function FogmaSidebar({
       {/* Header */}
       <div className="flex shrink-0 items-center justify-between gap-1.5 border-b border-fogma-border bg-fogma-surface px-3 pb-2 pt-2.5">
         <div className="flex items-center gap-1.5">
-          <span className="text-sm font-semibold tracking-tight text-fogma-text">Fogma</span>
+          <span className="text-sm font-semibold tracking-tight text-fogma-fg">Fogma</span>
         </div>
         <button
           type="button"
           onClick={() => setHelpOpen(true)}
-          className="rounded-sm p-0.5 text-fogma-text-muted transition-colors hover:bg-fogma-surface-2 hover:text-fogma-text"
+          className="rounded-sm p-0.5 text-fogma-fg-muted transition-colors hover:bg-fogma-surface-2 hover:text-fogma-fg"
           aria-label="How to use fogma"
           title="How to use fogma"
         >
@@ -174,13 +170,12 @@ export function FogmaSidebar({
                     label={section.title}
                     depth={1}
                     icon={section.icon}
-                    active={selection.kind === section.id}
+                    active={selection.kind === "section" && selection.sectionId === section.id}
                     agentActive={sectionAgentActive}
                     hasChildren={hasChildren}
                     expanded={isExpanded}
                     onClick={() => {
-                      // section.id is validated by the caller to be a non-data kind
-                    onSelect({ kind: section.id } as FogmaSelection)
+                      onSelect({ kind: "section", sectionId: section.id })
                       if (hasChildren) {
                         setExpandedSections((prev) => ({ ...prev, [section.id]: true }))
                       }
@@ -257,7 +252,7 @@ export function FogmaSidebar({
 
 function SectionHeader({ children }: { children: string }) {
   return (
-    <div className="mt-2 shrink-0 px-1 pb-0.5 text-[10px] font-medium uppercase tracking-wider text-fogma-text-muted">
+    <div className="mt-2 shrink-0 px-1 pb-0.5 text-[10px] font-medium uppercase tracking-wider text-fogma-fg-muted">
       {children}
     </div>
   )
@@ -349,7 +344,7 @@ function SidebarRow({
           </span>
         )}
         {draft && (
-          <span className="mr-2 shrink-0 rounded-sm bg-fogma-surface-2 px-1 py-[1px] text-[9px] font-medium uppercase tracking-wider text-fogma-text-muted">
+          <span className="mr-2 shrink-0 rounded-sm bg-fogma-surface-2 px-1 py-[1px] text-[9px] font-medium uppercase tracking-wider text-fogma-fg-muted">
             Draft
           </span>
         )}
@@ -441,8 +436,8 @@ function PageTreeRow({
 
 function rowVariant(agentActive: boolean, active: boolean): string {
   if (agentActive) return "bg-fogma-accent/10 text-fogma-accent hover:bg-fogma-accent/20"
-  if (active) return "bg-fogma-surface-2 font-semibold text-fogma-text"
-  return "text-fogma-text-muted hover:bg-fogma-surface-2 hover:text-fogma-text"
+  if (active) return "bg-fogma-surface-2 font-semibold text-fogma-fg"
+  return "text-fogma-fg-muted hover:bg-fogma-surface-2 hover:text-fogma-fg"
 }
 
 function pageFileLabel(path: string): string {

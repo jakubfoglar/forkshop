@@ -53,11 +53,11 @@ export function HelpModal({
       aria-label="Fogma cheatsheet"
     >
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold text-fogma-text">Fogma cheatsheet</h2>
+        <h2 className="text-base font-semibold text-fogma-fg">Fogma cheatsheet</h2>
         <button
           type="button"
           onClick={() => onOpenChange(false)}
-          className="rounded-sm p-0.5 text-fogma-text-muted transition-colors hover:bg-fogma-surface-2 hover:text-fogma-text"
+          className="rounded-sm p-0.5 text-fogma-fg-muted transition-colors hover:bg-fogma-surface-2 hover:text-fogma-fg"
           aria-label="Close"
         >
           <FogmaIcon icon={Xmark} className="size-4" />
@@ -97,7 +97,7 @@ export function HelpModal({
         />
         <Tip
           visual={
-            <span className="flex items-baseline gap-0.5 font-mono text-[10px] text-fogma-text-muted">
+            <span className="flex items-baseline gap-0.5 font-mono text-[10px] text-fogma-fg-muted">
               <Kbd>⌥</Kbd>+click
             </span>
           }
@@ -139,8 +139,8 @@ function Tip({ visual, title, body }: { visual: ReactNode; title: string; body: 
     <div className="flex gap-2.5 rounded-md px-2 py-1.5">
       <div className="flex w-8 shrink-0 items-center justify-center pt-0.5">{visual}</div>
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="text-xs font-medium text-fogma-text">{title}</span>
-        <span className="leading-relaxed text-xs text-fogma-text-muted">{body}</span>
+        <span className="text-xs font-medium text-fogma-fg">{title}</span>
+        <span className="leading-relaxed text-xs text-fogma-fg-muted">{body}</span>
       </div>
     </div>
   )
@@ -152,7 +152,7 @@ function ColorSwatch({ className }: { className: string }) {
 
 function Kbd({ children }: { children: ReactNode }) {
   return (
-    <kbd className="inline-flex min-w-3.5 items-center justify-center rounded-sm border border-fogma-border bg-fogma-surface-2 px-1 py-[1px] text-[10px] font-medium text-fogma-text-muted">
+    <kbd className="inline-flex min-w-3.5 items-center justify-center rounded-sm border border-fogma-border bg-fogma-surface-2 px-1 py-[1px] text-[10px] font-medium text-fogma-fg-muted">
       {children}
     </kbd>
   )
@@ -160,7 +160,7 @@ function Kbd({ children }: { children: ReactNode }) {
 
 function KbdGlyph({ children }: { children: ReactNode }) {
   return (
-    <span className="size-4.5 flex items-center justify-center rounded-sm border border-fogma-border bg-fogma-surface-2 text-[10px] font-semibold text-fogma-text-muted">
+    <span className="size-4.5 flex items-center justify-center rounded-sm border border-fogma-border bg-fogma-surface-2 text-[10px] font-semibold text-fogma-fg-muted">
       {children}
     </span>
   )
@@ -168,7 +168,7 @@ function KbdGlyph({ children }: { children: ReactNode }) {
 
 function DraftPill() {
   return (
-    <span className="rounded-sm bg-fogma-surface-2 px-1 py-[1px] text-[9px] font-medium uppercase tracking-wider text-fogma-text-muted">
+    <span className="rounded-sm bg-fogma-surface-2 px-1 py-[1px] text-[9px] font-medium uppercase tracking-wider text-fogma-fg-muted">
       Draft
     </span>
   )
