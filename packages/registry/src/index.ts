@@ -22,3 +22,7 @@ export { ResponsiveFrameView, responsiveFrameStageDimensions } from "./component
 export { EditPopover } from "./components/canvas/edit-popover.js"
 export { SpacingPicker } from "./components/canvas/spacing-picker.js"
 export { SpacingBodyMenu } from "./components/canvas/spacing-body-menu.js"
+export { isTextElement, computeDomPath, PREVIEW_EDIT_CSS, PREVIEW_AGENT_CSS, PREVIEW_COMPOSE_CSS } from "./lib/edit-mode.js"
+export { inspectElement, type InspectionResult, type AppliedToken } from "./lib/inspect-element.js"
+export { resolvePaddingClass, resolveGapClass, extractMarginClasses, type ResolvedSpacingClass } from "./lib/spacing-classes.js"
+export { InspectPanel } from "./components/inspect-panel.js"
