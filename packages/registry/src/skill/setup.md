@@ -604,3 +604,228 @@ This skill never:
 - Calls out to the network.
 
 ## Scaffolding templates
+
+Templates use `{{snake_case}}` placeholder substitution. Multi-line placeholders (`{{primitive_entries}}`) expand to comma-separated, indented blocks. Boolean placeholders (`{{has_locator}}`) gate whole template sections. Replace every `{{…}}` before writing; if a placeholder has no value, drop the surrounding line.
+
+### Substitution rules
+
+- **`{{board_name}}`** — PascalCase from the user's section title (e.g., "Foundations" → `Foundations`; "Design System" → `DesignSystem`; "Marketing Blocks" → `MarketingBlocks`).
+- **`{{board_slug}}`** — kebab-case from the user's section title ("Marketing Blocks" → `marketing-blocks`).
+- **`{{primitive_imports}}`** — one named import per line. Prefer a barrel `import { Button, Badge } from "@/components/ui"` if `components/ui/index.ts` exports them; otherwise per-file imports.
+- **`{{block_imports}}`** — same grouping logic, scoped to the blocks folder.
+- **`{{primitive_entries}}`** — comma-terminated, 6-space indented, one entry per line.
+- **`{{block_entries}}`** — comma-terminated, 6-space indented, one entry per line, with the fixture inlined as object literal props.
+- **`{{components_layout}}`** — `"stack"` by default; `"grid"` if user opted into matrix layout during iteration.
+- **`{{pages_overrides}}`** — empty by default; populated with `excludePaths: [...]` if user said "skip these routes" during iteration; populated with a TODO comment if dynamic routes detected.
+- **`{{sidebar_entries}}`** — one `{ id: "<slug>", title: "<title>", Component: <BoardName>Board }` per line, comma-terminated, 8-space indented.
+- **`{{board_imports}}`** — derived from accepted sidebar order; one `import { <BoardName>Board } from "./<slug>-board"` per line.
+- **`{{board_renders}}`** — derived from accepted sidebar order; one `<<BoardName>Board />` per line.
+- **`{{aliases.mount}}`** — resolved from `fogma.json` aliases at write time; defaults to `app/fogma` if absent.
+
+### Template 1 — `fogma.config.ts` (or `.tsx` if blocks have JSX fixtures)
+
+```tsx
+import type { FogmaConfig } from "@/components/fogma"
+{{primitive_imports}}
+{{block_imports}}
+
+export const config: FogmaConfig = {
+  designSystem: {
+    primitives: [
+{{primitive_entries}}
+    ],
+  },
+  components: {
+    layout: "{{components_layout}}",
+    entries: [
+{{block_entries}}
+    ],
+  },
+  pages: {
+    autoDiscover: true,
+{{pages_overrides}}
+  },
+}
+```
+
+`primitive_entries` example expansion:
+
+```
+      { name: "Button", render: () => <Button>Click me</Button> },
+      { name: "Badge", render: () => <Badge>Label</Badge> },
+```
+
+`block_entries` example expansion (fixture inlined):
+
+```
+      { slug: "hero", name: "Hero",
+        render: () => <Hero title="Welcome" eyebrow="The hub" cta={{label: "Try it", href: "#"}} /> },
+```
+
+### Template 2 — Board file (design-system-board kit)
+
+```tsx
+"use client"
+import { DesignSystemBoard } from "@/components/fogma/kits/design-system-board"
+import { config } from "./fogma.config"
+export function {{board_name}}Board() {
+  return <DesignSystemBoard {...config.designSystem} />
+}
+```
+
+### Template 3 — Board file (iframe-gallery kit)
+
+```tsx
+"use client"
+import { IframeGallery } from "@/components/fogma/kits/iframe-gallery"
+import { config } from "./fogma.config"
+export function {{board_name}}Board() {
+  return <IframeGallery {...config.components} />
+}
+```
+
+### Template 4 — Board file (page-tree kit)
+
+```tsx
+"use client"
+import { PageTree } from "@/components/fogma/kits/page-tree"
+import { config } from "./fogma.config"
+export function {{board_name}}Board() {
+  return <PageTree {...config.pages} />
+}
+```
+
+### Template 5 — `<aliases.mount>/page.tsx` (mount page)
+
+```tsx
+"use client"
+
+import { FogmaCanvas, FogmaSidebar } from "@/components/fogma"
+{{board_imports}}
+
+export default function FogmaPage() {
+  return (
+    <div className="flex h-screen bg-fogma-surface">
+      <FogmaSidebar sections={[
+{{sidebar_entries}}
+      ]} />
+      <FogmaCanvas>
+{{board_renders}}
+      </FogmaCanvas>
+    </div>
+  )
+}
+```
+
+### Template 6 — `.claude/hooks/post-tool-use.sh`
+
+```bash
+#!/usr/bin/env bash
+# Fogma live-AI hook. Notifies a running Fogma dev server of file edits.
+# Best-effort; never blocks the tool call.
+
+INPUT=$(cat)
+TOOL=$(jq -r '.tool_name' <<< "$INPUT")
+FILE=$(jq -r '.tool_input.file_path // ""' <<< "$INPUT")
+
+[ -z "$FILE" ] && exit 0
+
+curl -s -X POST http://localhost:3000/api/fogma/agent-activity \
+  -H "Content-Type: application/json" \
+  -d "{\"tool\":\"$TOOL\",\"file\":\"$FILE\"}" \
+  > /dev/null 2>&1 &
+
+exit 0
+```
+
+Hardcoded `localhost:3000` is intentional — Fogma is dev-only. If your dev server runs on a different port, edit the URL after install.
+
+### Template 7a — `next.config.ts` turbopack rule (Locator.js)
+
+```ts
+experimental: {
+  turbopack: {
+    rules: {
+      "*.{js,jsx,ts,tsx}": { loaders: ["@locator/webpack-loader"] },
+    },
+  },
+},
+```
+
+If `experimental` already exists in the user's config, merge into its `turbopack.rules` object — do not replace the existing `experimental` block.
+
+For `.js`/`.mjs` configs, embed the same fields in the existing module-export shape.
+
+### Template 7b — `<aliases.mount>/layout.tsx` (Locator.js mount)
+
+Create the file if absent:
+
+```tsx
+import { LocatorInit } from "@/components/fogma/locator-init"
+
+export default function FogmaLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <LocatorInit />
+      {children}
+    </>
+  )
+}
+```
+
+If the file already exists, insert the import at the top of the file and the `<LocatorInit />` element as the first child of the returned JSX.
+
+### Template 8 — Root `CLAUDE.md` cadence note
+
+Append verbatim:
+
+```markdown
+<!-- fogma:cadence-note start - managed; do not edit body, only delete the block -->
+## Fogma — editing cadence
+
+When editing files in `components/fogma/`, `lib/fogma/`, `app/fogma/`, or any
+block referenced in `fogma.config.ts`, prefer many small Edits over one Write.
+Fogma's live preview emits a notification per file write, so:
+
+- Use `MultiEdit` when one change spans multiple regions (single disk write,
+  multiple visual events).
+- Start with a valid skeleton, then replace section-by-section.
+- Avoid leaving the file in a broken intermediate state — Fogma's iframe
+  will show Next.js's error overlay until the next save fixes it.
+<!-- fogma:cadence-note end -->
+```
+
+### Template 9 — `<aliases.mount>/fogma.css`
+
+If the CLI did not write this file during `init`, write it from this template:
+
+```css
+@font-face {
+  font-family: "Raveo";
+  src: url("/fonts/raveo/raveo-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Raveo";
+  src: url("/fonts/raveo/raveo-medium.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Raveo";
+  src: url("/fonts/raveo/raveo-bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+
+:root {
+  --fogma-surface: #fafafa;
+  --fogma-fg: #111;
+  --fogma-border: #e5e5e5;
+  --fogma-accent: #2563eb;
+  --fogma-muted: #737373;
+}
+```
+
+The CLI's mount-page stub imports this file via `import "./fogma.css"`. Don't add the import again here — assume it's in place.
