@@ -6,8 +6,10 @@ import {
   LocatorInit,
   AgentActivityProvider,
   type FogmaSelection,
+  DesignSystemBoard,
+  IframeGallery,
+  PageTree,
 } from "@fogma/registry"
-import { ColorPicker, Box3dCenter, MultiplePagesEmpty } from "iconoir-react"
 import DesignSystemBoardView from "./design-system-board"
 import ComponentsBoardView from "./components-board"
 import PagesBoardView from "./pages-board"
@@ -43,9 +45,9 @@ export default function FogmaPage() {
           selection={selection}
           onSelect={setSelection}
           sections={[
-            { id: "design-system", title: "Design System", icon: ColorPicker },
-            { id: "components", title: "Components", icon: Box3dCenter },
-            { id: "pages", title: "Pages", icon: MultiplePagesEmpty },
+            { id: "design-system", title: DesignSystemBoard.defaultTitle, icon: DesignSystemBoard.icon },
+            { id: "components", title: IframeGallery.defaultTitle, icon: IframeGallery.icon },
+            { id: "pages", title: PageTree.defaultTitle, icon: PageTree.icon },
           ]}
           routes={PAGE_ROUTES}
         />
