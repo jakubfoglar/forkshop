@@ -96,3 +96,25 @@ describe("buildManifest", () => {
     }
   })
 })
+
+describe("manifest snapshot", () => {
+  it("primitives bundle items match the expected sorted list", async () => {
+    const manifest = await buildManifest({ registryRoot: REGISTRY_ROOT })
+    const bundle = manifest.bundles.primitives
+    if (!bundle) throw new Error("primitives bundle missing")
+    if (bundle.kind !== "primitive") throw new Error("kind mismatch")
+
+    // Sanity-check: the primitives bundle should include the well-known core files.
+    const required = [
+      "@fogma/components/canvas/canvas-node",
+      "@fogma/components/canvas/fogma-canvas",
+      "@fogma/components/sidebar/fogma-sidebar",
+      "@fogma/hooks/use-iframe-preview",
+      "@fogma/lib/edit-mode",
+      "@fogma/api/edit/route",
+    ]
+    for (const address of required) {
+      expect(bundle.items, `missing ${address}`).toContain(address)
+    }
+  })
+})
