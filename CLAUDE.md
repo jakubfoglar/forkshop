@@ -2,6 +2,8 @@
 
 Forkshop is an OSS Figma-style canvas + sidebar tool for Next.js + Tailwind projects. This file is for contributors and future-Jakub.
 
+> **Lineage:** Forkshop was extracted from **Ravineo's in-house Fogma** tool (in the `ravineo-web` monorepo). Where this guide mentions "Ravineo's Fogma" or "the in-house Fogma," it's referring to that upstream tool — not to Forkshop itself. Both names live on independently: Ravineo's Fogma stays internal under its original name; Forkshop is the public OSS extraction.
+
 ---
 
 ## Repo layout
@@ -177,7 +179,7 @@ When in doubt: would this style break if the host project uses a different desig
 
 ## What NOT to port from ravineo-web
 
-This is the most important section for future PRs. Forkshop is extracted from `ravineo-web` (the Ravineo marketing site + internal tools monorepo). Many things in ravineo-web must **never** be ported to this repo.
+This is the most important section for future PRs. Forkshop was extracted from **Ravineo's in-house Fogma** tool, which lives in `ravineo-web` (the Ravineo marketing site + internal tools monorepo) at `app/(tools)/fogma/`, `lib/fogma/`, `app/api/fogma/`. Many things in ravineo-web — including parts of Ravineo's Fogma itself — must **never** be ported to this repo.
 
 Do not port:
 - **Auth**: Clerk, iron-session, any gating logic
