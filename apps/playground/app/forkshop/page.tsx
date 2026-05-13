@@ -13,9 +13,18 @@ import {
 import DesignSystemBoardView from "./design-system-board"
 import ComponentsBoardView from "./components-board"
 import PagesBoardView from "./pages-board"
+import { forkshopConfig } from "./forkshop.config"
 
 const PAGE_ROUTES = ["/sample", "/sample/about", "/sample/dashboard"] as const
-const BLOCK_SLUGS = ["hero", "cta-band", "feature-row"] as const
+
+const FILE_MAP = {
+  primitives: forkshopConfig.primitives
+    .filter((p): p is typeof p & { sourcePath: string } => "sourcePath" in p && p.sourcePath !== undefined)
+    .map((p) => ({ id: p.id, sourcePath: p.sourcePath })),
+  blocks: forkshopConfig.blocks
+    .filter((b): b is typeof b & { sourcePath: string } => "sourcePath" in b && b.sourcePath !== undefined)
+    .map((b) => ({ slug: b.slug, sourcePath: b.sourcePath })),
+}
 
 export default function ForkshopPage() {
   const [selection, setSelection] = useState<ForkshopSelection>({
@@ -37,9 +46,8 @@ export default function ForkshopPage() {
   // When the user clicked a page leaf in the sidebar, isolate that page.
   const isolatedPath = selection.kind === "page" ? selection.path : undefined
 
-  // FILE_MAP populated in Task 19
   return (
-    <AgentActivityProvider fileMap={{ primitives: [], blocks: [] }}>
+    <AgentActivityProvider fileMap={FILE_MAP}>
       <LocatorInit mountPath="/forkshop" />
       <div className="flex h-screen overflow-hidden">
         <ForkshopSidebar

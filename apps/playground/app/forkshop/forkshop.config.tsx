@@ -7,14 +7,14 @@ import type { Config } from "tailwindcss"
 export const forkshopConfig = {
   tailwindConfig: tailwindConfig as Config,
   primitives: [
-    { id: "button", name: "Button", render: () => <Button>Click me</Button> },
-    { id: "badge", name: "Badge", render: () => <Badge>Label</Badge> },
-    { id: "input", name: "Input", render: () => <Input placeholder="Type here..." /> },
+    { id: "button", name: "Button", sourcePath: "components/ui/button.tsx", render: () => <Button>Click me</Button> },
+    { id: "badge", name: "Badge", sourcePath: "components/ui/badge.tsx", render: () => <Badge>Label</Badge> },
+    { id: "input", name: "Input", sourcePath: "components/ui/input.tsx", render: () => <Input placeholder="Type here..." /> },
   ],
   blocks: [
-    { slug: "hero", name: "Hero", iframeSrc: "/sample" },
-    { slug: "cta-band", name: "CTA Band", iframeSrc: "/sample" },
-    { slug: "feature-row", name: "Feature Row", iframeSrc: "/sample" },
+    { slug: "hero", name: "Hero", iframeSrc: "/sample", sourcePath: "components/blocks/hero.tsx" },
+    { slug: "cta-band", name: "CTA Band", iframeSrc: "/sample", sourcePath: "components/blocks/cta-band.tsx" },
+    { slug: "feature-row", name: "Feature Row", iframeSrc: "/sample", sourcePath: "components/blocks/feature-row.tsx" },
   ],
   pages: [
     { path: "/sample" },
