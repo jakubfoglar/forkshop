@@ -1,3 +1,4 @@
+@import "../../../packages/registry/tailwind/fogma.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

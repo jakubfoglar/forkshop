@@ -1,0 +1,25 @@
+:root {
+  --fogma-surface: #ffffff;
+  --fogma-surface-2: #f7f7f8;
+  --fogma-fg: #0a0a0a;
+  --fogma-fg-muted: #6b7280;
+  --fogma-border: #e5e7eb;
+  --fogma-border-strong: #d1d5db;
+  --fogma-accent: #5b6cff;
+  --fogma-accent-fg: #ffffff;
+  --fogma-agent: #a855f7;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fogma-surface: #0a0a0a;
+    --fogma-surface-2: #171717;
+    --fogma-fg: #fafafa;
+    --fogma-fg-muted: #9ca3af;
+    --fogma-border: #262626;
+    --fogma-border-strong: #404040;
+    --fogma-accent: #7c8aff;
+    --fogma-accent-fg: #0a0a0a;
+    --fogma-agent: #c084fc;
+  }
+}
