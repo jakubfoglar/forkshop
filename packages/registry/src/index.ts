@@ -1,2 +1,1 @@
-// Barrel exports filled in as files are ported. Keeping it sparse intentionally.
-export {}
+export { FogmaIcon } from "./components/icon.js"
