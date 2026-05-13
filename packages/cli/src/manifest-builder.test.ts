@@ -53,18 +53,21 @@ describe("buildManifest", () => {
     }
   })
 
-  it("lists clsx + motion + iconoir-react as primitives deps", () => {
+  it("primitives bundle has the expected runtime deps", () => {
     const bundle = manifest.bundles.primitives
     if (!bundle) throw new Error("primitives bundle missing")
-    if (bundle.kind === "primitive" || bundle.kind === "kit" || bundle.kind === "asset") {
-      expect(bundle.deps).toEqual(
-        expect.arrayContaining([
-          expect.stringMatching(/^clsx@/),
-          expect.stringMatching(/^motion@/),
-          expect.stringMatching(/^iconoir-react@/),
-        ])
-      )
-    }
+    if (bundle.kind !== "primitive") throw new Error("expected primitive kind")
+    expect(bundle.deps).toBeDefined()
+    if (!bundle.deps) return
+    // Pin the dep set: order doesn't matter but the package names do.
+    // Splits off the trailing `@<range>` while preserving scoped names
+    // (e.g. `@locator/runtime@^0.5.1` → `@locator/runtime`).
+    const packageNames = bundle.deps.map(
+      (dep: string) => dep.split("@").slice(0, -1).join("@") || dep.split("@")[0],
+    )
+    expect(packageNames.sort()).toEqual(
+      ["@locator/runtime", "clsx", "lucide-react", "motion"].sort(),
+    )
   })
 
   it("every @fogma/* import in file contents resolves to a known address", () => {

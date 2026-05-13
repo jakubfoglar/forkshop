@@ -73,15 +73,18 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
   const tailwindFiles = await walk(path.join(registryRoot, "tailwind"))
   const templateFiles = await walk(path.join(registryRoot, "templates"))
 
+  // The registry's own top-level barrel — not consumed by users, so skip it.
+  // Only the exact `packages/registry/src/index.ts` is dropped; nested
+  // `components/foo/index.ts` files (if introduced later) are still included.
+  const topLevelBarrel = path.join(registryRoot, "src", "index.ts")
+
   const files: Record<string, ManifestFile> = {}
 
   for (const absPath of [...srcFiles, ...tailwindFiles, ...templateFiles]) {
     // Skip test files
     if (/\.test\.(ts|tsx)$/.test(absPath)) continue
-    // Skip the registry's own index.ts barrel file — not consumed by users
-    if (absPath.endsWith(path.sep + "index.ts") && absPath.includes(path.sep + "src" + path.sep)) {
-      continue
-    }
+    // Skip only the registry's own top-level barrel.
+    if (absPath === topLevelBarrel) continue
     const address = pathToAddress(registryRoot, absPath)
     if (!address) continue
     const content = await fs.readFile(absPath, "utf8")
@@ -114,6 +117,14 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
 
   const primitiveItems = Object.keys(files).filter(isPrimitiveAddress).sort()
 
+  // Bundle authoring note:
+  // - `fonts` and `skill` are intentionally empty in v1. Fonts will be populated
+  //   when Raveo woff2 files land in packages/registry/fonts/; the setup skill
+  //   files will land when the setup-skill spec is implemented. Both bundles
+  //   exist so `init` already includes them — adding the assets later won't
+  //   require manifest schema changes.
+  // - `primitives.deps` mirrors packages/registry/package.json `dependencies`.
+  //   Keep the pins in sync when bumping the registry.
   const bundles: Record<string, Bundle> = {
     primitives: {
       kind: "primitive",
@@ -121,7 +132,7 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
       deps: [
         "clsx@^2.1.1",
         "motion@^11.0.0",
-        "iconoir-react@^7.0.0",
+        "lucide-react@^1.14.0",
         "@locator/runtime@^0.5.1",
       ],
     },
