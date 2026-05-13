@@ -7,7 +7,11 @@
   "exports": {
     ".": "./src/index.ts",
     "./tailwind": "./tailwind/fogma-preset.ts",
-    "./fogma.css": "./tailwind/fogma.css"
+    "./fogma.css": "./tailwind/fogma.css",
+    "./api/edit/route": "./src/api/edit/route.ts",
+    "./api/positions/route": "./src/api/positions/route.ts",
+    "./api/agent-activity/route": "./src/api/agent-activity/route.ts",
+    "./api/agent-activity/stream/route": "./src/api/agent-activity/stream/route.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
