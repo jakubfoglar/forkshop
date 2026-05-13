@@ -38,6 +38,7 @@ export const fogmaPreset: Partial<Config> = {
         "fogma-accent": "var(--fogma-accent)",
         "fogma-accent-fg": "var(--fogma-accent-fg)",
         "fogma-agent": "var(--fogma-agent)",
+        "fogma-agent-fg": "var(--fogma-agent-fg)",
       },
 
       // -----------------------------------------------------------------------
@@ -113,6 +114,7 @@ export const fogmaPreset: Partial<Config> = {
       // Font size — stock Tailwind parities, namespaced
       // -----------------------------------------------------------------------
       fontSize: {
+        "fogma-5xs": ["0.5625rem", { lineHeight: "1.3", letterSpacing: "0.02em" }],
         "fogma-4xs": ["0.65rem", { lineHeight: "1.3", letterSpacing: "0.02em" }],
         "fogma-3xs": ["0.72rem", { lineHeight: "1.3", letterSpacing: "0.02em" }],
         "fogma-label": ["0.75rem", { lineHeight: "1.3", letterSpacing: "0.02em" }],

@@ -275,7 +275,7 @@ export function FogmaSidebar({
 
 function SectionHeader({ children }: { children: string }) {
   return (
-    <div className="mt-fogma-2 shrink-0 px-fogma-1 pb-fogma-2 text-[10px] font-fogma-medium uppercase tracking-fogma-wider text-fogma-fg-muted">
+    <div className="mt-fogma-2 shrink-0 px-fogma-1 pb-fogma-2 text-fogma-4xs font-fogma-medium uppercase tracking-fogma-wider text-fogma-fg-muted">
       {children}
     </div>
   );
@@ -312,7 +312,7 @@ function SidebarRow({
     <div className="shrink-0">
       <div
         className={cn(
-          "flex items-center rounded-fogma-xxs py-fogma-0.5 text-fogma-xs",
+          "flex items-center rounded-fogma-lg text-fogma-xs",
           rowVariant(agentActive, active),
         )}
         style={{ paddingLeft: `${Math.max(0, depth - 1) * 0.75}rem` }}
@@ -354,20 +354,17 @@ function SidebarRow({
           {label}
         </button>
         {agentActive && agentFileLabel !== undefined && (
-          <span className="mr-fogma-1 shrink-0 truncate text-[9px] text-fogma-accent">
+          <span className="mr-fogma-1 shrink-0 truncate text-fogma-5xs text-fogma-accent">
             {agentFileLabel}
           </span>
         )}
         {isNew && (
-          <span
-            className="mr-fogma-1 shrink-0 rounded-fogma-lg px-fogma-1 py-[1px] text-[9px] font-fogma-medium uppercase tracking-fogma-wider"
-            style={{ background: "oklch(0.62 0.22 280)", color: "white" }}
-          >
+          <span className="mr-fogma-1 shrink-0 rounded-fogma-lg bg-fogma-agent px-fogma-1 py-fogma-px text-fogma-5xs font-fogma-medium uppercase tracking-fogma-wider text-fogma-agent-fg">
             New
           </span>
         )}
         {draft && (
-          <span className="mr-fogma-2 shrink-0 rounded-fogma-lg bg-fogma-surface-2 px-fogma-1 py-[1px] text-[9px] font-fogma-medium uppercase tracking-fogma-wider text-fogma-fg-muted">
+          <span className="mr-fogma-2 shrink-0 rounded-fogma-lg bg-fogma-surface-2 px-fogma-1 py-fogma-px text-fogma-5xs font-fogma-medium uppercase tracking-fogma-wider text-fogma-fg-muted">
             Draft
           </span>
         )}

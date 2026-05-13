@@ -9,6 +9,7 @@
   --fogma-accent: #5b6cff;
   --fogma-accent-fg: #ffffff;
   --fogma-agent: #a855f7;
+  --fogma-agent-fg: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,5 +24,6 @@
     --fogma-accent: #7c8aff;
     --fogma-accent-fg: #0a0a0a;
     --fogma-agent: #c084fc;
+    --fogma-agent-fg: #ffffff;
   }
 }
