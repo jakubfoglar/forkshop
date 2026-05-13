@@ -74,6 +74,14 @@ export type PageTreeProps = {
    * When not provided, the component manages isolation state internally.
    */
   onBack?: () => void
+  /**
+   * Called when the internal isolation state changes (double-click enters
+   * isolation or back button exits it) in uncontrolled mode.
+   * Use this to react to isolation state changes from the parent, e.g. to
+   * switch the FogmaCanvas stageWidth for zoom-to-fit.
+   * Only fires when `isolatedPath` prop is not provided (uncontrolled mode).
+   */
+  onIsolatedPathChange?: (path: string | null) => void
 }
 
 // ---------------------------------------------------------------------------
@@ -121,6 +129,7 @@ function PageTreeInner({
   onSelectChange,
   isolatedPath: controlledIsolatedPath,
   onBack,
+  onIsolatedPathChange,
 }: PageTreeProps) {
   const [internalIsolated, setInternalIsolated] = useState<string | null>(null)
 
@@ -134,11 +143,27 @@ function PageTreeInner({
         : null
       : internalIsolated
 
+  // In uncontrolled mode, notify parent whenever isolation state changes
+  // so it can update stageWidth for zoom-to-fit.
+  const handleIsolate = (path: string) => {
+    setInternalIsolated(path)
+    if (controlledIsolatedPath === undefined) {
+      onIsolatedPathChange?.(path)
+    }
+  }
+
   const handleBack = () => {
     if (onBack) {
+      // Parent controls navigation — let it handle the state update.
+      // Also clear internal state so a subsequent double-click works correctly.
+      setInternalIsolated(null)
+      if (controlledIsolatedPath === undefined) {
+        onIsolatedPathChange?.(null)
+      }
       onBack()
     } else {
       setInternalIsolated(null)
+      onIsolatedPathChange?.(null)
     }
   }
 
@@ -168,7 +193,7 @@ function PageTreeInner({
       onPositionChange={onPositionChange}
       selectedId={selectedId}
       onSelectChange={onSelectChange}
-      onIsolate={setInternalIsolated}
+      onIsolate={handleIsolate}
     />
   )
 }
