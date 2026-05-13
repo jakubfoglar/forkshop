@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from "commander"
 import pc from "picocolors"
+import { runAdd } from "./commands/add.js"
 import { runInit } from "./commands/init.js"
 
 const program = new Command()
@@ -20,6 +21,26 @@ program
   .action(async (opts) => {
     const result = await runInit({
       projectRoot: process.cwd(),
+      force: opts.force,
+      noInstall: !opts.install,
+      registryUrl: opts.registry,
+    })
+    if (!result.ok) {
+      console.error(pc.red(result.reason))
+      process.exit(2)
+    }
+  })
+
+program
+  .command("add <bundle>")
+  .description("Add a kit or feature to your installation.")
+  .option("--force", "Overwrite existing files on collision")
+  .option("--no-install", "Skip running the package manager")
+  .option("--registry <url>", "Override the registry base URL")
+  .action(async (bundle, opts) => {
+    const result = await runAdd({
+      projectRoot: process.cwd(),
+      bundleName: bundle,
       force: opts.force,
       noInstall: !opts.install,
       registryUrl: opts.registry,
