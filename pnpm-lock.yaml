@@ -23,6 +23,9 @@ importers:
       '@fogma/registry':
         specifier: workspace:*
         version: link:../../packages/registry
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
       iconoir-react:
         specifier: ^7.0.0
         version: 7.11.0(react@18.3.1)
