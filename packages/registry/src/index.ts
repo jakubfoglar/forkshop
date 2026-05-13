@@ -1,4 +1,4 @@
-export { FogmaIcon } from "./components/icon.js"
+export { FogmaIcon, type FogmaIconComponent } from "./components/icon.js"
 export { FogmaCanvas } from "./components/canvas/fogma-canvas.js"
 export { CanvasNode } from "./components/canvas/canvas-node.js"
 export { CanvasLabel } from "./components/canvas/canvas-label.js"
@@ -119,3 +119,4 @@ export {
   type PageTreeProps,
   type PageTreeEntry,
 } from "./kits/page-tree.js"
+export { fogmaIcons, type FogmaIconName } from "./lib/icons.js"

@@ -11,6 +11,7 @@ import { useFogmaCanvas } from "../components/canvas/fogma-canvas.js"
 import type { GetSnapTargets } from "../hooks/use-draggable-node.js"
 import type { NodePosition, NodePositions } from "../lib/node-positions.js"
 import type { SnapGuide, SnapTarget } from "../lib/system-snap.js"
+import { fogmaIcons } from "../lib/icons.js"
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -117,7 +118,14 @@ function stageSize(cells: TileCell[]): { width: number; height: number } {
 // Main kit component — rendered inside a <FogmaCanvas> provided by the caller
 // ---------------------------------------------------------------------------
 
-export const PageTree = memo(PageTreeInner)
+const _PageTree = memo(PageTreeInner)
+export const PageTree: typeof _PageTree & {
+  icon: typeof fogmaIcons.pages
+  defaultTitle: string
+} = Object.assign(_PageTree, {
+  icon: fogmaIcons.pages,
+  defaultTitle: "Pages",
+})
 
 function PageTreeInner({
   entries,

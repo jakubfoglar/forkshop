@@ -19,6 +19,7 @@ import {
 import { type SnapGuide, type SnapTarget } from "../lib/system-snap.js"
 import { TypographyFrame, type TypographyFrameProps } from "./typography-frame.js"
 import { type PrimitiveDescriptor } from "./primitives-showcase.js"
+import { fogmaIcons } from "../lib/icons.js"
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -89,7 +90,14 @@ function layoutPrimitives(
 // Main board component
 // ---------------------------------------------------------------------------
 
-export const DesignSystemBoard = memo(DesignSystemBoardInner)
+const _DesignSystemBoard = memo(DesignSystemBoardInner)
+export const DesignSystemBoard: typeof _DesignSystemBoard & {
+  icon: typeof fogmaIcons.designSystem
+  defaultTitle: string
+} = Object.assign(_DesignSystemBoard, {
+  icon: fogmaIcons.designSystem,
+  defaultTitle: "Design System",
+})
 
 function DesignSystemBoardInner({
   tailwindConfig,

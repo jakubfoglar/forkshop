@@ -8,6 +8,7 @@ import { useFogmaCanvas } from "../components/canvas/fogma-canvas.js"
 import type { GetSnapTargets } from "../hooks/use-draggable-node.js"
 import type { NodePosition, NodePositions } from "../lib/node-positions.js"
 import type { SnapGuide, SnapTarget } from "../lib/system-snap.js"
+import { fogmaIcons } from "../lib/icons.js"
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -155,7 +156,14 @@ function buildGridLayout(
 // Main kit component (renders inside <FogmaCanvas>)
 // ---------------------------------------------------------------------------
 
-export const IframeGallery = memo(IframeGalleryInner)
+const _IframeGallery = memo(IframeGalleryInner)
+export const IframeGallery: typeof _IframeGallery & {
+  icon: typeof fogmaIcons.components
+  defaultTitle: string
+} = Object.assign(_IframeGallery, {
+  icon: fogmaIcons.components,
+  defaultTitle: "Components",
+})
 
 function IframeGalleryInner({
   entries,
