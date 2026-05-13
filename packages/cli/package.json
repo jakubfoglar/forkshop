@@ -14,7 +14,7 @@
     "build": "tsx scripts/build.ts",
     "dev": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src",
+    "lint": "eslint src --ignore-pattern 'src/__fixtures__/**'",
     "test": "vitest run"
   },
   "dependencies": {
