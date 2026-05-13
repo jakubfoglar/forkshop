@@ -3,7 +3,10 @@
   "compilerOptions": {
     "outDir": "./dist",
     "baseUrl": ".",
-    "paths": { "@/*": ["./src/*"] }
+    "paths": {
+      "@/*": ["./src/*"],
+      "@fogma/*": ["./src/*"]
+    }
   },
   "include": ["src/**/*", "tailwind/**/*"],
   "exclude": ["node_modules", "dist"]
