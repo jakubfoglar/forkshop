@@ -385,6 +385,72 @@ Proceed? (y / n / show full snippet)
 
 ## Phase 6 — Write the artifacts
 
+Sequential. Failures stop the sequence — no transactional rollback. Order minimizes half-broken states (config before its consumers, kit-supporting writes before opt-in tweaks).
+
+For each step, after a successful write, print a single `✓ <action> <path>` line. After all steps, print a blank line and move to Phase 7.
+
+### Step 1 — `<aliases.mount>/fogma.config.ts` (or `.tsx`)
+
+Render from Template 1 (`## Scaffolding templates` below). Substitute placeholders using the rules in that section. Resolve primitive/block import paths against the user's actual `components/` paths captured in Phase 2.
+
+For the import group, prefer a single `from "@/components/ui"` barrel import if `components/ui/index.ts` exists; otherwise per-file imports.
+
+### Step 2 — Per-board files
+
+For each accepted sidebar section, write `<aliases.mount>/<board-slug>-board.tsx`. The slug is the section name kebab-cased ("Foundations" → `foundations`, "Marketing Blocks" → `marketing-blocks`).
+
+Pick the right template (Template 2 for design-system-board, Template 3 for iframe-gallery, Template 4 for page-tree).
+
+### Step 3 — `<aliases.mount>/page.tsx`
+
+Render from Template 5. Replace any CLI-dropped stub. Import every board file written in Step 2, list them in `sidebar_entries` in the order the user accepted.
+
+### Step 4 — `tailwind.config.ts` (automatic, no opt-in gate)
+
+The strategy spec's "never silently mutate" list covers `next.config.ts`, `.claude/settings.json`, and root `CLAUDE.md`. `tailwind.config.ts` is *not* on that list — it's an automatic write, surfaced in Phase 3's "Also touching" callout.
+
+Read the existing file. If `presets` already exists in `module.exports`/`export default`, append `require("./lib/fogma/tailwind/fogma-preset")` to that array. Otherwise add a new top-level `presets: [require("./lib/fogma/tailwind/fogma-preset")]` property.
+
+For TypeScript configs (`.ts`), use the same syntax inside the `Config` typed object.
+
+If the file's syntax is unusual (heavy comments, dynamic imports, exotic factory patterns) and a clean edit isn't safe, stop and print:
+
+> *"I couldn't safely edit `tailwind.config.ts` — please add this manually: `presets: [require('./lib/fogma/tailwind/fogma-preset')]` to your config's `presets` array."*
+
+Then continue to Step 5.
+
+### Step 5 — `<aliases.mount>/fogma.css`
+
+If the CLI already wrote this file (it likely did during `npx fogma init`), leave it alone. Otherwise write from Template 9 (the CSS template — added below in `## Scaffolding templates`).
+
+The file imports the Raveo `@font-face` declarations and defines `fogma-*` CSS variables. The user-mounted `app/fogma/layout.tsx` is expected to import it (the CLI handles that mount).
+
+### Step 6 — Locator.js wiring (only if opt-in 5a was consented)
+
+Apply Template 7a to `next.config.{ts,js,mjs}`.
+Apply Template 7b to `<aliases.mount>/layout.tsx` (create the file if absent).
+Detect the package manager from lockfile presence (`pnpm-lock.yaml` → pnpm, `yarn.lock` → yarn, `bun.lockb` → bun, otherwise npm) and run `<pm> add -D @locator/runtime @locator/webpack-loader`. If the install fails, print the install command for the user to retry manually and proceed (files are already wired; the user just needs the dep).
+
+### Step 7 — Live-AI hook installation (only if opt-in 5b was consented)
+
+Write `.claude/hooks/post-tool-use.sh` from Template 6 — make it executable (`chmod +x`).
+Apply the matcher-merge logic from Phase 5b to `.claude/settings.json` (create it if absent).
+
+### Step 8 — Root `CLAUDE.md` cadence note (only if opt-in 5c was consented)
+
+Append Template 8 verbatim to root `CLAUDE.md`. Create the file if absent. The template includes start/end comment markers so `fogma-doc-sync` can refresh it later.
+
+### Failure handling
+
+If any step throws (file write error, parse error on existing config, etc.):
+
+1. Print: `✗ <step name> — <one-line reason>`
+2. Stop the sequence (do not attempt later steps).
+3. Tell the user: *"I stopped at <step>. Earlier steps succeeded and are on disk. After fixing the issue (or asking me what to fix), say 'continue setup' and I'll resume from the failed step."*
+4. On a "continue setup" reply, jump back to the failed step.
+
+Steps are idempotent enough that re-running a single step after the user manually fixes the input is safe.
+
 ## Phase 7 — Final summary
 
 ## Adjust mode (re-runs)
