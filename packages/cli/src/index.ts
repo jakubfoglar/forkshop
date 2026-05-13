@@ -2,6 +2,7 @@
 import { Command } from "commander"
 import pc from "picocolors"
 import { runAdd } from "./commands/add.js"
+import { runDiff } from "./commands/diff.js"
 import { runInit } from "./commands/init.js"
 
 const program = new Command()
@@ -49,6 +50,35 @@ program
       console.error(pc.red(result.reason))
       process.exit(2)
     }
+  })
+
+program
+  .command("diff <path>")
+  .description("Show how your local copy of a Fogma file differs from upstream.")
+  .option("--registry <url>", "Override the registry base URL")
+  .action(async (filePath, opts) => {
+    const result = await runDiff({
+      projectRoot: process.cwd(),
+      path: filePath,
+      registryUrl: opts.registry,
+    })
+    if (result.diff) {
+      const colored = result.diff
+        .split("\n")
+        .map((line) => {
+          if (line.startsWith("+++") || line.startsWith("---")) return pc.bold(line)
+          if (line.startsWith("+")) return pc.green(line)
+          if (line.startsWith("-")) return pc.red(line)
+          if (line.startsWith("@@")) return pc.cyan(line)
+          return pc.dim(line)
+        })
+        .join("\n")
+      process.stdout.write(colored)
+    }
+    if (result.message) {
+      console.error(pc.dim(result.message))
+    }
+    process.exit(result.exitCode)
   })
 
 program.parseAsync().catch((error) => {
