@@ -26,3 +26,4 @@ export { isTextElement, computeDomPath, PREVIEW_EDIT_CSS, PREVIEW_AGENT_CSS, PRE
 export { inspectElement, type InspectionResult, type AppliedToken } from "./lib/inspect-element.js"
 export { resolvePaddingClass, resolveGapClass, extractMarginClasses, type ResolvedSpacingClass } from "./lib/spacing-classes.js"
 export { InspectPanel } from "./components/inspect-panel.js"
+export { LocatorInit } from "./components/locator-init.js"
