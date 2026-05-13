@@ -247,6 +247,46 @@ Changes that require a doc sync:
 
 ---
 
+## Maintaining `packages/registry/src/skill/setup.md`
+
+The setup skill is one of three markdown skills shipped via the registry (`setup.md`, `live-editing.md`, `doc-sync.md`). Only `setup.md` requires extensive structure — the other two are short reference cards.
+
+### Anatomy
+
+- YAML frontmatter — `name`, `description`. The description's natural-language triggers must not overlap with the sibling skills.
+- 8 phases (Phase 0 through Phase 7) — fixed order, each a numbered `## Phase N` subsection.
+- Adjust mode, Edge cases, "What this skill never does" — guardrails after the phases.
+- `## Scaffolding templates` — the bottom section, contains 9 templates with `{{snake_case}}` placeholders.
+
+### Phase 5 uses the `AskUserQuestion` tool
+
+Consent for the three opt-ins (Locator.js / live-AI hook / cadence note) is collected via a **single `AskUserQuestion` call with three questions**, not inline `y / n` prompts. Each question has three options: Yes / No / Show me. "Show me" renders the full code diff inline and re-asks just that question with Yes / No.
+
+If you edit Phase 5, preserve this contract — the skill's UX depends on the single-panel consent flow.
+
+### Updating
+
+- **Activation triggers** — in the `description:` field of the frontmatter. Test by invoking with each trigger phrase against `apps/playground` (or against any fresh Next.js fixture).
+- **Phase content** — the phases are read top-to-bottom by Claude at invocation time. Treat the file as a prompt: terse, imperative, no fluff. Refer the reader to `app/fogma/CLAUDE.md` in the user's repo for kit API details rather than duplicating them.
+- **Templates** — every template MUST be inside a fenced code block in the `## Scaffolding templates` section. The `validateSkillPlaceholders` check in `apps/docs/scripts/validate-registry.ts` enforces this.
+- **Placeholders** — use `{{snake_case}}` only. Lowercase, underscores. Document any new placeholder in the substitution-rules block at the top of the templates section.
+
+### What NOT to add
+
+- Long explanations or rationale — those live in the spec at `docs/specs/2026-05-13-fogma-setup-skill-design.md`. The skill file is for runtime instruction, not background.
+- Ravineo-specific examples or paths. Examples should use generic placeholder names ("Foundations", "Hero") that any project would recognize.
+- Direct skill-to-skill cross-talk. The setup skill mentions sibling skills by name but doesn't invoke them. Each skill stays self-contained.
+
+### Testing changes
+
+1. Edit `packages/registry/src/skill/setup.md`.
+2. Run `pnpm --filter docs validate-registry` — catches placeholder leaks (any `{{...}}` outside the `## Scaffolding templates` section, unless inside a fenced or inline code block).
+3. Sync into a fixture project's `.claude/skills/fogma-setup.md` for fast local iteration. The marketing fixture at `~/Desktop/ravineo_dev/fogma-fixtures/marketing-fixture/` (if present) is a known-good test bed; otherwise `pnpm create next-app` a fresh one and add a stub `fogma.json` + `app/fogma/CLAUDE.md`.
+4. Open Claude Code in the fixture and exercise the affected phase by invoking *"set up Fogma"*.
+5. For changes that affect detection: run against fixtures representing different project types (marketing, SaaS, hybrid, monorepo).
+
+---
+
 ## License + contribution posture
 
 MIT. See `LICENSE` at the repo root.
