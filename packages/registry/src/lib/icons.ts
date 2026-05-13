@@ -1,20 +1,17 @@
 import {
   ArrowLeft,
   Box,
-  Boxes,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   ChevronUp,
   Check,
   File,
-  Files,
   Info,
-  LayoutGrid,
-  Palette,
+  Network,
   Plus,
   Search,
-  Workflow,
+  SwatchBook,
   X,
   type LucideIcon,
 } from "lucide-react"
@@ -28,11 +25,11 @@ import {
  */
 export const fogmaIcons = {
   // Section / board defaults
-  designSystem: Palette,
-  components: Boxes,
-  pages: Files,
-  navigation: LayoutGrid,
-  flows: Workflow,
+  designSystem: SwatchBook,
+  components: Box,
+  pages: File,
+  navigation: Network,
+  flows: Network,
 
   // Entity types
   page: File,
