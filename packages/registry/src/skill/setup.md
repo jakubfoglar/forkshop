@@ -164,6 +164,76 @@ Do not render this to the user. It is the input to Phase 3.
 
 ## Phase 3 — Build the consolidated proposal
 
+Render the proposal in the exact format below. Use box-drawing characters (`┌ ├ └ │ •`) for the sidebar tree. Do **not** improvise a different layout — designers reading this proposal compare it visually across runs.
+
+### Proposal template
+
+```
+I've read your project. Here's what I see:
+
+  <narrative paragraph from Phase 1, 2-3 sentences>
+
+Here's the Fogma I'd build for you:
+
+  /fogma sidebar
+  ┌─ <Section 1 name>          (<kit name> kit<, layout: "<layout>" if iframe-gallery>)
+  │   • <bullet 1>
+  │   • <bullet 2>
+  ├─ <Section 2 name>          (<kit name> kit)
+  │   • <bullet 1>
+  └─ <Section N name>          (<kit name> kit)
+      • <bullet 1>
+
+Mount path:    <aliases.mount, abbreviated to project-relative>
+               (or app/(tools)/fogma/ — say "use tools group" to switch)
+
+Also touching (automatic — required for Fogma to render right):
+  • tailwind.config.ts — adds `presets: [require("./lib/fogma/tailwind/fogma-preset")]`
+    so Fogma's UI styles itself via `fogma-*` tokens without leaking into your tokens.
+
+Opt-ins (I'll ask before touching each):
+  [1] Locator.js for option-click open-in-editor
+        Touches: next.config.ts (turbopack rule), <aliases.mount>/layout.tsx (mount)
+        Installs: @locator/runtime, @locator/webpack-loader (dev)
+  [2] Live-AI awareness hook
+        Touches: .claude/settings.json (one hook entry)
+        Writes:  .claude/hooks/post-tool-use.sh (new file)
+  [3] Live-editing cadence note in root CLAUDE.md
+        Appends ~20 lines describing how to break up edits when working on
+        Fogma-watched files. Snippet is preserved on doc-sync.
+
+Reply with one of:
+  • "looks good" / "accept all"      → I'll proceed with everything above
+  • "rename <Section> to <Name>"     → I'll adjust section names
+  • "skip <Section>"                 → I'll drop a section
+  • "no Locator" / "yes hook"        → I'll toggle opt-ins
+  • "tools group" / "different path" → I'll switch mount path
+  • "pause"                          → I'll stop and not write anything
+
+You can also push back on the picture: "this is actually a SaaS, the (marketing)
+routes are stale" — I'll re-read and re-propose.
+```
+
+### Section composition rules
+
+For each scanned input, propose:
+
+- **Foundations** section — `design-system-board` kit — IFF Phase 2 found ≥ 1 primitive OR Tailwind config is non-default. Bullets: "<N> colors found in tailwind.config (<sample names>)" + "<N> primitives: <sample names>". If primitives but no notable colors, omit the colors bullet. If colors but no primitives, omit the primitives bullet.
+- **Blocks** section — `iframe-gallery` kit, layout `"stack"` — IFF Phase 2 found ≥ 1 block. Bullets: "<N> blocks: <sample names>" + "Fixtures pulled from <files where fixtures were captured>".
+- **Pages** section — `page-tree` kit — always proposed. Bullets: "<N> routes under <group>" per route group, or "<N> routes total" if no groups.
+
+For **hybrid** projects (both marketing and SaaS signals), propose one Foundations section + one Blocks (or Components) section *per surface* + one Pages section per surface. Name them with surface qualifiers: "Marketing Blocks", "Dashboard Components", "Marketing Pages", "App Pages". The user may merge or rename during iteration.
+
+For the **mobile profile** flag from Phase 1: in any Blocks section, append `, layout: "stack" (375px single-width — mobile profile)` after the kit name. The user can override via `"three-viewport"` in iteration.
+
+### Empty-section handling
+
+If a category has zero discovered entries (e.g., no primitives + default Tailwind → empty Foundations), do not propose it. Mention the gap in the narrative paragraph: *"I didn't find any primitives — start by adding a Foundations board later via `npx fogma add kits/design-system-board` and ask me to rescan."*
+
+### After rendering
+
+Wait for user input. Do not proceed to Phase 4 until you receive a reply. If the user is silent, do not write anything — `fogma.config.ts` and the board files stay untouched.
+
 ## Phase 4 — Iterate
 
 ## Phase 5 — Consent for config mutations
