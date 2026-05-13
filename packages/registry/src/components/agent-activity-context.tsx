@@ -40,6 +40,11 @@ export type ActivityEntry = {
   lastSeenAt: number
 }
 
+export type FileMap = {
+  primitives: ReadonlyArray<{ id: string; sourcePath: string }>
+  blocks: ReadonlyArray<{ slug: string; sourcePath: string }>
+}
+
 type AgentActivityValue = {
   entries: readonly ActivityEntry[]
   blockSlugs: readonly string[]

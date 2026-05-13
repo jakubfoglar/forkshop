@@ -39,7 +39,7 @@ export {
   useAgentSubstringsForBlock,
   deriveAffectedBlocks,
 } from "@forkshop/components/agent-activity-context"
-export type { ActivityEntry } from "@forkshop/components/agent-activity-context"
+export type { ActivityEntry, FileMap } from "@forkshop/components/agent-activity-context"
 export type { ActivityEntry as AgentActivityStateEntry } from "@forkshop/lib/agent-activity-state"
 export { recordActivity, subscribe } from "@forkshop/lib/agent-activity-state"
 export { filePathToRoute, fileToSelection } from "@forkshop/lib/file-to-selection"
