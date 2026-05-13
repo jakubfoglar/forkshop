@@ -1,12 +1,6 @@
 import { promises as fs } from "node:fs"
 import path from "node:path"
-import { fileURLToPath } from "node:url"
-
-const REGISTRY_ROOT = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  ".."
-)
-const SRC_ROOT = path.join(REGISTRY_ROOT, "src")
+import { REGISTRY_ROOT, SRC_ROOT, walkTsFiles } from "./_utils.js"
 
 /**
  * Rewrites one import source string. Pure function — no I/O.
@@ -29,8 +23,10 @@ export function normalizeImportSource(filePath: string, importPath: string): str
  */
 export function normalizeFileContent(filePath: string, content: string): string {
   const patterns: RegExp[] = [
-    /(\bfrom\s+)(["'])([^"']+)\2/g,
-    /(\bimport\s*\(\s*)(["'])([^"']+)\2/g,
+    // Matches: import ... from "..."  |  export ... from "..."   at line start
+    /^(\s*(?:import|export)\b[^"'\n]*?\bfrom\s+)(["'])([^"']+)\2/gm,
+    // Matches: import("...")  at line start (treats dynamic import as a statement here)
+    /^(\s*import\s*\(\s*)(["'])([^"']+)\2/gm,
   ]
   let next = content
   for (const re of patterns) {
@@ -42,21 +38,8 @@ export function normalizeFileContent(filePath: string, content: string): string 
   return next
 }
 
-async function walk(dir: string, out: string[] = []): Promise<string[]> {
-  const entries = await fs.readdir(dir, { withFileTypes: true })
-  for (const entry of entries) {
-    const full = path.join(dir, entry.name)
-    if (entry.isDirectory()) {
-      await walk(full, out)
-    } else if (/\.(ts|tsx)$/.test(entry.name)) {
-      out.push(full)
-    }
-  }
-  return out
-}
-
 async function main() {
-  const files = await walk(SRC_ROOT)
+  const files = await walkTsFiles(SRC_ROOT)
   let changedCount = 0
   for (const abs of files) {
     const rel = path.relative(REGISTRY_ROOT, abs).split(path.sep).join("/")

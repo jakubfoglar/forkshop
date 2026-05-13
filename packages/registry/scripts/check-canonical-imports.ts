@@ -1,26 +1,12 @@
 import { promises as fs } from "node:fs"
 import path from "node:path"
-import { fileURLToPath } from "node:url"
+import { REGISTRY_ROOT, SRC_ROOT, walkTsFiles } from "./_utils.js"
 
-const REGISTRY_ROOT = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  ".."
-)
-const SRC_ROOT = path.join(REGISTRY_ROOT, "src")
-
-const RELATIVE_PARENT_RE = /(\bfrom\s+|\bimport\s*\(\s*)(["'])(\.\.\/[^"']+)\2/g
-
-async function walk(dir: string, out: string[] = []): Promise<string[]> {
-  for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
-    const full = path.join(dir, entry.name)
-    if (entry.isDirectory()) await walk(full, out)
-    else if (/\.(ts|tsx)$/.test(entry.name)) out.push(full)
-  }
-  return out
-}
+const RELATIVE_PARENT_RE =
+  /^(\s*(?:import|export)\b[^"'\n]*?\bfrom\s+|^\s*import\s*\(\s*)(["'])(\.\.\/[^"']+)\2/gm
 
 async function main() {
-  const files = await walk(SRC_ROOT)
+  const files = await walkTsFiles(SRC_ROOT)
   const violations: { file: string; match: string }[] = []
   for (const abs of files) {
     const content = await fs.readFile(abs, "utf8")
