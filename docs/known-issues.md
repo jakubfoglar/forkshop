@@ -1,70 +1,67 @@
 # Known issues
 
-Bugs and rough edges discovered during real-world testing of the setup skill against a production project (Spotato). Each is **kit-level** — the setup skill correctly detects, proposes, consents, and writes; these are issues in how the rendered kits behave inside the user's `/fogma` route.
-
-None of these block shipping the setup skill itself. They each warrant their own follow-up spec when the kits get a polish pass.
+Tracked from real-world testing of the setup skill against a production project (Spotato). All five v0 issues have been resolved as of 2026-05-13.
 
 ---
 
-## 1. `fogma-*` tokens leak into the Design System board
+## ✅ 1. `fogma-*` tokens leaked into the Design System board
 
-**Where:** `components/fogma/kits/design-system-board.tsx`
+**Status:** Fixed in `0d5292a` (token-registry filter).
 
-**What happens:** The kit reads all colors from `tailwind.config.{ts,js}` and renders them as swatches. The setup skill wires the `fogma-preset` into the user's Tailwind config so Fogma's UI styles itself — but those `fogma-*` tokens (`fogma-accent`, `fogma-canvas`, `fogma-fg`, `fogma-surface`, `fogma-border`, etc.) then show up in the user's Design System view alongside their own tokens.
+**What it was:** The Fogma preset wires `fogma-*` tokens (`fogma-accent`, `fogma-canvas`, `fogma-fg`, etc.) into the user's Tailwind config so Fogma's UI styles itself. The `design-system-board` kit read every color from the merged config and showed them as user-facing tokens. The whole point of the `fogma-*` namespace was isolation.
 
-**Why it matters:** The whole point of the `fogma-*` namespace (per the OSS strategy spec) is isolation between Fogma's chrome and the user's design system. Leaking them defeats the namespace.
-
-**Fix sketch:** In the design-system-board's color extractor, filter out keys whose path includes `fogma-`. Make it overridable via a kit prop (`hideFogmaTokens?: boolean`, default `true`).
-
-**Related:** Tailwind's *default* palettes (`amber-*`, `blue-*`, `cyan-*` etc.) also show up alongside the user's custom tokens because most projects extend rather than replace `theme.colors`. A similar filter pattern — *"hide tokens not explicitly named in this project's config"* — could clean both up. Lower priority than the `fogma-*` leak since defaults are at least real Tailwind tokens; the `fogma-*` ones are foreign to the user.
+**Fix:** `buildTokenRegistry` in `packages/registry/src/lib/token-registry.ts` now filters out `fogma-*` names by default across every category (colors, spacing, radii, etc.). Opt back in with `{ includeFogmaTokens: true }` if needed.
 
 ---
 
-## 2. Page tile cropped in Pages overview
+## ✅ 2. Page tiles cropped in Pages overview
 
-**Where:** `components/fogma/kits/page-tree.tsx` + `components/fogma/canvas/use-iframe-preview.ts`
+**Status:** Fixed in `8cc14eb` (LazyIframe desktop scaling).
 
-**What happens:** In the Pages overview board, each route renders as an iframe-thumbnail tile. Tiles are sized small (correct for overview) but the inner iframe shows only the top portion of the page, not the full scrolled content scaled into the tile.
+**What it was:** Page-tree tiles loaded the iframe at 400px width and showed only the top 280px, so each tile looked like a phone-narrow header crop.
 
-**Why it matters:** The tile becomes ambiguous — you can't tell which page is which from a header crop alone. Production Fogma (`app/(tools)/fogma/` in ravineo-web) handles this with `body.scrollHeight` measurement + CSS scaling.
-
-**Fix sketch:** Port the full `use-iframe-preview.ts` body-scroll-height measurement into the OSS kit. The ravineo-web version handles this correctly; the OSS extraction probably ported a partial version.
+**Fix:** `LazyIframe` accepts an optional `desktopWidth` prop. When set, the iframe loads at that width and CSS-scales down to fit the requested `width × heightCap`. The page-tree kit passes `desktopWidth={1440}` so tiles render as desktop thumbnails.
 
 ---
 
-## 3. Next.js dev chrome visible inside iframe previews
+## ✅ 3. Next.js dev chrome visible inside iframe previews
 
-**Where:** Same as above — `use-iframe-preview.ts` / `use-iframe-edit-wiring.ts`
+**Status:** Fixed in `8cc14eb` (LazyIframe dev-chrome hiding).
 
-**What happens:** The Next.js dev-mode floating circle ("N" badge bottom-left) is visible inside the iframe previews, obscuring page content.
+**What it was:** Next.js's "N" badge and dev-overlay elements showed inside every iframe preview.
 
-**Why it matters:** Designers want to see *their* design, not Next.js's diagnostic UI. Production Fogma injects a CSS override to hide it.
-
-**Fix sketch:** The CSS injection happens via `PREVIEW_EDIT_CSS` in production. The OSS port appears to be missing this or applying it incompletely. Likely a single-CSS-string addition.
+**Fix:** `LazyIframe`'s onLoad handler now injects a `<style>` element hiding `nextjs-portal`, `[data-nextjs-toast]`, `[data-nextjs-dev-overlay]`, `#__next-build-watcher`. Matches the same selector list used by `responsive-frame-view`.
 
 ---
 
-## 4. Sidebar route single-click doesn't open responsive view
+## ✅ 4. Sidebar route single-click didn't open responsive view
 
-**Where:** `components/fogma/sidebar/` + canvas selection state
+**Status:** Fixed in `aba73bf` (templates ported from playground).
 
-**What happens:** Clicking a route name in the PAGES sidebar (e.g., "Home") shows a small tile preview rather than the full three-viewport (Desktop / Tablet / Mobile) responsive frame view. Double-clicking the same tile *does* open the responsive view.
+**What it was:** Clicking a route name in the PAGES sidebar (e.g., "Home") rendered the small tile preview instead of the three-viewport responsive view. Double-clicking the tile worked. The wiring gap was in the *generated* `app/fogma/page.tsx` — the mount page didn't manage selection state, so sidebar selections went nowhere.
 
-**Why it matters:** Single-click in the sidebar is the natural primary action. Forcing double-click for the most common operation is friction.
-
-**Fix sketch:** Wire sidebar row single-click to set selection to `{ kind: "page", path }` instead of `{ kind: "sitemap" }`. Production Fogma does this; the OSS port likely has the sidebar pointing at the overview instead of the per-page view.
+**Fix:** The setup skill's mount page template (Template 5) now tracks `useState<FogmaSelection>`, derives `isolatedPath` from page selections, and passes it to `PagesBoardView`. The pages-board template (Template 4) accepts `isolatedPath` + `onBack` and forwards them to the `PageTree` kit's `isolatedPath` prop. Matches the `apps/playground` reference implementation.
 
 ---
 
-## When to address these
+## ✅ 5. Typography sizes rendered uniformly (display-* hardcoded)
 
-These are all small surface bugs in the ported kits. None require new design work — production Fogma (`app/(tools)/fogma/` in `ravineo-web`) already solves each one correctly. The fix is mostly *"port the missing logic from production Fogma to the OSS kit equivalent."*
+**Status:** Fixed in `aba73bf` (typography reads from tailwind config).
 
-Recommended bundling: one polish spec called `fogma-kits-v0-polish` that addresses all four together. Probably a half-day's work once started.
+**What it was:** The `typography-frame` defaulted to class names `text-display-3xl`, `text-display-2xl`, etc. If the user's Tailwind config didn't define those exact keys, all the "Type Sample" rows rendered at base size.
 
-Tracking status:
+**Fix:** The setup skill's design-system-board template now passes `tailwindConfig={fogmaConfig.tailwindConfig}` to the kit. The kit reads fontSize tokens dynamically from the user's actual config, so display sizes always reflect the real design system.
 
-- [ ] `fogma-*` token filter in design-system-board
-- [ ] iframe-preview body-scroll-height measurement
-- [ ] Hide Next.js dev chrome in iframe previews
-- [ ] Sidebar single-click → responsive view
+---
+
+## Applying these fixes to an already-installed Fogma
+
+These fixes ship via the OSS registry. New installs (`npx fogma init` against the updated registry) get the corrected templates automatically. For an existing install, the easiest path is to re-run the setup skill — when `fogma.config.tsx` is non-empty, adjust mode kicks in; tell it to "rescan and regenerate" and it'll update the board files and `page.tsx` to the new shape.
+
+Alternative: hand-port the diff from `apps/playground/app/fogma/` into your install's `app/fogma/`. Five small files; ~20 minutes of careful editing.
+
+---
+
+## Next polish pass
+
+These were the v0 surface bugs. The next quality bar is harder things: per-block fixture inference (so blocks don't all use the homepage as their `iframeSrc`), customizable stage dimensions per project, and the broader UX of the iteration loop. Out of scope for now; warrants its own spec when the time comes.
