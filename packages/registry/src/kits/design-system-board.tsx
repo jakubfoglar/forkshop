@@ -2,7 +2,6 @@
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { Config } from "tailwindcss"
-import type { ReactNode } from "react"
 import { CanvasNode } from "../components/canvas/canvas-node.js"
 import { useFogmaCanvas } from "../components/canvas/fogma-canvas.js"
 import { GuideOverlay } from "../components/canvas/guide-overlay.js"
@@ -14,13 +13,12 @@ import {
   layoutSystem,
   COLOR_NODE_WIDTH,
   COLOR_NODE_HEIGHT,
-  SECTION_GAP,
   type PositionedColorNode,
   type SystemLayout,
 } from "../lib/system-layout.js"
 import { type SnapGuide, type SnapTarget } from "../lib/system-snap.js"
 import { TypographyFrame, type TypographyFrameProps } from "./typography-frame.js"
-import { PrimitivesShowcase, type PrimitiveDescriptor } from "./primitives-showcase.js"
+import { type PrimitiveDescriptor } from "./primitives-showcase.js"
 
 // ---------------------------------------------------------------------------
 // Constants

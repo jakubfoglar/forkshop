@@ -22,7 +22,6 @@ function useIsNavigationActive(): boolean {
 }
 
 type IconoirComponent = ComponentType<SVGProps<SVGSVGElement> & { strokeWidth?: number | string }>
-type IconComponent = ComponentType<{ className?: string }>
 
 // ---------------------------------------------------------------------------
 // Public types
