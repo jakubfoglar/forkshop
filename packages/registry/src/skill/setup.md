@@ -236,6 +236,29 @@ Wait for user input. Do not proceed to Phase 4 until you receive a reply. If the
 
 ## Phase 4 — Iterate
 
+After rendering the Phase 3 proposal, wait for the user's reply. Loop:
+
+1. Read the user's reply.
+2. Classify it as one of:
+   - **Full acceptance** ("looks good", "accept all", "yes", "go", "ship it") → exit the loop and proceed to Phase 5.
+   - **Section rename** ("rename Foundations to Colors", "call it Tokens instead") → update the section name in the internal proposal state.
+   - **Section drop** ("skip Blocks", "remove Pages", "don't include Foundations") → drop the section from the proposal state.
+   - **Section add** ("also add a Layouts board", "add a Flows section") → propose a new section. If no scanned data fits, ask: *"I'd add it with what content? An empty starter, or pull from a folder you point me at?"*
+   - **Opt-in toggle** ("no Locator", "yes hook", "skip the cadence note") → flip the opt-in flag.
+   - **Mount path change** ("tools group", "use app/(tools)/fogma/", "put it under apps/web") → update `mountPath` in the proposal state.
+   - **Narrative correction** ("this is actually a SaaS", "the (marketing) routes are stale, don't include them") → return to Phase 1 with the correction as an explicit hint; re-run Steps 1-5; produce a new narrative; re-render.
+   - **"explain why you chose X"** → describe the heuristic that produced the choice, briefly. Do not modify state.
+   - **"pause"** → stop, write nothing, tell the user how to resume: *"Paused. Type 'set up Fogma' again to resume from the current proposal."* Hold the proposal state if you can; otherwise the next invocation re-runs Phase 1.
+   - **Ambiguous** → ask one short clarifying question. Do not assume.
+3. Re-render the proposal with the new state. Use the exact Phase 3 template.
+4. Go to step 1.
+
+### Rules
+
+- **No writes during iteration.** All changes live in-memory until full acceptance. The user can experiment freely.
+- **Narrative pushback restarts Phase 1.** A correction to *what kind of project this is* invalidates downstream choices. Don't try to patch the narrative; re-derive it.
+- **Soft cap at 5 iterations.** If you've re-rendered the proposal 5 times without acceptance, ask: *"We've gone back and forth a few times. Want to pause and come back, or keep refining?"* This is a check-in, not a hard stop — if the user says keep going, keep going.
+
 ## Phase 5 — Consent for config mutations
 
 ## Phase 6 — Write the artifacts
