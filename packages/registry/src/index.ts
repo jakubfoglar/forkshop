@@ -84,6 +84,13 @@ export {
   type NodePosition,
   type NodePositions,
 } from "./lib/node-positions.js"
+export { DesignSystemBoard, type DesignSystemBoardProps } from "./kits/design-system-board.js"
+export { TypographyFrame, type TypographyFrameProps } from "./kits/typography-frame.js"
+export {
+  PrimitivesShowcase,
+  type PrimitivesShowcaseProps,
+  type PrimitiveDescriptor,
+} from "./kits/primitives-showcase.js"
 export {
   buildMarketingSitemap,
   buildFooterSitemap,
