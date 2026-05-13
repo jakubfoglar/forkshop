@@ -25,12 +25,12 @@ export function InspectPanel({
 }) {
   return (
     <aside className="flex w-[340px] flex-col border-l border-fogma-border bg-fogma-surface">
-      <div className="flex items-center justify-between border-b border-fogma-border px-1 py-0.75">
+      <div className="flex items-center justify-between border-b border-fogma-border px-4 py-3">
         <h3 className="text-sm font-semibold text-fogma-fg">Inspect</h3>
         <button
           type="button"
           onClick={onClose}
-          className="rounded px-0.5 py-0.25 text-xs text-fogma-fg-muted hover:text-fogma-fg"
+          className="rounded px-2 py-1 text-xs text-fogma-fg-muted hover:text-fogma-fg"
         >
           Close
         </button>
@@ -47,7 +47,7 @@ export function InspectPanel({
 function AppliedSection({ inspection }: { inspection: InspectionResult | undefined }) {
   if (!inspection) {
     return (
-      <div className="border-b border-fogma-border px-1 py-0.75">
+      <div className="border-b border-fogma-border px-4 py-3">
         <p className="text-xs text-fogma-fg-muted">
           Click any element in the desktop frame to inspect.
         </p>
@@ -55,27 +55,27 @@ function AppliedSection({ inspection }: { inspection: InspectionResult | undefin
     )
   }
   return (
-    <div className="border-b border-fogma-border px-1 py-0.75">
-      <div className="mb-0.75 flex items-baseline justify-between">
+    <div className="border-b border-fogma-border px-4 py-3">
+      <div className="mb-3 flex items-baseline justify-between">
         <h4 className="text-xs font-semibold uppercase tracking-wider text-fogma-fg-muted">
           Selected
         </h4>
         <code className="text-xs text-fogma-fg">{`<${inspection.tagName}>`}</code>
       </div>
       {inspection.textPreview && (
-        <p className="mb-0.75 truncate text-xs text-fogma-fg">"{inspection.textPreview}"</p>
+        <p className="mb-3 truncate text-xs text-fogma-fg">"{inspection.textPreview}"</p>
       )}
       {inspection.applied.length === 0 && inspection.unknownClasses.length === 0 && (
         <p className="text-xs text-fogma-fg-muted">No tokenized classes on this element.</p>
       )}
-      <ul className="space-y-0.5">
+      <ul className="space-y-2">
         {inspection.applied.map((token) => (
           <li key={token.className}>
             <AppliedRow token={token} />
           </li>
         ))}
         {inspection.unknownClasses.map((className) => (
-          <li key={className} className="flex items-center gap-0.5">
+          <li key={className} className="flex items-center gap-2">
             <code className="text-xs text-fogma-fg-muted">{className}</code>
             <span className="text-xs text-fogma-fg-muted">(non-token)</span>
           </li>
@@ -87,8 +87,8 @@ function AppliedSection({ inspection }: { inspection: InspectionResult | undefin
 
 function AppliedRow({ token }: { token: AppliedToken }) {
   return (
-    <div className="flex items-center justify-between gap-0.5 rounded px-0.5 py-0.25 hover:bg-gray-50">
-      <div className="flex min-w-0 items-center gap-0.5">
+    <div className="flex items-center justify-between gap-2 rounded px-2 py-1 hover:bg-gray-50">
+      <div className="flex min-w-0 items-center gap-2">
         <TokenSwatch entry={token.entry} />
         <code className="truncate font-mono text-xs text-fogma-fg">{token.className}</code>
       </div>
@@ -127,7 +127,7 @@ function CatalogCategory({
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="flex w-full items-center justify-between px-1 py-0.75 text-left hover:bg-gray-50"
+        className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-gray-50"
       >
         <span className="text-xs font-semibold text-fogma-fg">{label}</span>
         <span className="text-xs text-fogma-fg-muted">
@@ -135,7 +135,7 @@ function CatalogCategory({
         </span>
       </button>
       {open && (
-        <ul className="space-y-0.5 px-1 pb-0.75">
+        <ul className="space-y-2 px-4 pb-3">
           {entries.map((entry) => (
             <li key={tokenKey(entry)}>
               <CatalogRow entry={entry} />
@@ -153,8 +153,8 @@ function tokenKey(entry: TokenEntry): string {
 
 function CatalogRow({ entry }: { entry: TokenEntry }) {
   return (
-    <div className="flex items-center justify-between gap-0.5 rounded px-0.5 py-0.25 hover:bg-gray-50">
-      <div className="flex min-w-0 items-center gap-0.5">
+    <div className="flex items-center justify-between gap-2 rounded px-2 py-1 hover:bg-gray-50">
+      <div className="flex min-w-0 items-center gap-2">
         <TokenSwatch entry={entry} />
         <code className="truncate font-mono text-xs text-fogma-fg">{entry.name}</code>
       </div>
@@ -168,7 +168,7 @@ function TokenSwatch({ entry }: { entry: TokenEntry }) {
     return (
       <span
         aria-hidden
-        className="inline-block size-1 shrink-0 rounded-xs border border-fogma-border"
+        className="inline-block size-4 shrink-0 rounded-md border border-fogma-border"
         style={{ background: entry.hex }}
       />
     )
@@ -187,7 +187,7 @@ function TokenSwatch({ entry }: { entry: TokenEntry }) {
     return (
       <span
         aria-hidden
-        className="inline-block w-1.5 shrink-0 text-center font-semibold text-fogma-fg"
+        className="inline-block w-6 shrink-0 text-center font-semibold text-fogma-fg"
         style={{ fontSize: "0.875rem", lineHeight: 1 }}
       >
         Aa
@@ -198,7 +198,7 @@ function TokenSwatch({ entry }: { entry: TokenEntry }) {
     return (
       <span
         aria-hidden
-        className="inline-block w-1.5 shrink-0 text-center text-fogma-fg"
+        className="inline-block w-6 shrink-0 text-center text-fogma-fg"
         style={{ fontSize: "0.875rem", lineHeight: 1, fontWeight: entry.weight }}
       >
         Aa
@@ -209,7 +209,7 @@ function TokenSwatch({ entry }: { entry: TokenEntry }) {
     return (
       <span
         aria-hidden
-        className="inline-block size-1 shrink-0 border border-fogma-border-strong"
+        className="inline-block size-4 shrink-0 border border-fogma-border-strong"
         style={{ borderTopLeftRadius: entry.value, background: "#f8fafc" }}
       />
     )
@@ -218,7 +218,7 @@ function TokenSwatch({ entry }: { entry: TokenEntry }) {
     return (
       <span
         aria-hidden
-        className="inline-block size-1 shrink-0 rounded-xs"
+        className="inline-block size-4 shrink-0 rounded-md"
         style={{ background: "#fff", boxShadow: entry.value }}
       />
     )
@@ -262,7 +262,7 @@ function TokenValue({ entry }: { entry: TokenEntry }) {
     }
     case "shadow": {
       return (
-        <span className="max-w-1.5 truncate text-xs text-fogma-fg-muted" title={entry.value}>
+        <span className="max-w-6 truncate text-xs text-fogma-fg-muted" title={entry.value}>
           shadow
         </span>
       )

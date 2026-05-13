@@ -41,24 +41,24 @@ export function TypographyFrame({
   children,
 }: TypographyFrameProps) {
   return (
-    <div className="flex flex-col gap-1 p-1">
-      <section className="flex flex-col gap-0.5">
+    <div className="flex flex-col gap-4 p-4">
+      <section className="flex flex-col gap-2">
         <span className="font-mono text-xs uppercase tracking-wider text-fogma-fg-tertiary">
           Display
         </span>
         {displaySizes.map((sample) => (
-          <div key={sample.label} className="flex flex-col gap-0.125">
+          <div key={sample.label} className="flex flex-col gap-0.5">
             <span className="font-mono text-xs text-fogma-fg-tertiary">{sample.label}</span>
             <span className={`${sample.className} text-fogma-fg`}>{displaySample}</span>
           </div>
         ))}
       </section>
-      <section className="flex flex-col gap-0.5">
+      <section className="flex flex-col gap-2">
         <span className="font-mono text-xs uppercase tracking-wider text-fogma-fg-tertiary">
           Body
         </span>
         {bodySizes.map((sample) => (
-          <div key={sample.label} className="flex flex-col gap-0.125">
+          <div key={sample.label} className="flex flex-col gap-0.5">
             <span className="font-mono text-xs text-fogma-fg-tertiary">{sample.label}</span>
             <span className={`${sample.className} text-fogma-fg`}>{bodySample}</span>
           </div>

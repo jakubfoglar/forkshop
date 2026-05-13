@@ -18,8 +18,8 @@ export function FloatingControls({
   onToggleCompose?: () => void
 }) {
   return (
-    <div className="pointer-events-none absolute bottom-1 right-1 z-10 flex flex-col items-end gap-0.25">
-      <div className="pointer-events-auto flex items-center gap-0.125 rounded-full border border-fogma-border bg-fogma-surface px-0.25 py-0.125 shadow-sm">
+    <div className="pointer-events-none absolute bottom-4 right-4 z-10 flex flex-col items-end gap-1">
+      <div className="pointer-events-auto flex items-center gap-0.5 rounded-full border border-fogma-border bg-fogma-surface px-1 py-0.5 shadow-sm">
         {composeAvailable && (
           <button
             type="button"
@@ -27,7 +27,7 @@ export function FloatingControls({
             aria-pressed={composeEnabled}
             title="Toggle compose mode (drag to reorder, + to insert, × to remove)"
             className={cn(
-              "rounded-full px-0.5 py-0.125 text-xs font-medium transition-colors",
+              "rounded-full px-2 py-0.5 text-xs font-medium transition-colors",
               composeEnabled
                 ? "bg-fogma-accent/10 text-fogma-accent hover:bg-fogma-accent/20"
                 : "text-fogma-fg-muted hover:bg-fogma-surface-2 hover:text-fogma-fg",
@@ -39,17 +39,17 @@ export function FloatingControls({
         <button
           type="button"
           onClick={onFit}
-          className="rounded-full px-0.5 py-0.125 text-xs font-medium text-fogma-fg-muted hover:bg-fogma-surface-2 hover:text-fogma-fg"
+          className="rounded-full px-2 py-0.5 text-xs font-medium text-fogma-fg-muted hover:bg-fogma-surface-2 hover:text-fogma-fg"
         >
           Fit
         </button>
-        <span className="min-w-1.75 px-0.25 text-center text-xs tabular-nums text-fogma-fg-muted">
+        <span className="min-w-7 px-1 text-center text-xs tabular-nums text-fogma-fg-muted">
           {Math.round(zoom * 100)}%
         </span>
         <button
           type="button"
           onClick={onResetZoom}
-          className="rounded-full px-0.5 py-0.125 text-xs font-medium text-fogma-fg-muted hover:bg-fogma-surface-2 hover:text-fogma-fg"
+          className="rounded-full px-2 py-0.5 text-xs font-medium text-fogma-fg-muted hover:bg-fogma-surface-2 hover:text-fogma-fg"
         >
           100%
         </button>

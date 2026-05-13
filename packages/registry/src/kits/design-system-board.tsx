@@ -470,7 +470,7 @@ function ColorCardInner({
         outline: outlineFor(isSelected, isHovered),
         outlineOffset: 0,
       }}
-      className="flex items-center gap-0.25 rounded border border-fogma-border bg-fogma-surface px-0.25 shadow-xs"
+      className="flex items-center gap-1 rounded border border-fogma-border bg-fogma-surface px-1 shadow-xs"
     >
       <span
         aria-hidden="true"
@@ -478,9 +478,9 @@ function ColorCardInner({
           background: node.hex,
           boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.08)",
         }}
-        className="size-1 shrink-0 rounded-xxs"
+        className="size-4 shrink-0 rounded"
       />
-      <span className="truncate text-2xs text-fogma-fg-muted">{node.name}</span>
+      <span className="truncate text-xs text-fogma-fg-muted">{node.name}</span>
     </div>
   )
 }

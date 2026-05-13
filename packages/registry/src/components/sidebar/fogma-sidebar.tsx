@@ -136,7 +136,7 @@ export function FogmaSidebar({
         <button
           type="button"
           onClick={() => setHelpOpen(true)}
-          className="rounded-sm p-0.5 text-fogma-fg-muted transition-colors hover:bg-fogma-surface-2 hover:text-fogma-fg"
+          className="rounded-lg p-2 text-fogma-fg-muted transition-colors hover:bg-fogma-surface-2 hover:text-fogma-fg"
           aria-label="How to use fogma"
           title="How to use fogma"
         >
@@ -251,7 +251,7 @@ export function FogmaSidebar({
 
 function SectionHeader({ children }: { children: string }) {
   return (
-    <div className="mt-2 shrink-0 px-1 pb-0.5 text-[10px] font-medium uppercase tracking-wider text-fogma-fg-muted">
+    <div className="mt-2 shrink-0 px-1 pb-2 text-[10px] font-medium uppercase tracking-wider text-fogma-fg-muted">
       {children}
     </div>
   )
@@ -288,7 +288,7 @@ function SidebarRow({
     <div className="shrink-0">
       <div
         className={cn(
-          "flex items-center rounded py-0.5 text-xs",
+          "flex items-center rounded py-2 text-xs",
           rowVariant(agentActive, active),
         )}
         style={{ paddingLeft: `${Math.max(0, depth - 1) * 0.75}rem` }}
@@ -325,7 +325,7 @@ function SidebarRow({
         <button
           type="button"
           onClick={onClick}
-          className="min-w-0 flex-1 truncate py-0.5 pr-1 text-left"
+          className="min-w-0 flex-1 truncate py-2 pr-1 text-left"
         >
           {label}
         </button>
@@ -336,14 +336,14 @@ function SidebarRow({
         )}
         {isNew && (
           <span
-            className="mr-1 shrink-0 rounded-sm px-1 py-[1px] text-[9px] font-medium uppercase tracking-wider"
+            className="mr-1 shrink-0 rounded-lg px-1 py-[1px] text-[9px] font-medium uppercase tracking-wider"
             style={{ background: "oklch(0.62 0.22 280)", color: "white" }}
           >
             New
           </span>
         )}
         {draft && (
-          <span className="mr-2 shrink-0 rounded-sm bg-fogma-surface-2 px-1 py-[1px] text-[9px] font-medium uppercase tracking-wider text-fogma-fg-muted">
+          <span className="mr-2 shrink-0 rounded-lg bg-fogma-surface-2 px-1 py-[1px] text-[9px] font-medium uppercase tracking-wider text-fogma-fg-muted">
             Draft
           </span>
         )}
