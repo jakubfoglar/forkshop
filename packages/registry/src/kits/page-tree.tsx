@@ -340,6 +340,7 @@ function PageTileInner({
         width={TILE_WIDTH}
         heightCap={TILE_HEIGHT}
         onIframeWheel={handleIframeWheel}
+        onIframeDblClick={() => onIsolate(entry.path)}
         className="bg-white shadow-md"
       />
     </CanvasNode>

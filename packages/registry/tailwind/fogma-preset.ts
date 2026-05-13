@@ -26,7 +26,11 @@ export const fogmaPreset: Partial<Config> = {
         "fogma-agent": "var(--fogma-agent)",
       },
       fontFamily: {
-        "fogma-sans": ["Raveo", "Inter", "system-ui", "sans-serif"],
+        // Resolves to whatever the host wires into --font-raveo (set by
+        // `next/font/local` in the playground's layout.tsx). Falls back to
+        // Inter / system-ui when the variable is unset (e.g. SSR before
+        // hydration, or hosts that don't load Raveo).
+        "fogma-sans": ["var(--font-raveo)", "Inter", "system-ui", "sans-serif"],
       },
       fontSize: {
         "fogma-4xs": ["0.65rem", { lineHeight: "1.3", letterSpacing: "0.02em" }],

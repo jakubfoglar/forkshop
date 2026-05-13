@@ -13,6 +13,7 @@ type LazyIframeProps = {
   iframeRef?: (element: HTMLIFrameElement | undefined) => void
   className?: string
   onIframeWheel?: (event: WheelEvent, iframe: HTMLIFrameElement) => void
+  onIframeDblClick?: (event: MouseEvent, iframe: HTMLIFrameElement) => void
   // Optional: called on every contentDocument resize. Used by isolation views
   // that auto-size to their content. Off by default to avoid the cost.
   onBodyHeightSync?: (height: number) => void
@@ -27,6 +28,7 @@ export function LazyIframe({
   iframeRef,
   className,
   onIframeWheel,
+  onIframeDblClick,
   onBodyHeightSync,
 }: LazyIframeProps) {
   const [shouldLoad, setShouldLoad] = useState(false)
@@ -58,6 +60,7 @@ export function LazyIframe({
     if (!iframe) return
     let attached: Document | undefined
     let wheelHandler: ((event: WheelEvent) => void) | undefined
+    let dblClickHandler: ((event: MouseEvent) => void) | undefined
     let gestureHandler: ((event: Event) => void) | undefined
     let resizeObserver: ResizeObserver | undefined
     const onLoad = () => {
@@ -67,6 +70,10 @@ export function LazyIframe({
       if (onIframeWheel) {
         wheelHandler = (event) => onIframeWheel(event, iframe)
         document_.addEventListener("wheel", wheelHandler, { passive: false })
+      }
+      if (onIframeDblClick) {
+        dblClickHandler = (event) => onIframeDblClick(event, iframe)
+        document_.addEventListener("dblclick", dblClickHandler, { capture: true })
       }
       gestureHandler = (event) => event.preventDefault()
       document_.addEventListener("gesturestart", gestureHandler, { passive: false })
@@ -90,13 +97,14 @@ export function LazyIframe({
       iframe.removeEventListener("load", onLoad)
       resizeObserver?.disconnect()
       if (attached && wheelHandler) attached.removeEventListener("wheel", wheelHandler)
+      if (attached && dblClickHandler) attached.removeEventListener("dblclick", dblClickHandler, { capture: true })
       if (attached && gestureHandler) {
         attached.removeEventListener("gesturestart", gestureHandler)
         attached.removeEventListener("gesturechange", gestureHandler)
         attached.removeEventListener("gestureend", gestureHandler)
       }
     }
-  }, [shouldLoad, onIframeWheel, onBodyHeightSync])
+  }, [shouldLoad, onIframeWheel, onIframeDblClick, onBodyHeightSync])
 
   const resolvedHeight =
     height ?? (heightCap !== undefined && heightCap > 0 ? heightCap : undefined)
