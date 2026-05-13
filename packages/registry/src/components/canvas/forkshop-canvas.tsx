@@ -14,6 +14,8 @@ import {
   type RefObject,
 } from "react"
 import type { Transform } from "@forkshop/hooks/use-draggable-node"
+import { IframeRegistryProvider } from "@forkshop/components/iframe-registry"
+import { AgentIframeRelay } from "@forkshop/components/agent-iframe-relay"
 
 export type WheelInput = {
   deltaX: number
@@ -428,16 +430,19 @@ export function ForkshopCanvas({
 
   return (
     <ForkshopCanvasContext.Provider value={contextValue}>
-      <div
-        ref={containerRef as React.RefObject<HTMLDivElement>}
-        className="relative flex-1 select-none overflow-hidden overscroll-contain bg-forkshop-canvas"
-        style={{ cursor: containerCursor, touchAction: "none" }}
-        onClick={onContainerClick}
-      >
-        <div ref={stageRef as React.RefObject<HTMLDivElement>} style={stageStyle}>
-          {children}
+      <IframeRegistryProvider>
+        <AgentIframeRelay pageSelectionPath={undefined} blockSelectionSlug={undefined} />
+        <div
+          ref={containerRef as React.RefObject<HTMLDivElement>}
+          className="relative flex-1 select-none overflow-hidden overscroll-contain bg-forkshop-canvas"
+          style={{ cursor: containerCursor, touchAction: "none" }}
+          onClick={onContainerClick}
+        >
+          <div ref={stageRef as React.RefObject<HTMLDivElement>} style={stageStyle}>
+            {children}
+          </div>
         </div>
-      </div>
+      </IframeRegistryProvider>
     </ForkshopCanvasContext.Provider>
   )
 }
