@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest"
 import { normalizeImportSource } from "./normalize-imports.js"
 
 describe("normalizeImportSource", () => {
-  it("rewrites a relative .js import to @fogma/* form", () => {
+  it("rewrites a relative .js import to @forkshop/* form", () => {
     const filePath = "src/kits/iframe-gallery.tsx"
     const importPath = "../components/canvas/canvas-node.js"
     expect(normalizeImportSource(filePath, importPath)).toBe(
-      "@fogma/components/canvas/canvas-node"
+      "@forkshop/components/canvas/canvas-node"
     )
   })
 
@@ -14,7 +14,7 @@ describe("normalizeImportSource", () => {
     const filePath = "src/components/canvas/canvas-node.tsx"
     const importPath = "./canvas-label.js"
     expect(normalizeImportSource(filePath, importPath)).toBe(
-      "@fogma/components/canvas/canvas-label"
+      "@forkshop/components/canvas/canvas-label"
     )
   })
 
@@ -22,7 +22,7 @@ describe("normalizeImportSource", () => {
     const filePath = "src/api/edit/route.ts"
     const importPath = "../../lib/edit-mode.js"
     expect(normalizeImportSource(filePath, importPath)).toBe(
-      "@fogma/lib/edit-mode"
+      "@forkshop/lib/edit-mode"
     )
   })
 
@@ -31,18 +31,18 @@ describe("normalizeImportSource", () => {
     expect(normalizeImportSource("src/components/x.tsx", "motion/react")).toBe("motion/react")
   })
 
-  it("leaves already-canonical @fogma/* imports unchanged", () => {
+  it("leaves already-canonical @forkshop/* imports unchanged", () => {
     expect(
-      normalizeImportSource("src/kits/x.tsx", "@fogma/lib/foo")
-    ).toBe("@fogma/lib/foo")
+      normalizeImportSource("src/kits/x.tsx", "@forkshop/lib/foo")
+    ).toBe("@forkshop/lib/foo")
   })
 
   it("strips .ts/.tsx extensions if present", () => {
     expect(
       normalizeImportSource("src/kits/x.tsx", "../lib/foo.ts")
-    ).toBe("@fogma/lib/foo")
+    ).toBe("@forkshop/lib/foo")
     expect(
       normalizeImportSource("src/kits/x.tsx", "../lib/foo.tsx")
-    ).toBe("@fogma/lib/foo")
+    ).toBe("@forkshop/lib/foo")
   })
 })

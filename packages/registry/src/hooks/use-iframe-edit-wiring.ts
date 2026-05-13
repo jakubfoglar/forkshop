@@ -1,15 +1,15 @@
 "use client"
 
 import { useEffect } from "react"
-import { isTextElement, PREVIEW_AGENT_CSS, PREVIEW_EDIT_CSS, SKIP_TAGS } from "@fogma/lib/edit-mode"
+import { isTextElement, PREVIEW_AGENT_CSS, PREVIEW_EDIT_CSS, SKIP_TAGS } from "@forkshop/lib/edit-mode"
 
 type AgentMessage =
-  | { type: "fogma:agent-block"; slugs: string[] }
+  | { type: "forkshop:agent-block"; slugs: string[] }
   | {
-      type: "fogma:agent-text"
+      type: "forkshop:agent-text"
       strings: readonly { oldString?: string; newString?: string }[]
     }
-  | { type: "fogma:agent-page-active"; active: boolean }
+  | { type: "forkshop:agent-page-active"; active: boolean }
 
 function findElementContainingSubstring(
   iframeDocument: Document,
@@ -210,7 +210,7 @@ export function useIframeEditWiring({
         const target = event.target as HTMLElement | null
         // Spacing zones (padding strips, gap strips) have their own click
         // handler. Don't swallow those events here.
-        if (target?.dataset.fogmaZone !== undefined) return
+        if (target?.dataset.forkshopZone !== undefined) return
         // Cmd/Ctrl is the spacing-mode modifier — let the spacing wiring
         // handle modifier-clicks (zone clicks, body margin menu). Bail before
         // we'd capture and turn a Cmd-click on text into an edit-mode entry.
@@ -273,21 +273,21 @@ export function useIframeEditWiring({
         const data = event.data as unknown
         if (data === null || typeof data !== "object") return
         const message = data as Partial<AgentMessage> & { type?: string }
-        if (message.type === "fogma:agent-block") {
+        if (message.type === "forkshop:agent-block") {
           const targetSlugs = new Set<string>(message.slugs)
           for (const node of iframeDocument.querySelectorAll<HTMLElement>(
-            "[data-fogma-block][data-fogma-agent-active]",
+            "[data-forkshop-block][data-forkshop-agent-active]",
           )) {
-            const slug = node.dataset.fogmaBlock
+            const slug = node.dataset.forkshopBlock
             if (slug && !targetSlugs.has(slug)) {
-              delete node.dataset.fogmaAgentActive
+              delete node.dataset.forkshopAgentActive
             }
           }
           for (const slug of targetSlugs) {
             for (const node of iframeDocument.querySelectorAll<HTMLElement>(
-              `[data-fogma-block="${CSS.escape(slug)}"]`,
+              `[data-forkshop-block="${CSS.escape(slug)}"]`,
             )) {
-              node.dataset.fogmaAgentActive = ""
+              node.dataset.forkshopAgentActive = ""
             }
             const previous = agentBlockTimers.get(slug)
             if (previous) clearTimeout(previous)
@@ -295,9 +295,9 @@ export function useIframeEditWiring({
               slug,
               setTimeout(() => {
                 for (const node of iframeDocument.querySelectorAll<HTMLElement>(
-                  `[data-fogma-block="${CSS.escape(slug)}"]`,
+                  `[data-forkshop-block="${CSS.escape(slug)}"]`,
                 )) {
-                  delete node.dataset.fogmaAgentActive
+                  delete node.dataset.forkshopAgentActive
                 }
                 agentBlockTimers.delete(slug)
               }, 2000),
@@ -305,25 +305,25 @@ export function useIframeEditWiring({
           }
           return
         }
-        if (message.type === "fogma:agent-page-active") {
+        if (message.type === "forkshop:agent-page-active") {
           if (message.active) {
-            iframeDocument.documentElement.dataset.fogmaAgentPageActive = ""
+            iframeDocument.documentElement.dataset.forkshopAgentPageActive = ""
           } else {
-            delete iframeDocument.documentElement.dataset.fogmaAgentPageActive
+            delete iframeDocument.documentElement.dataset.forkshopAgentPageActive
           }
           return
         }
-        if (message.type === "fogma:agent-text") {
+        if (message.type === "forkshop:agent-text") {
           for (const change of message.strings ?? []) {
             const targets = findAllTargetsForChange(iframeDocument, change)
             for (const target of targets) {
               // Force re-trigger by toggling the attribute off and on across a frame.
-              delete target.dataset.fogmaAgentTextPulse
+              delete target.dataset.forkshopAgentTextPulse
               // oxlint-disable-next-line no-unused-expressions
               void target.offsetHeight
-              target.dataset.fogmaAgentTextPulse = ""
+              target.dataset.forkshopAgentTextPulse = ""
               const timer = setTimeout(() => {
-                delete target.dataset.fogmaAgentTextPulse
+                delete target.dataset.forkshopAgentTextPulse
                 agentTextTimers.delete(timer)
               }, 2100)
               agentTextTimers.add(timer)

@@ -7,7 +7,7 @@ export async function fetchManifest(registryUrl: string): Promise<Manifest> {
     response = await fetch(url)
   } catch (error) {
     throw new Error(
-      `Could not reach the Fogma registry at ${url} (${(error as Error).message}). ` +
+      `Could not reach the Forkshop registry at ${url} (${(error as Error).message}). ` +
         `Retry, or pass --registry <url> for local development.`
     )
   }
@@ -20,8 +20,8 @@ export async function fetchManifest(registryUrl: string): Promise<Manifest> {
   const manifest = (await response.json()) as Manifest
   if (manifest.version !== MANIFEST_SCHEMA_VERSION) {
     throw new Error(
-      `Your fogma CLI is incompatible with this registry (CLI: ${MANIFEST_SCHEMA_VERSION}, manifest: ${manifest.version}). ` +
-        `Update with npm i -g fogma@latest.`
+      `Your forkshop CLI is incompatible with this registry (CLI: ${MANIFEST_SCHEMA_VERSION}, manifest: ${manifest.version}). ` +
+        `Update with npm i -g forkshop@latest.`
     )
   }
   return manifest

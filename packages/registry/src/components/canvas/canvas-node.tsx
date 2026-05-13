@@ -6,11 +6,11 @@ import {
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
 } from "react"
-import type { NodePosition } from "@fogma/lib/node-positions"
-import type { SnapGuide } from "@fogma/lib/system-snap"
-import { CanvasLabel } from "@fogma/components/canvas/canvas-label"
-import { useFogmaCanvas } from "@fogma/components/canvas/fogma-canvas"
-import { useDraggableNode, type GetSnapTargets } from "@fogma/hooks/use-draggable-node"
+import type { NodePosition } from "@forkshop/lib/node-positions"
+import type { SnapGuide } from "@forkshop/lib/system-snap"
+import { CanvasLabel } from "@forkshop/components/canvas/canvas-label"
+import { useForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
+import { useDraggableNode, type GetSnapTargets } from "@forkshop/hooks/use-draggable-node"
 
 function outlineFor(isSelected: boolean, isHovered: boolean): string {
   if (isSelected) {
@@ -73,7 +73,7 @@ export function CanvasNode({
   style,
   children,
 }: CanvasNodeProps) {
-  const { transformRef } = useFogmaCanvas()
+  const { transformRef } = useForkshopCanvas()
   const [isBodyHovered, setIsBodyHovered] = useState(false)
   const [isLabelHovered, setIsLabelHovered] = useState(false)
   const isHovered = isBodyHovered || isLabelHovered
@@ -175,7 +175,7 @@ export function CanvasNode({
                   height: 5,
                   borderRadius: "50%",
                   background: "white",
-                  animation: "fogma-agent-pulse 1.2s infinite",
+                  animation: "forkshop-agent-pulse 1.2s infinite",
                 }}
               />
               <span>Claude · {agentFileLabel ?? "editing"}</span>

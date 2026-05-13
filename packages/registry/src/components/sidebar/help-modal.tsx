@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, type ReactNode } from "react"
-import { FogmaIcon } from "@fogma/components/icon"
+import { ForkshopIcon } from "@forkshop/components/icon"
 import { X } from "lucide-react"
 
 export function HelpModal({
@@ -49,22 +49,22 @@ export function HelpModal({
     <dialog
       ref={dialogRef}
       onClick={handleDialogClick}
-      className="m-auto max-w-[440px] w-full rounded-[1.25rem] border border-fogma-border bg-fogma-surface p-fogma-5 shadow-lg backdrop:bg-black/40 open:flex open:flex-col gap-fogma-4"
-      aria-label="Fogma cheatsheet"
+      className="m-auto max-w-[440px] w-full rounded-[1.25rem] border border-forkshop-border bg-forkshop-surface p-forkshop-5 shadow-lg backdrop:bg-black/40 open:flex open:flex-col gap-forkshop-4"
+      aria-label="Forkshop cheatsheet"
     >
       <div className="flex items-center justify-between">
-        <h2 className="text-fogma-base font-fogma-semibold text-fogma-fg">Fogma cheatsheet</h2>
+        <h2 className="text-forkshop-base font-forkshop-semibold text-forkshop-fg">Forkshop cheatsheet</h2>
         <button
           type="button"
           onClick={() => onOpenChange(false)}
-          className="rounded-fogma-lg p-fogma-2 text-fogma-fg-muted transition-colors hover:bg-fogma-surface-2 hover:text-fogma-fg"
+          className="rounded-forkshop-lg p-forkshop-2 text-forkshop-fg-muted transition-colors hover:bg-forkshop-surface-2 hover:text-forkshop-fg"
           aria-label="Close"
         >
-          <FogmaIcon icon={X} className="size-fogma-4" />
+          <ForkshopIcon icon={X} className="size-forkshop-4" />
         </button>
       </div>
-      <p className="sr-only">Quick reference for editing in fogma.</p>
-      <div className="flex flex-col gap-fogma-2">
+      <p className="sr-only">Quick reference for editing in forkshop.</p>
+      <div className="flex flex-col gap-forkshop-2">
         <Tip
           visual={<ColorSwatch className="ring-blue-500/60 bg-blue-500/30" />}
           title="Page spacing"
@@ -97,7 +97,7 @@ export function HelpModal({
         />
         <Tip
           visual={
-            <span className="flex items-baseline gap-fogma-2 font-mono text-[10px] text-fogma-fg-muted">
+            <span className="flex items-baseline gap-forkshop-2 font-mono text-[10px] text-forkshop-fg-muted">
               <Kbd>⌥</Kbd>+click
             </span>
           }
@@ -117,7 +117,7 @@ export function HelpModal({
         <Tip
           visual={<KbdGlyph>↻</KbdGlyph>}
           title="Saves are real"
-          body="Every edit writes directly to the source TSX. Revert with git — there's no undo inside fogma."
+          body="Every edit writes directly to the source TSX. Revert with git — there's no undo inside forkshop."
         />
         <Tip
           visual={<DraftPill />}
@@ -136,23 +136,23 @@ export function HelpModal({
 
 function Tip({ visual, title, body }: { visual: ReactNode; title: string; body: ReactNode }) {
   return (
-    <div className="flex gap-fogma-2.5 rounded-fogma-xl px-fogma-2 py-fogma-1.5">
-      <div className="flex w-fogma-8 shrink-0 items-center justify-center pt-fogma-2">{visual}</div>
-      <div className="flex min-w-0 flex-1 flex-col gap-fogma-2">
-        <span className="text-fogma-xs font-fogma-medium text-fogma-fg">{title}</span>
-        <span className="leading-relaxed text-fogma-xs text-fogma-fg-muted">{body}</span>
+    <div className="flex gap-forkshop-2.5 rounded-forkshop-xl px-forkshop-2 py-forkshop-1.5">
+      <div className="flex w-forkshop-8 shrink-0 items-center justify-center pt-forkshop-2">{visual}</div>
+      <div className="flex min-w-0 flex-1 flex-col gap-forkshop-2">
+        <span className="text-forkshop-xs font-forkshop-medium text-forkshop-fg">{title}</span>
+        <span className="leading-relaxed text-forkshop-xs text-forkshop-fg-muted">{body}</span>
       </div>
     </div>
   )
 }
 
 function ColorSwatch({ className }: { className: string }) {
-  return <span className={`block size-fogma-3.5 rounded-fogma-lg ring-1 ${className}`} />
+  return <span className={`block size-forkshop-3.5 rounded-forkshop-lg ring-1 ${className}`} />
 }
 
 function Kbd({ children }: { children: ReactNode }) {
   return (
-    <kbd className="inline-flex min-w-fogma-3.5 items-center justify-center rounded-fogma-lg border border-fogma-border bg-fogma-surface-2 px-fogma-1 py-[1px] text-[10px] font-fogma-medium text-fogma-fg-muted">
+    <kbd className="inline-flex min-w-forkshop-3.5 items-center justify-center rounded-forkshop-lg border border-forkshop-border bg-forkshop-surface-2 px-forkshop-1 py-[1px] text-[10px] font-forkshop-medium text-forkshop-fg-muted">
       {children}
     </kbd>
   )
@@ -160,7 +160,7 @@ function Kbd({ children }: { children: ReactNode }) {
 
 function KbdGlyph({ children }: { children: ReactNode }) {
   return (
-    <span className="size-[1.125rem] flex items-center justify-center rounded-fogma-lg border border-fogma-border bg-fogma-surface-2 text-[10px] font-fogma-semibold text-fogma-fg-muted">
+    <span className="size-[1.125rem] flex items-center justify-center rounded-forkshop-lg border border-forkshop-border bg-forkshop-surface-2 text-[10px] font-forkshop-semibold text-forkshop-fg-muted">
       {children}
     </span>
   )
@@ -168,7 +168,7 @@ function KbdGlyph({ children }: { children: ReactNode }) {
 
 function DraftPill() {
   return (
-    <span className="rounded-fogma-lg bg-fogma-surface-2 px-fogma-1 py-[1px] text-[9px] font-fogma-medium uppercase tracking-fogma-wider text-fogma-fg-muted">
+    <span className="rounded-forkshop-lg bg-forkshop-surface-2 px-forkshop-1 py-[1px] text-[9px] font-forkshop-medium uppercase tracking-forkshop-wider text-forkshop-fg-muted">
       Draft
     </span>
   )

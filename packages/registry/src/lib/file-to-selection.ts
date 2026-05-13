@@ -1,4 +1,4 @@
-import type { FogmaSelection } from "@fogma/components/sidebar/fogma-sidebar"
+import type { ForkshopSelection } from "@forkshop/components/sidebar/forkshop-sidebar"
 
 // Files that belong to site-wide navigation rather than a specific page.
 // Projects can extend this by providing a custom fileToSelection implementation.
@@ -14,7 +14,7 @@ const NAVIGATION_FILES = new Set<string>([
 
 // Generic Next.js route-group stripper.
 // Turns "app/(marketing)/about/page.tsx" → "/about"
-// Turns "app/(tools)/(internal)/fogma/page.tsx" → "/fogma"
+// Turns "app/(tools)/(internal)/forkshop/page.tsx" → "/forkshop"
 // Turns "app/page.tsx" → "/"
 export function filePathToRoute(
   filePath: string,
@@ -39,13 +39,13 @@ export function filePathToRoute(
 // File-path → selection
 // ---------------------------------------------------------------------------
 
-// Map an absolute or project-relative file path to the Fogma sidebar entry
+// Map an absolute or project-relative file path to the Forkshop sidebar entry
 // that should reflect activity on that file.
 //
-// - Returns a FogmaSelection when the file maps to a known sidebar entry.
+// - Returns a ForkshopSelection when the file maps to a known sidebar entry.
 // - Returns "site-wide" for tracked files that don't map to a specific
 //   page/block (configs, libs, …).
-// - Returns undefined when Fogma doesn't track this file at all.
+// - Returns undefined when Forkshop doesn't track this file at all.
 //
 // Navigation files map to { kind: "section"; sectionId: "navigation" } so
 // consumers can check selection.kind === "section" && selection.sectionId === "navigation".
@@ -53,7 +53,7 @@ export function fileToSelection(
   filePath: string,
   projectRoot: string,
   blockSlugs: readonly string[],
-): FogmaSelection | "site-wide" | undefined {
+): ForkshopSelection | "site-wide" | undefined {
   const relative = toRelative(filePath, projectRoot)
   if (relative === undefined) return undefined
   if (relative.startsWith("node_modules/") || relative.startsWith(".next/")) return undefined

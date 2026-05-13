@@ -1,12 +1,12 @@
 import path from "node:path"
-import { buildManifest } from "fogma/manifest-builder"
+import { buildManifest } from "forkshop/manifest-builder"
 
 // During `next build` and `next dev`, cwd is apps/docs. Walk up to workspace root
 // and into packages/registry.
 const REGISTRY_ROOT = path.resolve(process.cwd(), "../../packages/registry")
 
 const REGISTRY_BASE_URL =
-  process.env.FOGMA_REGISTRY_BASE_URL ?? "https://fogma.dev/r/"
+  process.env.FORKSHOP_REGISTRY_BASE_URL ?? "https://forkshop.dev/r/"
 
 export const dynamic = "force-static"
 export const revalidate = false

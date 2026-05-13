@@ -19,7 +19,7 @@ async function main() {
     }
   }
   if (violations.length > 0) {
-    console.error("Found relative parent imports — use @fogma/* canonical alias instead:\n")
+    console.error("Found relative parent imports — use @forkshop/* canonical alias instead:\n")
     for (const v of violations) {
       console.error(`  ${v.file}:  ${v.match}`)
     }

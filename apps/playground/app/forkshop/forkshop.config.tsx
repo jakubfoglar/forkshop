@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import tailwindConfig from "@/tailwind.config"
 import type { Config } from "tailwindcss"
 
-export const fogmaConfig = {
+export const forkshopConfig = {
   tailwindConfig: tailwindConfig as Config,
   primitives: [
     { id: "button", name: "Button", render: () => <Button>Click me</Button> },

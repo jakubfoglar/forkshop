@@ -3,7 +3,7 @@ import os from "node:os"
 import path from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
 import { runDiff } from "./diff.js"
-import type { FogmaJson, Manifest } from "../manifest-schema.js"
+import type { ForkshopJson, Manifest } from "../manifest-schema.js"
 
 function fakeManifest(content: string): Manifest {
   return {
@@ -12,35 +12,35 @@ function fakeManifest(content: string): Manifest {
     registryBaseUrl: "https://example.test/r/",
     bundles: {},
     files: {
-      "@fogma/lib/foo": { kind: "text", ext: "ts", content },
+      "@forkshop/lib/foo": { kind: "text", ext: "ts", content },
     },
   }
 }
 
 async function setup(localContent: string): Promise<string> {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "fogma-diff-"))
-  const fogmaJson: FogmaJson = {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "forkshop-diff-"))
+  const forkshopJson: ForkshopJson = {
     registryVersion: "1.0.0",
     installedAt: "2026-05-13T10:00:00Z",
-    registryUrl: "https://fogma.dev/r/",
+    registryUrl: "https://forkshop.dev/r/",
     aliases: {
       base: "@/",
-      components: "@/components/fogma",
-      kits: "@/components/fogma/kits",
-      hooks: "@/lib/fogma/hooks",
-      lib: "@/lib/fogma",
-      api: "@/app/api/fogma",
-      tailwind: "@/lib/fogma/tailwind",
-      mount: "@/app/fogma",
+      components: "@/components/forkshop",
+      kits: "@/components/forkshop/kits",
+      hooks: "@/lib/forkshop/hooks",
+      lib: "@/lib/forkshop",
+      api: "@/app/api/forkshop",
+      tailwind: "@/lib/forkshop/tailwind",
+      mount: "@/app/forkshop",
     },
     installedBundles: ["primitives"],
     files: {
-      "@fogma/lib/foo": { dest: "lib/fogma/foo.ts", sha: "" },
+      "@forkshop/lib/foo": { dest: "lib/forkshop/foo.ts", sha: "" },
     },
   }
-  await fs.writeFile(path.join(root, "fogma.json"), JSON.stringify(fogmaJson, null, 2))
-  await fs.mkdir(path.join(root, "lib/fogma"), { recursive: true })
-  await fs.writeFile(path.join(root, "lib/fogma/foo.ts"), localContent)
+  await fs.writeFile(path.join(root, "forkshop.json"), JSON.stringify(forkshopJson, null, 2))
+  await fs.mkdir(path.join(root, "lib/forkshop"), { recursive: true })
+  await fs.writeFile(path.join(root, "lib/forkshop/foo.ts"), localContent)
   return root
 }
 
@@ -55,7 +55,7 @@ describe("runDiff", () => {
     dirs.push(root)
     const result = await runDiff({
       projectRoot: root,
-      path: "lib/fogma/foo.ts",
+      path: "lib/forkshop/foo.ts",
       manifest: fakeManifest("export const foo = 1"),
     })
     expect(result.exitCode).toBe(0)
@@ -67,7 +67,7 @@ describe("runDiff", () => {
     dirs.push(root)
     const result = await runDiff({
       projectRoot: root,
-      path: "lib/fogma/foo.ts",
+      path: "lib/forkshop/foo.ts",
       manifest: fakeManifest("export const foo = 1"),
     })
     expect(result.exitCode).toBe(1)
@@ -75,7 +75,7 @@ describe("runDiff", () => {
     expect(result.diff).toContain("+export const foo = 1")
   })
 
-  it("exits 2 when the path is not tracked in fogma.json", async () => {
+  it("exits 2 when the path is not tracked in forkshop.json", async () => {
     const root = await setup("foo")
     dirs.push(root)
     const result = await runDiff({

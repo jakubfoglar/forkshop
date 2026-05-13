@@ -1,9 +1,9 @@
 "use client"
 
 import { useEffect } from "react"
-import { isTextElement } from "@fogma/lib/edit-mode"
+import { isTextElement } from "@forkshop/lib/edit-mode"
 
-const BLOCK_ATTR = "data-fogma-block"
+const BLOCK_ATTR = "data-forkshop-block"
 
 function findBlockAncestor(element: HTMLElement): string | undefined {
   let current: HTMLElement | null = element

@@ -4,13 +4,13 @@ Tracked from real-world testing of the setup skill against a production project 
 
 ---
 
-## ✅ 1. `fogma-*` tokens leaked into the Design System board
+## ✅ 1. `forkshop-*` tokens leaked into the Design System board
 
 **Status:** Fixed in `0d5292a` (token-registry filter).
 
-**What it was:** The Fogma preset wires `fogma-*` tokens (`fogma-accent`, `fogma-canvas`, `fogma-fg`, etc.) into the user's Tailwind config so Fogma's UI styles itself. The `design-system-board` kit read every color from the merged config and showed them as user-facing tokens. The whole point of the `fogma-*` namespace was isolation.
+**What it was:** The Forkshop preset wires `forkshop-*` tokens (`forkshop-accent`, `forkshop-canvas`, `forkshop-fg`, etc.) into the user's Tailwind config so Forkshop's UI styles itself. The `design-system-board` kit read every color from the merged config and showed them as user-facing tokens. The whole point of the `forkshop-*` namespace was isolation.
 
-**Fix:** `buildTokenRegistry` in `packages/registry/src/lib/token-registry.ts` now filters out `fogma-*` names by default across every category (colors, spacing, radii, etc.). Opt back in with `{ includeFogmaTokens: true }` if needed.
+**Fix:** `buildTokenRegistry` in `packages/registry/src/lib/token-registry.ts` now filters out `forkshop-*` names by default across every category (colors, spacing, radii, etc.). Opt back in with `{ includeForkshopTokens: true }` if needed.
 
 ---
 
@@ -38,9 +38,9 @@ Tracked from real-world testing of the setup skill against a production project 
 
 **Status:** Fixed in `aba73bf` (templates ported from playground).
 
-**What it was:** Clicking a route name in the PAGES sidebar (e.g., "Home") rendered the small tile preview instead of the three-viewport responsive view. Double-clicking the tile worked. The wiring gap was in the *generated* `app/fogma/page.tsx` — the mount page didn't manage selection state, so sidebar selections went nowhere.
+**What it was:** Clicking a route name in the PAGES sidebar (e.g., "Home") rendered the small tile preview instead of the three-viewport responsive view. Double-clicking the tile worked. The wiring gap was in the *generated* `app/forkshop/page.tsx` — the mount page didn't manage selection state, so sidebar selections went nowhere.
 
-**Fix:** The setup skill's mount page template (Template 5) now tracks `useState<FogmaSelection>`, derives `isolatedPath` from page selections, and passes it to `PagesBoardView`. The pages-board template (Template 4) accepts `isolatedPath` + `onBack` and forwards them to the `PageTree` kit's `isolatedPath` prop. Matches the `apps/playground` reference implementation.
+**Fix:** The setup skill's mount page template (Template 5) now tracks `useState<ForkshopSelection>`, derives `isolatedPath` from page selections, and passes it to `PagesBoardView`. The pages-board template (Template 4) accepts `isolatedPath` + `onBack` and forwards them to the `PageTree` kit's `isolatedPath` prop. Matches the `apps/playground` reference implementation.
 
 ---
 
@@ -50,15 +50,15 @@ Tracked from real-world testing of the setup skill against a production project 
 
 **What it was:** The `typography-frame` defaulted to class names `text-display-3xl`, `text-display-2xl`, etc. If the user's Tailwind config didn't define those exact keys, all the "Type Sample" rows rendered at base size.
 
-**Fix:** The setup skill's design-system-board template now passes `tailwindConfig={fogmaConfig.tailwindConfig}` to the kit. The kit reads fontSize tokens dynamically from the user's actual config, so display sizes always reflect the real design system.
+**Fix:** The setup skill's design-system-board template now passes `tailwindConfig={forkshopConfig.tailwindConfig}` to the kit. The kit reads fontSize tokens dynamically from the user's actual config, so display sizes always reflect the real design system.
 
 ---
 
-## Applying these fixes to an already-installed Fogma
+## Applying these fixes to an already-installed Forkshop
 
-These fixes ship via the OSS registry. New installs (`npx fogma init` against the updated registry) get the corrected templates automatically. For an existing install, the easiest path is to re-run the setup skill — when `fogma.config.tsx` is non-empty, adjust mode kicks in; tell it to "rescan and regenerate" and it'll update the board files and `page.tsx` to the new shape.
+These fixes ship via the OSS registry. New installs (`npx forkshop init` against the updated registry) get the corrected templates automatically. For an existing install, the easiest path is to re-run the setup skill — when `forkshop.config.tsx` is non-empty, adjust mode kicks in; tell it to "rescan and regenerate" and it'll update the board files and `page.tsx` to the new shape.
 
-Alternative: hand-port the diff from `apps/playground/app/fogma/` into your install's `app/fogma/`. Five small files; ~20 minutes of careful editing.
+Alternative: hand-port the diff from `apps/playground/app/forkshop/` into your install's `app/forkshop/`. Five small files; ~20 minutes of careful editing.
 
 ---
 

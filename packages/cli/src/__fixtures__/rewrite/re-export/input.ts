@@ -1,2 +1,2 @@
-export { fogmaIcons } from "@fogma/lib/icons"
-export type { FogmaIconName } from "@fogma/lib/icons"
+export { forkshopIcons } from "@forkshop/lib/icons"
+export type { ForkshopIconName } from "@forkshop/lib/icons"

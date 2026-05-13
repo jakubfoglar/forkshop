@@ -1,4 +1,4 @@
-export const SITEMAP_EXCLUSIONS = ["/styleguide", "/sample-page", "/fogma"] as const
+export const SITEMAP_EXCLUSIONS = ["/styleguide", "/sample-page", "/forkshop"] as const
 export const SITEMAP_FOOTER_PATHS = ["/privacy", "/terms", "/transparency"] as const
 
 export const SITEMAP_IFRAME_WIDTH = 1280

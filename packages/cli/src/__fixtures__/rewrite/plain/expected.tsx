@@ -1,9 +1,9 @@
 "use client"
 
 import { useEffect } from "react"
-import { CanvasNode } from "@/components/fogma/canvas/canvas-node"
-import { useFogmaCanvas } from "@/components/fogma/canvas/fogma-canvas"
-import type { NodePosition } from "@/lib/fogma/node-positions"
+import { CanvasNode } from "@/components/forkshop/canvas/canvas-node"
+import { useForkshopCanvas } from "@/components/forkshop/canvas/forkshop-canvas"
+import type { NodePosition } from "@/lib/forkshop/node-positions"
 
 export function Plain() {
   useEffect(() => {}, [])

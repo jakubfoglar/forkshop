@@ -20,7 +20,7 @@ importers:
 
   apps/docs:
     dependencies:
-      fogma:
+      forkshop:
         specifier: workspace:*
         version: link:../../packages/cli
       next:
@@ -51,7 +51,7 @@ importers:
 
   apps/playground:
     dependencies:
-      '@fogma/registry':
+      '@forkshop/registry':
         specifier: workspace:*
         version: link:../../packages/registry
       clsx:

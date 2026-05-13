@@ -2,8 +2,8 @@
 
 import { useEffect } from "react"
 import { createPortal } from "react-dom"
-import { cn } from "@fogma/lib/cn"
-import type { TokenEntry } from "@fogma/lib/token-registry"
+import { cn } from "@forkshop/lib/cn"
+import type { TokenEntry } from "@forkshop/lib/token-registry"
 
 // Picker for swapping one spacing class (e.g. `p-4`) for another in the same
 // family (e.g. `p-6`). Renders below an anchor rect in host (page) coords.
@@ -48,13 +48,13 @@ export function SpacingPicker({
   const isBlock = containingBlock !== undefined
   return createPortal(
     <>
-      <div className="fixed inset-fogma-0 z-[99]" onClick={onClose} />
+      <div className="fixed inset-forkshop-0 z-[99]" onClick={onClose} />
       <div
         className={cn(
-          "fixed z-[100] flex flex-col gap-fogma-1 rounded-fogma-xl border bg-fogma-surface p-fogma-1.5 shadow-lg",
+          "fixed z-[100] flex flex-col gap-forkshop-1 rounded-forkshop-xl border bg-forkshop-surface p-forkshop-1.5 shadow-lg",
           // purple-300 / purple-100 / purple-700 are intentional overlay colours that
-          // visually distinguish block-scoped spacing zones (purple) from page zones (fogma-border).
-          isBlock ? "border-purple-300" : "border-fogma-border",
+          // visually distinguish block-scoped spacing zones (purple) from page zones (forkshop-border).
+          isBlock ? "border-purple-300" : "border-forkshop-border",
         )}
         style={{
           left: anchor.left + anchor.width / 2,
@@ -63,16 +63,16 @@ export function SpacingPicker({
         }}
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-center gap-fogma-1 px-fogma-1 pb-fogma-0.5 font-mono text-fogma-xs">
+        <div className="flex items-center gap-forkshop-1 px-forkshop-1 pb-forkshop-0.5 font-mono text-forkshop-xs">
           {isBlock && (
             // purple-100/purple-700: intentional block-scope indicator colour (see comment above)
-            <span className="rounded-fogma-lg bg-purple-100 px-fogma-1 py-[1px] text-[10px] font-fogma-medium uppercase tracking-wide text-purple-700">
+            <span className="rounded-forkshop-lg bg-purple-100 px-forkshop-1 py-[1px] text-[10px] font-forkshop-medium uppercase tracking-wide text-purple-700">
               {containingBlock}
             </span>
           )}
-          <span className="text-fogma-fg-muted">{currentClass}</span>
+          <span className="text-forkshop-fg-muted">{currentClass}</span>
         </div>
-        <div className="flex max-w-[28rem] flex-wrap gap-fogma-0.5">
+        <div className="flex max-w-[28rem] flex-wrap gap-forkshop-0.5">
           {entries.map((entry) => {
             const isCurrent = entry.name === currentName
             return (
@@ -81,11 +81,11 @@ export function SpacingPicker({
                 type="button"
                 onClick={() => onSelect(`${prefix}${entry.name}`)}
                 className={cn(
-                  "flex flex-col items-center rounded-fogma-xxs px-fogma-1.5 py-fogma-1 text-center font-mono text-fogma-xs leading-tight transition-colors",
+                  "flex flex-col items-center rounded-forkshop-xxs px-forkshop-1.5 py-forkshop-1 text-center font-mono text-forkshop-xs leading-tight transition-colors",
                   // purple-600: intentional block-scope selected state (see comment above)
-                  isCurrent && isBlock && "bg-purple-600 text-fogma-surface",
-                  isCurrent && !isBlock && "bg-fogma-fg text-fogma-surface",
-                  !isCurrent && "text-fogma-fg-muted hover:bg-fogma-surface-2 hover:text-fogma-fg",
+                  isCurrent && isBlock && "bg-purple-600 text-forkshop-surface",
+                  isCurrent && !isBlock && "bg-forkshop-fg text-forkshop-surface",
+                  !isCurrent && "text-forkshop-fg-muted hover:bg-forkshop-surface-2 hover:text-forkshop-fg",
                 )}
                 title={`${prefix}${entry.name} — ${entry.rem}`}
               >
@@ -93,7 +93,7 @@ export function SpacingPicker({
                 <span
                   className={cn(
                     "text-[9px] tabular-nums",
-                    isCurrent ? "text-fogma-surface/70" : "text-fogma-fg-muted",
+                    isCurrent ? "text-forkshop-surface/70" : "text-forkshop-fg-muted",
                   )}
                 >
                   {formatPxLabel(entry)}

@@ -7,7 +7,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 export default defineConfig({
   resolve: {
     alias: {
-      "@fogma": path.resolve(__dirname, "src"),
+      "@forkshop": path.resolve(__dirname, "src"),
     },
   },
   test: {

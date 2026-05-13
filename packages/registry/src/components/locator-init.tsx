@@ -3,14 +3,14 @@
 import { useEffect } from "react"
 
 // Mounts Locator.js's runtime UI (Option+Click an element to open its source
-// file in the editor) — but only when this page is loaded inside fogma's
+// file in the editor) — but only when this page is loaded inside forkshop's
 // iframes, never on the regular site. We detect by looking at the parent
 // window's path. Same-origin so the access works.
 //
 // The transform that adds source-loc metadata runs on every TSX/JSX file in
 // dev (see turbopack.rules in next.config). This component just turns on
 // the UI in the right context.
-export function LocatorInit({ mountPath = "/fogma" }: { mountPath?: string } = {}) {
+export function LocatorInit({ mountPath = "/forkshop" }: { mountPath?: string } = {}) {
   useEffect(() => {
     if (process.env.NODE_ENV !== "development") return
     try {
@@ -36,10 +36,10 @@ export function LocatorInit({ mountPath = "/fogma" }: { mountPath?: string } = {
 }
 
 // Pre-seed the Locator config in localStorage so first-time users don't see
-// the welcome wizard and the link opens correctly from within fogma's iframes.
+// the welcome wizard and the link opens correctly from within forkshop's iframes.
 // hrefTarget=_top makes the vscode:// (or other) URL navigate the top window
 // instead of the iframe — Chrome blocks external-scheme navigation from
-// iframes, but _top sends it to fogma's parent frame where the browser
+// iframes, but _top sends it to forkshop's parent frame where the browser
 // triggers the OS handler without actually navigating.
 function seedLocatorOptions() {
   try {

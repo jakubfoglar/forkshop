@@ -2,7 +2,7 @@ export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       {...props}
-      className="rounded-md border border-fogma-border bg-fogma-surface px-3 py-2 text-sm text-fogma-fg placeholder:text-fogma-fg-muted"
+      className="rounded-md border border-forkshop-border bg-forkshop-surface px-3 py-2 text-sm text-forkshop-fg placeholder:text-forkshop-fg-muted"
     />
   )
 }

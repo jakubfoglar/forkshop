@@ -1,0 +1,29 @@
+:root {
+  --forkshop-canvas: #f3f4f6;   /* gray-100 — the canvas backdrop */
+  --forkshop-surface: #ffffff;
+  --forkshop-surface-2: #f7f7f8;
+  --forkshop-fg: #0a0a0a;
+  --forkshop-fg-muted: #6b7280;
+  --forkshop-border: #e5e7eb;
+  --forkshop-border-strong: #d1d5db;
+  --forkshop-accent: #5b6cff;
+  --forkshop-accent-fg: #ffffff;
+  --forkshop-agent: #a855f7;
+  --forkshop-agent-fg: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --forkshop-canvas: #0a0a0a;
+    --forkshop-surface: #171717;
+    --forkshop-surface-2: #1f1f1f;
+    --forkshop-fg: #fafafa;
+    --forkshop-fg-muted: #9ca3af;
+    --forkshop-border: #262626;
+    --forkshop-border-strong: #404040;
+    --forkshop-accent: #7c8aff;
+    --forkshop-accent-fg: #0a0a0a;
+    --forkshop-agent: #c084fc;
+    --forkshop-agent-fg: #ffffff;
+  }
+}

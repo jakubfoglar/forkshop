@@ -1,35 +1,35 @@
 ---
-name: fogma-setup
-description: Wires Fogma into a Next.js + Tailwind project after `npx fogma init`. Detects project type, scans components and routes, proposes a sidebar, asks before mutating next.config.ts / .claude/settings.json / root CLAUDE.md, writes per-board files, populates fogma.config.ts. Activates on "set up Fogma", "finish Fogma setup", "configure Fogma", "wire up Fogma".
+name: forkshop-setup
+description: Wires Forkshop into a Next.js + Tailwind project after `npx forkshop init`. Detects project type, scans components and routes, proposes a sidebar, asks before mutating next.config.ts / .claude/settings.json / root CLAUDE.md, writes per-board files, populates forkshop.config.ts. Activates on "set up Forkshop", "finish Forkshop setup", "configure Forkshop", "wire up Forkshop".
 ---
 
-# Fogma — first-run setup
+# Forkshop — first-run setup
 
-You are setting up Fogma in the user's project. The CLI (`npx fogma init`) has already dropped Fogma's source files (primitives, kits, fonts, API routes, an empty `fogma.config.ts` stub, and a CLAUDE.md). Your job is to walk the user through the *configuration* — what their Fogma's sidebar contains, which kits power each section, and which opt-in features to install — then write the per-board files and populate `fogma.config.ts`.
+You are setting up Forkshop in the user's project. The CLI (`npx forkshop init`) has already dropped Forkshop's source files (primitives, kits, fonts, API routes, an empty `forkshop.config.ts` stub, and a CLAUDE.md). Your job is to walk the user through the *configuration* — what their Forkshop's sidebar contains, which kits power each section, and which opt-in features to install — then write the per-board files and populate `forkshop.config.ts`.
 
-You run **once** per project. After this, your work is mostly historical: the user reads `app/fogma/CLAUDE.md` for ongoing customization, the sibling `fogma-live-editing` skill auto-applies when Claude edits Fogma-watched files, and the user-invoked `fogma-doc-sync` skill refreshes documentation if it drifts.
+You run **once** per project. After this, your work is mostly historical: the user reads `app/forkshop/CLAUDE.md` for ongoing customization, the sibling `forkshop-live-editing` skill auto-applies when Claude edits Forkshop-watched files, and the user-invoked `forkshop-doc-sync` skill refreshes documentation if it drifts.
 
-The user owns every file you produce. They will fork freely. This file (the skill itself) is in their repo too — they can edit it. Lean toward shorter outputs, explicit user consent on every config mutation, and language that frames Fogma as something they *have*, not something they *use*.
+The user owns every file you produce. They will fork freely. This file (the skill itself) is in their repo too — they can edit it. Lean toward shorter outputs, explicit user consent on every config mutation, and language that frames Forkshop as something they *have*, not something they *use*.
 
 ## Phase 0 — Read preconditions
 
 Do **all** of the following before proceeding to Phase 1. If any check fails, exit with the indicated message and stop.
 
-### Check 1 — `fogma.json` exists at the repo root
+### Check 1 — `forkshop.json` exists at the repo root
 
-Read `fogma.json` from the working directory. If missing, exit:
+Read `forkshop.json` from the working directory. If missing, exit:
 
-> *"Fogma's source files aren't installed yet. Run `npx fogma init` first."*
+> *"Forkshop's source files aren't installed yet. Run `npx forkshop init` first."*
 
-`fogma.json` is the source of truth for the `aliases.mount` path (where Fogma's mount route lives) and the alias map needed to resolve all other paths. Without it, every subsequent step would be guessing.
+`forkshop.json` is the source of truth for the `aliases.mount` path (where Forkshop's mount route lives) and the alias map needed to resolve all other paths. Without it, every subsequent step would be guessing.
 
 ### Check 2 — Read `{{aliases.mount}}/CLAUDE.md`
 
-Resolve `{{aliases.mount}}` from `fogma.json` (defaults to `app/fogma` if absent). Read the file at `<aliases.mount>/CLAUDE.md`.
+Resolve `{{aliases.mount}}` from `forkshop.json` (defaults to `app/forkshop` if absent). Read the file at `<aliases.mount>/CLAUDE.md`.
 
 If missing, exit:
 
-> *"Fogma's installation seems incomplete — `<aliases.mount>/CLAUDE.md` is missing. Re-run `npx fogma init --force` or restore the file manually."*
+> *"Forkshop's installation seems incomplete — `<aliases.mount>/CLAUDE.md` is missing. Re-run `npx forkshop init --force` or restore the file manually."*
 
 That CLAUDE.md documents the kit API (`design-system-board`, `iframe-gallery`, `page-tree`), the selection model, and the conventions you'll write code against. You will rely on it instead of duplicating its content here.
 
@@ -37,23 +37,23 @@ That CLAUDE.md documents the kit API (`design-system-board`, `iframe-gallery`, `
 
 Confirm `app/` exists at the repo root (or under the workspace specified by `aliases.mount` in monorepos). If only `pages/` exists, exit:
 
-> *"Fogma v1 only supports Next.js App Router. Pages Router support is on the roadmap but not shipped."*
+> *"Forkshop v1 only supports Next.js App Router. Pages Router support is on the roadmap but not shipped."*
 
 If `vite.config.{ts,js,mjs}` exists at the repo root, exit:
 
-> *"This looks like a Vite project. Fogma v1 supports Next.js App Router only."*
+> *"This looks like a Vite project. Forkshop v1 supports Next.js App Router only."*
 
 If `remix.config.{ts,js}` exists, exit:
 
-> *"This looks like a Remix project. Fogma v1 supports Next.js App Router only."*
+> *"This looks like a Remix project. Forkshop v1 supports Next.js App Router only."*
 
 If neither `app/` nor `pages/` exists and no framework config is found, exit:
 
-> *"This doesn't look like a Next.js project. Fogma requires App Router."*
+> *"This doesn't look like a Next.js project. Forkshop requires App Router."*
 
 ### Check 4 — Re-run detection
 
-If `fogma.config.ts` (or `.tsx`) at `<aliases.mount>/` contains a non-empty `config` export — that is, more than the stub the CLI dropped — switch to **Adjust mode** (see the section near the bottom of this file) and skip Phases 1–7.
+If `forkshop.config.ts` (or `.tsx`) at `<aliases.mount>/` contains a non-empty `config` export — that is, more than the stub the CLI dropped — switch to **Adjust mode** (see the section near the bottom of this file) and skip Phases 1–7.
 
 A "non-empty" config means: any of `designSystem.primitives`, `components.entries`, or `pages.autoDiscover` has been populated past the stub's defaults. The CLI's stub has empty arrays.
 
@@ -173,9 +173,9 @@ I've read your project. Here's what I see:
 
   <narrative paragraph from Phase 1, 2-3 sentences>
 
-Here's the Fogma I'd build for you:
+Here's the Forkshop I'd build for you:
 
-  /fogma sidebar
+  /forkshop sidebar
   ┌─ <Section 1 name>          (<kit name> kit<, layout: "<layout>" if iframe-gallery>)
   │   • <bullet 1>
   │   • <bullet 2>
@@ -185,16 +185,16 @@ Here's the Fogma I'd build for you:
       • <bullet 1>
 
 Mount path:    <aliases.mount, abbreviated to project-relative>
-               (or app/(tools)/fogma/ — say "use tools group" to switch)
+               (or app/(tools)/forkshop/ — say "use tools group" to switch)
 
-Also touching (automatic — required for Fogma to render right):
-  • tailwind.config.ts — adds `presets: [require("./lib/fogma/tailwind/fogma-preset")]`
-    so Fogma's UI styles itself via `fogma-*` tokens without leaking into your tokens.
+Also touching (automatic — required for Forkshop to render right):
+  • tailwind.config.ts — adds `presets: [require("./lib/forkshop/tailwind/forkshop-preset")]`
+    so Forkshop's UI styles itself via `forkshop-*` tokens without leaking into your tokens.
 
 Opt-ins (I'll confirm each one after you accept):
   [1] Locator.js — Option-click any element to open its file in your editor
   [2] Live-AI hook — sidebar pulses + canvas glows where Claude is editing
-  [3] Cadence note — teaches Claude to use small Edits on Fogma-watched files
+  [3] Cadence note — teaches Claude to use small Edits on Forkshop-watched files
 
 ```
 
@@ -234,11 +234,11 @@ For the **mobile profile** flag from Phase 1: in any Blocks section, append `, l
 
 ### Empty-section handling
 
-If a category has zero discovered entries (e.g., no primitives + default Tailwind → empty Foundations), do not propose it. Mention the gap in the narrative paragraph: *"I didn't find any primitives — start by adding a Foundations board later via `npx fogma add kits/design-system-board` and ask me to rescan."*
+If a category has zero discovered entries (e.g., no primitives + default Tailwind → empty Foundations), do not propose it. Mention the gap in the narrative paragraph: *"I didn't find any primitives — start by adding a Foundations board later via `npx forkshop add kits/design-system-board` and ask me to rescan."*
 
 ### After rendering
 
-Wait for user input. Do not proceed to Phase 4 until you receive a reply. If the user is silent, do not write anything — `fogma.config.ts` and the board files stay untouched.
+Wait for user input. Do not proceed to Phase 4 until you receive a reply. If the user is silent, do not write anything — `forkshop.config.ts` and the board files stay untouched.
 
 ## Phase 4 — Iterate
 
@@ -251,10 +251,10 @@ After rendering the Phase 3 proposal, wait for the user's reply. Loop:
    - **Section drop** ("skip Blocks", "remove Pages", "don't include Foundations") → drop the section from the proposal state.
    - **Section add** ("also add a Layouts board", "add a Flows section") → propose a new section. If no scanned data fits, ask: *"I'd add it with what content? An empty starter, or pull from a folder you point me at?"*
    - **Opt-in toggle** ("no Locator", "yes hook", "skip the cadence note") → flip the opt-in flag.
-   - **Mount path change** ("tools group", "use app/(tools)/fogma/", "put it under apps/web") → update `mountPath` in the proposal state.
+   - **Mount path change** ("tools group", "use app/(tools)/forkshop/", "put it under apps/web") → update `mountPath` in the proposal state.
    - **Narrative correction** ("this is actually a SaaS", "the (marketing) routes are stale, don't include them") → return to Phase 1 with the correction as an explicit hint; re-run Steps 1-5; produce a new narrative; re-render.
    - **"explain why you chose X"** → describe the heuristic that produced the choice, briefly. Do not modify state.
-   - **"pause"** → stop, write nothing, tell the user how to resume: *"Paused. Type 'set up Fogma' again to resume from the current proposal."* Hold the proposal state if you can; otherwise the next invocation re-runs Phase 1.
+   - **"pause"** → stop, write nothing, tell the user how to resume: *"Paused. Type 'set up Forkshop' again to resume from the current proposal."* Hold the proposal state if you can; otherwise the next invocation re-runs Phase 1.
    - **Ambiguous** → ask one short clarifying question. Do not assume.
 3. Re-render the proposal with the new state. Use the exact Phase 3 template.
 4. Go to step 1.
@@ -282,14 +282,14 @@ say yes to.
 
   [1] Locator.js — Option-click any element to open its file at the right line.
         Adds a turbopack rule to next.config.js, mounts <LocatorInit /> in
-        app/fogma/layout.tsx, installs @locator/runtime + @locator/webpack-loader.
+        app/forkshop/layout.tsx, installs @locator/runtime + @locator/webpack-loader.
 
   [2] Live-AI hook — sidebar pulses + canvas glows where Claude is editing.
         Adds one hook entry to .claude/settings.json, writes a small
         .claude/hooks/post-tool-use.sh script.
 
   [3] Cadence note — teaches Claude to use many small Edits instead of one
-        big Write on Fogma-watched files, so you watch the page take shape
+        big Write on Forkshop-watched files, so you watch the page take shape
         live instead of a single flash. Appends ~20 bracketed lines to your
         root CLAUDE.md.
 
@@ -342,7 +342,7 @@ The full-diff content for each:
 
 **Live-AI hook full diff** — the new `.claude/hooks/post-tool-use.sh` (~30 lines, see Template 6), plus the new entry in `.claude/settings.json` (or merge proposal if a `PostToolUse` matcher already exists).
 
-**Cadence note full snippet** — the bracketed `<!-- fogma:cadence-note start ... -->` block (see Template 8).
+**Cadence note full snippet** — the bracketed `<!-- forkshop:cadence-note start ... -->` block (see Template 8).
 
 Render these as inline fenced code blocks with `─────` boxes around them so the user can see the proposed changes at the line level.
 
@@ -351,9 +351,9 @@ Render these as inline fenced code blocks with `─────` boxes around th
 - **If `next.config.ts` already has `experimental.turbopack.rules`:** the "Show me" diff shows a *merge proposal* (new loader added to existing rules object) rather than a raw append. The skill never overwrites existing rules.
 - **If the next config is `.js`/`.mjs`:** convert the turbopack rule snippet to that module format.
 - **If `.claude/settings.json` does not exist:** note this in the preamble for [2]: *"`.claude/settings.json` doesn't exist — I'll create it with just the hook entry."* The diff path shows the full file content.
-- **If `.claude/settings.json` already has a `PostToolUse` matcher covering `Edit|Write|MultiEdit`:** show a merge proposal that adds Fogma's hook entry alongside any existing entries.
+- **If `.claude/settings.json` already has a `PostToolUse` matcher covering `Edit|Write|MultiEdit`:** show a merge proposal that adds Forkshop's hook entry alongside any existing entries.
 - **If root `CLAUDE.md` doesn't exist:** offer to create with just the cadence note. Note in the preamble: *"No root CLAUDE.md found — I'll create it with the cadence note as a starter."*
-- **If root `CLAUDE.md` already contains a `<!-- fogma:cadence-note start -->` marker:** skip the cadence question entirely (don't include it in the `AskUserQuestion` call). Mention in the Phase 7 summary that the note is already in place.
+- **If root `CLAUDE.md` already contains a `<!-- forkshop:cadence-note start -->` marker:** skip the cadence question entirely (don't include it in the `AskUserQuestion` call). Mention in the Phase 7 summary that the note is already in place.
 
 ### Rules for the consent panel
 
@@ -371,7 +371,7 @@ Sequential. Failures stop the sequence — no transactional rollback. Order mini
 
 For each step, after a successful write, print a single `✓ <action> <path>` line. After all steps, print a blank line and move to Phase 7.
 
-### Step 1 — `<aliases.mount>/fogma.config.ts` (or `.tsx`)
+### Step 1 — `<aliases.mount>/forkshop.config.ts` (or `.tsx`)
 
 Render from Template 1 (`## Scaffolding templates` below). Substitute placeholders using the rules in that section. Resolve primitive/block import paths against the user's actual `components/` paths captured in Phase 2.
 
@@ -391,21 +391,21 @@ Render from Template 5. Replace any CLI-dropped stub. Import every board file wr
 
 The strategy spec's "never silently mutate" list covers `next.config.ts`, `.claude/settings.json`, and root `CLAUDE.md`. `tailwind.config.ts` is *not* on that list — it's an automatic write, surfaced in Phase 3's "Also touching" callout.
 
-Read the existing file. If `presets` already exists in `module.exports`/`export default`, append `require("./lib/fogma/tailwind/fogma-preset")` to that array. Otherwise add a new top-level `presets: [require("./lib/fogma/tailwind/fogma-preset")]` property.
+Read the existing file. If `presets` already exists in `module.exports`/`export default`, append `require("./lib/forkshop/tailwind/forkshop-preset")` to that array. Otherwise add a new top-level `presets: [require("./lib/forkshop/tailwind/forkshop-preset")]` property.
 
 For TypeScript configs (`.ts`), use the same syntax inside the `Config` typed object.
 
 If the file's syntax is unusual (heavy comments, dynamic imports, exotic factory patterns) and a clean edit isn't safe, stop and print:
 
-> *"I couldn't safely edit `tailwind.config.ts` — please add this manually: `presets: [require('./lib/fogma/tailwind/fogma-preset')]` to your config's `presets` array."*
+> *"I couldn't safely edit `tailwind.config.ts` — please add this manually: `presets: [require('./lib/forkshop/tailwind/forkshop-preset')]` to your config's `presets` array."*
 
 Then continue to Step 5.
 
-### Step 5 — `<aliases.mount>/fogma.css`
+### Step 5 — `<aliases.mount>/forkshop.css`
 
-If the CLI already wrote this file (it likely did during `npx fogma init`), leave it alone. Otherwise write from Template 9 (the CSS template — added below in `## Scaffolding templates`).
+If the CLI already wrote this file (it likely did during `npx forkshop init`), leave it alone. Otherwise write from Template 9 (the CSS template — added below in `## Scaffolding templates`).
 
-The file imports the Raveo `@font-face` declarations and defines `fogma-*` CSS variables. The user-mounted `app/fogma/layout.tsx` is expected to import it (the CLI handles that mount).
+The file imports the Raveo `@font-face` declarations and defines `forkshop-*` CSS variables. The user-mounted `app/forkshop/layout.tsx` is expected to import it (the CLI handles that mount).
 
 ### Step 6 — Locator.js wiring (only if opt-in 5a was consented)
 
@@ -420,7 +420,7 @@ Apply the matcher-merge logic from Phase 5b to `.claude/settings.json` (create i
 
 ### Step 8 — Root `CLAUDE.md` cadence note (only if opt-in 5c was consented)
 
-Append Template 8 verbatim to root `CLAUDE.md`. Create the file if absent. The template includes start/end comment markers so `fogma-doc-sync` can refresh it later.
+Append Template 8 verbatim to root `CLAUDE.md`. Create the file if absent. The template includes start/end comment markers so `forkshop-doc-sync` can refresh it later.
 
 ### Failure handling
 
@@ -438,37 +438,37 @@ Steps are idempotent enough that re-running a single step after the user manuall
 After Phase 6 completes (or partially completes with failures), render the summary verbatim:
 
 ```
-Fogma is set up. Here's what you have:
+Forkshop is set up. Here's what you have:
 
-  Mount:   <aliases.mount, abbreviated>  →  http://localhost:3000/fogma
-  Config:  <aliases.mount>/fogma.config.ts
+  Mount:   <aliases.mount, abbreviated>  →  http://localhost:3000/forkshop
+  Config:  <aliases.mount>/forkshop.config.ts
   Boards:  <comma-separated section names>
   Opt-ins: <✓ Locator.js | ✗ Locator.js (skipped)>   <✓ Live-AI hook | ✗ Live-AI hook (skipped)>   <✓ Cadence note | ✗ Cadence note (skipped)>
 
 Try this first:
   1. pnpm dev   (or your package manager's dev command)
-  2. Open /fogma in your browser
+  2. Open /forkshop in your browser
   3. Click any text on a block → edit in place → save
   4. <if Locator opted in:> Option-click any element → opens the file at the right line
 
-Customize Fogma:
-  • Rename a board       → edit the section title in fogma.config.ts
+Customize Forkshop:
+  • Rename a board       → edit the section title in forkshop.config.ts
   • Add a board          → ask Claude: "add a Layouts board"
-  • Restyle the sidebar  → fork components/fogma/sidebar/
-  • Change kit defaults  → fork the kit in components/fogma/kits/
-  Everything Fogma generated is in your repo. You own all of it.
+  • Restyle the sidebar  → fork components/forkshop/sidebar/
+  • Change kit defaults  → fork the kit in components/forkshop/kits/
+  Everything Forkshop generated is in your repo. You own all of it.
 
 Sibling skills available:
-  • fogma-live-editing  — auto-applies cadence guidance when Claude edits
-                          Fogma-watched files (active without invocation)
-  • fogma-doc-sync      — invoke when app/fogma/CLAUDE.md drifts:
-                          "sync Fogma docs" or "/fogma-doc-sync"
+  • forkshop-live-editing  — auto-applies cadence guidance when Claude edits
+                          Forkshop-watched files (active without invocation)
+  • forkshop-doc-sync      — invoke when app/forkshop/CLAUDE.md drifts:
+                          "sync Forkshop docs" or "/forkshop-doc-sync"
 
 Notes for later:
   • For previewing logged-out / locked / per-user states, see the Auth
     section of <aliases.mount>/CLAUDE.md.
-  • Fogma updates aren't automatic. To compare your files against the
-    latest upstream: npx fogma diff <path>.
+  • Forkshop updates aren't automatic. To compare your files against the
+    latest upstream: npx forkshop diff <path>.
   <if Tailwind v4 detected:> • Tailwind v4 detected — `presets:` wasn't auto-wired. Add the preset manually per <aliases.mount>/CLAUDE.md.
   <if any Phase 6 step failed:> • <list the outstanding manual steps from failed Phase 6 actions>
 ```
@@ -482,13 +482,13 @@ Notes for later:
 
 ## Adjust mode (re-runs)
 
-If Phase 0's Check 4 detected a non-empty `fogma.config.ts`, you are in adjust mode. Skip Phases 1–7. Render:
+If Phase 0's Check 4 detected a non-empty `forkshop.config.ts`, you are in adjust mode. Skip Phases 1–7. Render:
 
 ```
-Looks like Fogma is already set up. Here's your current config:
+Looks like Forkshop is already set up. Here's your current config:
 
   Mount:   <aliases.mount>
-  Boards:  <comma-separated section names from current fogma.config.ts>
+  Boards:  <comma-separated section names from current forkshop.config.ts>
   Opt-ins: <state observed: ✓/✗ for Locator (presence of next.config.ts turbopack rule),
             ✓/✗ for hook (presence of .claude/hooks/post-tool-use.sh + matching entry in settings.json),
             ✓/✗ for cadence note (presence of the marker in root CLAUDE.md)>
@@ -499,25 +499,25 @@ What would you like to change?
   • "install hook"                → walk Phase 5b again
   • "install cadence note"        → walk Phase 5c again
   • "rescan components"           → re-run Phase 2 and propose a diff
-  • "open config"                 → just open fogma.config.ts, do nothing
+  • "open config"                 → just open forkshop.config.ts, do nothing
 
 Or describe what you want.
 ```
 
 ### Adjust-mode actions
 
-- **Add a board** → Run Phase 2 against the relevant folder (ask the user *"where should I scan?"* if non-obvious), produce a single-section proposal, walk the user through it, and on accept: write a new `*-board.tsx` file, append an entry to `fogma.config.ts` (`designSystem.primitives`, `components.entries`, or a new top-level board section), update `<aliases.mount>/page.tsx` to import and mount the new board.
-- **Remove a board** → Delete the `*-board.tsx` file, remove the entry from `fogma.config.ts`, remove the import/mount from `<aliases.mount>/page.tsx`. Confirm before deleting.
+- **Add a board** → Run Phase 2 against the relevant folder (ask the user *"where should I scan?"* if non-obvious), produce a single-section proposal, walk the user through it, and on accept: write a new `*-board.tsx` file, append an entry to `forkshop.config.ts` (`designSystem.primitives`, `components.entries`, or a new top-level board section), update `<aliases.mount>/page.tsx` to import and mount the new board.
+- **Remove a board** → Delete the `*-board.tsx` file, remove the entry from `forkshop.config.ts`, remove the import/mount from `<aliases.mount>/page.tsx`. Confirm before deleting.
 - **Install an opt-in** → Walk the corresponding Phase 5 prompt (5a / 5b / 5c). On accept, apply the Phase 6 step for that opt-in. Do not re-run other Phase 6 steps.
-- **Rescan components** → Run Phase 2. Diff the new scan against the current `fogma.config.ts`. Show: *"I found 3 new primitives (Avatar, Tabs, Card) and 1 missing (Skeleton was removed). Update fogma.config.ts to add/remove?"*
+- **Rescan components** → Run Phase 2. Diff the new scan against the current `forkshop.config.ts`. Show: *"I found 3 new primitives (Avatar, Tabs, Card) and 1 missing (Skeleton was removed). Update forkshop.config.ts to add/remove?"*
 - **Open config** → Just print the path. Do not modify anything.
 - **A free-form description** → Interpret as best you can. If unclear, ask one short clarifying question.
 
 ### Rules for adjust mode
 
 - **Never re-run Phase 6 wholesale.** Only the specific changes requested.
-- **Never re-write `fogma.config.ts` from scratch.** Always patch in place. If the user edited fields beyond what you wrote, preserve their edits.
-- **For a full reset:** tell the user to delete `fogma.config.ts` (or move it aside) and re-run the skill — Phase 0's re-run detection will see the stub and run the full first-time flow.
+- **Never re-write `forkshop.config.ts` from scratch.** Always patch in place. If the user edited fields beyond what you wrote, preserve their edits.
+- **For a full reset:** tell the user to delete `forkshop.config.ts` (or move it aside) and re-run the skill — Phase 0's re-run detection will see the stub and run the full first-time flow.
 
 ## Edge cases
 
@@ -525,7 +525,7 @@ Explicit guidance for situations Claude is likely to hit. Each row has one canon
 
 ### Empty `components/` or no primitives found
 
-Skip the Foundations section in the proposal. Mention in the narrative: *"I didn't find any primitives — start by `npx fogma add kits/design-system-board` once you have a few components, then say 'rescan components' and I'll add the board."*
+Skip the Foundations section in the proposal. Mention in the narrative: *"I didn't find any primitives — start by `npx forkshop add kits/design-system-board` once you have a few components, then say 'rescan components' and I'll add the board."*
 
 ### Empty `components/blocks/` (or equivalent) found
 
@@ -533,11 +533,11 @@ Skip the Blocks section. Same kind of recovery hint in the narrative.
 
 ### Too many discovered entries
 
-If Phase 2 finds more than ~30 primitives or ~50 blocks, propose the top 12 / 20 by import-count and tell the user in the proposal: *"I capped Foundations at 12 primitives sorted by import-count. You can add the rest manually in `fogma.config.ts` or ask me to use different criteria."*
+If Phase 2 finds more than ~30 primitives or ~50 blocks, propose the top 12 / 20 by import-count and tell the user in the proposal: *"I capped Foundations at 12 primitives sorted by import-count. You can add the rest manually in `forkshop.config.ts` or ask me to use different criteria."*
 
 ### Dynamic-only routes (`[slug]` without statics)
 
-In the Pages section, set `autoDiscover: true` and add a TODO comment in `fogma.config.ts`:
+In the Pages section, set `autoDiscover: true` and add a TODO comment in `forkshop.config.ts`:
 
 ```ts
 pages: {
@@ -551,21 +551,21 @@ In the proposal, mention: *"All routes under <group> are dynamic — I'll set `a
 
 ### `tailwind.config.*` missing (likely Tailwind v4)
 
-Proceed with everything else. Skip the Phase 6 Step 4 write. Surface in the Phase 7 summary: *"Tailwind v4 detected — `presets:` wasn't auto-wired. To style Fogma, add `@import "./lib/fogma/tailwind/fogma-preset.css"` to your CSS (or follow the v4 migration guide in <aliases.mount>/CLAUDE.md)."*
+Proceed with everything else. Skip the Phase 6 Step 4 write. Surface in the Phase 7 summary: *"Tailwind v4 detected — `presets:` wasn't auto-wired. To style Forkshop, add `@import "./lib/forkshop/tailwind/forkshop-preset.css"` to your CSS (or follow the v4 migration guide in <aliases.mount>/CLAUDE.md)."*
 
 ### Monorepo (no repo-root `app/`, but `pnpm-workspace.yaml` or `turbo.json`)
 
 In Phase 0 / 1, ask the user: *"This looks like a monorepo. Which workspace should I scan and mount in?"* Wait for the answer. Adjust every path lookup (Phase 1 docs, Phase 2 scans, `aliases.mount`) to that workspace.
 
-If the user already has `aliases.mount` pointing into a workspace in `fogma.json`, skip the question.
+If the user already has `aliases.mount` pointing into a workspace in `forkshop.json`, skip the question.
 
 ### `<aliases.mount>/` already populated with non-stub content
 
-If Phase 0's re-run check found a populated config, this is the adjust-mode path. But if `<aliases.mount>/` has user-written files that don't match Fogma's expected layout (e.g., the user repurposed the folder), refuse and exit:
+If Phase 0's re-run check found a populated config, this is the adjust-mode path. But if `<aliases.mount>/` has user-written files that don't match Forkshop's expected layout (e.g., the user repurposed the folder), refuse and exit:
 
-> *"`<aliases.mount>/` already contains files that aren't from Fogma. Move them aside or set `aliases.mount` in `fogma.json` to a different path, then re-run."*
+> *"`<aliases.mount>/` already contains files that aren't from Forkshop. Move them aside or set `aliases.mount` in `forkshop.json` to a different path, then re-run."*
 
-### `fogma.json` present but no `<aliases.mount>/CLAUDE.md`
+### `forkshop.json` present but no `<aliases.mount>/CLAUDE.md`
 
 Exit (Phase 0 Check 2). Already handled. Re-state here for completeness.
 
@@ -580,9 +580,9 @@ This skill never:
 - Silently mutates `next.config.ts` (always asks via Phase 5a).
 - Silently mutates `.claude/settings.json` (always asks via Phase 5b).
 - Silently mutates the root `CLAUDE.md` (always asks via Phase 5c).
-- Touches files outside the Fogma surface (`app/fogma/`, `components/fogma/`, `lib/fogma/`, `app/api/fogma/`) without consent.
-- Installs npm packages without consent — the always-on deps (`iconoir-react`, `clsx`, `motion`) are installed by `npx fogma init`; the opt-in deps (`@locator/runtime`, `@locator/webpack-loader`) are installed only after Phase 5a consent.
-- Reverts user edits — re-runs are additive; if the user edited `fogma.config.ts`, adjust mode proposes deltas, never overwrites.
+- Touches files outside the Forkshop surface (`app/forkshop/`, `components/forkshop/`, `lib/forkshop/`, `app/api/forkshop/`) without consent.
+- Installs npm packages without consent — the always-on deps (`iconoir-react`, `clsx`, `motion`) are installed by `npx forkshop init`; the opt-in deps (`@locator/runtime`, `@locator/webpack-loader`) are installed only after Phase 5a consent.
+- Reverts user edits — re-runs are additive; if the user edited `forkshop.config.ts`, adjust mode proposes deltas, never overwrites.
 - Calls out to the network.
 
 ## Scaffolding templates
@@ -604,18 +604,18 @@ Templates use `{{snake_case}}` placeholder substitution. Multi-line placeholders
 - **`{{sidebar_sections}}`** — one entry per accepted section, comma-terminated, 12-space indented. Each line is `{ id: "<slug>", title: <BoardKit>.defaultTitle, icon: <BoardKit>.icon },` where `<BoardKit>` is `DesignSystemBoard` for the foundations kit, `IframeGallery` for the blocks/components kit, and `PageTree` for the pages kit. (These imports are listed in the mount page's top import block.)
 - **`{{board_imports}}`** — one `import {{board_name}}BoardView from "./{{board_slug}}-board"` per accepted section. Default imports, in sidebar order.
 - **`{{board_renders}}`** — one conditional render per accepted section, 10-space indented. Pattern: `{view === "<slug>" && <{{board_name}}BoardView />}`. The pages board gets the extra `isolatedPath` + `onBack` props (see Template 5).
-- **`{{aliases.mount}}`** — resolved from `fogma.json` aliases at write time; defaults to `app/fogma` if absent.
+- **`{{aliases.mount}}`** — resolved from `forkshop.json` aliases at write time; defaults to `app/forkshop` if absent.
 
-**Note on the tailwind config import path in Template 1:** the templates assume the typical mount path `app/fogma/`, where `@/../tailwind.config` resolves to the repo-root `tailwind.config.{ts,js}`. If the user's `aliases.mount` is nested deeper (e.g., `app/(tools)/fogma/`), adjust the relative segments accordingly — `@/../tailwind.config` should always resolve to the repo-root tailwind config. If the project's `@` alias maps somewhere other than the repo root, use the explicit relative path that lands on `tailwind.config.{ts,js}` from the mount directory.
+**Note on the tailwind config import path in Template 1:** the templates assume the typical mount path `app/forkshop/`, where `@/../tailwind.config` resolves to the repo-root `tailwind.config.{ts,js}`. If the user's `aliases.mount` is nested deeper (e.g., `app/(tools)/forkshop/`), adjust the relative segments accordingly — `@/../tailwind.config` should always resolve to the repo-root tailwind config. If the project's `@` alias maps somewhere other than the repo root, use the explicit relative path that lands on `tailwind.config.{ts,js}` from the mount directory.
 
-### Template 1 — `fogma.config.tsx` (always `.tsx` — primitives use JSX)
+### Template 1 — `forkshop.config.tsx` (always `.tsx` — primitives use JSX)
 
 ```tsx
 import type { Config } from "tailwindcss"
 import tailwindConfig from "@/../tailwind.config"
 {{primitive_imports}}
 
-export const fogmaConfig = {
+export const forkshopConfig = {
   tailwindConfig: tailwindConfig as Config,
   primitives: [
 {{primitive_entries}}
@@ -659,8 +659,8 @@ export const fogmaConfig = {
 "use client"
 
 import { useRef } from "react"
-import { FogmaCanvas, DesignSystemBoard } from "@fogma/registry"
-import { fogmaConfig } from "./fogma.config"
+import { ForkshopCanvas, DesignSystemBoard } from "@forkshop/registry"
+import { forkshopConfig } from "./forkshop.config"
 
 // Stage dimensions for the design system board.
 // 3000x2400 fits the default token set + primitives at zoom-to-fit.
@@ -672,7 +672,7 @@ export default function {{board_name}}BoardView() {
   const stageRef = useRef<HTMLDivElement>(null)
 
   return (
-    <FogmaCanvas
+    <ForkshopCanvas
       containerRef={containerRef}
       stageRef={stageRef}
       stageWidth={STAGE_W}
@@ -680,10 +680,10 @@ export default function {{board_name}}BoardView() {
       fitMode="both"
     >
       <DesignSystemBoard
-        tailwindConfig={fogmaConfig.tailwindConfig}
-        primitives={[...fogmaConfig.primitives]}
+        tailwindConfig={forkshopConfig.tailwindConfig}
+        primitives={[...forkshopConfig.primitives]}
       />
-    </FogmaCanvas>
+    </ForkshopCanvas>
   )
 }
 ```
@@ -694,8 +694,8 @@ export default function {{board_name}}BoardView() {
 "use client"
 
 import { useRef } from "react"
-import { FogmaCanvas, IframeGallery } from "@fogma/registry"
-import { fogmaConfig } from "./fogma.config"
+import { ForkshopCanvas, IframeGallery } from "@forkshop/registry"
+import { forkshopConfig } from "./forkshop.config"
 
 // Stack layout: viewport width 1200, blocks stacked ~600px each.
 const STAGE_W = 1200
@@ -706,15 +706,15 @@ export default function {{board_name}}BoardView() {
   const stageRef = useRef<HTMLDivElement>(null)
 
   return (
-    <FogmaCanvas
+    <ForkshopCanvas
       containerRef={containerRef}
       stageRef={stageRef}
       stageWidth={STAGE_W}
       stageHeight={STAGE_H}
       fitMode="width"
     >
-      <IframeGallery entries={[...fogmaConfig.blocks]} layout="stack" />
-    </FogmaCanvas>
+      <IframeGallery entries={[...forkshopConfig.blocks]} layout="stack" />
+    </ForkshopCanvas>
   )
 }
 ```
@@ -725,8 +725,8 @@ export default function {{board_name}}BoardView() {
 "use client"
 
 import { useRef, useState } from "react"
-import { FogmaCanvas, PageTree, responsiveFrameStageDimensions } from "@fogma/registry"
-import { fogmaConfig } from "./fogma.config"
+import { ForkshopCanvas, PageTree, responsiveFrameStageDimensions } from "@forkshop/registry"
+import { forkshopConfig } from "./forkshop.config"
 
 // Grid view dimensions auto-scale with entries; pick generous defaults.
 const GRID_STAGE_W = 1800
@@ -749,7 +749,7 @@ export default function {{board_name}}BoardView({
   const stageRef = useRef<HTMLDivElement>(null)
 
   // Track internal isolation state from PageTree (double-click) so we can
-  // switch stageWidth and trigger FogmaCanvas's auto-fit-on-width-change.
+  // switch stageWidth and trigger ForkshopCanvas's auto-fit-on-width-change.
   const [internalIsolated, setInternalIsolated] = useState<string | null>(null)
 
   // Effective isolation: external prop wins when defined (sidebar nav).
@@ -767,7 +767,7 @@ export default function {{board_name}}BoardView({
   }
 
   return (
-    <FogmaCanvas
+    <ForkshopCanvas
       containerRef={containerRef}
       stageRef={stageRef}
       stageWidth={stageWidth}
@@ -775,12 +775,12 @@ export default function {{board_name}}BoardView({
       fitMode={fitMode}
     >
       <PageTree
-        entries={[...fogmaConfig.pages]}
+        entries={[...forkshopConfig.pages]}
         isolatedPath={controlledIsolatedPath}
         onBack={handleBack}
         onIsolatedPathChange={setInternalIsolated}
       />
-    </FogmaCanvas>
+    </ForkshopCanvas>
   )
 }
 ```
@@ -792,22 +792,22 @@ export default function {{board_name}}BoardView({
 
 import { useState } from "react"
 import {
-  FogmaSidebar,
+  ForkshopSidebar,
   LocatorInit,
   AgentActivityProvider,
-  type FogmaSelection,
+  type ForkshopSelection,
   DesignSystemBoard,
   IframeGallery,
   PageTree,
-} from "@fogma/registry"
+} from "@forkshop/registry"
 {{board_imports}}
-import { fogmaConfig } from "./fogma.config"
+import { forkshopConfig } from "./forkshop.config"
 
 const PAGE_ROUTES = [{{page_routes}}] as const
 const BLOCK_SLUGS = [{{block_slugs}}] as const
 
-export default function FogmaPage() {
-  const [selection, setSelection] = useState<FogmaSelection>({
+export default function ForkshopPage() {
+  const [selection, setSelection] = useState<ForkshopSelection>({
     kind: "section",
     sectionId: "{{first_section_id}}",
   })
@@ -825,9 +825,9 @@ export default function FogmaPage() {
 
   return (
     <AgentActivityProvider blockSlugs={BLOCK_SLUGS} projectRoot="">
-      <LocatorInit mountPath="/fogma" />
+      <LocatorInit mountPath="/forkshop" />
       <div className="flex h-screen overflow-hidden">
-        <FogmaSidebar
+        <ForkshopSidebar
           selection={selection}
           onSelect={setSelection}
           sections={[
@@ -877,7 +877,7 @@ import PagesBoardView from "./pages-board"
 
 ```bash
 #!/usr/bin/env bash
-# Fogma live-AI hook. Notifies a running Fogma dev server of file edits.
+# Forkshop live-AI hook. Notifies a running Forkshop dev server of file edits.
 # Best-effort; never blocks the tool call.
 
 INPUT=$(cat)
@@ -886,7 +886,7 @@ FILE=$(jq -r '.tool_input.file_path // ""' <<< "$INPUT")
 
 [ -z "$FILE" ] && exit 0
 
-curl -s -X POST http://localhost:3000/api/fogma/agent-activity \
+curl -s -X POST http://localhost:3000/api/forkshop/agent-activity \
   -H "Content-Type: application/json" \
   -d "{\"tool\":\"$TOOL\",\"file\":\"$FILE\"}" \
   > /dev/null 2>&1 &
@@ -894,7 +894,7 @@ curl -s -X POST http://localhost:3000/api/fogma/agent-activity \
 exit 0
 ```
 
-Hardcoded `localhost:3000` is intentional — Fogma is dev-only. If your dev server runs on a different port, edit the URL after install.
+Hardcoded `localhost:3000` is intentional — Forkshop is dev-only. If your dev server runs on a different port, edit the URL after install.
 
 ### Template 7a — `next.config.ts` turbopack rule (Locator.js)
 
@@ -917,9 +917,9 @@ For `.js`/`.mjs` configs, embed the same fields in the existing module-export sh
 Create the file if absent:
 
 ```tsx
-import { LocatorInit } from "@/components/fogma/locator-init"
+import { LocatorInit } from "@/components/forkshop/locator-init"
 
-export default function FogmaLayout({ children }: { children: React.ReactNode }) {
+export default function ForkshopLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <LocatorInit />
@@ -936,22 +936,22 @@ If the file already exists, insert the import at the top of the file and the `<L
 Append verbatim:
 
 ```markdown
-<!-- fogma:cadence-note start - managed; do not edit body, only delete the block -->
-## Fogma — editing cadence
+<!-- forkshop:cadence-note start - managed; do not edit body, only delete the block -->
+## Forkshop — editing cadence
 
-When editing files in `components/fogma/`, `lib/fogma/`, `app/fogma/`, or any
-block referenced in `fogma.config.ts`, prefer many small Edits over one Write.
-Fogma's live preview emits a notification per file write, so:
+When editing files in `components/forkshop/`, `lib/forkshop/`, `app/forkshop/`, or any
+block referenced in `forkshop.config.ts`, prefer many small Edits over one Write.
+Forkshop's live preview emits a notification per file write, so:
 
 - Use `MultiEdit` when one change spans multiple regions (single disk write,
   multiple visual events).
 - Start with a valid skeleton, then replace section-by-section.
-- Avoid leaving the file in a broken intermediate state — Fogma's iframe
+- Avoid leaving the file in a broken intermediate state — Forkshop's iframe
   will show Next.js's error overlay until the next save fixes it.
-<!-- fogma:cadence-note end -->
+<!-- forkshop:cadence-note end -->
 ```
 
-### Template 9 — `<aliases.mount>/fogma.css`
+### Template 9 — `<aliases.mount>/forkshop.css`
 
 If the CLI did not write this file during `init`, write it from this template:
 
@@ -976,12 +976,12 @@ If the CLI did not write this file during `init`, write it from this template:
 }
 
 :root {
-  --fogma-surface: #fafafa;
-  --fogma-fg: #111;
-  --fogma-border: #e5e5e5;
-  --fogma-accent: #2563eb;
-  --fogma-muted: #737373;
+  --forkshop-surface: #fafafa;
+  --forkshop-fg: #111;
+  --forkshop-border: #e5e5e5;
+  --forkshop-accent: #2563eb;
+  --forkshop-muted: #737373;
 }
 ```
 
-The CLI's mount-page stub imports this file via `import "./fogma.css"`. Don't add the import again here — assume it's in place.
+The CLI's mount-page stub imports this file via `import "./forkshop.css"`. Don't add the import again here — assume it's in place.

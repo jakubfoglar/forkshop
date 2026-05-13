@@ -1,5 +1,5 @@
 /**
- * Shared schema for the fogma registry manifest.
+ * Shared schema for the forkshop registry manifest.
  * Consumed by the CLI, produced by apps/docs.
  */
 
@@ -31,8 +31,8 @@ export type ManifestFile =
     }
 
 /**
- * Resolved alias map for path rewriting. Keys are `@fogma/<prefix>`,
- * values are the user-side alias (e.g. `@/components/fogma`).
+ * Resolved alias map for path rewriting. Keys are `@forkshop/<prefix>`,
+ * values are the user-side alias (e.g. `@/components/forkshop`).
  */
 export type ResolvedAliases = Record<string, string>
 
@@ -40,18 +40,18 @@ export type ResolvedAliases = Record<string, string>
  * Default alias map applied when init has not yet been customised.
  */
 export const DEFAULT_ALIASES: ResolvedAliases = {
-  "@fogma/components": "@/components/fogma",
-  "@fogma/kits": "@/components/fogma/kits",
-  "@fogma/hooks": "@/lib/fogma/hooks",
-  "@fogma/lib": "@/lib/fogma",
-  "@fogma/api": "@/app/api/fogma",
-  "@fogma/tailwind": "@/lib/fogma/tailwind",
+  "@forkshop/components": "@/components/forkshop",
+  "@forkshop/kits": "@/components/forkshop/kits",
+  "@forkshop/hooks": "@/lib/forkshop/hooks",
+  "@forkshop/lib": "@/lib/forkshop",
+  "@forkshop/api": "@/app/api/forkshop",
+  "@forkshop/tailwind": "@/lib/forkshop/tailwind",
 }
 
 /**
- * The shape persisted at <project>/fogma.json after `init` runs.
+ * The shape persisted at <project>/forkshop.json after `init` runs.
  */
-export interface FogmaJson {
+export interface ForkshopJson {
   $schema?: string
   registryVersion: string
   installedAt: string
@@ -67,10 +67,10 @@ export interface FogmaJson {
     mount: string
   }
   installedBundles: string[]
-  files: Record<string, FogmaJsonFile>
+  files: Record<string, ForkshopJsonFile>
 }
 
-export interface FogmaJsonFile {
+export interface ForkshopJsonFile {
   dest: string // workspace-relative
   sha: string // sha256 of the rewritten content at install time
 }

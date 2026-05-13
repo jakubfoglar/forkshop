@@ -99,7 +99,7 @@ export async function preflightInit(
   if (!hasAppDir && !hasNextConfig) {
     return {
       ok: false,
-      reason: "Fogma requires a Next.js App Router project. Run this in your project root, or pass --root <path>.",
+      reason: "Forkshop requires a Next.js App Router project. Run this in your project root, or pass --root <path>.",
     }
   }
 

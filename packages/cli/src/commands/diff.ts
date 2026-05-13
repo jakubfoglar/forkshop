@@ -1,7 +1,7 @@
 import { promises as fs } from "node:fs"
 import path from "node:path"
 import { fetchManifest } from "../fetch-manifest.js"
-import { readFogmaJson } from "../fogma-json.js"
+import { readForkshopJson } from "../forkshop-json.js"
 import type { Manifest } from "../manifest-schema.js"
 import { rewriteImports } from "../rewrite.js"
 import { unifiedDiff } from "../unified-diff.js"
@@ -28,19 +28,19 @@ function aliasMapForRewrite(aliases: {
   tailwind: string
 }) {
   return {
-    "@fogma/components": aliases.components,
-    "@fogma/kits": aliases.kits,
-    "@fogma/hooks": aliases.hooks,
-    "@fogma/lib": aliases.lib,
-    "@fogma/api": aliases.api,
-    "@fogma/tailwind": aliases.tailwind,
+    "@forkshop/components": aliases.components,
+    "@forkshop/kits": aliases.kits,
+    "@forkshop/hooks": aliases.hooks,
+    "@forkshop/lib": aliases.lib,
+    "@forkshop/api": aliases.api,
+    "@forkshop/tailwind": aliases.tailwind,
   }
 }
 
 export async function runDiff(options: DiffOptions): Promise<DiffResult> {
-  const fogmaJson = await readFogmaJson(options.projectRoot)
-  if (!fogmaJson) {
-    return { exitCode: 2, diff: "", message: "Run `fogma init` first." }
+  const forkshopJson = await readForkshopJson(options.projectRoot)
+  if (!forkshopJson) {
+    return { exitCode: 2, diff: "", message: "Run `forkshop init` first." }
   }
 
   const absolute = path.isAbsolute(options.path)
@@ -48,17 +48,17 @@ export async function runDiff(options: DiffOptions): Promise<DiffResult> {
     : path.join(options.projectRoot, options.path)
   const workspaceRelative = path.relative(options.projectRoot, absolute).split(path.sep).join("/")
 
-  const entry = Object.entries(fogmaJson.files).find(([, info]) => info.dest === workspaceRelative)
+  const entry = Object.entries(forkshopJson.files).find(([, info]) => info.dest === workspaceRelative)
   if (!entry) {
     return {
       exitCode: 2,
       diff: "",
-      message: `This path isn't in fogma.json: ${workspaceRelative}. Add it manually under "files", or rerun init.`,
+      message: `This path isn't in forkshop.json: ${workspaceRelative}. Add it manually under "files", or rerun init.`,
     }
   }
   const [address] = entry
 
-  const manifest = options.manifest ?? (await fetchManifest(options.registryUrl ?? fogmaJson.registryUrl))
+  const manifest = options.manifest ?? (await fetchManifest(options.registryUrl ?? forkshopJson.registryUrl))
   const upstream = manifest.files[address]
   if (!upstream) {
     return {
@@ -71,7 +71,7 @@ export async function runDiff(options: DiffOptions): Promise<DiffResult> {
     return { exitCode: 0, diff: "", message: "Binary file — diff not supported." }
   }
 
-  const rewritten = rewriteImports(upstream.content, aliasMapForRewrite(fogmaJson.aliases))
+  const rewritten = rewriteImports(upstream.content, aliasMapForRewrite(forkshopJson.aliases))
   const local = await fs.readFile(absolute, "utf8")
 
   if (local === rewritten) return { exitCode: 0, diff: "" }

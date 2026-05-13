@@ -1,7 +1,7 @@
 import { motion } from "motion/react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { CanvasNode } from "@/components/fogma/canvas/canvas-node"
+import { CanvasNode } from "@/components/forkshop/canvas/canvas-node"
 import type { ClassValue } from "clsx"
 
 export function Mixed() {

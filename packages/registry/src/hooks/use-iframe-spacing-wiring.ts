@@ -18,12 +18,12 @@ export type SpacingZoneTarget =
       containingBlock: string | undefined
     }
 
-const ZONE_ATTR = "data-fogma-zone"
-const ZONE_KIND_ATTR = "data-fogma-zone-kind"
-const ZONE_AXIS_ATTR = "data-fogma-zone-axis"
-const ZONE_SCOPE_ATTR = "data-fogma-zone-scope"
-const BLOCK_ATTR = "data-fogma-block"
-const ZONE_CONTAINER_ID = "fogma-spacing-overlay"
+const ZONE_ATTR = "data-forkshop-zone"
+const ZONE_KIND_ATTR = "data-forkshop-zone-kind"
+const ZONE_AXIS_ATTR = "data-forkshop-zone-axis"
+const ZONE_SCOPE_ATTR = "data-forkshop-zone-scope"
+const BLOCK_ATTR = "data-forkshop-block"
+const ZONE_CONTAINER_ID = "forkshop-spacing-overlay"
 
 const SPACING_OVERLAY_CSS = `
 #${ZONE_CONTAINER_ID} {
@@ -358,7 +358,7 @@ export function useIframeSpacingWiring({
       attachedWindow = iframeWindow
 
       const styleElement = iframeDocument.createElement("style")
-      styleElement.dataset.fogmaSpacing = "true"
+      styleElement.dataset.forkshopSpacing = "true"
       styleElement.textContent = SPACING_OVERLAY_CSS
       iframeDocument.head.append(styleElement)
 
@@ -409,7 +409,7 @@ function isSpacingSide(value: string | null): value is SpacingSide {
 }
 
 // Walks up to find the nearest ancestor carrying the dev-only marker
-// `data-fogma-block="<slug>"` injected by withBlockMarker. If found, the
+// `data-forkshop-block="<slug>"` injected by withBlockMarker. If found, the
 // hovered/clicked element lives inside that block and spacing edits should
 // route to its file in components/blocks/.
 function findContainingBlock(element: HTMLElement): string | undefined {

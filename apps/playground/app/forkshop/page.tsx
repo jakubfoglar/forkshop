@@ -2,14 +2,14 @@
 
 import { useState } from "react"
 import {
-  FogmaSidebar,
+  ForkshopSidebar,
   LocatorInit,
   AgentActivityProvider,
-  type FogmaSelection,
+  type ForkshopSelection,
   DesignSystemBoard,
   IframeGallery,
   PageTree,
-} from "@fogma/registry"
+} from "@forkshop/registry"
 import DesignSystemBoardView from "./design-system-board"
 import ComponentsBoardView from "./components-board"
 import PagesBoardView from "./pages-board"
@@ -17,8 +17,8 @@ import PagesBoardView from "./pages-board"
 const PAGE_ROUTES = ["/sample", "/sample/about", "/sample/dashboard"] as const
 const BLOCK_SLUGS = ["hero", "cta-band", "feature-row"] as const
 
-export default function FogmaPage() {
-  const [selection, setSelection] = useState<FogmaSelection>({
+export default function ForkshopPage() {
+  const [selection, setSelection] = useState<ForkshopSelection>({
     kind: "section",
     sectionId: "design-system",
   })
@@ -39,9 +39,9 @@ export default function FogmaPage() {
 
   return (
     <AgentActivityProvider blockSlugs={BLOCK_SLUGS} projectRoot="">
-      <LocatorInit mountPath="/fogma" />
+      <LocatorInit mountPath="/forkshop" />
       <div className="flex h-screen overflow-hidden">
-        <FogmaSidebar
+        <ForkshopSidebar
           selection={selection}
           onSelect={setSelection}
           sections={[

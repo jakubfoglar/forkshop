@@ -13,16 +13,16 @@ function fakeManifest(): Manifest {
     bundles: {
       primitives: {
         kind: "primitive",
-        items: ["@fogma/lib/foo"],
+        items: ["@forkshop/lib/foo"],
         deps: ["clsx@^2.0.0"],
       },
       "kits/iframe-gallery": {
         kind: "kit",
-        items: ["@fogma/kits/iframe-gallery"],
+        items: ["@forkshop/kits/iframe-gallery"],
       },
       "css-and-config": {
         kind: "asset",
-        items: ["@fogma/css/fogma"],
+        items: ["@forkshop/css/forkshop"],
       },
       init: {
         kind: "composite",
@@ -30,28 +30,28 @@ function fakeManifest(): Manifest {
       },
     },
     files: {
-      "@fogma/lib/foo": {
+      "@forkshop/lib/foo": {
         kind: "text",
         ext: "ts",
         content: "export const foo = 1",
       },
-      "@fogma/kits/iframe-gallery": {
+      "@forkshop/kits/iframe-gallery": {
         kind: "text",
         ext: "tsx",
-        content: `import { foo } from "@fogma/lib/foo"\nexport const Gallery = () => foo`,
+        content: `import { foo } from "@forkshop/lib/foo"\nexport const Gallery = () => foo`,
       },
-      "@fogma/css/fogma": {
+      "@forkshop/css/forkshop": {
         kind: "text",
         ext: "css",
-        content: "/* fogma styles */",
-        destOverride: "{aliases.mount}/fogma.css",
+        content: "/* forkshop styles */",
+        destOverride: "{aliases.mount}/forkshop.css",
       },
     },
   }
 }
 
 async function setupProject(): Promise<string> {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "fogma-init-"))
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "forkshop-init-"))
   await fs.mkdir(path.join(root, "app"))
   await fs.writeFile(path.join(root, "next.config.js"), "module.exports = {}")
   await fs.writeFile(
@@ -68,7 +68,7 @@ describe("runInit", () => {
     for (const d of dirs.splice(0)) await fs.rm(d, { recursive: true, force: true })
   })
 
-  it("copies all init bundle files, writes fogma.json, prints a summary", async () => {
+  it("copies all init bundle files, writes forkshop.json, prints a summary", async () => {
     const root = await setupProject()
     dirs.push(root)
     const result = await runInit({
@@ -78,25 +78,25 @@ describe("runInit", () => {
     })
     expect(result.ok).toBe(true)
 
-    expect(await fs.readFile(path.join(root, "lib/fogma/foo.ts"), "utf8")).toBe("export const foo = 1")
+    expect(await fs.readFile(path.join(root, "lib/forkshop/foo.ts"), "utf8")).toBe("export const foo = 1")
     const gallery = await fs.readFile(
-      path.join(root, "components/fogma/kits/iframe-gallery.tsx"),
+      path.join(root, "components/forkshop/kits/iframe-gallery.tsx"),
       "utf8"
     )
-    expect(gallery).toContain('from "@/lib/fogma/foo"')
-    expect(await fs.readFile(path.join(root, "app/fogma/fogma.css"), "utf8")).toBe("/* fogma styles */")
+    expect(gallery).toContain('from "@/lib/forkshop/foo"')
+    expect(await fs.readFile(path.join(root, "app/forkshop/forkshop.css"), "utf8")).toBe("/* forkshop styles */")
 
-    const fogmaJsonText = await fs.readFile(path.join(root, "fogma.json"), "utf8")
-    const fogmaJson = JSON.parse(fogmaJsonText)
-    expect(fogmaJson.registryVersion).toBe("1.0.0")
-    expect(fogmaJson.installedBundles).toContain("primitives")
-    expect(fogmaJson.files["@fogma/lib/foo"].dest).toBe("lib/fogma/foo.ts")
+    const forkshopJsonText = await fs.readFile(path.join(root, "forkshop.json"), "utf8")
+    const forkshopJson = JSON.parse(forkshopJsonText)
+    expect(forkshopJson.registryVersion).toBe("1.0.0")
+    expect(forkshopJson.installedBundles).toContain("primitives")
+    expect(forkshopJson.files["@forkshop/lib/foo"].dest).toBe("lib/forkshop/foo.ts")
   })
 
-  it("refuses if fogma.json already exists", async () => {
+  it("refuses if forkshop.json already exists", async () => {
     const root = await setupProject()
     dirs.push(root)
-    await fs.writeFile(path.join(root, "fogma.json"), "{}")
+    await fs.writeFile(path.join(root, "forkshop.json"), "{}")
     const result = await runInit({
       projectRoot: root,
       manifest: fakeManifest(),
@@ -109,8 +109,8 @@ describe("runInit", () => {
   it("refuses on collision with an existing file (without --force)", async () => {
     const root = await setupProject()
     dirs.push(root)
-    await fs.mkdir(path.join(root, "lib/fogma"), { recursive: true })
-    await fs.writeFile(path.join(root, "lib/fogma/foo.ts"), "// pre-existing")
+    await fs.mkdir(path.join(root, "lib/forkshop"), { recursive: true })
+    await fs.writeFile(path.join(root, "lib/forkshop/foo.ts"), "// pre-existing")
     const result = await runInit({
       projectRoot: root,
       manifest: fakeManifest(),
@@ -123,8 +123,8 @@ describe("runInit", () => {
   it("overwrites with --force", async () => {
     const root = await setupProject()
     dirs.push(root)
-    await fs.mkdir(path.join(root, "lib/fogma"), { recursive: true })
-    await fs.writeFile(path.join(root, "lib/fogma/foo.ts"), "// pre-existing")
+    await fs.mkdir(path.join(root, "lib/forkshop"), { recursive: true })
+    await fs.writeFile(path.join(root, "lib/forkshop/foo.ts"), "// pre-existing")
     const result = await runInit({
       projectRoot: root,
       manifest: fakeManifest(),
@@ -132,6 +132,6 @@ describe("runInit", () => {
       force: true,
     })
     expect(result.ok).toBe(true)
-    expect(await fs.readFile(path.join(root, "lib/fogma/foo.ts"), "utf8")).toBe("export const foo = 1")
+    expect(await fs.readFile(path.join(root, "lib/forkshop/foo.ts"), "utf8")).toBe("export const foo = 1")
   })
 })

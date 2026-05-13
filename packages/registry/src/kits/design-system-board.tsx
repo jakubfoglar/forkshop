@@ -2,24 +2,24 @@
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { Config } from "tailwindcss"
-import { CanvasNode } from "@fogma/components/canvas/canvas-node"
-import { useFogmaCanvas } from "@fogma/components/canvas/fogma-canvas"
-import { GuideOverlay } from "@fogma/components/canvas/guide-overlay"
-import { useDraggableNode, type GetSnapTargets } from "@fogma/hooks/use-draggable-node"
-import type { NodePosition, NodePositions } from "@fogma/lib/node-positions"
-import { buildTokenRegistry } from "@fogma/lib/token-registry"
-import { buildSystemGraph } from "@fogma/lib/system-graph"
+import { CanvasNode } from "@forkshop/components/canvas/canvas-node"
+import { useForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
+import { GuideOverlay } from "@forkshop/components/canvas/guide-overlay"
+import { useDraggableNode, type GetSnapTargets } from "@forkshop/hooks/use-draggable-node"
+import type { NodePosition, NodePositions } from "@forkshop/lib/node-positions"
+import { buildTokenRegistry } from "@forkshop/lib/token-registry"
+import { buildSystemGraph } from "@forkshop/lib/system-graph"
 import {
   layoutSystem,
   COLOR_NODE_WIDTH,
   COLOR_NODE_HEIGHT,
   type PositionedColorNode,
   type SystemLayout,
-} from "@fogma/lib/system-layout"
-import { type SnapGuide, type SnapTarget } from "@fogma/lib/system-snap"
-import { TypographyFrame, type TypographyFrameProps } from "@fogma/kits/typography-frame"
-import { type PrimitiveDescriptor } from "@fogma/kits/primitives-showcase"
-import { fogmaIcons } from "@fogma/lib/icons"
+} from "@forkshop/lib/system-layout"
+import { type SnapGuide, type SnapTarget } from "@forkshop/lib/system-snap"
+import { TypographyFrame, type TypographyFrameProps } from "@forkshop/kits/typography-frame"
+import { type PrimitiveDescriptor } from "@forkshop/kits/primitives-showcase"
+import { forkshopIcons } from "@forkshop/lib/icons"
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -92,10 +92,10 @@ function layoutPrimitives(
 
 const _DesignSystemBoard = memo(DesignSystemBoardInner)
 export const DesignSystemBoard: typeof _DesignSystemBoard & {
-  icon: typeof fogmaIcons.designSystem
+  icon: typeof forkshopIcons.designSystem
   defaultTitle: string
 } = Object.assign(_DesignSystemBoard, {
-  icon: fogmaIcons.designSystem,
+  icon: forkshopIcons.designSystem,
   defaultTitle: "Design System",
 })
 
@@ -223,9 +223,9 @@ function DesignSystemBoardInner({
           onGuidesChange={handleGuidesChange}
           onSelectChange={handleSelectChange}
           style={{ height: p.height, transition: "box-shadow 120ms ease-out" }}
-          className="border border-fogma-border bg-fogma-surface shadow-xs"
+          className="border border-forkshop-border bg-forkshop-surface shadow-xs"
         >
-          <div className="p-fogma-4">{p.render()}</div>
+          <div className="p-forkshop-4">{p.render()}</div>
         </CanvasNode>
       ))}
 
@@ -243,7 +243,7 @@ function DesignSystemBoardInner({
         onGuidesChange={handleGuidesChange}
         onSelectChange={handleSelectChange}
         style={{ height: TYPOGRAPHY_HEIGHT, transition: "box-shadow 120ms ease-out" }}
-        className="border border-fogma-border bg-fogma-surface shadow-xs"
+        className="border border-forkshop-border bg-forkshop-surface shadow-xs"
       >
         <TypographyFrame {...typographyOptions} />
       </CanvasNode>
@@ -307,7 +307,7 @@ function ColorsSection({
   selectedId: string | undefined
   onSelectChange: (id: string, selected: boolean) => void
 }) {
-  const { isInteractingRef } = useFogmaCanvas()
+  const { isInteractingRef } = useForkshopCanvas()
   const [hoveredId, setHoveredId] = useState<string>()
   const connections = useMemo(() => buildConnectionIndex(layout), [layout])
 
@@ -445,7 +445,7 @@ function ColorCardInner({
   onHoverIn: () => void
   onHoverOut: () => void
 }) {
-  const { transformRef } = useFogmaCanvas()
+  const { transformRef } = useForkshopCanvas()
   const { containerRef, x, y, dragHandleProps } = useDraggableNode({
     id: positioned.id,
     layoutX: positioned.x,
@@ -478,7 +478,7 @@ function ColorCardInner({
         outline: outlineFor(isSelected, isHovered),
         outlineOffset: 0,
       }}
-      className="flex items-center gap-fogma-1 rounded-fogma-xxs border border-fogma-border bg-fogma-surface px-fogma-1 shadow-xs"
+      className="flex items-center gap-forkshop-1 rounded-forkshop-xxs border border-forkshop-border bg-forkshop-surface px-forkshop-1 shadow-xs"
     >
       <span
         aria-hidden="true"
@@ -486,9 +486,9 @@ function ColorCardInner({
           background: node.hex,
           boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.08)",
         }}
-        className="size-fogma-4 shrink-0 rounded-fogma-xxs"
+        className="size-forkshop-4 shrink-0 rounded-forkshop-xxs"
       />
-      <span className="truncate text-fogma-xs text-fogma-fg-muted">{node.name}</span>
+      <span className="truncate text-forkshop-xs text-forkshop-fg-muted">{node.name}</span>
     </div>
   )
 }

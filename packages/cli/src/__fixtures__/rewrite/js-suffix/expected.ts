@@ -1,2 +1,2 @@
-import { foo } from "@/lib/fogma/edit-mode"
-import { bar } from "@/components/fogma/icon"
+import { foo } from "@/lib/forkshop/edit-mode"
+import { bar } from "@/components/forkshop/icon"

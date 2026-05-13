@@ -4,7 +4,7 @@ import pc from "picocolors"
 import { buildInstallCommand, detectPackageManager } from "../detect-pm.js"
 import { copyManifestFiles, findCollisions } from "../copy-files.js"
 import { fetchManifest } from "../fetch-manifest.js"
-import { readFogmaJson, writeFogmaJson } from "../fogma-json.js"
+import { readForkshopJson, writeForkshopJson } from "../forkshop-json.js"
 import type { Manifest } from "../manifest-schema.js"
 import { resolveBundles } from "../resolve-bundles.js"
 import { resolveDestination } from "../resolve-destination.js"
@@ -25,16 +25,16 @@ export type AddResult = { ok: true } | { ok: false; reason: string }
 export async function runAdd(options: AddOptions): Promise<AddResult> {
   const { projectRoot, bundleName, force = false, noInstall = false } = options
 
-  const fogmaJson = await readFogmaJson(projectRoot)
-  if (!fogmaJson) {
-    return { ok: false, reason: "Run `fogma init` first." }
+  const forkshopJson = await readForkshopJson(projectRoot)
+  if (!forkshopJson) {
+    return { ok: false, reason: "Run `forkshop init` first." }
   }
 
-  if (fogmaJson.installedBundles.includes(bundleName)) {
+  if (forkshopJson.installedBundles.includes(bundleName)) {
     return { ok: false, reason: `Bundle "${bundleName}" already installed.` }
   }
 
-  const manifest = options.manifest ?? (await fetchManifest(fogmaJson.registryUrl))
+  const manifest = options.manifest ?? (await fetchManifest(forkshopJson.registryUrl))
 
   if (!manifest.bundles[bundleName]) {
     const valid = Object.keys(manifest.bundles)
@@ -51,13 +51,13 @@ export async function runAdd(options: AddOptions): Promise<AddResult> {
 
   // Filter out files already installed.
   const newFileAddresses = resolved.fileAddresses.filter(
-    (address) => !fogmaJson.files[address]
+    (address) => !forkshopJson.files[address]
   )
 
   const destinations = newFileAddresses.map((address) => {
     const file = manifest.files[address]
     if (!file) throw new Error(`Missing file in manifest: ${address}`)
-    return resolveDestination(address, file, fogmaJson.aliases)
+    return resolveDestination(address, file, forkshopJson.aliases)
   })
   const collisions = await findCollisions(projectRoot, destinations)
   if (collisions.length > 0 && !force) {
@@ -73,7 +73,7 @@ export async function runAdd(options: AddOptions): Promise<AddResult> {
   const plan = await copyManifestFiles({
     projectRoot,
     manifest,
-    aliases: fogmaJson.aliases,
+    aliases: forkshopJson.aliases,
     fileAddresses: newFileAddresses,
   })
 
@@ -92,11 +92,11 @@ export async function runAdd(options: AddOptions): Promise<AddResult> {
     }
   }
 
-  fogmaJson.installedBundles = [...fogmaJson.installedBundles, bundleName]
+  forkshopJson.installedBundles = [...forkshopJson.installedBundles, bundleName]
   for (const entry of plan) {
-    fogmaJson.files[entry.address] = { dest: entry.dest, sha: entry.sha }
+    forkshopJson.files[entry.address] = { dest: entry.dest, sha: entry.sha }
   }
-  await writeFogmaJson(projectRoot, fogmaJson)
+  await writeForkshopJson(projectRoot, forkshopJson)
 
   console.log(pc.green(`\nAdded ${plan.length} files.`))
 

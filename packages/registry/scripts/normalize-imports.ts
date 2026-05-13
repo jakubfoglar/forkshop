@@ -8,14 +8,14 @@ import { REGISTRY_ROOT, SRC_ROOT, walkTsFiles } from "./_utils.js"
  * importPath: the raw import string as it appears in source
  */
 export function normalizeImportSource(filePath: string, importPath: string): string {
-  if (importPath.startsWith("@fogma/")) return importPath
+  if (importPath.startsWith("@forkshop/")) return importPath
   if (!importPath.startsWith(".")) return importPath
 
   const importerDir = path.dirname(filePath)
   const absoluteImport = path.normalize(path.join(importerDir, importPath))
   const fromSrc = path.relative("src", absoluteImport).split(path.sep).join("/")
   const noExt = fromSrc.replace(/\.(ts|tsx|js|jsx|mjs)$/, "")
-  return `@fogma/${noExt}`
+  return `@forkshop/${noExt}`
 }
 
 /**

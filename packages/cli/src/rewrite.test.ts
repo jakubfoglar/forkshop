@@ -8,12 +8,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const FIXTURES_DIR = path.join(__dirname, "__fixtures__/rewrite")
 
 const DEFAULT_ALIASES: AliasMap = {
-  "@fogma/components": "@/components/fogma",
-  "@fogma/kits": "@/components/fogma/kits",
-  "@fogma/hooks": "@/lib/fogma/hooks",
-  "@fogma/lib": "@/lib/fogma",
-  "@fogma/api": "@/app/api/fogma",
-  "@fogma/tailwind": "@/lib/fogma/tailwind",
+  "@forkshop/components": "@/components/forkshop",
+  "@forkshop/kits": "@/components/forkshop/kits",
+  "@forkshop/hooks": "@/lib/forkshop/hooks",
+  "@forkshop/lib": "@/lib/forkshop",
+  "@forkshop/api": "@/app/api/forkshop",
+  "@forkshop/tailwind": "@/lib/forkshop/tailwind",
 }
 
 const FIXTURES = ["plain", "dynamic", "type-only", "re-export", "mixed", "js-suffix", "unmatched"]
@@ -35,17 +35,17 @@ describe("rewriteImports", () => {
     })
   }
 
-  it("returns input unchanged when no @fogma imports present", () => {
+  it("returns input unchanged when no @forkshop imports present", () => {
     const source = `import { useState } from "react"\nexport const x = useState`
     expect(rewriteImports(source, DEFAULT_ALIASES)).toBe(source)
   })
 
   it("picks the longest matching alias prefix", () => {
     const aliases: AliasMap = {
-      "@fogma/components": "@/foo",
-      "@fogma/components/canvas": "@/bar/canvas",
+      "@forkshop/components": "@/foo",
+      "@forkshop/components/canvas": "@/bar/canvas",
     }
-    const source = `import { X } from "@fogma/components/canvas/x"`
+    const source = `import { X } from "@forkshop/components/canvas/x"`
     const expected = `import { X } from "@/bar/canvas/x"`
     expect(rewriteImports(source, aliases)).toBe(expected)
   })
@@ -55,7 +55,7 @@ describe("rewriteImports", () => {
   })
 
   it("returns input unchanged when aliases map is empty", () => {
-    const source = `import { X } from "@fogma/lib/foo"`
+    const source = `import { X } from "@forkshop/lib/foo"`
     expect(rewriteImports(source, {})).toBe(source)
   })
 })

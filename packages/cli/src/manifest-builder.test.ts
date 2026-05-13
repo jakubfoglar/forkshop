@@ -17,11 +17,11 @@ describe("buildManifest", () => {
   it("returns a valid top-level shape", () => {
     expect(manifest.version).toBe("1.0.0")
     expect(manifest.generatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/)
-    expect(manifest.registryBaseUrl).toBe("https://fogma.dev/r/")
+    expect(manifest.registryBaseUrl).toBe("https://forkshop.dev/r/")
   })
 
   it("includes the canvas-node primitive in the manifest", () => {
-    const file = manifest.files["@fogma/components/canvas/canvas-node"]
+    const file = manifest.files["@forkshop/components/canvas/canvas-node"]
     expect(file).toBeDefined()
     if (!file) throw new Error("canvas-node missing")
     expect(file.kind).toBe("text")
@@ -32,7 +32,7 @@ describe("buildManifest", () => {
   })
 
   it("includes the iframe-gallery kit", () => {
-    expect(manifest.files["@fogma/kits/iframe-gallery"]).toBeDefined()
+    expect(manifest.files["@forkshop/kits/iframe-gallery"]).toBeDefined()
   })
 
   it("defines the primitives bundle with correct kind", () => {
@@ -70,14 +70,14 @@ describe("buildManifest", () => {
     )
   })
 
-  it("every @fogma/* import in file contents resolves to a known address", () => {
+  it("every @forkshop/* import in file contents resolves to a known address", () => {
     const knownAddresses = new Set(Object.keys(manifest.files))
-    // `@fogma/registry` (and sub-paths) is the user-facing package alias used
+    // `@forkshop/registry` (and sub-paths) is the user-facing package alias used
     // in documentation and doc comments — it doesn't appear as its own entry
     // in the manifest (the barrel is omitted by design).
     const isDocsOnly = (ref: string): boolean =>
-      ref === "@fogma/registry" || ref.startsWith("@fogma/registry/")
-    const importRe = /@fogma\/[a-zA-Z0-9/_-]+/g
+      ref === "@forkshop/registry" || ref.startsWith("@forkshop/registry/")
+    const importRe = /@forkshop\/[a-zA-Z0-9/_-]+/g
     for (const [address, file] of Object.entries(manifest.files)) {
       if (file.kind !== "text") continue
       // Markdown files are documentation, not imports — skip.
@@ -109,7 +109,7 @@ describe("buildManifest", () => {
   })
 
   it("includes the CLAUDE.md template with destOverride", () => {
-    const file = manifest.files["@fogma/templates/claude-md"]
+    const file = manifest.files["@forkshop/templates/claude-md"]
     expect(file).toBeDefined()
     if (file && file.kind === "text") {
       expect(file.ext).toBe("md")
@@ -127,12 +127,12 @@ describe("manifest snapshot", () => {
 
     // Sanity-check: the primitives bundle should include the well-known core files.
     const required = [
-      "@fogma/components/canvas/canvas-node",
-      "@fogma/components/canvas/fogma-canvas",
-      "@fogma/components/sidebar/fogma-sidebar",
-      "@fogma/hooks/use-iframe-preview",
-      "@fogma/lib/edit-mode",
-      "@fogma/api/edit/route",
+      "@forkshop/components/canvas/canvas-node",
+      "@forkshop/components/canvas/forkshop-canvas",
+      "@forkshop/components/sidebar/forkshop-sidebar",
+      "@forkshop/hooks/use-iframe-preview",
+      "@forkshop/lib/edit-mode",
+      "@forkshop/api/edit/route",
     ]
     for (const address of required) {
       expect(bundle.items, `missing ${address}`).toContain(address)

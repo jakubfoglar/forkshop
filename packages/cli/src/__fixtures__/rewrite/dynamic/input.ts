@@ -1,4 +1,4 @@
 export async function loadLazy() {
-  const mod = await import("@fogma/lib/system-layout")
+  const mod = await import("@forkshop/lib/system-layout")
   return mod
 }

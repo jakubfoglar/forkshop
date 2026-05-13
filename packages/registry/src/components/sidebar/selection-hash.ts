@@ -1,7 +1,7 @@
-import type { FogmaSelection } from "@fogma/components/sidebar/fogma-sidebar"
+import type { ForkshopSelection } from "@forkshop/components/sidebar/forkshop-sidebar"
 
-// Pure helpers for round-tripping a FogmaSelection through a URL hash.
-// The hash mirrors what's on screen so /fogma can be bookmarked/shared:
+// Pure helpers for round-tripping a ForkshopSelection through a URL hash.
+// The hash mirrors what's on screen so /forkshop can be bookmarked/shared:
 //   #/section/blocks       → { kind: "section", sectionId: "blocks" }
 //   #/section/navigation   → { kind: "section", sectionId: "navigation" }
 //   #/page/about           → { kind: "page", path: "/about" }
@@ -10,7 +10,7 @@ import type { FogmaSelection } from "@fogma/components/sidebar/fogma-sidebar"
 //   #/block/hero           → { kind: "block", slug: "hero" }
 //   (anything else)        → fall back to default
 
-export function serializeSelection(selection: FogmaSelection): string {
+export function serializeSelection(selection: ForkshopSelection): string {
   switch (selection.kind) {
     case "section": {
       return `#/section/${encodeURIComponent(selection.sectionId)}`
@@ -25,7 +25,7 @@ export function serializeSelection(selection: FogmaSelection): string {
   }
 }
 
-export function parseSelection(hash: string): FogmaSelection | undefined {
+export function parseSelection(hash: string): ForkshopSelection | undefined {
   // strip leading "#" if present
   const value = hash.startsWith("#") ? hash.slice(1) : hash
   if (value.startsWith("/section/")) {

@@ -11,7 +11,7 @@ describe("detectPackageManager", () => {
   })
 
   async function mkTemp(): Promise<string> {
-    const d = await fs.mkdtemp(path.join(os.tmpdir(), "fogma-pm-"))
+    const d = await fs.mkdtemp(path.join(os.tmpdir(), "forkshop-pm-"))
     dirs.push(d)
     return d
   }

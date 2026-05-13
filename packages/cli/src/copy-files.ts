@@ -1,6 +1,6 @@
 import { promises as fs } from "node:fs"
 import path from "node:path"
-import type { FogmaJson, Manifest } from "./manifest-schema.js"
+import type { ForkshopJson, Manifest } from "./manifest-schema.js"
 import { resolveDestination } from "./resolve-destination.js"
 import { rewriteImports } from "./rewrite.js"
 import { sha256Hex } from "./sha.js"
@@ -8,7 +8,7 @@ import { sha256Hex } from "./sha.js"
 export interface CopyOptions {
   projectRoot: string
   manifest: Manifest
-  aliases: FogmaJson["aliases"]
+  aliases: ForkshopJson["aliases"]
   fileAddresses: string[]
 }
 
@@ -20,14 +20,14 @@ export interface CopyPlanEntry {
 
 export type CopyPlan = CopyPlanEntry[]
 
-function aliasMapForRewrite(aliases: FogmaJson["aliases"]): Record<string, string> {
+function aliasMapForRewrite(aliases: ForkshopJson["aliases"]): Record<string, string> {
   return {
-    "@fogma/components": aliases.components,
-    "@fogma/kits": aliases.kits,
-    "@fogma/hooks": aliases.hooks,
-    "@fogma/lib": aliases.lib,
-    "@fogma/api": aliases.api,
-    "@fogma/tailwind": aliases.tailwind,
+    "@forkshop/components": aliases.components,
+    "@forkshop/kits": aliases.kits,
+    "@forkshop/hooks": aliases.hooks,
+    "@forkshop/lib": aliases.lib,
+    "@forkshop/api": aliases.api,
+    "@forkshop/tailwind": aliases.tailwind,
   }
 }
 

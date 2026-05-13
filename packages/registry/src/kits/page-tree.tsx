@@ -2,16 +2,16 @@
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
-import { BackButton } from "@fogma/components/canvas/back-button"
-import { CanvasNode } from "@fogma/components/canvas/canvas-node"
-import { GuideOverlay } from "@fogma/components/canvas/guide-overlay"
-import { LazyIframe } from "@fogma/components/canvas/lazy-iframe"
-import { ResponsiveFrameView } from "@fogma/components/canvas/responsive-frame-view"
-import { useFogmaCanvas } from "@fogma/components/canvas/fogma-canvas"
-import type { GetSnapTargets } from "@fogma/hooks/use-draggable-node"
-import type { NodePosition, NodePositions } from "@fogma/lib/node-positions"
-import type { SnapGuide, SnapTarget } from "@fogma/lib/system-snap"
-import { fogmaIcons } from "@fogma/lib/icons"
+import { BackButton } from "@forkshop/components/canvas/back-button"
+import { CanvasNode } from "@forkshop/components/canvas/canvas-node"
+import { GuideOverlay } from "@forkshop/components/canvas/guide-overlay"
+import { LazyIframe } from "@forkshop/components/canvas/lazy-iframe"
+import { ResponsiveFrameView } from "@forkshop/components/canvas/responsive-frame-view"
+import { useForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
+import type { GetSnapTargets } from "@forkshop/hooks/use-draggable-node"
+import type { NodePosition, NodePositions } from "@forkshop/lib/node-positions"
+import type { SnapGuide, SnapTarget } from "@forkshop/lib/system-snap"
+import { forkshopIcons } from "@forkshop/lib/icons"
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -79,7 +79,7 @@ export type PageTreeProps = {
    * Called when the internal isolation state changes (double-click enters
    * isolation or back button exits it) in uncontrolled mode.
    * Use this to react to isolation state changes from the parent, e.g. to
-   * switch the FogmaCanvas stageWidth for zoom-to-fit.
+   * switch the ForkshopCanvas stageWidth for zoom-to-fit.
    * Only fires when `isolatedPath` prop is not provided (uncontrolled mode).
    */
   onIsolatedPathChange?: (path: string | null) => void
@@ -115,15 +115,15 @@ function stageSize(cells: TileCell[]): { width: number; height: number } {
 }
 
 // ---------------------------------------------------------------------------
-// Main kit component — rendered inside a <FogmaCanvas> provided by the caller
+// Main kit component — rendered inside a <ForkshopCanvas> provided by the caller
 // ---------------------------------------------------------------------------
 
 const _PageTree = memo(PageTreeInner)
 export const PageTree: typeof _PageTree & {
-  icon: typeof fogmaIcons.pages
+  icon: typeof forkshopIcons.pages
   defaultTitle: string
 } = Object.assign(_PageTree, {
-  icon: fogmaIcons.pages,
+  icon: forkshopIcons.pages,
   defaultTitle: "Pages",
 })
 
@@ -332,7 +332,7 @@ function PageTileInner({
   onSelectChange: (id: string, selected: boolean) => void
   onIsolate: (path: string) => void
 }) {
-  const { applyWheelInput, transformRef } = useFogmaCanvas()
+  const { applyWheelInput, transformRef } = useForkshopCanvas()
   const label = entry.label ?? humanize(entry.path)
 
   const handleIframeWheel = useCallback(
@@ -398,7 +398,7 @@ function IsolationView({
   showBackButton: boolean
   onBack: () => void
 }) {
-  const { applyWheelInput, transformRef, containerRef } = useFogmaCanvas()
+  const { applyWheelInput, transformRef, containerRef } = useForkshopCanvas()
   const [measuredHeight, setMeasuredHeight] = useState<number | undefined>(undefined)
   // Track when containerRef is populated so the portal can attach.
   const [containerReady, setContainerReady] = useState(false)

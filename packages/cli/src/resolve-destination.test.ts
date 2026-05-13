@@ -1,35 +1,35 @@
 import { describe, expect, it } from "vitest"
 import { resolveDestination } from "./resolve-destination.js"
-import type { FogmaJson, ManifestFile } from "./manifest-schema.js"
+import type { ForkshopJson, ManifestFile } from "./manifest-schema.js"
 
-const aliases: FogmaJson["aliases"] = {
+const aliases: ForkshopJson["aliases"] = {
   base: "@/",
-  components: "@/components/fogma",
-  kits: "@/components/fogma/kits",
-  hooks: "@/lib/fogma/hooks",
-  lib: "@/lib/fogma",
-  api: "@/app/api/fogma",
-  tailwind: "@/lib/fogma/tailwind",
-  mount: "@/app/fogma",
+  components: "@/components/forkshop",
+  kits: "@/components/forkshop/kits",
+  hooks: "@/lib/forkshop/hooks",
+  lib: "@/lib/forkshop",
+  api: "@/app/api/forkshop",
+  tailwind: "@/lib/forkshop/tailwind",
+  mount: "@/app/forkshop",
 }
 
 describe("resolveDestination", () => {
-  it("maps a components file to components/fogma/", () => {
+  it("maps a components file to components/forkshop/", () => {
     const file: ManifestFile = { kind: "text", ext: "tsx", content: "" }
-    const dest = resolveDestination("@fogma/components/canvas/canvas-node", file, aliases)
-    expect(dest).toBe("components/fogma/canvas/canvas-node.tsx")
+    const dest = resolveDestination("@forkshop/components/canvas/canvas-node", file, aliases)
+    expect(dest).toBe("components/forkshop/canvas/canvas-node.tsx")
   })
 
-  it("maps a hooks file to lib/fogma/hooks/", () => {
+  it("maps a hooks file to lib/forkshop/hooks/", () => {
     const file: ManifestFile = { kind: "text", ext: "ts", content: "" }
-    const dest = resolveDestination("@fogma/hooks/use-iframe-preview", file, aliases)
-    expect(dest).toBe("lib/fogma/hooks/use-iframe-preview.ts")
+    const dest = resolveDestination("@forkshop/hooks/use-iframe-preview", file, aliases)
+    expect(dest).toBe("lib/forkshop/hooks/use-iframe-preview.ts")
   })
 
-  it("maps an api file to app/api/fogma/", () => {
+  it("maps an api file to app/api/forkshop/", () => {
     const file: ManifestFile = { kind: "text", ext: "ts", content: "" }
-    const dest = resolveDestination("@fogma/api/edit/route", file, aliases)
-    expect(dest).toBe("app/api/fogma/edit/route.ts")
+    const dest = resolveDestination("@forkshop/api/edit/route", file, aliases)
+    expect(dest).toBe("app/api/forkshop/edit/route.ts")
   })
 
   it("honors destOverride templates with {aliases.X} placeholders", () => {
@@ -39,8 +39,8 @@ describe("resolveDestination", () => {
       content: "",
       destOverride: "{aliases.mount}/CLAUDE.md",
     }
-    const dest = resolveDestination("@fogma/templates/claude-md", file, aliases)
-    expect(dest).toBe("app/fogma/CLAUDE.md")
+    const dest = resolveDestination("@forkshop/templates/claude-md", file, aliases)
+    expect(dest).toBe("app/forkshop/CLAUDE.md")
   })
 
   it("uses destOverride for binary files", () => {
@@ -49,7 +49,7 @@ describe("resolveDestination", () => {
       url: "fonts/raveo-regular.woff2",
       destOverride: "app/fonts/raveo/raveo-regular.woff2",
     }
-    const dest = resolveDestination("@fogma/fonts/raveo-regular", file, aliases)
+    const dest = resolveDestination("@forkshop/fonts/raveo-regular", file, aliases)
     expect(dest).toBe("app/fonts/raveo/raveo-regular.woff2")
   })
 })

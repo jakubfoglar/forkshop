@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const config = {
-  transpilePackages: ["fogma"],
+  transpilePackages: ["forkshop"],
   webpack(config) {
     // The CLI source uses NodeNext-style relative imports with `.js` extensions
     // (e.g. `import "./manifest-schema.js"`). webpack needs an extensionAlias

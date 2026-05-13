@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
-import { fileToSelection } from "@fogma/lib/file-to-selection"
+import { fileToSelection } from "@forkshop/lib/file-to-selection"
 
 // PascalCase → kebab-case: "HeroDisplay" → "hero-display".
 // Used to map a block slug to the component name Claude would write in a
@@ -73,7 +73,7 @@ export function AgentActivityProvider({
 
   useEffect(() => {
     // Live AI awareness SSE subscription wired in a separate spec.
-    // The endpoint at /api/fogma/agent-activity/stream is a no-op until then.
+    // The endpoint at /api/forkshop/agent-activity/stream is a no-op until then.
     return
   }, [])
 

@@ -1,8 +1,8 @@
 "use client"
 
 import { useRef } from "react"
-import { FogmaCanvas, DesignSystemBoard } from "@fogma/registry"
-import { fogmaConfig } from "./fogma.config"
+import { ForkshopCanvas, DesignSystemBoard } from "@forkshop/registry"
+import { forkshopConfig } from "./forkshop.config"
 
 // Stage dimensions for the design system board.
 // The board lays out color nodes + primitives; 3000×2400 is spacious enough
@@ -15,7 +15,7 @@ export default function DesignSystemBoardView() {
   const stageRef = useRef<HTMLDivElement>(null)
 
   return (
-    <FogmaCanvas
+    <ForkshopCanvas
       containerRef={containerRef}
       stageRef={stageRef}
       stageWidth={STAGE_W}
@@ -23,9 +23,9 @@ export default function DesignSystemBoardView() {
       fitMode="both"
     >
       <DesignSystemBoard
-        tailwindConfig={fogmaConfig.tailwindConfig}
-        primitives={[...fogmaConfig.primitives]}
+        tailwindConfig={forkshopConfig.tailwindConfig}
+        primitives={[...forkshopConfig.primitives]}
       />
-    </FogmaCanvas>
+    </ForkshopCanvas>
   )
 }

@@ -1,8 +1,8 @@
 "use client"
 
 import { useCallback, useRef, type PointerEvent as ReactPointerEvent, type RefObject } from "react"
-import type { NodePosition } from "@fogma/lib/node-positions"
-import { applySnap, snapPixelsAt, type SnapGuide, type SnapTarget } from "@fogma/lib/system-snap"
+import type { NodePosition } from "@forkshop/lib/node-positions"
+import { applySnap, snapPixelsAt, type SnapGuide, type SnapTarget } from "@forkshop/lib/system-snap"
 
 export type Transform = { zoom: number; panX: number; panY: number }
 

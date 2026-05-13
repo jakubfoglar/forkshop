@@ -17,7 +17,7 @@ const raveo = localFont({
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={raveo.variable}>
-      <body className="font-fogma-sans bg-fogma-surface text-fogma-fg">{children}</body>
+      <body className="font-forkshop-sans bg-forkshop-surface text-forkshop-fg">{children}</body>
     </html>
   )
 }

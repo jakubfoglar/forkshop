@@ -5,13 +5,13 @@ import { runDiff } from "./commands/diff.js"
 import { runInit } from "./commands/init.js"
 
 const program = new Command()
-  .name("fogma")
-  .description("Drop Fogma into your Next.js + Tailwind project.")
+  .name("forkshop")
+  .description("Drop Forkshop into your Next.js + Tailwind project.")
   .version("0.0.0")
 
 program
   .command("init")
-  .description("Install Fogma into the current project.")
+  .description("Install Forkshop into the current project.")
   .option("--force", "Overwrite existing files on collision")
   .option("--no-install", "Skip running the package manager")
   .option("--no-warn-dirty", "Don't warn if the git tree is dirty")
@@ -53,7 +53,7 @@ program
 
 program
   .command("diff <path>")
-  .description("Show how your local copy of a Fogma file differs from upstream.")
+  .description("Show how your local copy of a Forkshop file differs from upstream.")
   .option("--registry <url>", "Override the registry base URL")
   .action(async (filePath, opts) => {
     const result = await runDiff({

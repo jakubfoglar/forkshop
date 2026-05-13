@@ -13,7 +13,7 @@ import {
   type ReactNode,
   type RefObject,
 } from "react"
-import type { Transform } from "@fogma/hooks/use-draggable-node"
+import type { Transform } from "@forkshop/hooks/use-draggable-node"
 
 export type WheelInput = {
   deltaX: number
@@ -23,7 +23,7 @@ export type WheelInput = {
   screenY: number
 }
 
-export type FogmaCanvasHandle = {
+export type ForkshopCanvasHandle = {
   fitToView: () => void
   resetZoom: () => void
   animateToBox: (x: number, y: number, w: number, h: number) => void
@@ -32,7 +32,7 @@ export type FogmaCanvasHandle = {
   applyWheelInput: (input: WheelInput) => void
 }
 
-type FogmaCanvasContextValue = {
+type ForkshopCanvasContextValue = {
   transformRef: RefObject<Transform>
   isInteractingRef: RefObject<boolean>
   fitToView: () => void
@@ -43,11 +43,11 @@ type FogmaCanvasContextValue = {
   containerRef: RefObject<HTMLDivElement | null>
 }
 
-const FogmaCanvasContext = createContext<FogmaCanvasContextValue | undefined>(undefined)
+const ForkshopCanvasContext = createContext<ForkshopCanvasContextValue | undefined>(undefined)
 
-export function useFogmaCanvas(): FogmaCanvasContextValue {
-  const value = useContext(FogmaCanvasContext)
-  if (!value) throw new Error("useFogmaCanvas must be used inside <FogmaCanvas>")
+export function useForkshopCanvas(): ForkshopCanvasContextValue {
+  const value = useContext(ForkshopCanvasContext)
+  if (!value) throw new Error("useForkshopCanvas must be used inside <ForkshopCanvas>")
   return value
 }
 
@@ -61,7 +61,7 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max)
 }
 
-export function FogmaCanvas({
+export function ForkshopCanvas({
   ref,
   initialTransform,
   onTransformChange,
@@ -73,7 +73,7 @@ export function FogmaCanvas({
   stageRef,
   children,
 }: {
-  ref?: RefObject<FogmaCanvasHandle | null>
+  ref?: RefObject<ForkshopCanvasHandle | null>
   initialTransform?: Transform
   onTransformChange?: (transform: Transform) => void
   stageWidth: number
@@ -377,7 +377,7 @@ export function FogmaCanvas({
     }
   }, [isSpaceHeld, containerRef])
 
-  const handle = useMemo<FogmaCanvasHandle>(
+  const handle = useMemo<ForkshopCanvasHandle>(
     () => ({
       fitToView,
       resetZoom,
@@ -390,7 +390,7 @@ export function FogmaCanvas({
   )
   useImperativeHandle(ref, () => handle, [handle])
 
-  const contextValue = useMemo<FogmaCanvasContextValue>(
+  const contextValue = useMemo<ForkshopCanvasContextValue>(
     () => ({
       transformRef,
       isInteractingRef,
@@ -427,10 +427,10 @@ export function FogmaCanvas({
   else if (isSpaceHeld) containerCursor = "grab"
 
   return (
-    <FogmaCanvasContext.Provider value={contextValue}>
+    <ForkshopCanvasContext.Provider value={contextValue}>
       <div
         ref={containerRef as React.RefObject<HTMLDivElement>}
-        className="relative flex-1 select-none overflow-hidden overscroll-contain bg-fogma-canvas"
+        className="relative flex-1 select-none overflow-hidden overscroll-contain bg-forkshop-canvas"
         style={{ cursor: containerCursor, touchAction: "none" }}
         onClick={onContainerClick}
       >
@@ -438,6 +438,6 @@ export function FogmaCanvas({
           {children}
         </div>
       </div>
-    </FogmaCanvasContext.Provider>
+    </ForkshopCanvasContext.Provider>
   )
 }

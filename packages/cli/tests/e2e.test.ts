@@ -58,9 +58,9 @@ async function setupBareNextProject(root: string) {
   await fs.writeFile(path.join(root, "app/page.tsx"), "export default function Page() { return <main>OK</main> }")
 }
 
-describe.skip("e2e: fogma init against a bare Next.js project", () => {
-  it("copies files, writes fogma.json, leaves the project typecheckable", async () => {
-    const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "fogma-e2e-"))
+describe.skip("e2e: forkshop init against a bare Next.js project", () => {
+  it("copies files, writes forkshop.json, leaves the project typecheckable", async () => {
+    const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "forkshop-e2e-"))
     try {
       await setupBareNextProject(tmp)
 
@@ -70,15 +70,15 @@ describe.skip("e2e: fogma init against a bare Next.js project", () => {
       )
       expect(result.stdout).toMatch(/Installed/)
 
-      const fogmaJson = JSON.parse(await fs.readFile(path.join(tmp, "fogma.json"), "utf8"))
-      expect(fogmaJson.registryVersion).toBeDefined()
+      const forkshopJson = JSON.parse(await fs.readFile(path.join(tmp, "forkshop.json"), "utf8"))
+      expect(forkshopJson.registryVersion).toBeDefined()
 
       const canvasNode = await fs.readFile(
-        path.join(tmp, "components/fogma/canvas/canvas-node.tsx"),
+        path.join(tmp, "components/forkshop/canvas/canvas-node.tsx"),
         "utf8"
       )
       expect(canvasNode).toContain("CanvasNode")
-      expect(canvasNode).not.toContain("@fogma/")
+      expect(canvasNode).not.toContain("@forkshop/")
     } finally {
       await fs.rm(tmp, { recursive: true, force: true })
     }

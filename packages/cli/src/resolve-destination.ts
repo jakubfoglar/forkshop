@@ -1,13 +1,13 @@
-import type { FogmaJson, ManifestFile } from "./manifest-schema.js"
+import type { ForkshopJson, ManifestFile } from "./manifest-schema.js"
 
-function workspaceRelative(value: string, aliases: FogmaJson["aliases"]): string {
+function workspaceRelative(value: string, aliases: ForkshopJson["aliases"]): string {
   if (value.startsWith(aliases.base)) {
     return value.slice(aliases.base.length)
   }
   return value.replace(/^@\//, "")
 }
 
-function applyOverride(template: string, aliases: FogmaJson["aliases"]): string {
+function applyOverride(template: string, aliases: ForkshopJson["aliases"]): string {
   const substituted = template.replace(/\{aliases\.([a-zA-Z]+)\}/g, (_match, key: string) => {
     const value = (aliases as Record<string, string>)[key]
     if (value === undefined) {
@@ -21,7 +21,7 @@ function applyOverride(template: string, aliases: FogmaJson["aliases"]): string 
 export function resolveDestination(
   address: string,
   file: ManifestFile,
-  aliases: FogmaJson["aliases"]
+  aliases: ForkshopJson["aliases"]
 ): string {
   if (file.kind === "binary") {
     if (!file.destOverride) {
@@ -34,12 +34,12 @@ export function resolveDestination(
   }
 
   const namespaceMap: Record<string, string> = {
-    "@fogma/components": aliases.components,
-    "@fogma/kits": aliases.kits,
-    "@fogma/hooks": aliases.hooks,
-    "@fogma/lib": aliases.lib,
-    "@fogma/api": aliases.api,
-    "@fogma/tailwind": aliases.tailwind,
+    "@forkshop/components": aliases.components,
+    "@forkshop/kits": aliases.kits,
+    "@forkshop/hooks": aliases.hooks,
+    "@forkshop/lib": aliases.lib,
+    "@forkshop/api": aliases.api,
+    "@forkshop/tailwind": aliases.tailwind,
   }
   const sortedPrefixes = Object.keys(namespaceMap).sort((a, b) => b.length - a.length)
   for (const prefix of sortedPrefixes) {

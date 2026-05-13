@@ -8,9 +8,9 @@ import {
   type SVGProps,
 } from "react";
 import { ChevronDown, ChevronRight, Info, File } from "lucide-react";
-import { cn } from "@fogma/lib/cn";
-import { buildPageTree, type PageTreeNode } from "@fogma/components/sidebar/page-tree";
-import { HelpModal } from "@fogma/components/sidebar/help-modal";
+import { cn } from "@forkshop/lib/cn";
+import { buildPageTree, type PageTreeNode } from "@forkshop/components/sidebar/page-tree";
+import { HelpModal } from "@forkshop/components/sidebar/help-modal";
 
 // TODO: deferred — agent-activity-state (Task 13). These hooks will be
 // wired up once the agent-activity context shell is ported.
@@ -35,7 +35,7 @@ type LucideComponent = ComponentType<
 // Public types
 // ---------------------------------------------------------------------------
 
-export type FogmaSelection =
+export type ForkshopSelection =
   | { kind: "section"; sectionId: string }
   | { kind: "page"; path: string }
   | { kind: "block"; slug: string };
@@ -45,7 +45,7 @@ export type FogmaSelection =
  * group, a navigation canvas, …).
  */
 export type SidebarEntry = {
-  /** Unique identifier used in FogmaSelection.slug */
+  /** Unique identifier used in ForkshopSelection.slug */
   slug: string;
   /** Human-readable label */
   name: string;
@@ -58,7 +58,7 @@ export type SidebarEntry = {
  * Sections are rendered above the Pages tree.
  */
 export type SidebarSection = {
-  /** Unique id, e.g. "blocks", "navigation" — maps to FogmaSelection.kind */
+  /** Unique id, e.g. "blocks", "navigation" — maps to ForkshopSelection.kind */
   id: string;
   /** Human-readable section title */
   title: string;
@@ -75,7 +75,7 @@ export type SidebarSection = {
 // Component
 // ---------------------------------------------------------------------------
 
-export function FogmaSidebar({
+export function ForkshopSidebar({
   selection,
   onSelect,
   sections = [],
@@ -83,8 +83,8 @@ export function FogmaSidebar({
   otherRoutes = [],
   titleOverrides = new Map(),
 }: {
-  selection: FogmaSelection;
-  onSelect: (next: FogmaSelection) => void;
+  selection: ForkshopSelection;
+  onSelect: (next: ForkshopSelection) => void;
   /** Design sections rendered above the Pages tree */
   sections?: SidebarSection[];
   /** Primary page routes (e.g. from your Next.js app) */
@@ -137,28 +137,28 @@ export function FogmaSidebar({
   }, [selection, sections]);
 
   return (
-    <aside className="flex h-full w-[240px] shrink-0 flex-col border-r border-fogma-border bg-fogma-surface">
+    <aside className="flex h-full w-[240px] shrink-0 flex-col border-r border-forkshop-border bg-forkshop-surface">
       {/* Header */}
-      <div className="flex shrink-0 items-center justify-between gap-fogma-1.5 border-b border-fogma-border bg-fogma-surface px-fogma-3 pb-fogma-2 pt-fogma-2.5">
-        <div className="flex items-center gap-fogma-1.5">
-          <span className="text-fogma-sm font-fogma-semibold tracking-fogma-tight text-fogma-fg">
-            Fogma
+      <div className="flex shrink-0 items-center justify-between gap-forkshop-1.5 border-b border-forkshop-border bg-forkshop-surface px-forkshop-3 pb-forkshop-2 pt-forkshop-2.5">
+        <div className="flex items-center gap-forkshop-1.5">
+          <span className="text-forkshop-sm font-forkshop-semibold tracking-forkshop-tight text-forkshop-fg">
+            Forkshop
           </span>
         </div>
         <button
           type="button"
           onClick={() => setHelpOpen(true)}
-          className="rounded-fogma-sm p-fogma-2 text-fogma-fg-muted transition-colors hover:bg-fogma-surface-2 hover:text-fogma-fg"
-          aria-label="How to use fogma"
-          title="How to use fogma"
+          className="rounded-forkshop-sm p-forkshop-2 text-forkshop-fg-muted transition-colors hover:bg-forkshop-surface-2 hover:text-forkshop-fg"
+          aria-label="How to use forkshop"
+          title="How to use forkshop"
         >
-          <Info className="size-fogma-4" strokeWidth={2} />
+          <Info className="size-forkshop-4" strokeWidth={2} />
         </button>
         <HelpModal open={helpOpen} onOpenChange={setHelpOpen} />
       </div>
 
       {/* Body */}
-      <div className="flex min-h-0 flex-1 flex-col gap-fogma-1 overflow-y-auto px-fogma-2 pb-fogma-2">
+      <div className="flex min-h-0 flex-1 flex-col gap-forkshop-1 overflow-y-auto px-forkshop-2 pb-forkshop-2">
         {/* Design sections */}
         {sections.length > 0 && (
           <>
@@ -275,7 +275,7 @@ export function FogmaSidebar({
 
 function SectionHeader({ children }: { children: string }) {
   return (
-    <div className="mt-fogma-2 shrink-0 px-fogma-1 pb-fogma-2 text-fogma-4xs font-fogma-medium uppercase tracking-fogma-wider text-fogma-fg-muted">
+    <div className="mt-forkshop-2 shrink-0 px-forkshop-1 pb-forkshop-2 text-forkshop-4xs font-forkshop-medium uppercase tracking-forkshop-wider text-forkshop-fg-muted">
       {children}
     </div>
   );
@@ -312,7 +312,7 @@ function SidebarRow({
     <div className="shrink-0">
       <div
         className={cn(
-          "flex items-center rounded-fogma-md text-fogma-xs",
+          "flex items-center rounded-forkshop-md text-forkshop-xs",
           rowVariant(agentActive, active),
         )}
         style={{ paddingLeft: `${Math.max(0, depth - 1) * 0.75}rem` }}
@@ -323,48 +323,48 @@ function SidebarRow({
             type="button"
             onClick={onToggleExpand}
             aria-label={expanded ? "Collapse" : "Expand"}
-            className="mr-fogma-1 flex size-fogma-4 items-center justify-center text-current opacity-70 hover:opacity-100"
+            className="mr-forkshop-1 flex size-forkshop-4 items-center justify-center text-current opacity-70 hover:opacity-100"
           >
             {expanded ? (
-              <ChevronDown className="size-fogma-4" strokeWidth={2} />
+              <ChevronDown className="size-forkshop-4" strokeWidth={2} />
             ) : (
-              <ChevronRight className="size-fogma-4" strokeWidth={2} />
+              <ChevronRight className="size-forkshop-4" strokeWidth={2} />
             )}
           </button>
         ) : (
-          <span className="mr-fogma-1 size-fogma-4" />
+          <span className="mr-forkshop-1 size-forkshop-4" />
         )}
         {/* icon column */}
-        <span className="mr-fogma-1.5 flex size-fogma-3.5 shrink-0 items-center justify-center text-current opacity-60">
+        <span className="mr-forkshop-1.5 flex size-forkshop-3.5 shrink-0 items-center justify-center text-current opacity-60">
           {Icon && <Icon className="size-full" strokeWidth={2} />}
         </span>
         {agentActive && (
           <span
             aria-hidden="true"
-            className="mr-fogma-1 inline-block size-fogma-1.5 shrink-0 rounded-fogma-full bg-fogma-accent"
-            style={{ animation: "fogma-agent-pulse 1.2s infinite" }}
+            className="mr-forkshop-1 inline-block size-forkshop-1.5 shrink-0 rounded-forkshop-full bg-forkshop-accent"
+            style={{ animation: "forkshop-agent-pulse 1.2s infinite" }}
           />
         )}
         {/* label */}
         <button
           type="button"
           onClick={onClick}
-          className="min-w-0 flex-1 truncate py-fogma-2 pr-fogma-1 text-left"
+          className="min-w-0 flex-1 truncate py-forkshop-2 pr-forkshop-1 text-left"
         >
           {label}
         </button>
         {agentActive && agentFileLabel !== undefined && (
-          <span className="mr-fogma-1 shrink-0 truncate text-fogma-5xs text-fogma-accent">
+          <span className="mr-forkshop-1 shrink-0 truncate text-forkshop-5xs text-forkshop-accent">
             {agentFileLabel}
           </span>
         )}
         {isNew && (
-          <span className="mr-fogma-1 shrink-0 rounded-fogma-lg bg-fogma-agent px-fogma-1 py-fogma-px text-fogma-5xs font-fogma-medium uppercase tracking-fogma-wider text-fogma-agent-fg">
+          <span className="mr-forkshop-1 shrink-0 rounded-forkshop-lg bg-forkshop-agent px-forkshop-1 py-forkshop-px text-forkshop-5xs font-forkshop-medium uppercase tracking-forkshop-wider text-forkshop-agent-fg">
             New
           </span>
         )}
         {draft && (
-          <span className="mr-fogma-2 shrink-0 rounded-fogma-lg bg-fogma-surface-2 px-fogma-1 py-fogma-px text-fogma-5xs font-fogma-medium uppercase tracking-fogma-wider text-fogma-fg-muted">
+          <span className="mr-forkshop-2 shrink-0 rounded-forkshop-lg bg-forkshop-surface-2 px-forkshop-1 py-forkshop-px text-forkshop-5xs font-forkshop-medium uppercase tracking-forkshop-wider text-forkshop-fg-muted">
             Draft
           </span>
         )}
@@ -391,8 +391,8 @@ function PageTreeRow({
 }: {
   node: PageTreeNode;
   depth: number;
-  selection: FogmaSelection;
-  onSelect: (next: FogmaSelection) => void;
+  selection: ForkshopSelection;
+  onSelect: (next: ForkshopSelection) => void;
   activePages: ReadonlySet<string>;
   newPagePaths: ReadonlySet<string>;
 }) {
@@ -460,9 +460,9 @@ function PageTreeRow({
 
 function rowVariant(agentActive: boolean, active: boolean): string {
   if (agentActive)
-    return "bg-fogma-accent/10 text-fogma-accent hover:bg-fogma-accent/20";
-  if (active) return "bg-fogma-surface-2 font-semibold text-fogma-fg";
-  return "text-fogma-fg-muted hover:bg-fogma-surface-2 hover:text-fogma-fg";
+    return "bg-forkshop-accent/10 text-forkshop-accent hover:bg-forkshop-accent/20";
+  if (active) return "bg-forkshop-surface-2 font-semibold text-forkshop-fg";
+  return "text-forkshop-fg-muted hover:bg-forkshop-surface-2 hover:text-forkshop-fg";
 }
 
 function pageFileLabel(path: string): string {

@@ -3,7 +3,7 @@ import os from "node:os"
 import path from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
 import { runAdd } from "./add.js"
-import type { FogmaJson, Manifest } from "../manifest-schema.js"
+import type { ForkshopJson, Manifest } from "../manifest-schema.js"
 
 function fakeManifest(): Manifest {
   return {
@@ -14,12 +14,12 @@ function fakeManifest(): Manifest {
       primitives: { kind: "primitive", items: [], deps: [] },
       "kits/extra": {
         kind: "kit",
-        items: ["@fogma/kits/extra"],
+        items: ["@forkshop/kits/extra"],
         deps: ["lodash@^4"],
       },
     },
     files: {
-      "@fogma/kits/extra": {
+      "@forkshop/kits/extra": {
         kind: "text",
         ext: "tsx",
         content: "export const Extra = () => null",
@@ -29,31 +29,31 @@ function fakeManifest(): Manifest {
 }
 
 async function setupInstalledProject(): Promise<string> {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "fogma-add-"))
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "forkshop-add-"))
   await fs.mkdir(path.join(root, "app"))
   await fs.writeFile(path.join(root, "next.config.js"), "module.exports = {}")
   await fs.writeFile(
     path.join(root, "tsconfig.json"),
     JSON.stringify({ compilerOptions: { paths: { "@/*": ["./*"] } } })
   )
-  const fogmaJson: FogmaJson = {
+  const forkshopJson: ForkshopJson = {
     registryVersion: "1.0.0",
     installedAt: "2026-05-13T10:00:00Z",
-    registryUrl: "https://fogma.dev/r/",
+    registryUrl: "https://forkshop.dev/r/",
     aliases: {
       base: "@/",
-      components: "@/components/fogma",
-      kits: "@/components/fogma/kits",
-      hooks: "@/lib/fogma/hooks",
-      lib: "@/lib/fogma",
-      api: "@/app/api/fogma",
-      tailwind: "@/lib/fogma/tailwind",
-      mount: "@/app/fogma",
+      components: "@/components/forkshop",
+      kits: "@/components/forkshop/kits",
+      hooks: "@/lib/forkshop/hooks",
+      lib: "@/lib/forkshop",
+      api: "@/app/api/forkshop",
+      tailwind: "@/lib/forkshop/tailwind",
+      mount: "@/app/forkshop",
     },
     installedBundles: ["primitives"],
     files: {},
   }
-  await fs.writeFile(path.join(root, "fogma.json"), JSON.stringify(fogmaJson, null, 2))
+  await fs.writeFile(path.join(root, "forkshop.json"), JSON.stringify(forkshopJson, null, 2))
   return root
 }
 
@@ -63,7 +63,7 @@ describe("runAdd", () => {
     for (const d of dirs.splice(0)) await fs.rm(d, { recursive: true, force: true })
   })
 
-  it("adds a kit and updates fogma.json", async () => {
+  it("adds a kit and updates forkshop.json", async () => {
     const root = await setupInstalledProject()
     dirs.push(root)
     const result = await runAdd({
@@ -73,14 +73,14 @@ describe("runAdd", () => {
       noInstall: true,
     })
     expect(result.ok).toBe(true)
-    expect(await fs.readFile(path.join(root, "components/fogma/kits/extra.tsx"), "utf8")).toContain("Extra")
-    const fogmaJson = JSON.parse(await fs.readFile(path.join(root, "fogma.json"), "utf8"))
-    expect(fogmaJson.installedBundles).toContain("kits/extra")
-    expect(fogmaJson.files["@fogma/kits/extra"]).toBeDefined()
+    expect(await fs.readFile(path.join(root, "components/forkshop/kits/extra.tsx"), "utf8")).toContain("Extra")
+    const forkshopJson = JSON.parse(await fs.readFile(path.join(root, "forkshop.json"), "utf8"))
+    expect(forkshopJson.installedBundles).toContain("kits/extra")
+    expect(forkshopJson.files["@forkshop/kits/extra"]).toBeDefined()
   })
 
-  it("refuses without a fogma.json", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "fogma-add-"))
+  it("refuses without a forkshop.json", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "forkshop-add-"))
     dirs.push(root)
     const result = await runAdd({
       projectRoot: root,
@@ -89,7 +89,7 @@ describe("runAdd", () => {
       noInstall: true,
     })
     expect(result.ok).toBe(false)
-    if (!result.ok) expect(result.reason).toMatch(/Run `fogma init`/)
+    if (!result.ok) expect(result.reason).toMatch(/Run `forkshop init`/)
   })
 
   it("rejects an unknown bundle name with a list of valid names", async () => {

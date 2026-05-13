@@ -1,7 +1,7 @@
 "use client"
 
-import type { SnapGuide } from "@fogma/lib/system-snap"
-import { useFogmaCanvas } from "@fogma/components/canvas/fogma-canvas"
+import type { SnapGuide } from "@forkshop/lib/system-snap"
+import { useForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
 
 // Red snap-alignment guide lines, rendered over the stage during a drag.
 // Stroke width is zoom-invariant via `vectorEffect="non-scaling-stroke"`.
@@ -14,7 +14,7 @@ export function GuideOverlay({
   height: number
   guides: readonly SnapGuide[]
 }) {
-  const { transformRef } = useFogmaCanvas()
+  const { transformRef } = useForkshopCanvas()
   if (guides.length === 0) return
   const zoom = transformRef.current?.zoom ?? 1
   const strokeWidth = 1 / Math.max(zoom, 0.001)

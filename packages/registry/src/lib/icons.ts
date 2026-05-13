@@ -17,13 +17,13 @@ import {
 } from "lucide-react"
 
 /**
- * Preselected icons for Fogma's known concepts.
+ * Preselected icons for Forkshop's known concepts.
  *
  * Use these instead of importing from `lucide-react` directly so the visual
  * identity stays consistent across boards and kits. Pass directly to a
- * sidebar section's `icon` prop or to `<FogmaIcon icon={fogmaIcons.X} />`.
+ * sidebar section's `icon` prop or to `<ForkshopIcon icon={forkshopIcons.X} />`.
  */
-export const fogmaIcons = {
+export const forkshopIcons = {
   // Section / board defaults
   designSystem: SwatchBook,
   components: Box,
@@ -48,4 +48,4 @@ export const fogmaIcons = {
   chevronRight: ChevronRight,
 } satisfies Record<string, LucideIcon>
 
-export type FogmaIconName = keyof typeof fogmaIcons
+export type ForkshopIconName = keyof typeof forkshopIcons

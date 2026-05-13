@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from "vitest"
 import { preflightInit } from "./preflight.js"
 
 async function makeTempProject(setup: (root: string) => Promise<void>): Promise<string> {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "fogma-preflight-"))
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "forkshop-preflight-"))
   await setup(root)
   return root
 }
@@ -69,7 +69,7 @@ describe("preflightInit", () => {
 
 describe("preflightInit JSONC handling", () => {
   it("succeeds for a tsconfig that uses @/* path alias", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "fogma-preflight-jsonc-"))
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "forkshop-preflight-jsonc-"))
     try {
       await fs.mkdir(path.join(root, "app"))
       await fs.writeFile(path.join(root, "next.config.js"), "module.exports = {}")
@@ -93,7 +93,7 @@ describe("preflightInit JSONC handling", () => {
   })
 
   it("handles block comments inside tsconfig", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "fogma-preflight-jsonc-"))
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "forkshop-preflight-jsonc-"))
     try {
       await fs.mkdir(path.join(root, "app"))
       await fs.writeFile(path.join(root, "next.config.js"), "module.exports = {}")
@@ -116,7 +116,7 @@ describe("preflightInit JSONC handling", () => {
   })
 
   it("handles trailing commas", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "fogma-preflight-jsonc-"))
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "forkshop-preflight-jsonc-"))
     try {
       await fs.mkdir(path.join(root, "app"))
       await fs.writeFile(path.join(root, "next.config.js"), "module.exports = {}")

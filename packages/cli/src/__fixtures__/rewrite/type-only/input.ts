@@ -1,4 +1,4 @@
-import type { TokenEntry, TokenRegistry } from "@fogma/lib/token-registry"
-import type { ColorNode } from "@fogma/lib/system-graph"
+import type { TokenEntry, TokenRegistry } from "@forkshop/lib/token-registry"
+import type { ColorNode } from "@forkshop/lib/system-graph"
 
 export type Combined = TokenEntry & ColorNode & TokenRegistry

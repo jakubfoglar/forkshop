@@ -29,7 +29,7 @@ function broadcast(): void {
     try {
       subscriber(snapshot)
     } catch (error) {
-      console.error("[fogma agent-activity] subscriber threw:", error)
+      console.error("[forkshop agent-activity] subscriber threw:", error)
     }
   }
 }
@@ -54,7 +54,7 @@ export function subscribe(subscriber: Subscriber): () => void {
   try {
     subscriber([...state.values()])
   } catch (error) {
-    console.error("[fogma agent-activity] subscriber threw on subscribe:", error)
+    console.error("[forkshop agent-activity] subscriber threw on subscribe:", error)
   }
   return () => {
     subscribers.delete(subscriber)
@@ -64,8 +64,8 @@ export function subscribe(subscriber: Subscriber): () => void {
 // Per-process prune timer. Keyed on globalThis so HMR re-execution of this
 // module doesn't spawn duplicates.
 declare global {
-  var __fogmaAgentActivityPruneTimer: ReturnType<typeof setInterval> | undefined
+  var __forkshopAgentActivityPruneTimer: ReturnType<typeof setInterval> | undefined
 }
-if (!globalThis.__fogmaAgentActivityPruneTimer) {
-  globalThis.__fogmaAgentActivityPruneTimer = setInterval(pruneIdle, 1000)
+if (!globalThis.__forkshopAgentActivityPruneTimer) {
+  globalThis.__forkshopAgentActivityPruneTimer = setInterval(pruneIdle, 1000)
 }

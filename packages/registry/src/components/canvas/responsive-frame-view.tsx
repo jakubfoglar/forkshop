@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { CanvasLabel } from "@fogma/components/canvas/canvas-label"
+import { CanvasLabel } from "@forkshop/components/canvas/canvas-label"
 
 const BLOCK_VIEWPORT_GAP = 32
 const ISOLATION_LABEL_HEIGHT = 80
@@ -70,7 +70,7 @@ export function ResponsiveFrameView(props: ResponsiveFrameViewProps) {
     viewports = DEFAULT_VIEWPORTS,
   } = props
   const id = props.kind === "page" ? props.path : `block:${props.slug}`
-  const source = props.kind === "page" ? (props.source ?? props.path) : `/fogma/block/${props.slug}`
+  const source = props.kind === "page" ? (props.source ?? props.path) : `/forkshop/block/${props.slug}`
   const title =
     props.kind === "page" ? (props.title ?? props.path) : `${props.slug} — ${props.title}`
   const isPage = props.kind === "page"
@@ -248,7 +248,7 @@ function Viewport({
       // Also hide chrome that would otherwise pollute every previewed page —
       // the cookie banner and Next.js dev-tools button.
       const previewStyle = document_.createElement("style")
-      previewStyle.dataset.fogmaPreview = "true"
+      previewStyle.dataset.forkshopPreview = "true"
       previewStyle.textContent = `
         html, body { min-height: 0 !important; height: auto !important; }
         [class*="min-h-screen"] { min-height: 0 !important; }

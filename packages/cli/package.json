@@ -1,9 +1,9 @@
 {
-  "name": "fogma",
+  "name": "forkshop",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "bin": { "fogma": "./dist/index.js" },
+  "bin": { "forkshop": "./dist/index.js" },
   "files": ["dist"],
   "exports": {
     ".": "./dist/index.js",

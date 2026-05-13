@@ -14,7 +14,7 @@
       "@playground/*": [
         "./*"
       ],
-      "@fogma/*": [
+      "@forkshop/*": [
         "../../packages/registry/src/*"
       ]
     },

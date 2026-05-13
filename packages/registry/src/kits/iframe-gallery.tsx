@@ -1,14 +1,14 @@
 "use client"
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { CanvasNode } from "@fogma/components/canvas/canvas-node"
-import { GuideOverlay } from "@fogma/components/canvas/guide-overlay"
-import { LazyIframe } from "@fogma/components/canvas/lazy-iframe"
-import { useFogmaCanvas } from "@fogma/components/canvas/fogma-canvas"
-import type { GetSnapTargets } from "@fogma/hooks/use-draggable-node"
-import type { NodePosition, NodePositions } from "@fogma/lib/node-positions"
-import type { SnapGuide, SnapTarget } from "@fogma/lib/system-snap"
-import { fogmaIcons } from "@fogma/lib/icons"
+import { CanvasNode } from "@forkshop/components/canvas/canvas-node"
+import { GuideOverlay } from "@forkshop/components/canvas/guide-overlay"
+import { LazyIframe } from "@forkshop/components/canvas/lazy-iframe"
+import { useForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
+import type { GetSnapTargets } from "@forkshop/hooks/use-draggable-node"
+import type { NodePosition, NodePositions } from "@forkshop/lib/node-positions"
+import type { SnapGuide, SnapTarget } from "@forkshop/lib/system-snap"
+import { forkshopIcons } from "@forkshop/lib/icons"
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -30,7 +30,7 @@ export type IframeGalleryEntry = {
   slug: string
   /** Human-readable label shown above the node. */
   name: string
-  /** URL to render inside the iframe (e.g. `/fogma/preview/<slug>`). */
+  /** URL to render inside the iframe (e.g. `/forkshop/preview/<slug>`). */
   iframeSrc: string
   /**
    * Row index for grid layout (0-based).
@@ -153,15 +153,15 @@ function buildGridLayout(
 }
 
 // ---------------------------------------------------------------------------
-// Main kit component (renders inside <FogmaCanvas>)
+// Main kit component (renders inside <ForkshopCanvas>)
 // ---------------------------------------------------------------------------
 
 const _IframeGallery = memo(IframeGalleryInner)
 export const IframeGallery: typeof _IframeGallery & {
-  icon: typeof fogmaIcons.components
+  icon: typeof forkshopIcons.components
   defaultTitle: string
 } = Object.assign(_IframeGallery, {
-  icon: fogmaIcons.components,
+  icon: forkshopIcons.components,
   defaultTitle: "Components",
 })
 
@@ -294,7 +294,7 @@ function GalleryNodeInner({
   onSelectChange: (id: string, selected: boolean) => void
   onHeightChange: (slug: string, height: number) => void
 }) {
-  const { applyWheelInput, transformRef } = useFogmaCanvas()
+  const { applyWheelInput, transformRef } = useForkshopCanvas()
 
   const handleBodyHeightSync = useCallback(
     (height: number) => onHeightChange(entry.slug, height),

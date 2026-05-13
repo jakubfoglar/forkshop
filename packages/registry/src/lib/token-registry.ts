@@ -150,11 +150,11 @@ function remToPx(value: string): number | undefined {
 // Category builders
 // ---------------------------------------------------------------------------
 
-const FOGMA_TOKEN_PREFIX = "fogma-"
+const FORKSHOP_TOKEN_PREFIX = "forkshop-"
 
-function isFogmaToken(name: string, family?: string): boolean {
-  if (name.startsWith(FOGMA_TOKEN_PREFIX)) return true
-  if (family && (family === "fogma" || family.startsWith(FOGMA_TOKEN_PREFIX))) return true
+function isForkshopToken(name: string, family?: string): boolean {
+  if (name.startsWith(FORKSHOP_TOKEN_PREFIX)) return true
+  if (family && (family === "forkshop" || family.startsWith(FORKSHOP_TOKEN_PREFIX))) return true
   return false
 }
 
@@ -162,12 +162,12 @@ function buildColors(
   theme: AnyRecord,
   themeExtend: AnyRecord,
   semanticFamilies: Set<string>,
-  includeFogmaTokens: boolean,
+  includeForkshopTokens: boolean,
 ): TokenEntry[] {
   const colorsConfig = (themeExtend["colors"] ?? theme["colors"] ?? {}) as AnyRecord
   let flat = flattenColors(colorsConfig, "")
-  if (!includeFogmaTokens) {
-    flat = flat.filter((entry) => !isFogmaToken(entry.name, entry.family))
+  if (!includeForkshopTokens) {
+    flat = flat.filter((entry) => !isForkshopToken(entry.name, entry.family))
   }
   const seen = new Set<string>()
   const entries: TokenEntry[] = []
@@ -194,7 +194,7 @@ function buildColors(
 function buildSpacing(
   theme: AnyRecord,
   themeExtend: AnyRecord,
-  includeFogmaTokens: boolean,
+  includeForkshopTokens: boolean,
 ): TokenEntry[] {
   const spacingConfig = (theme["spacing"] ?? {}) as Record<string, string>
   const extendPadding = (themeExtend["padding"] ?? {}) as Record<string, string>
@@ -205,10 +205,10 @@ function buildSpacing(
     rem,
     px: remToPx(rem),
   }))
-  return includeFogmaTokens ? entries : entries.filter((entry) => !isFogmaToken(entry.name))
+  return includeForkshopTokens ? entries : entries.filter((entry) => !isForkshopToken(entry.name))
 }
 
-function buildFontSizes(theme: AnyRecord, includeFogmaTokens: boolean): TokenEntry[] {
+function buildFontSizes(theme: AnyRecord, includeForkshopTokens: boolean): TokenEntry[] {
   const fontSizeConfig = (theme["fontSize"] ?? {}) as Record<
     string,
     string | [string, { lineHeight?: string; letterSpacing?: string }]
@@ -226,23 +226,23 @@ function buildFontSizes(theme: AnyRecord, includeFogmaTokens: boolean): TokenEnt
       letterSpacing: options?.letterSpacing,
     }
   })
-  return includeFogmaTokens ? entries : entries.filter((entry) => !isFogmaToken(entry.name))
+  return includeForkshopTokens ? entries : entries.filter((entry) => !isForkshopToken(entry.name))
 }
 
-function buildFontWeights(theme: AnyRecord, includeFogmaTokens: boolean): TokenEntry[] {
+function buildFontWeights(theme: AnyRecord, includeForkshopTokens: boolean): TokenEntry[] {
   const fontWeightConfig = (theme["fontWeight"] ?? {}) as Record<string, string>
   const entries = Object.entries(fontWeightConfig).map<TokenEntry>(([name, weight]) => ({
     kind: "fontWeight",
     name,
     weight: Number.parseInt(weight, 10),
   }))
-  return includeFogmaTokens ? entries : entries.filter((entry) => !isFogmaToken(entry.name))
+  return includeForkshopTokens ? entries : entries.filter((entry) => !isForkshopToken(entry.name))
 }
 
 function buildRadii(
   theme: AnyRecord,
   themeExtend: AnyRecord,
-  includeFogmaTokens: boolean,
+  includeForkshopTokens: boolean,
 ): TokenEntry[] {
   const baseRadii = (theme["borderRadius"] ?? {}) as Record<string, string>
   const extendRadii = (themeExtend["borderRadius"] ?? {}) as Record<string, string>
@@ -252,23 +252,23 @@ function buildRadii(
     name,
     value,
   }))
-  return includeFogmaTokens ? entries : entries.filter((entry) => !isFogmaToken(entry.name))
+  return includeForkshopTokens ? entries : entries.filter((entry) => !isForkshopToken(entry.name))
 }
 
-function buildShadows(theme: AnyRecord, includeFogmaTokens: boolean): TokenEntry[] {
+function buildShadows(theme: AnyRecord, includeForkshopTokens: boolean): TokenEntry[] {
   const shadowConfig = (theme["boxShadow"] ?? {}) as Record<string, string>
   const entries = Object.entries(shadowConfig).map<TokenEntry>(([name, value]) => ({
     kind: "shadow",
     name,
     value,
   }))
-  return includeFogmaTokens ? entries : entries.filter((entry) => !isFogmaToken(entry.name))
+  return includeForkshopTokens ? entries : entries.filter((entry) => !isForkshopToken(entry.name))
 }
 
 function buildContainers(
   theme: AnyRecord,
   themeExtend: AnyRecord,
-  includeFogmaTokens: boolean,
+  includeForkshopTokens: boolean,
 ): TokenEntry[] {
   const maxWidthConfig = (themeExtend["maxWidth"] ?? theme["maxWidth"] ?? {}) as Record<
     string,
@@ -279,7 +279,7 @@ function buildContainers(
     name,
     value,
   }))
-  return includeFogmaTokens ? entries : entries.filter((entry) => !isFogmaToken(entry.name))
+  return includeForkshopTokens ? entries : entries.filter((entry) => !isForkshopToken(entry.name))
 }
 
 function buildClassLookup(
@@ -345,12 +345,12 @@ export type BuildTokenRegistryOptions = {
    */
   rawScaleFamilies?: Set<string>
   /**
-   * When true, tokens whose names start with `fogma-` (or whose family is
-   * `fogma`) are kept in the registry. Defaults to `false` so Fogma's own
-   * chrome tokens — wired in by the setup skill via `fogma-preset` — don't
+   * When true, tokens whose names start with `forkshop-` (or whose family is
+   * `forkshop`) are kept in the registry. Defaults to `false` so Forkshop's own
+   * chrome tokens — wired in by the setup skill via `forkshop-preset` — don't
    * leak into the user-facing design system view.
    */
-  includeFogmaTokens?: boolean
+  includeForkshopTokens?: boolean
 }
 
 /**
@@ -366,7 +366,7 @@ export function buildTokenRegistry(
   tailwindConfig: Config,
   options: BuildTokenRegistryOptions = {},
 ): TokenRegistry {
-  const { rawScaleFamilies = new Set<string>(), includeFogmaTokens = false } = options
+  const { rawScaleFamilies = new Set<string>(), includeForkshopTokens = false } = options
   const resolved = resolveConfig(tailwindConfig)
   const theme = (resolved.theme ?? {}) as AnyRecord
   // `resolveConfig` merges `extend` into the top-level theme, so there is no
@@ -375,13 +375,13 @@ export function buildTokenRegistry(
   const themeExtend: AnyRecord = {}
 
   const partial = {
-    colors: buildColors(theme, themeExtend, rawScaleFamilies, includeFogmaTokens),
-    spacing: buildSpacing(theme, themeExtend, includeFogmaTokens),
-    fontSizes: buildFontSizes(theme, includeFogmaTokens),
-    fontWeights: buildFontWeights(theme, includeFogmaTokens),
-    radii: buildRadii(theme, themeExtend, includeFogmaTokens),
-    shadows: buildShadows(theme, includeFogmaTokens),
-    containers: buildContainers(theme, themeExtend, includeFogmaTokens),
+    colors: buildColors(theme, themeExtend, rawScaleFamilies, includeForkshopTokens),
+    spacing: buildSpacing(theme, themeExtend, includeForkshopTokens),
+    fontSizes: buildFontSizes(theme, includeForkshopTokens),
+    fontWeights: buildFontWeights(theme, includeForkshopTokens),
+    radii: buildRadii(theme, themeExtend, includeForkshopTokens),
+    shadows: buildShadows(theme, includeForkshopTokens),
+    containers: buildContainers(theme, themeExtend, includeForkshopTokens),
   }
 
   return { ...partial, classLookup: buildClassLookup(partial) }
@@ -394,8 +394,8 @@ export function buildTokenRegistry(
 let _activeCatalog: TokenRegistry | null = null
 
 /**
- * Set the active token catalog. Call this once during your app's fogma setup
- * (e.g., from `fogma.config.ts`) so consumers can retrieve it via
+ * Set the active token catalog. Call this once during your app's forkshop setup
+ * (e.g., from `forkshop.config.ts`) so consumers can retrieve it via
  * `getActiveTokenRegistry()` without threading it through every prop.
  */
 export function setActiveTokenRegistry(registry: TokenRegistry): void {
@@ -409,7 +409,7 @@ export function setActiveTokenRegistry(registry: TokenRegistry): void {
 export function getActiveTokenRegistry(): TokenRegistry {
   if (!_activeCatalog) {
     throw new Error(
-      "No token registry set. Call setActiveTokenRegistry(buildTokenRegistry(yourConfig)) during your fogma setup.",
+      "No token registry set. Call setActiveTokenRegistry(buildTokenRegistry(yourConfig)) during your forkshop setup.",
     )
   }
   return _activeCatalog

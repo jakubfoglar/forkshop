@@ -6,9 +6,9 @@ export function FeatureRow({
   body?: string
 }) {
   return (
-    <section data-fogma-block="feature-row" className="px-8 py-12">
+    <section data-forkshop-block="feature-row" className="px-8 py-12">
       <h2 className="text-2xl font-semibold">{title}</h2>
-      <p className="mt-2 text-fogma-fg-muted">{body}</p>
+      <p className="mt-2 text-forkshop-fg-muted">{body}</p>
     </section>
   )
 }

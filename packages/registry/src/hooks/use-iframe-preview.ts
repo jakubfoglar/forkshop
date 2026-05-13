@@ -79,7 +79,7 @@ export function useIframePreview({
       attachedDocument = document_
 
       const previewStyle = document_.createElement("style")
-      previewStyle.dataset.fogmaPreview = "true"
+      previewStyle.dataset.forkshopPreview = "true"
       previewStyle.textContent = PREVIEW_HIDE_CHROME_CSS
       document_.head.append(previewStyle)
 

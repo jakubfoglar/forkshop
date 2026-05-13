@@ -1,8 +1,8 @@
 "use client"
 
 import { useRef, useState } from "react"
-import { FogmaCanvas, PageTree, responsiveFrameStageDimensions } from "@fogma/registry"
-import { fogmaConfig } from "./fogma.config"
+import { ForkshopCanvas, PageTree, responsiveFrameStageDimensions } from "@forkshop/registry"
+import { forkshopConfig } from "./forkshop.config"
 
 // Grid view: 3 pages in a 4-column grid → all in one row.
 // Each tile is 400×280. One row with 3 columns: 3×400 + 2×32 gap = 1264 wide.
@@ -28,7 +28,7 @@ export default function PagesBoardView({
   const stageRef = useRef<HTMLDivElement>(null)
 
   // Track internal isolation state from PageTree (double-click) so we can
-  // switch stageWidth and trigger FogmaCanvas's auto-fit-on-width-change effect.
+  // switch stageWidth and trigger ForkshopCanvas's auto-fit-on-width-change effect.
   const [internalIsolated, setInternalIsolated] = useState<string | null>(null)
 
   // Effective isolation: external prop wins when defined (sidebar nav).
@@ -37,7 +37,7 @@ export default function PagesBoardView({
     controlledIsolatedPath !== undefined ? true : internalIsolated !== null
 
   // Switch stage dimensions based on isolation state.
-  // FogmaCanvas auto-fits when stageWidth changes, so toggling isolation
+  // ForkshopCanvas auto-fits when stageWidth changes, so toggling isolation
   // automatically triggers a zoom-to-fit-width with no additional logic.
   const stageWidth = isIsolated ? ISOLATION_STAGE_W : GRID_STAGE_W
   const stageHeight = isIsolated ? ISOLATION_STAGE_H : GRID_STAGE_H
@@ -51,7 +51,7 @@ export default function PagesBoardView({
   }
 
   return (
-    <FogmaCanvas
+    <ForkshopCanvas
       containerRef={containerRef}
       stageRef={stageRef}
       stageWidth={stageWidth}
@@ -59,11 +59,11 @@ export default function PagesBoardView({
       fitMode={fitMode}
     >
       <PageTree
-        entries={[...fogmaConfig.pages]}
+        entries={[...forkshopConfig.pages]}
         isolatedPath={controlledIsolatedPath}
         onBack={handleBack}
         onIsolatedPathChange={setInternalIsolated}
       />
-    </FogmaCanvas>
+    </ForkshopCanvas>
   )
 }

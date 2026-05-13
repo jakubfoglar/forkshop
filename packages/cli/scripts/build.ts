@@ -19,8 +19,8 @@ await build({
       // Bundled CJS deps (e.g. commander) use require() for node: built-ins.
       // esbuild's default require shim throws "Dynamic require not supported"
       // when targeting ESM, so wire up a real require via createRequire.
-      `import { createRequire as __fogmaCreateRequire } from "node:module";`,
-      `const require = __fogmaCreateRequire(import.meta.url);`,
+      `import { createRequire as __forkshopCreateRequire } from "node:module";`,
+      `const require = __forkshopCreateRequire(import.meta.url);`,
     ].join("\n"),
   },
   external: [], // node: built-ins are auto-handled

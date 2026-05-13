@@ -1,6 +1,6 @@
-# Fogma — Maintainer Guide
+# Forkshop — Maintainer Guide
 
-Fogma is an OSS Figma-style canvas + sidebar tool for Next.js + Tailwind projects. This file is for contributors and future-Jakub.
+Forkshop is an OSS Figma-style canvas + sidebar tool for Next.js + Tailwind projects. This file is for contributors and future-Jakub.
 
 ---
 
@@ -8,11 +8,11 @@ Fogma is an OSS Figma-style canvas + sidebar tool for Next.js + Tailwind project
 
 ```
 packages/
-  cli/          The published `fogma` npm CLI. Commands: `fogma init`,
-                `fogma add`, `fogma diff`. See "packages/cli" section below.
+  cli/          The published `forkshop` npm CLI. Commands: `forkshop init`,
+                `forkshop add`, `forkshop diff`. See "packages/cli" section below.
 
   registry/     The source. All components, hooks, lib utilities, API routes,
-                and kits live here. Published as @fogma/registry.
+                and kits live here. Published as @forkshop/registry.
     src/
       components/   Primitives — canvas, sidebar, icon, etc.
       hooks/        iframe hooks, draggable-node hook
@@ -20,15 +20,15 @@ packages/
                     system-snap, node-positions, sitemap-tree, file-to-selection,
                     edit-mode, inspect-element, spacing-classes, agent-activity-state
       kits/         Configurable boards: design-system-board, iframe-gallery, page-tree
-      api/          Next.js route handlers (re-exported by user's app/api/fogma/)
+      api/          Next.js route handlers (re-exported by user's app/api/forkshop/)
         edit/
         positions/
         agent-activity/
           stream/
-      templates/    user-claude-md.md — auto-loaded by Claude Code in user's app/fogma/
+      templates/    user-claude-md.md — auto-loaded by Claude Code in user's app/forkshop/
 
 apps/
-  playground/   Minimal Next.js demo that mounts a Fogma installation.
+  playground/   Minimal Next.js demo that mounts a Forkshop installation.
                 The canonical "does it work?" check. Mount all three kits here.
 
   docs/         Serves the static registry at `/r/registry.json`. See
@@ -39,23 +39,23 @@ apps/
 
 ## `packages/cli`
 
-The published `fogma` npm CLI. Commands:
+The published `forkshop` npm CLI. Commands:
 
-- `fogma init` — copies the `init` bundle's files into the user's project, rewrites
-  `@fogma/*` imports to the user's project aliases, installs runtime deps via the
-  user's detected package manager, writes `fogma.json` recording what was installed
+- `forkshop init` — copies the `init` bundle's files into the user's project, rewrites
+  `@forkshop/*` imports to the user's project aliases, installs runtime deps via the
+  user's detected package manager, writes `forkshop.json` recording what was installed
   and where.
-- `fogma add <bundle>` — installs an additional kit (one of `kits/iframe-gallery`,
+- `forkshop add <bundle>` — installs an additional kit (one of `kits/iframe-gallery`,
   `kits/page-tree`, `kits/design-system-board`) or feature bundle.
-- `fogma diff <path>` — shows a unified diff of the user's local copy vs the
+- `forkshop diff <path>` — shows a unified diff of the user's local copy vs the
   upstream version, with path rewriting applied so alias-only churn doesn't appear.
 
 Bundled with esbuild into a single ESM file at `dist/index.js`. Tests in
 `packages/cli/src/**/*.test.ts` (and `tests/e2e.test.ts` — `.skip`'d, needs docs
 dev server). The path-rewriter (`src/rewrite.ts`) is the heart of the install flow:
-it does a longest-prefix-match swap from `@fogma/*` to the user's `fogma.json` aliases.
+it does a longest-prefix-match swap from `@forkshop/*` to the user's `forkshop.json` aliases.
 
-Build: `pnpm --filter fogma build`. Test: `pnpm --filter fogma test`.
+Build: `pnpm --filter forkshop build`. Test: `pnpm --filter forkshop test`.
 
 ---
 
@@ -67,7 +67,7 @@ calls `buildManifest()` (exported from the CLI package's `manifest-builder.ts`),
 which walks `packages/registry/{src,tailwind,templates}` and emits the manifest.
 
 A pre-build validator (`apps/docs/scripts/validate-registry.ts`) ensures every
-`@fogma/...` import in registry source resolves to a known canonical address.
+`@forkshop/...` import in registry source resolves to a known canonical address.
 It also confirms every bundle's items exist in the files map. Run via
 `pnpm --filter docs validate-registry`. Wired into `next build` automatically.
 
@@ -75,13 +75,13 @@ It also confirms every bundle's items exist in the files map. Run via
 
 ## Canonical-alias convention
 
-Every cross-file import inside `packages/registry/src/**` must use the `@fogma/*`
-alias (e.g., `import { foo } from "@fogma/lib/edit-mode"`), never a relative path.
+Every cross-file import inside `packages/registry/src/**` must use the `@forkshop/*`
+alias (e.g., `import { foo } from "@forkshop/lib/edit-mode"`), never a relative path.
 The CLI's path-rewriter assumes this. A lint check at
 `packages/registry/scripts/check-canonical-imports.ts` enforces it as part of
-`pnpm --filter @fogma/registry lint`.
+`pnpm --filter @forkshop/registry lint`.
 
-The registry's own `tsconfig.json` maps `@fogma/*` → `./src/*` so local typecheck
+The registry's own `tsconfig.json` maps `@forkshop/*` → `./src/*` so local typecheck
 and Vitest resolve correctly. The playground (`apps/playground`) needs additional
 per-subdir webpack/turbopack alias entries in `next.config.mjs` to resolve those
 imports across the workspace boundary.
@@ -114,7 +114,7 @@ Placement:
 
 Naming:
 - File: `kebab-case.tsx` (or `.ts` for hooks/utils)
-- Export: named export matching PascalCase (`export function FogmaCanvas`)
+- Export: named export matching PascalCase (`export function ForkshopCanvas`)
 - Client-only components: add `"use client"` at the top
 
 After adding a primitive, export it from `packages/registry/src/index.ts`. Keep exports grouped logically — canvas primitives together, hooks together, lib together, kits last.
@@ -162,22 +162,22 @@ A kit is a React component with a typed `*Props` interface. Export both from `in
 
 ## Branding decoupling
 
-All Fogma-internal styling must be decoupled from any host project's brand.
+All Forkshop-internal styling must be decoupled from any host project's brand.
 
 Rules:
-- All CSS tokens must be `fogma-*`-namespaced (e.g. `fogma-fg`, `fogma-canvas-bg`, `fogma-accent`). **Never** `text`, `background`, or any other non-namespaced token that collides with Tailwind defaults.
-- Icons via `<FogmaIcon icon={X} />` from `@fogma/registry`. Never import raw Iconoir or any other icon library directly in registry code.
+- All CSS tokens must be `forkshop-*`-namespaced (e.g. `forkshop-fg`, `forkshop-canvas-bg`, `forkshop-accent`). **Never** `text`, `background`, or any other non-namespaced token that collides with Tailwind defaults.
+- Icons via `<ForkshopIcon icon={X} />` from `@forkshop/registry`. Never import raw Iconoir or any other icon library directly in registry code.
 - Font via Raveo only. Loaded by the playground via `next/font/local`. The registry itself does not load fonts — it assumes the host has loaded them.
-- CSS variables are defined in `packages/registry/tailwind/fogma.css`. The tailwind preset (`fogma.config.ts`) references them.
-- The `fogma-*` Tailwind preset is configured in `packages/registry/tailwind/`. Users add it to their `tailwind.config.ts`.
+- CSS variables are defined in `packages/registry/tailwind/forkshop.css`. The tailwind preset (`forkshop.config.ts`) references them.
+- The `forkshop-*` Tailwind preset is configured in `packages/registry/tailwind/`. Users add it to their `tailwind.config.ts`.
 
-When in doubt: would this style break if the host project uses a different design system? If yes, it needs a `fogma-` namespace.
+When in doubt: would this style break if the host project uses a different design system? If yes, it needs a `forkshop-` namespace.
 
 ---
 
 ## What NOT to port from ravineo-web
 
-This is the most important section for future PRs. Fogma is extracted from `ravineo-web` (the Ravineo marketing site + internal tools monorepo). Many things in ravineo-web must **never** be ported to this repo.
+This is the most important section for future PRs. Forkshop is extracted from `ravineo-web` (the Ravineo marketing site + internal tools monorepo). Many things in ravineo-web must **never** be ported to this repo.
 
 Do not port:
 - **Auth**: Clerk, iron-session, any gating logic
@@ -236,7 +236,7 @@ Every change that affects user-facing primitives or kits must also update:
 packages/registry/src/templates/user-claude-md.md
 ```
 
-This file is the CLAUDE.md that gets auto-loaded into a user's Claude Code session when they're working in `app/fogma/`. If it drifts from the actual API, future agents will work from wrong information.
+This file is the CLAUDE.md that gets auto-loaded into a user's Claude Code session when they're working in `app/forkshop/`. If it drifts from the actual API, future agents will work from wrong information.
 
 Changes that require a doc sync:
 - New primitive exported from `index.ts`
@@ -267,13 +267,13 @@ If you edit Phase 5, preserve this contract — the skill's UX depends on the si
 ### Updating
 
 - **Activation triggers** — in the `description:` field of the frontmatter. Test by invoking with each trigger phrase against `apps/playground` (or against any fresh Next.js fixture).
-- **Phase content** — the phases are read top-to-bottom by Claude at invocation time. Treat the file as a prompt: terse, imperative, no fluff. Refer the reader to `app/fogma/CLAUDE.md` in the user's repo for kit API details rather than duplicating them.
+- **Phase content** — the phases are read top-to-bottom by Claude at invocation time. Treat the file as a prompt: terse, imperative, no fluff. Refer the reader to `app/forkshop/CLAUDE.md` in the user's repo for kit API details rather than duplicating them.
 - **Templates** — every template MUST be inside a fenced code block in the `## Scaffolding templates` section. The `validateSkillPlaceholders` check in `apps/docs/scripts/validate-registry.ts` enforces this.
 - **Placeholders** — use `{{snake_case}}` only. Lowercase, underscores. Document any new placeholder in the substitution-rules block at the top of the templates section.
 
 ### What NOT to add
 
-- Long explanations or rationale — those live in the spec at `docs/specs/2026-05-13-fogma-setup-skill-design.md`. The skill file is for runtime instruction, not background.
+- Long explanations or rationale — those live in the spec at `docs/specs/2026-05-13-forkshop-setup-skill-design.md`. The skill file is for runtime instruction, not background.
 - Ravineo-specific examples or paths. Examples should use generic placeholder names ("Foundations", "Hero") that any project would recognize.
 - Direct skill-to-skill cross-talk. The setup skill mentions sibling skills by name but doesn't invoke them. Each skill stays self-contained.
 
@@ -281,8 +281,8 @@ If you edit Phase 5, preserve this contract — the skill's UX depends on the si
 
 1. Edit `packages/registry/src/skill/setup.md`.
 2. Run `pnpm --filter docs validate-registry` — catches placeholder leaks (any `{{...}}` outside the `## Scaffolding templates` section, unless inside a fenced or inline code block).
-3. Sync into a fixture project's `.claude/skills/fogma-setup.md` for fast local iteration. The marketing fixture at `~/Desktop/ravineo_dev/fogma-fixtures/marketing-fixture/` (if present) is a known-good test bed; otherwise `pnpm create next-app` a fresh one and add a stub `fogma.json` + `app/fogma/CLAUDE.md`.
-4. Open Claude Code in the fixture and exercise the affected phase by invoking *"set up Fogma"*.
+3. Sync into a fixture project's `.claude/skills/forkshop-setup.md` for fast local iteration. The marketing fixture at `~/Desktop/ravineo_dev/forkshop-fixtures/marketing-fixture/` (if present) is a known-good test bed; otherwise `pnpm create next-app` a fresh one and add a stub `forkshop.json` + `app/forkshop/CLAUDE.md`.
+4. Open Claude Code in the fixture and exercise the affected phase by invoking *"set up Forkshop"*.
 5. For changes that affect detection: run against fixtures representing different project types (marketing, SaaS, hybrid, monorepo).
 
 ---

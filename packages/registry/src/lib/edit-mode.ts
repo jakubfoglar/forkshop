@@ -51,33 +51,33 @@ export const PREVIEW_EDIT_CSS = `
 
 // CSS for the Live-AI agent decorations. Injected alongside PREVIEW_EDIT_CSS;
 // must NOT inherit the global animation-disable rule above (we re-enable
-// animations for the pulse + text flash). --fogma-agent-color is set on
+// animations for the pulse + text flash). --forkshop-agent-color is set on
 // documentElement by the host so it scales with zoom-invariant calculations.
 export const PREVIEW_AGENT_CSS = `
 :root {
-  --fogma-agent-color: oklch(0.62 0.22 280);
+  --forkshop-agent-color: oklch(0.62 0.22 280);
 }
 /* Block markers from withBlockMarker use display:contents — they have no box,
    so outline/background applied directly is invisible. Target the first
    concrete child of each marker (the block's rendered root element). */
-[data-fogma-block][data-fogma-agent-active] > * {
-  outline: calc(2px / var(--canvas-zoom, 1)) solid var(--fogma-agent-color) !important;
+[data-forkshop-block][data-forkshop-agent-active] > * {
+  outline: calc(2px / var(--canvas-zoom, 1)) solid var(--forkshop-agent-color) !important;
   outline-offset: calc(4px / var(--canvas-zoom, 1)) !important;
   border-radius: calc(2px / var(--canvas-zoom, 1));
 }
 /* Softer, slower pulse on every block when the entire page is being edited
    (Claude touched the page's TSX, which composes blocks via props). Gives
    "this page is being worked on" without claiming a specific block changed. */
-[data-fogma-agent-page-active] [data-fogma-block] > * {
-  animation: fogma-agent-page-block-pulse 2.4s ease-in-out infinite !important;
+[data-forkshop-agent-page-active] [data-forkshop-block] > * {
+  animation: forkshop-agent-page-block-pulse 2.4s ease-in-out infinite !important;
   animation-duration: 2.4s !important;
 }
-@keyframes fogma-agent-page-block-pulse {
+@keyframes forkshop-agent-page-block-pulse {
   0%, 100% { box-shadow: none; }
-  50% { box-shadow: 0 0 0 calc(2px / var(--canvas-zoom, 1)) color-mix(in oklch, var(--fogma-agent-color) 30%, transparent); }
+  50% { box-shadow: 0 0 0 calc(2px / var(--canvas-zoom, 1)) color-mix(in oklch, var(--forkshop-agent-color) 30%, transparent); }
 }
-[data-fogma-agent-text-pulse] {
-  outline: calc(2px / var(--canvas-zoom, 1)) solid var(--fogma-agent-color) !important;
+[data-forkshop-agent-text-pulse] {
+  outline: calc(2px / var(--canvas-zoom, 1)) solid var(--forkshop-agent-color) !important;
   outline-offset: calc(3px / var(--canvas-zoom, 1)) !important;
   border-radius: calc(2px / var(--canvas-zoom, 1));
 }
@@ -86,14 +86,14 @@ export const PREVIEW_AGENT_CSS = `
 // CSS for compose mode — slot outlines, drag handles + remove buttons,
 // drop-zone "+" buttons. Injected when the user toggles compose mode.
 export const PREVIEW_COMPOSE_CSS = `
-[data-fogma-slot] {
+[data-forkshop-slot] {
   position: relative;
 }
-[data-fogma-slot]:hover {
+[data-forkshop-slot]:hover {
   outline: calc(1.5px / var(--canvas-zoom, 1)) dashed #818cf8 !important;
   outline-offset: calc(2px / var(--canvas-zoom, 1));
 }
-[data-fogma-compose-chrome] {
+[data-forkshop-compose-chrome] {
   position: absolute;
   top: calc(6px / var(--canvas-zoom, 1));
   right: calc(6px / var(--canvas-zoom, 1));
@@ -102,7 +102,7 @@ export const PREVIEW_COMPOSE_CSS = `
   z-index: 99999;
   pointer-events: auto;
 }
-[data-fogma-compose-button] {
+[data-forkshop-compose-button] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -119,10 +119,10 @@ export const PREVIEW_COMPOSE_CSS = `
   user-select: none;
   font-family: inherit;
 }
-[data-fogma-compose-button="handle"] { cursor: grab; color: #4f46e5; }
-[data-fogma-compose-button="remove"] { color: #dc2626; border-color: #fca5a5; }
-[data-fogma-compose-button]:hover { background: #f8fafc; }
-[data-fogma-drop-zone] {
+[data-forkshop-compose-button="handle"] { cursor: grab; color: #4f46e5; }
+[data-forkshop-compose-button="remove"] { color: #dc2626; border-color: #fca5a5; }
+[data-forkshop-compose-button]:hover { background: #f8fafc; }
+[data-forkshop-drop-zone] {
   height: calc(28px / var(--canvas-zoom, 1));
   margin: calc(6px / var(--canvas-zoom, 1)) 0;
   display: flex;
@@ -131,7 +131,7 @@ export const PREVIEW_COMPOSE_CSS = `
   pointer-events: auto;
   position: relative;
 }
-[data-fogma-drop-zone]::before {
+[data-forkshop-drop-zone]::before {
   content: "+";
   display: inline-flex;
   align-items: center;
@@ -148,10 +148,10 @@ export const PREVIEW_COMPOSE_CSS = `
   opacity: 0.6;
   transition: opacity 120ms ease-out, transform 120ms ease-out, background 120ms ease-out;
 }
-[data-fogma-drop-zone]:hover::before {
+[data-forkshop-drop-zone]:hover::before {
   opacity: 1;
 }
-[data-fogma-drop-indicator] {
+[data-forkshop-drop-indicator] {
   position: absolute;
   height: calc(4px / var(--canvas-zoom, 1));
   background: #4f46e5;
@@ -160,7 +160,7 @@ export const PREVIEW_COMPOSE_CSS = `
   z-index: 99999;
   box-shadow: 0 0 calc(8px / var(--canvas-zoom, 1)) rgba(79, 70, 229, 0.5);
 }
-[data-fogma-slot][data-fogma-dragging] {
+[data-forkshop-slot][data-forkshop-dragging] {
   cursor: grabbing;
 }
 `

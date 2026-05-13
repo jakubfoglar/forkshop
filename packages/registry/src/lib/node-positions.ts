@@ -18,7 +18,7 @@ export function isNodePositions(value: unknown): value is NodePositions {
 
 export async function persistNodePositions(
   positions: NodePositions,
-  endpoint = "/api/fogma/layout",
+  endpoint = "/api/forkshop/layout",
 ): Promise<void> {
   if (globalThis.window === undefined) return
   try {

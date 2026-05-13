@@ -1,8 +1,8 @@
 import type { Config } from "tailwindcss"
-import fogmaPreset from "../../packages/registry/tailwind/fogma-preset"
+import forkshopPreset from "../../packages/registry/tailwind/forkshop-preset"
 
 const config: Config = {
-  presets: [fogmaPreset as Config],
+  presets: [forkshopPreset as Config],
   content: [
     "./app/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",

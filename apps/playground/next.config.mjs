@@ -4,21 +4,21 @@ import { fileURLToPath } from "node:url"
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const registrySrc = path.resolve(__dirname, "../../packages/registry/src")
 
-// Map every top-level dir under packages/registry/src/ to its @fogma/* alias.
-// Done per-subdir (not a single "@fogma" prefix alias) so we don't accidentally
-// shadow the "@fogma/registry" workspace package itself.
-const fogmaSubdirs = ["api", "components", "hooks", "kits", "lib"]
-const fogmaAliases = Object.fromEntries(
-  fogmaSubdirs.map((dir) => [`@fogma/${dir}`, path.join(registrySrc, dir)])
+// Map every top-level dir under packages/registry/src/ to its @forkshop/* alias.
+// Done per-subdir (not a single "@forkshop" prefix alias) so we don't accidentally
+// shadow the "@forkshop/registry" workspace package itself.
+const forkshopSubdirs = ["api", "components", "hooks", "kits", "lib"]
+const forkshopAliases = Object.fromEntries(
+  forkshopSubdirs.map((dir) => [`@forkshop/${dir}`, path.join(registrySrc, dir)])
 )
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ["@fogma/registry"],
+  transpilePackages: ["@forkshop/registry"],
   turbopack: {
     resolveExtensions: [".tsx", ".ts", ".jsx", ".js", ".mjs", ".json"],
-    resolveAlias: fogmaAliases,
+    resolveAlias: forkshopAliases,
     rules: {
       "**/*.{tsx,jsx}": {
         loaders: [
@@ -34,7 +34,7 @@ const nextConfig = {
     }
     config.resolve.alias = {
       ...(config.resolve.alias ?? {}),
-      ...fogmaAliases,
+      ...forkshopAliases,
     }
     return config
   },

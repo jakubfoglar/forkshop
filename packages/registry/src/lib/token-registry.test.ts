@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import type { Config } from "tailwindcss"
-import { buildTokenRegistry } from "@fogma/lib/token-registry"
+import { buildTokenRegistry } from "@forkshop/lib/token-registry"
 
 const sampleConfig: Config = {
   content: [],
@@ -51,60 +51,60 @@ describe("buildTokenRegistry", () => {
     expect(entry.value).toBe("1rem")
   })
 
-  it("filters fogma-* tokens by default", () => {
+  it("filters forkshop-* tokens by default", () => {
     const registry = buildTokenRegistry({
       content: [],
       theme: {
         colors: {
           brand: "#abcdef",
-          "fogma-accent": "#fefefe",
+          "forkshop-accent": "#fefefe",
         },
-        spacing: { "4": "1rem", "fogma-gutter": "1.5rem" },
-        borderRadius: { md: "0.375rem", "fogma-card": "0.75rem" },
+        spacing: { "4": "1rem", "forkshop-gutter": "1.5rem" },
+        borderRadius: { md: "0.375rem", "forkshop-card": "0.75rem" },
       },
     })
     const colorNames = registry.colors.map((entry) => entry.name)
     expect(colorNames).toContain("brand")
-    expect(colorNames).not.toContain("fogma-accent")
+    expect(colorNames).not.toContain("forkshop-accent")
 
     const spacingNames = registry.spacing.map((entry) => entry.name)
     expect(spacingNames).toContain("4")
-    expect(spacingNames).not.toContain("fogma-gutter")
+    expect(spacingNames).not.toContain("forkshop-gutter")
 
     const radiusNames = registry.radii.map((entry) => entry.name)
     expect(radiusNames).toContain("md")
-    expect(radiusNames).not.toContain("fogma-card")
+    expect(radiusNames).not.toContain("forkshop-card")
   })
 
-  it("includes fogma-* tokens when opted in", () => {
+  it("includes forkshop-* tokens when opted in", () => {
     const registry = buildTokenRegistry(
       {
         content: [],
         theme: {
           colors: {
             brand: "#abcdef",
-            "fogma-accent": "#fefefe",
+            "forkshop-accent": "#fefefe",
           },
         },
       },
-      { includeFogmaTokens: true },
+      { includeForkshopTokens: true },
     )
-    expect(registry.colors.map((entry) => entry.name)).toContain("fogma-accent")
+    expect(registry.colors.map((entry) => entry.name)).toContain("forkshop-accent")
   })
 
-  it("filters tokens whose family is fogma", () => {
+  it("filters tokens whose family is forkshop", () => {
     const registry = buildTokenRegistry({
       content: [],
       theme: {
         colors: {
-          fogma: { accent: "#fefefe", canvas: "#111111" },
+          forkshop: { accent: "#fefefe", canvas: "#111111" },
           brand: { 500: "#abcdef" },
         },
       },
     })
     const names = registry.colors.map((entry) => entry.name)
     expect(names).toContain("brand-500")
-    expect(names).not.toContain("fogma-accent")
-    expect(names).not.toContain("fogma-canvas")
+    expect(names).not.toContain("forkshop-accent")
+    expect(names).not.toContain("forkshop-canvas")
   })
 })

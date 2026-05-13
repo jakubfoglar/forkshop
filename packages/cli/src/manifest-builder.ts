@@ -12,31 +12,31 @@ export interface BuildManifestOptions {
   registryBaseUrl?: string
 }
 
-const DEFAULT_BASE_URL = "https://fogma.dev/r/"
+const DEFAULT_BASE_URL = "https://forkshop.dev/r/"
 
 /**
- * Maps an absolute file path inside packages/registry to a canonical @fogma/* address.
+ * Maps an absolute file path inside packages/registry to a canonical @forkshop/* address.
  * Files under src/ get the address derived from their path-from-src.
- * Files under tailwind/ get @fogma/tailwind/<name> or @fogma/css/<name> for .css.
- * Files under templates/ get @fogma/templates/<name>.
+ * Files under tailwind/ get @forkshop/tailwind/<name> or @forkshop/css/<name> for .css.
+ * Files under templates/ get @forkshop/templates/<name>.
  */
 function pathToAddress(registryRoot: string, absolutePath: string): string | undefined {
   const rel = path.relative(registryRoot, absolutePath).split(path.sep).join("/")
   if (rel.startsWith("src/")) {
     const noExt = rel.slice("src/".length).replace(/\.(ts|tsx|md|css)$/, "")
-    return `@fogma/${noExt}`
+    return `@forkshop/${noExt}`
   }
   if (rel.startsWith("tailwind/")) {
     const noExt = rel.slice("tailwind/".length).replace(/\.(ts|css)$/, "")
-    // fogma-preset.ts → @fogma/tailwind/fogma-preset
-    // fogma.css → @fogma/css/fogma
-    if (noExt === "fogma" && rel.endsWith(".css")) return "@fogma/css/fogma"
-    return `@fogma/tailwind/${noExt}`
+    // forkshop-preset.ts → @forkshop/tailwind/forkshop-preset
+    // forkshop.css → @forkshop/css/forkshop
+    if (noExt === "forkshop" && rel.endsWith(".css")) return "@forkshop/css/forkshop"
+    return `@forkshop/tailwind/${noExt}`
   }
   if (rel.startsWith("templates/")) {
     const noExt = rel.slice("templates/".length).replace(/\.(md|tsx|ts)$/, "")
-    if (noExt === "user-claude-md") return "@fogma/templates/claude-md"
-    return `@fogma/templates/${noExt}`
+    if (noExt === "user-claude-md") return "@forkshop/templates/claude-md"
+    return `@forkshop/templates/${noExt}`
   }
   return undefined
 }
@@ -97,10 +97,10 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
 
   // destOverrides for fixed-location files.
   const overrides: Record<string, string> = {
-    "@fogma/templates/claude-md": "{aliases.mount}/CLAUDE.md",
-    "@fogma/css/fogma": "{aliases.mount}/fogma.css",
-    "@fogma/tailwind/fogma-preset": "{aliases.tailwind}/fogma-preset.ts",
-    "@fogma/skill/setup": ".claude/skills/fogma-setup.md",
+    "@forkshop/templates/claude-md": "{aliases.mount}/CLAUDE.md",
+    "@forkshop/css/forkshop": "{aliases.mount}/forkshop.css",
+    "@forkshop/tailwind/forkshop-preset": "{aliases.tailwind}/forkshop-preset.ts",
+    "@forkshop/skill/setup": ".claude/skills/forkshop-setup.md",
   }
   for (const [address, dest] of Object.entries(overrides)) {
     const existing = files[address]
@@ -111,21 +111,21 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
 
   // Construct bundles. Items computed by inspecting the files map.
   const isPrimitiveAddress = (addr: string): boolean =>
-    addr.startsWith("@fogma/components/") ||
-    addr.startsWith("@fogma/hooks/") ||
-    addr.startsWith("@fogma/lib/") ||
-    addr.startsWith("@fogma/api/")
+    addr.startsWith("@forkshop/components/") ||
+    addr.startsWith("@forkshop/hooks/") ||
+    addr.startsWith("@forkshop/lib/") ||
+    addr.startsWith("@forkshop/api/")
 
   const primitiveItems = Object.keys(files).filter(isPrimitiveAddress).sort()
 
-  const skillItems = Object.keys(files).filter((addr) => addr.startsWith("@fogma/skill/")).sort()
+  const skillItems = Object.keys(files).filter((addr) => addr.startsWith("@forkshop/skill/")).sort()
 
   // Bundle authoring note:
   // - `fonts` is intentionally empty in v1; it will be populated when Raveo
   //   woff2 files land in packages/registry/fonts/. The bundle exists so `init`
   //   already includes it — adding the assets later won't require manifest
   //   schema changes.
-  // - `skill` is populated dynamically from any `@fogma/skill/*` addresses
+  // - `skill` is populated dynamically from any `@forkshop/skill/*` addresses
   //   present in the registry's `src/skill/` directory.
   // - `primitives.deps` mirrors packages/registry/package.json `dependencies`.
   //   Keep the pins in sync when bumping the registry.
@@ -142,18 +142,18 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
     },
     "kits/iframe-gallery": {
       kind: "kit",
-      items: ["@fogma/kits/iframe-gallery"],
+      items: ["@forkshop/kits/iframe-gallery"],
     },
     "kits/page-tree": {
       kind: "kit",
-      items: ["@fogma/kits/page-tree"],
+      items: ["@forkshop/kits/page-tree"],
     },
     "kits/design-system-board": {
       kind: "kit",
       items: [
-        "@fogma/kits/design-system-board",
-        "@fogma/kits/typography-frame",
-        "@fogma/kits/primitives-showcase",
+        "@forkshop/kits/design-system-board",
+        "@forkshop/kits/typography-frame",
+        "@forkshop/kits/primitives-showcase",
       ],
     },
     fonts: {
@@ -163,9 +163,9 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
     "css-and-config": {
       kind: "asset",
       items: [
-        "@fogma/css/fogma",
-        "@fogma/tailwind/fogma-preset",
-        "@fogma/templates/claude-md",
+        "@forkshop/css/forkshop",
+        "@forkshop/tailwind/forkshop-preset",
+        "@forkshop/templates/claude-md",
       ].filter((address) => address in files),
     },
     skill: {

@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react"
 import { Check, X } from "lucide-react"
 import { createPortal } from "react-dom"
-import { cn } from "@fogma/lib/cn"
-import { FogmaIcon } from "@fogma/components/icon"
+import { cn } from "@forkshop/lib/cn"
+import { ForkshopIcon } from "@forkshop/components/icon"
 
 // Inline save/discard widget that hovers right next to the currently-edited
 // element. Lives in the host document via portal — positions itself in screen
@@ -67,19 +67,19 @@ export function EditPopover({
   return createPortal(
     <div
       style={{ position: "fixed", left: position.left, top: position.top, zIndex: 100 }}
-      className="-translate-y-full pl-fogma-1"
+      className="-translate-y-full pl-forkshop-1"
     >
-      <div className="flex items-center gap-fogma-0.5 rounded-fogma-full border border-fogma-border bg-fogma-surface py-fogma-0.5 pl-fogma-1 pr-fogma-0.5 shadow-md">
+      <div className="flex items-center gap-forkshop-0.5 rounded-forkshop-full border border-forkshop-border bg-forkshop-surface py-forkshop-0.5 pl-forkshop-1 pr-forkshop-0.5 shadow-md">
         {error && (
           <>
-            <span className="px-fogma-1 text-fogma-xs text-red-600">{error}</span>
+            <span className="px-forkshop-1 text-forkshop-xs text-red-600">{error}</span>
             <button
               type="button"
               onClick={onDismissError}
-              className="rounded-fogma-full p-fogma-0.5 text-fogma-fg-muted hover:bg-fogma-surface-2 hover:text-fogma-fg"
+              className="rounded-forkshop-full p-forkshop-0.5 text-forkshop-fg-muted hover:bg-forkshop-surface-2 hover:text-forkshop-fg"
               aria-label="Dismiss error"
             >
-              <FogmaIcon icon={X} className="size-fogma-4" />
+              <ForkshopIcon icon={X} className="size-forkshop-4" />
             </button>
           </>
         )}
@@ -88,28 +88,28 @@ export function EditPopover({
           onClick={onDiscard}
           disabled={isSaving}
           className={cn(
-            "rounded-fogma-full p-fogma-0.5 hover:bg-fogma-surface-2",
+            "rounded-forkshop-full p-forkshop-0.5 hover:bg-forkshop-surface-2",
             isSaving
               ? "cursor-not-allowed opacity-40"
-              : "text-fogma-fg-muted hover:text-fogma-fg",
+              : "text-forkshop-fg-muted hover:text-forkshop-fg",
           )}
           aria-label="Discard edit"
           title="Discard (esc)"
         >
-          <FogmaIcon icon={X} className="size-fogma-5" />
+          <ForkshopIcon icon={X} className="size-forkshop-5" />
         </button>
         <button
           type="button"
           onClick={onSave}
           disabled={isSaving}
           className={cn(
-            "rounded-fogma-full bg-fogma-fg p-fogma-0.5 text-fogma-surface hover:bg-fogma-fg/80",
+            "rounded-forkshop-full bg-forkshop-fg p-forkshop-0.5 text-forkshop-surface hover:bg-forkshop-fg/80",
             isSaving && "cursor-not-allowed opacity-60",
           )}
           aria-label="Save edit"
           title="Save (⌘↵)"
         >
-          <FogmaIcon icon={Check} className="size-fogma-5" />
+          <ForkshopIcon icon={Check} className="size-forkshop-5" />
         </button>
       </div>
     </div>,

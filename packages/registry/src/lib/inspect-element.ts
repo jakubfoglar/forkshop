@@ -1,4 +1,4 @@
-import type { ClassLookupEntry, TokenRegistry } from "@fogma/lib/token-registry"
+import type { ClassLookupEntry, TokenRegistry } from "@forkshop/lib/token-registry"
 
 export type AppliedToken = {
   className: string

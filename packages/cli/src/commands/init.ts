@@ -3,9 +3,9 @@ import { promisify } from "node:util"
 import pc from "picocolors"
 import { buildInstallCommand, detectPackageManager } from "../detect-pm.js"
 import { copyManifestFiles, findCollisions } from "../copy-files.js"
-import { writeFogmaJson } from "../fogma-json.js"
+import { writeForkshopJson } from "../forkshop-json.js"
 import { fetchManifest } from "../fetch-manifest.js"
-import { type FogmaJson, type Manifest } from "../manifest-schema.js"
+import { type ForkshopJson, type Manifest } from "../manifest-schema.js"
 import { preflightInit } from "../preflight.js"
 import { resolveBundles } from "../resolve-bundles.js"
 import { resolveDestination } from "../resolve-destination.js"
@@ -23,17 +23,17 @@ export interface InitOptions {
 
 export type InitResult = { ok: true } | { ok: false; reason: string }
 
-const DEFAULT_REGISTRY_URL = "https://fogma.dev/r/"
+const DEFAULT_REGISTRY_URL = "https://forkshop.dev/r/"
 
-const DEFAULT_FOGMA_ALIASES: FogmaJson["aliases"] = {
+const DEFAULT_FORKSHOP_ALIASES: ForkshopJson["aliases"] = {
   base: "@/",
-  components: "@/components/fogma",
-  kits: "@/components/fogma/kits",
-  hooks: "@/lib/fogma/hooks",
-  lib: "@/lib/fogma",
-  api: "@/app/api/fogma",
-  tailwind: "@/lib/fogma/tailwind",
-  mount: "@/app/fogma",
+  components: "@/components/forkshop",
+  kits: "@/components/forkshop/kits",
+  hooks: "@/lib/forkshop/hooks",
+  lib: "@/lib/forkshop",
+  api: "@/app/api/forkshop",
+  tailwind: "@/lib/forkshop/tailwind",
+  mount: "@/app/forkshop",
 }
 
 export async function runInit(options: InitOptions): Promise<InitResult> {
@@ -48,13 +48,13 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
   const { promises: fs } = await import("node:fs")
   const path = await import("node:path")
   try {
-    await fs.access(path.join(projectRoot, "fogma.json"))
+    await fs.access(path.join(projectRoot, "forkshop.json"))
     return {
       ok: false,
-      reason: "Fogma is already installed. Use `fogma diff <file>` or `fogma add <kit>`.",
+      reason: "Forkshop is already installed. Use `forkshop diff <file>` or `forkshop add <kit>`.",
     }
   } catch {
-    // OK — fogma.json doesn't exist
+    // OK — forkshop.json doesn't exist
   }
 
   // 3. Fetch manifest (or use injected one for tests).
@@ -67,7 +67,7 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
   const destinations = resolved.fileAddresses.map((address) => {
     const file = manifest.files[address]
     if (!file) throw new Error(`Missing file in manifest: ${address}`)
-    return resolveDestination(address, file, DEFAULT_FOGMA_ALIASES)
+    return resolveDestination(address, file, DEFAULT_FORKSHOP_ALIASES)
   })
   const collisions = await findCollisions(projectRoot, destinations)
   if (collisions.length > 0 && !force) {
@@ -84,7 +84,7 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
   const plan = await copyManifestFiles({
     projectRoot,
     manifest,
-    aliases: DEFAULT_FOGMA_ALIASES,
+    aliases: DEFAULT_FORKSHOP_ALIASES,
     fileAddresses: resolved.fileAddresses,
   })
 
@@ -104,25 +104,25 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
     }
   }
 
-  // 8. Write fogma.json.
-  const fogmaJson: FogmaJson = {
-    $schema: "https://fogma.dev/schema/fogma.json",
+  // 8. Write forkshop.json.
+  const forkshopJson: ForkshopJson = {
+    $schema: "https://forkshop.dev/schema/forkshop.json",
     registryVersion: manifest.version,
     installedAt: new Date().toISOString(),
     registryUrl,
-    aliases: DEFAULT_FOGMA_ALIASES,
+    aliases: DEFAULT_FORKSHOP_ALIASES,
     installedBundles: resolved.bundleNames,
     files: Object.fromEntries(
       plan.map((entry) => [entry.address, { dest: entry.dest, sha: entry.sha }])
     ),
   }
-  await writeFogmaJson(projectRoot, fogmaJson)
+  await writeForkshopJson(projectRoot, forkshopJson)
 
   // 9. Print summary.
   console.log(pc.green(`\nInstalled ${plan.length} files into your project.`))
   console.log("\nNext steps:")
-  console.log("  1. Open Claude Code in this project and type 'set up Fogma' to finish wiring.")
-  console.log("  2. Or run `pnpm dev` and open /fogma to see the default layout.")
+  console.log("  1. Open Claude Code in this project and type 'set up Forkshop' to finish wiring.")
+  console.log("  2. Or run `pnpm dev` and open /forkshop to see the default layout.")
 
   return { ok: true }
 }

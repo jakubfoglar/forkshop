@@ -1,12 +1,12 @@
 import { describe, it, expect } from "vitest"
-import { filePathToRoute, fileToSelection } from "@fogma/lib/file-to-selection"
+import { filePathToRoute, fileToSelection } from "@forkshop/lib/file-to-selection"
 
 describe("filePathToRoute", () => {
   it("strips a single route group", () => {
     expect(filePathToRoute("app/(marketing)/about/page.tsx")).toBe("/about")
   })
   it("strips multiple route groups", () => {
-    expect(filePathToRoute("app/(tools)/(internal)/fogma/page.tsx")).toBe("/fogma")
+    expect(filePathToRoute("app/(tools)/(internal)/forkshop/page.tsx")).toBe("/forkshop")
   })
   it("returns / for the root page", () => {
     expect(filePathToRoute("app/page.tsx")).toBe("/")

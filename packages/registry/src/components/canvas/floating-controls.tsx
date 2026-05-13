@@ -1,6 +1,6 @@
 "use client"
 
-import { cn } from "@fogma/lib/cn"
+import { cn } from "@forkshop/lib/cn"
 
 export function FloatingControls({
   zoom,
@@ -18,8 +18,8 @@ export function FloatingControls({
   onToggleCompose?: () => void
 }) {
   return (
-    <div className="pointer-events-none absolute bottom-fogma-4 right-fogma-4 z-10 flex flex-col items-end gap-fogma-1">
-      <div className="pointer-events-auto flex items-center gap-fogma-0.5 rounded-fogma-full border border-fogma-border bg-fogma-surface px-fogma-1 py-fogma-0.5 shadow-sm">
+    <div className="pointer-events-none absolute bottom-forkshop-4 right-forkshop-4 z-10 flex flex-col items-end gap-forkshop-1">
+      <div className="pointer-events-auto flex items-center gap-forkshop-0.5 rounded-forkshop-full border border-forkshop-border bg-forkshop-surface px-forkshop-1 py-forkshop-0.5 shadow-sm">
         {composeAvailable && (
           <button
             type="button"
@@ -27,10 +27,10 @@ export function FloatingControls({
             aria-pressed={composeEnabled}
             title="Toggle compose mode (drag to reorder, + to insert, × to remove)"
             className={cn(
-              "rounded-fogma-full px-fogma-2 py-fogma-0.5 text-fogma-xs font-fogma-medium transition-colors",
+              "rounded-forkshop-full px-forkshop-2 py-forkshop-0.5 text-forkshop-xs font-forkshop-medium transition-colors",
               composeEnabled
-                ? "bg-fogma-accent/10 text-fogma-accent hover:bg-fogma-accent/20"
-                : "text-fogma-fg-muted hover:bg-fogma-surface-2 hover:text-fogma-fg",
+                ? "bg-forkshop-accent/10 text-forkshop-accent hover:bg-forkshop-accent/20"
+                : "text-forkshop-fg-muted hover:bg-forkshop-surface-2 hover:text-forkshop-fg",
             )}
           >
             Compose
@@ -39,17 +39,17 @@ export function FloatingControls({
         <button
           type="button"
           onClick={onFit}
-          className="rounded-fogma-full px-fogma-2 py-fogma-0.5 text-fogma-xs font-fogma-medium text-fogma-fg-muted hover:bg-fogma-surface-2 hover:text-fogma-fg"
+          className="rounded-forkshop-full px-forkshop-2 py-forkshop-0.5 text-forkshop-xs font-forkshop-medium text-forkshop-fg-muted hover:bg-forkshop-surface-2 hover:text-forkshop-fg"
         >
           Fit
         </button>
-        <span className="min-w-fogma-7 px-fogma-1 text-center text-fogma-xs tabular-nums text-fogma-fg-muted">
+        <span className="min-w-forkshop-7 px-forkshop-1 text-center text-forkshop-xs tabular-nums text-forkshop-fg-muted">
           {Math.round(zoom * 100)}%
         </span>
         <button
           type="button"
           onClick={onResetZoom}
-          className="rounded-fogma-full px-fogma-2 py-fogma-0.5 text-fogma-xs font-fogma-medium text-fogma-fg-muted hover:bg-fogma-surface-2 hover:text-fogma-fg"
+          className="rounded-forkshop-full px-forkshop-2 py-forkshop-0.5 text-forkshop-xs font-forkshop-medium text-forkshop-fg-muted hover:bg-forkshop-surface-2 hover:text-forkshop-fg"
         >
           100%
         </button>

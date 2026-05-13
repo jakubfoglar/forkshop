@@ -2,8 +2,8 @@
 
 import { useEffect } from "react"
 import { createPortal } from "react-dom"
-import { cn } from "@fogma/lib/cn"
-import type { ResolvedSpacingClass } from "@fogma/lib/spacing-classes"
+import { cn } from "@forkshop/lib/cn"
+import type { ResolvedSpacingClass } from "@forkshop/lib/spacing-classes"
 
 // Lists the "non-zone" editable spacing classes on the clicked element
 // (currently: margins). Each row, when clicked, opens the regular
@@ -32,12 +32,12 @@ export function SpacingBodyMenu({
   const isBlock = containingBlock !== undefined
   return createPortal(
     <>
-      <div className="fixed inset-fogma-0 z-[99]" onClick={onClose} />
+      <div className="fixed inset-forkshop-0 z-[99]" onClick={onClose} />
       <div
         className={cn(
-          "fixed z-[100] flex flex-col gap-fogma-0.5 rounded-fogma-xl border bg-fogma-surface p-fogma-1.5 shadow-lg",
+          "fixed z-[100] flex flex-col gap-forkshop-0.5 rounded-forkshop-xl border bg-forkshop-surface p-forkshop-1.5 shadow-lg",
           // purple-300: intentional block-scope indicator colour (matches spacing-picker convention)
-          isBlock ? "border-purple-300" : "border-fogma-border",
+          isBlock ? "border-purple-300" : "border-forkshop-border",
         )}
         style={{
           left: anchor.left + anchor.width / 2,
@@ -47,9 +47,9 @@ export function SpacingBodyMenu({
         onClick={(event) => event.stopPropagation()}
       >
         {isBlock && (
-          <div className="px-fogma-1 pb-fogma-0.5">
+          <div className="px-forkshop-1 pb-forkshop-0.5">
             {/* purple-100/purple-700: intentional block-scope indicator colour (see comment above) */}
-            <span className="rounded-fogma-lg bg-purple-100 px-fogma-1 py-[1px] font-mono text-[10px] font-fogma-medium uppercase tracking-wide text-purple-700">
+            <span className="rounded-forkshop-lg bg-purple-100 px-forkshop-1 py-[1px] font-mono text-[10px] font-forkshop-medium uppercase tracking-wide text-purple-700">
               {containingBlock}
             </span>
           </div>
@@ -59,7 +59,7 @@ export function SpacingBodyMenu({
             key={item.fullClass}
             type="button"
             onClick={() => onPick(item)}
-            className="rounded-fogma-xxs px-fogma-1.5 py-fogma-1 text-left font-mono text-fogma-xs text-fogma-fg-muted transition-colors hover:bg-fogma-surface-2 hover:text-fogma-fg"
+            className="rounded-forkshop-xxs px-forkshop-1.5 py-forkshop-1 text-left font-mono text-forkshop-xs text-forkshop-fg-muted transition-colors hover:bg-forkshop-surface-2 hover:text-forkshop-fg"
           >
             {item.fullClass}
           </button>

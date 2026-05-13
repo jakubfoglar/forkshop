@@ -41,26 +41,26 @@ export function TypographyFrame({
   children,
 }: TypographyFrameProps) {
   return (
-    <div className="flex flex-col gap-fogma-4 p-fogma-4">
-      <section className="flex flex-col gap-fogma-2">
-        <span className="font-mono text-fogma-xs uppercase tracking-fogma-wider text-fogma-fg-muted">
+    <div className="flex flex-col gap-forkshop-4 p-forkshop-4">
+      <section className="flex flex-col gap-forkshop-2">
+        <span className="font-mono text-forkshop-xs uppercase tracking-forkshop-wider text-forkshop-fg-muted">
           Display
         </span>
         {displaySizes.map((sample) => (
-          <div key={sample.label} className="flex flex-col gap-fogma-0.5">
-            <span className="font-mono text-fogma-xs text-fogma-fg-muted">{sample.label}</span>
-            <span className={`${sample.className} text-fogma-fg`}>{displaySample}</span>
+          <div key={sample.label} className="flex flex-col gap-forkshop-0.5">
+            <span className="font-mono text-forkshop-xs text-forkshop-fg-muted">{sample.label}</span>
+            <span className={`${sample.className} text-forkshop-fg`}>{displaySample}</span>
           </div>
         ))}
       </section>
-      <section className="flex flex-col gap-fogma-2">
-        <span className="font-mono text-fogma-xs uppercase tracking-fogma-wider text-fogma-fg-muted">
+      <section className="flex flex-col gap-forkshop-2">
+        <span className="font-mono text-forkshop-xs uppercase tracking-forkshop-wider text-forkshop-fg-muted">
           Body
         </span>
         {bodySizes.map((sample) => (
-          <div key={sample.label} className="flex flex-col gap-fogma-0.5">
-            <span className="font-mono text-fogma-xs text-fogma-fg-muted">{sample.label}</span>
-            <span className={`${sample.className} text-fogma-fg`}>{bodySample}</span>
+          <div key={sample.label} className="flex flex-col gap-forkshop-0.5">
+            <span className="font-mono text-forkshop-xs text-forkshop-fg-muted">{sample.label}</span>
+            <span className={`${sample.className} text-forkshop-fg`}>{bodySample}</span>
           </div>
         ))}
       </section>

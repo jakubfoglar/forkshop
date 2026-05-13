@@ -1,4 +1,4 @@
-import type { TokenRegistry } from "@fogma/lib/token-registry"
+import type { TokenRegistry } from "@forkshop/lib/token-registry"
 
 export type ColorNode = {
   id: string
