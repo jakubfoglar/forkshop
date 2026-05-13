@@ -109,3 +109,8 @@ export {
   SITEMAP_HORIZONTAL_GAP,
   SITEMAP_VERTICAL_GAP,
 } from "./lib/sitemap-tree.js"
+export {
+  IframeGallery,
+  type IframeGalleryProps,
+  type IframeGalleryEntry,
+} from "./kits/iframe-gallery.js"
