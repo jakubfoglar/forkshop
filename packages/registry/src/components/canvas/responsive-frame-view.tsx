@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { CanvasLabel } from "./canvas-label.js"
+import { CanvasLabel } from "@fogma/components/canvas/canvas-label"
 
 const BLOCK_VIEWPORT_GAP = 32
 const ISOLATION_LABEL_HEIGHT = 80

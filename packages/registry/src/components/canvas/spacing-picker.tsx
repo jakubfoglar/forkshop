@@ -2,8 +2,8 @@
 
 import { useEffect } from "react"
 import { createPortal } from "react-dom"
-import { cn } from "../../lib/cn.js"
-import type { TokenEntry } from "../../lib/token-registry.js"
+import { cn } from "@fogma/lib/cn"
+import type { TokenEntry } from "@fogma/lib/token-registry"
 
 // Picker for swapping one spacing class (e.g. `p-4`) for another in the same
 // family (e.g. `p-6`). Renders below an anchor rect in host (page) coords.

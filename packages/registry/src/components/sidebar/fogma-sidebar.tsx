@@ -8,9 +8,9 @@ import {
   type SVGProps,
 } from "react";
 import { ChevronDown, ChevronRight, Info, File } from "lucide-react";
-import { cn } from "../../lib/cn.js";
-import { buildPageTree, type PageTreeNode } from "./page-tree.js";
-import { HelpModal } from "./help-modal.js";
+import { cn } from "@fogma/lib/cn";
+import { buildPageTree, type PageTreeNode } from "@fogma/components/sidebar/page-tree";
+import { HelpModal } from "@fogma/components/sidebar/help-modal";
 
 // TODO: deferred — agent-activity-state (Task 13). These hooks will be
 // wired up once the agent-activity context shell is ported.

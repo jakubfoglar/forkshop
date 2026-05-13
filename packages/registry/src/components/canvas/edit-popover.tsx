@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react"
 import { Check, X } from "lucide-react"
 import { createPortal } from "react-dom"
-import { cn } from "../../lib/cn.js"
-import { FogmaIcon } from "../icon.js"
+import { cn } from "@fogma/lib/cn"
+import { FogmaIcon } from "@fogma/components/icon"
 
 // Inline save/discard widget that hovers right next to the currently-edited
 // element. Lives in the host document via portal — positions itself in screen

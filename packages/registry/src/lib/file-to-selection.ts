@@ -1,4 +1,4 @@
-import type { FogmaSelection } from "../components/sidebar/fogma-sidebar.js"
+import type { FogmaSelection } from "@fogma/components/sidebar/fogma-sidebar"
 
 // Files that belong to site-wide navigation rather than a specific page.
 // Projects can extend this by providing a custom fileToSelection implementation.

@@ -2,8 +2,8 @@
 
 import { useEffect } from "react"
 import { createPortal } from "react-dom"
-import { cn } from "../../lib/cn.js"
-import type { ResolvedSpacingClass } from "../../lib/spacing-classes.js"
+import { cn } from "@fogma/lib/cn"
+import type { ResolvedSpacingClass } from "@fogma/lib/spacing-classes"
 
 // Lists the "non-zone" editable spacing classes on the clicked element
 // (currently: margins). Each row, when clicked, opens the regular

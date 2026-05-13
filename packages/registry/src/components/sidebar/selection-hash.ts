@@ -1,4 +1,4 @@
-import type { FogmaSelection } from "./fogma-sidebar.js"
+import type { FogmaSelection } from "@fogma/components/sidebar/fogma-sidebar"
 
 // Pure helpers for round-tripping a FogmaSelection through a URL hash.
 // The hash mirrors what's on screen so /fogma can be bookmarked/shared:

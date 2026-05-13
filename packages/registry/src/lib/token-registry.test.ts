@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import type { Config } from "tailwindcss"
-import { buildTokenRegistry } from "./token-registry.js"
+import { buildTokenRegistry } from "@fogma/lib/token-registry"
 
 const sampleConfig: Config = {
   content: [],

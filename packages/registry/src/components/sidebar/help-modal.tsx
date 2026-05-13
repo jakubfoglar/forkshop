@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, type ReactNode } from "react"
-import { FogmaIcon } from "../icon.js"
+import { FogmaIcon } from "@fogma/components/icon"
 import { X } from "lucide-react"
 
 export function HelpModal({

@@ -1,4 +1,4 @@
-import type { SpacingSide } from "../hooks/use-iframe-spacing-wiring.js"
+import type { SpacingSide } from "@fogma/hooks/use-iframe-spacing-wiring"
 
 // Tailwind default breakpoints. The project hasn't overridden them; if it ever
 // does, this map needs updating.

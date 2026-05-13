@@ -13,6 +13,9 @@
       ],
       "@playground/*": [
         "./*"
+      ],
+      "@fogma/*": [
+        "../../packages/registry/src/*"
       ]
     },
     "incremental": true,

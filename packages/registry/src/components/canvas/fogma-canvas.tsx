@@ -13,7 +13,7 @@ import {
   type ReactNode,
   type RefObject,
 } from "react"
-import type { Transform } from "../../hooks/use-draggable-node.js"
+import type { Transform } from "@fogma/hooks/use-draggable-node"
 
 export type WheelInput = {
   deltaX: number

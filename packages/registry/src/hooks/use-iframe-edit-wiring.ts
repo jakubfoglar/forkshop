@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import { isTextElement, PREVIEW_AGENT_CSS, PREVIEW_EDIT_CSS, SKIP_TAGS } from "../lib/edit-mode.js"
+import { isTextElement, PREVIEW_AGENT_CSS, PREVIEW_EDIT_CSS, SKIP_TAGS } from "@fogma/lib/edit-mode"
 
 type AgentMessage =
   | { type: "fogma:agent-block"; slugs: string[] }

@@ -1,7 +1,7 @@
 "use client"
 
-import type { SnapGuide } from "../../lib/system-snap.js"
-import { useFogmaCanvas } from "./fogma-canvas.js"
+import type { SnapGuide } from "@fogma/lib/system-snap"
+import { useFogmaCanvas } from "@fogma/components/canvas/fogma-canvas"
 
 // Red snap-alignment guide lines, rendered over the stage during a drag.
 // Stroke width is zoom-invariant via `vectorEffect="non-scaling-stroke"`.

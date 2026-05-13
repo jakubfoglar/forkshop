@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, type CSSProperties } from "react"
-import type { AppliedToken, InspectionResult } from "../lib/inspect-element.js"
-import type { TokenEntry, TokenRegistry } from "../lib/token-registry.js"
+import type { AppliedToken, InspectionResult } from "@fogma/lib/inspect-element"
+import type { TokenEntry, TokenRegistry } from "@fogma/lib/token-registry"
 
 const CATEGORY_LABELS: Record<keyof Omit<TokenRegistry, "classLookup">, string> = {
   colors: "Colors",

@@ -2,16 +2,16 @@
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
-import { BackButton } from "../components/canvas/back-button.js"
-import { CanvasNode } from "../components/canvas/canvas-node.js"
-import { GuideOverlay } from "../components/canvas/guide-overlay.js"
-import { LazyIframe } from "../components/canvas/lazy-iframe.js"
-import { ResponsiveFrameView } from "../components/canvas/responsive-frame-view.js"
-import { useFogmaCanvas } from "../components/canvas/fogma-canvas.js"
-import type { GetSnapTargets } from "../hooks/use-draggable-node.js"
-import type { NodePosition, NodePositions } from "../lib/node-positions.js"
-import type { SnapGuide, SnapTarget } from "../lib/system-snap.js"
-import { fogmaIcons } from "../lib/icons.js"
+import { BackButton } from "@fogma/components/canvas/back-button"
+import { CanvasNode } from "@fogma/components/canvas/canvas-node"
+import { GuideOverlay } from "@fogma/components/canvas/guide-overlay"
+import { LazyIframe } from "@fogma/components/canvas/lazy-iframe"
+import { ResponsiveFrameView } from "@fogma/components/canvas/responsive-frame-view"
+import { useFogmaCanvas } from "@fogma/components/canvas/fogma-canvas"
+import type { GetSnapTargets } from "@fogma/hooks/use-draggable-node"
+import type { NodePosition, NodePositions } from "@fogma/lib/node-positions"
+import type { SnapGuide, SnapTarget } from "@fogma/lib/system-snap"
+import { fogmaIcons } from "@fogma/lib/icons"
 
 // ---------------------------------------------------------------------------
 // Constants

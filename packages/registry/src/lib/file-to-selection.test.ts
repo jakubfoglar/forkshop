@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { filePathToRoute, fileToSelection } from "./file-to-selection.js"
+import { filePathToRoute, fileToSelection } from "@fogma/lib/file-to-selection"
 
 describe("filePathToRoute", () => {
   it("strips a single route group", () => {

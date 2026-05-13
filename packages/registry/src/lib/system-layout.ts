@@ -1,4 +1,4 @@
-import type { ColorNode, SystemGraph } from "./system-graph.js"
+import type { ColorNode, SystemGraph } from "@fogma/lib/system-graph"
 
 // ---------------------------------------------------------------------------
 // Block descriptor — generic shape consumed by layoutSystem

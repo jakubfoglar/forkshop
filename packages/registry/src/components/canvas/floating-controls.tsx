@@ -1,6 +1,6 @@
 "use client"
 
-import { cn } from "../../lib/cn.js"
+import { cn } from "@fogma/lib/cn"
 
 export function FloatingControls({
   zoom,

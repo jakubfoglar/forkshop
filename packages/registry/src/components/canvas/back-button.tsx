@@ -1,7 +1,7 @@
 "use client"
 
 import { ArrowLeft } from "lucide-react"
-import { FogmaIcon } from "../icon.js"
+import { FogmaIcon } from "@fogma/components/icon"
 
 export function BackButton({
   destinationLabel,

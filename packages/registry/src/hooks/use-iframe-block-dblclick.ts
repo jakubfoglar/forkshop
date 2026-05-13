@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import { isTextElement } from "../lib/edit-mode.js"
+import { isTextElement } from "@fogma/lib/edit-mode"
 
 const BLOCK_ATTR = "data-fogma-block"
 

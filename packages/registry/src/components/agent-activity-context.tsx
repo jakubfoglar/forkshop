@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
-import { fileToSelection } from "../lib/file-to-selection.js"
+import { fileToSelection } from "@fogma/lib/file-to-selection"
 
 // PascalCase → kebab-case: "HeroDisplay" → "hero-display".
 // Used to map a block slug to the component name Claude would write in a

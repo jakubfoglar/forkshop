@@ -2,24 +2,24 @@
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { Config } from "tailwindcss"
-import { CanvasNode } from "../components/canvas/canvas-node.js"
-import { useFogmaCanvas } from "../components/canvas/fogma-canvas.js"
-import { GuideOverlay } from "../components/canvas/guide-overlay.js"
-import { useDraggableNode, type GetSnapTargets } from "../hooks/use-draggable-node.js"
-import type { NodePosition, NodePositions } from "../lib/node-positions.js"
-import { buildTokenRegistry } from "../lib/token-registry.js"
-import { buildSystemGraph } from "../lib/system-graph.js"
+import { CanvasNode } from "@fogma/components/canvas/canvas-node"
+import { useFogmaCanvas } from "@fogma/components/canvas/fogma-canvas"
+import { GuideOverlay } from "@fogma/components/canvas/guide-overlay"
+import { useDraggableNode, type GetSnapTargets } from "@fogma/hooks/use-draggable-node"
+import type { NodePosition, NodePositions } from "@fogma/lib/node-positions"
+import { buildTokenRegistry } from "@fogma/lib/token-registry"
+import { buildSystemGraph } from "@fogma/lib/system-graph"
 import {
   layoutSystem,
   COLOR_NODE_WIDTH,
   COLOR_NODE_HEIGHT,
   type PositionedColorNode,
   type SystemLayout,
-} from "../lib/system-layout.js"
-import { type SnapGuide, type SnapTarget } from "../lib/system-snap.js"
-import { TypographyFrame, type TypographyFrameProps } from "./typography-frame.js"
-import { type PrimitiveDescriptor } from "./primitives-showcase.js"
-import { fogmaIcons } from "../lib/icons.js"
+} from "@fogma/lib/system-layout"
+import { type SnapGuide, type SnapTarget } from "@fogma/lib/system-snap"
+import { TypographyFrame, type TypographyFrameProps } from "@fogma/kits/typography-frame"
+import { type PrimitiveDescriptor } from "@fogma/kits/primitives-showcase"
+import { fogmaIcons } from "@fogma/lib/icons"
 
 // ---------------------------------------------------------------------------
 // Constants
