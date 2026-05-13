@@ -47,39 +47,44 @@ export type FileMap = {
 
 type AgentActivityValue = {
   entries: readonly ActivityEntry[]
-  blockSlugs: readonly string[]
-  projectRoot: string
-  // Page paths the agent has touched during this session. Sticky — never
-  // pruned, so a newly-created page stays in the sidebar even after the 5s
-  // activity window closes (until full reload picks it up from disk).
+  fileMap: FileMap
   seenPagePaths: ReadonlySet<string>
 }
 
 const Context = createContext<AgentActivityValue>({
   entries: [],
-  blockSlugs: [],
-  projectRoot: "",
+  fileMap: { primitives: [], blocks: [] },
   seenPagePaths: new Set(),
 })
 
 const STALE_MS = 5500
 
 export function AgentActivityProvider({
-  blockSlugs,
-  projectRoot,
+  fileMap,
   children,
 }: {
-  blockSlugs: readonly string[]
-  projectRoot: string
+  fileMap: FileMap
   children: ReactNode
 }) {
   const [entries, setEntries] = useState<readonly ActivityEntry[]>([])
   const [seenPagePaths, setSeenPagePaths] = useState<ReadonlySet<string>>(() => new Set())
 
   useEffect(() => {
-    // Live AI awareness SSE subscription wired in a separate spec.
-    // The endpoint at /api/forkshop/agent-activity/stream is a no-op until then.
-    return
+    if (process.env.NODE_ENV === "production") return
+    const eventSource = new EventSource("/api/forkshop/agent-activity/stream")
+    const handleActivity = (event: MessageEvent<string>) => {
+      try {
+        const data = JSON.parse(event.data) as { activeFiles: ActivityEntry[] }
+        setEntries(data.activeFiles)
+      } catch (error) {
+        console.error("[forkshop agent-activity] parse failed:", error)
+      }
+    }
+    eventSource.addEventListener("activity", handleActivity)
+    return () => {
+      eventSource.removeEventListener("activity", handleActivity)
+      eventSource.close()
+    }
   }, [])
 
   useEffect(() => {
@@ -101,7 +106,7 @@ export function AgentActivityProvider({
     setSeenPagePaths((current) => {
       let next: Set<string> | undefined
       for (const entry of entries) {
-        const selection = fileToSelection(entry.filePath, projectRoot, blockSlugs)
+        const selection = fileToSelection(entry.filePath, fileMap)
         if (selection !== undefined && selection !== "site-wide" && selection.kind === "page") {
           if (!current.has(selection.path)) {
             if (next === undefined) next = new Set(current)
@@ -111,11 +116,11 @@ export function AgentActivityProvider({
       }
       return next ?? current
     })
-  }, [entries, projectRoot, blockSlugs])
+  }, [entries, fileMap])
 
   const value = useMemo<AgentActivityValue>(
-    () => ({ entries, blockSlugs, projectRoot, seenPagePaths }),
-    [entries, blockSlugs, projectRoot, seenPagePaths],
+    () => ({ entries, fileMap, seenPagePaths }),
+    [entries, fileMap, seenPagePaths],
   )
 
   return <Context.Provider value={value}>{children}</Context.Provider>
@@ -133,25 +138,26 @@ export function useAgentSeenPagePaths(): ReadonlySet<string> {
 }
 
 export function useAgentActivePages(): ReadonlySet<string> {
-  const { entries, blockSlugs, projectRoot } = useAgentActivity()
+  const { entries, fileMap } = useAgentActivity()
   return useMemo(() => {
     const pages = new Set<string>()
     for (const entry of entries) {
-      const selection = fileToSelection(entry.filePath, projectRoot, blockSlugs)
+      const selection = fileToSelection(entry.filePath, fileMap)
       if (selection && selection !== "site-wide" && selection.kind === "page") {
         pages.add(selection.path)
       }
     }
     return pages
-  }, [entries, blockSlugs, projectRoot])
+  }, [entries, fileMap])
 }
 
 export function useAgentActiveBlocks(): ReadonlySet<string> {
-  const { entries, blockSlugs, projectRoot } = useAgentActivity()
+  const { entries, fileMap } = useAgentActivity()
   return useMemo(() => {
     const blocks = new Set<string>()
+    const blockSlugs = fileMap.blocks.map((b) => b.slug)
     for (const entry of entries) {
-      const selection = fileToSelection(entry.filePath, projectRoot, blockSlugs)
+      const selection = fileToSelection(entry.filePath, fileMap)
       if (selection === undefined || selection === "site-wide") continue
       if (selection.kind === "block") {
         blocks.add(selection.slug)
@@ -165,7 +171,21 @@ export function useAgentActiveBlocks(): ReadonlySet<string> {
       }
     }
     return blocks
-  }, [entries, blockSlugs, projectRoot])
+  }, [entries, fileMap])
+}
+
+export function useAgentActivePrimitives(): ReadonlySet<string> {
+  const { entries, fileMap } = useAgentActivity()
+  return useMemo(() => {
+    const primitives = new Set<string>()
+    for (const entry of entries) {
+      const selection = fileToSelection(entry.filePath, fileMap)
+      if (selection && selection !== "site-wide" && selection.kind === "primitive") {
+        primitives.add(selection.id)
+      }
+    }
+    return primitives
+  }, [entries, fileMap])
 }
 
 // True when the given page is being edited AND no specific block could be
@@ -174,13 +194,14 @@ export function useAgentActiveBlocks(): ReadonlySet<string> {
 // When a specific block IS identified, the tier-2 outline on that single
 // block is enough — we don't want every block competing for attention.
 export function usePageActiveFallback(pagePath: string | undefined): boolean {
-  const { entries, blockSlugs, projectRoot } = useAgentActivity()
+  const { entries, fileMap } = useAgentActivity()
   return useMemo(() => {
     if (pagePath === undefined) return false
+    const blockSlugs = fileMap.blocks.map((b) => b.slug)
     let pageHit = false
     let anyBlockIdentified = false
     for (const entry of entries) {
-      const selection = fileToSelection(entry.filePath, projectRoot, blockSlugs)
+      const selection = fileToSelection(entry.filePath, fileMap)
       if (
         selection === undefined ||
         selection === "site-wide" ||
@@ -198,54 +219,37 @@ export function usePageActiveFallback(pagePath: string | undefined): boolean {
       }
     }
     return pageHit && !anyBlockIdentified
-  }, [entries, blockSlugs, projectRoot, pagePath])
-}
-
-export function useIsNavigationActive(): boolean {
-  const { entries, blockSlugs, projectRoot } = useAgentActivity()
-  return useMemo(
-    () =>
-      entries.some((entry) => {
-        const selection = fileToSelection(entry.filePath, projectRoot, blockSlugs)
-        return (
-          selection !== undefined &&
-          selection !== "site-wide" &&
-          selection.kind === "section" &&
-          selection.sectionId === "navigation"
-        )
-      }),
-    [entries, blockSlugs, projectRoot],
-  )
+  }, [entries, fileMap, pagePath])
 }
 
 export function useSiteWideActivity(): {
   active: boolean
   recentBasename: string | undefined
 } {
-  const { entries, blockSlugs, projectRoot } = useAgentActivity()
+  const { entries, fileMap } = useAgentActivity()
   return useMemo(() => {
     let recentBasename: string | undefined
     let mostRecent = 0
     for (const entry of entries) {
-      const selection = fileToSelection(entry.filePath, projectRoot, blockSlugs)
+      const selection = fileToSelection(entry.filePath, fileMap)
       if (selection === "site-wide" && entry.lastSeenAt > mostRecent) {
         recentBasename = entry.filePath.split("/").pop()
         mostRecent = entry.lastSeenAt
       }
     }
     return { active: recentBasename !== undefined, recentBasename }
-  }, [entries, blockSlugs, projectRoot])
+  }, [entries, fileMap])
 }
 
 export function useAgentSubstringsForPage(
   pagePath: string | undefined,
 ): readonly { oldString?: string; newString?: string }[] {
-  const { entries, blockSlugs, projectRoot } = useAgentActivity()
+  const { entries, fileMap } = useAgentActivity()
   return useMemo(() => {
     if (pagePath === undefined) return []
     const result: { oldString?: string; newString?: string }[] = []
     for (const entry of entries) {
-      const selection = fileToSelection(entry.filePath, projectRoot, blockSlugs)
+      const selection = fileToSelection(entry.filePath, fileMap)
       if (
         selection &&
         selection !== "site-wide" &&
@@ -256,18 +260,18 @@ export function useAgentSubstringsForPage(
       }
     }
     return result
-  }, [entries, blockSlugs, projectRoot, pagePath])
+  }, [entries, fileMap, pagePath])
 }
 
 export function useAgentSubstringsForBlock(
   slug: string | undefined,
 ): readonly { oldString?: string; newString?: string }[] {
-  const { entries, blockSlugs, projectRoot } = useAgentActivity()
+  const { entries, fileMap } = useAgentActivity()
   return useMemo(() => {
     if (slug === undefined) return []
     const result: { oldString?: string; newString?: string }[] = []
     for (const entry of entries) {
-      const selection = fileToSelection(entry.filePath, projectRoot, blockSlugs)
+      const selection = fileToSelection(entry.filePath, fileMap)
       if (
         selection &&
         selection !== "site-wide" &&
@@ -278,5 +282,5 @@ export function useAgentSubstringsForBlock(
       }
     }
     return result
-  }, [entries, blockSlugs, projectRoot, slug])
+  }, [entries, fileMap, slug])
 }

@@ -23,9 +23,6 @@ function useAgentActivePages(): ReadonlySet<string> {
 function useAgentActiveBlocks(): ReadonlySet<string> {
   return new Set();
 }
-function useIsNavigationActive(): boolean {
-  return false;
-}
 
 type LucideComponent = ComponentType<
   SVGProps<SVGSVGElement> & { strokeWidth?: number | string }
@@ -124,7 +121,6 @@ export function ForkshopSidebar({
 
   const activePages = useAgentActivePages();
   const activeBlocks = useAgentActiveBlocks();
-  const navigationActive = useIsNavigationActive();
 
   // Auto-expand a section when the active selection is one of its entries.
   useEffect(() => {
@@ -173,10 +169,6 @@ export function ForkshopSidebar({
                   )
                 : [];
               const hasChildren = entriesSorted.length > 0;
-              // Determine agent activity for "navigation"-kind sections
-              const sectionAgentActive =
-                section.id === "navigation" ? navigationActive : false;
-
               return (
                 <div key={section.id}>
                   <SidebarRow
@@ -187,7 +179,7 @@ export function ForkshopSidebar({
                       selection.kind === "section" &&
                       selection.sectionId === section.id
                     }
-                    agentActive={sectionAgentActive}
+                    agentActive={false}
                     hasChildren={hasChildren}
                     expanded={isExpanded}
                     onClick={() => {

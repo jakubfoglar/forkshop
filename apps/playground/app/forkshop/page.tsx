@@ -37,8 +37,9 @@ export default function ForkshopPage() {
   // When the user clicked a page leaf in the sidebar, isolate that page.
   const isolatedPath = selection.kind === "page" ? selection.path : undefined
 
+  // FILE_MAP populated in Task 19
   return (
-    <AgentActivityProvider blockSlugs={BLOCK_SLUGS} projectRoot="">
+    <AgentActivityProvider fileMap={{ primitives: [], blocks: [] }}>
       <LocatorInit mountPath="/forkshop" />
       <div className="flex h-screen overflow-hidden">
         <ForkshopSidebar
