@@ -7,6 +7,7 @@ import {
   AgentActivityProvider,
   type FogmaSelection,
 } from "@fogma/registry"
+import { ColorPicker, Box3dCenter, MultiplePagesEmpty } from "iconoir-react"
 import DesignSystemBoardView from "./design-system-board"
 import ComponentsBoardView from "./components-board"
 import PagesBoardView from "./pages-board"
@@ -20,8 +21,19 @@ export default function FogmaPage() {
     sectionId: "design-system",
   })
 
-  const activeView =
-    selection.kind === "section" ? selection.sectionId : null
+  // Determine which main view to show.
+  const view: "design-system" | "components" | "pages" =
+    selection.kind === "page"
+      ? "pages"
+      : selection.kind === "section" &&
+          (selection.sectionId === "design-system" ||
+            selection.sectionId === "components" ||
+            selection.sectionId === "pages")
+        ? selection.sectionId
+        : "design-system"
+
+  // When the user clicked a page leaf in the sidebar, isolate that page.
+  const isolatedPath = selection.kind === "page" ? selection.path : undefined
 
   return (
     <AgentActivityProvider blockSlugs={BLOCK_SLUGS} projectRoot="">
@@ -31,20 +43,20 @@ export default function FogmaPage() {
           selection={selection}
           onSelect={setSelection}
           sections={[
-            { id: "design-system", title: "Design System" },
-            { id: "components", title: "Components" },
-            { id: "pages", title: "Pages" },
+            { id: "design-system", title: "Design System", icon: ColorPicker },
+            { id: "components", title: "Components", icon: Box3dCenter },
+            { id: "pages", title: "Pages", icon: MultiplePagesEmpty },
           ]}
           routes={PAGE_ROUTES}
         />
         <div className="relative flex flex-1 overflow-hidden">
-          {activeView === "design-system" && <DesignSystemBoardView />}
-          {activeView === "components" && <ComponentsBoardView />}
-          {activeView === "pages" && <PagesBoardView />}
-          {activeView === null && (
-            <div className="flex flex-1 items-center justify-center text-sm text-fogma-fg-muted">
-              Select a section from the sidebar.
-            </div>
+          {view === "design-system" && <DesignSystemBoardView />}
+          {view === "components" && <ComponentsBoardView />}
+          {view === "pages" && (
+            <PagesBoardView
+              isolatedPath={isolatedPath}
+              onBack={() => setSelection({ kind: "section", sectionId: "pages" })}
+            />
           )}
         </div>
       </div>

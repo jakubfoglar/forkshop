@@ -61,6 +61,17 @@ export type PageTreeProps = {
   selectedId?: string
   /** Called when selection changes. */
   onSelectChange?: (id: string, selected: boolean) => void
+  /**
+   * Controlled isolated path. When provided, overrides internal isolation state
+   * and immediately shows the isolation (drill-in) view for the given path.
+   * If the path doesn't match any entry the grid view is shown instead.
+   */
+  isolatedPath?: string
+  /**
+   * Called when the user clicks the "Back" button in isolation view.
+   * When not provided, the component manages isolation state internally.
+   */
+  onBack?: () => void
 }
 
 // ---------------------------------------------------------------------------
@@ -106,17 +117,37 @@ function PageTreeInner({
   onPositionChange,
   selectedId,
   onSelectChange,
+  isolatedPath: controlledIsolatedPath,
+  onBack,
 }: PageTreeProps) {
-  const [isolatedPath, setIsolatedPath] = useState<string | null>(null)
+  const [internalIsolated, setInternalIsolated] = useState<string | null>(null)
+
+  // Controlled mode: if isolatedPath prop is provided, use it.
+  // Uncontrolled mode: use internal state driven by double-click.
+  const effectiveIsolated =
+    controlledIsolatedPath !== undefined
+      ? // Validate that the path actually exists in entries; fall back to null (grid).
+        entries.some((e) => e.path === controlledIsolatedPath)
+        ? controlledIsolatedPath
+        : null
+      : internalIsolated
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack()
+    } else {
+      setInternalIsolated(null)
+    }
+  }
 
   // Isolation view: replace the canvas content with a 3-viewport drill-in.
-  if (isolatedPath !== null) {
+  if (effectiveIsolated !== null) {
     return (
       <IsolationView
-        path={isolatedPath}
-        src={iframeSrcResolver(isolatedPath)}
+        path={effectiveIsolated}
+        src={iframeSrcResolver(effectiveIsolated)}
         viewports={viewports}
-        onBack={() => setIsolatedPath(null)}
+        onBack={handleBack}
       />
     )
   }
@@ -129,7 +160,7 @@ function PageTreeInner({
       onPositionChange={onPositionChange}
       selectedId={selectedId}
       onSelectChange={onSelectChange}
-      onIsolate={setIsolatedPath}
+      onIsolate={setInternalIsolated}
     />
   )
 }

@@ -9,7 +9,13 @@ import { fogmaConfig } from "./fogma.config"
 const STAGE_W = 1264
 const STAGE_H = 400
 
-export default function PagesBoardView() {
+export default function PagesBoardView({
+  isolatedPath,
+  onBack,
+}: {
+  isolatedPath?: string
+  onBack?: () => void
+}) {
   const containerRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
 
@@ -21,7 +27,11 @@ export default function PagesBoardView() {
       stageHeight={STAGE_H}
       fitMode="both"
     >
-      <PageTree entries={[...fogmaConfig.pages]} />
+      <PageTree
+        entries={[...fogmaConfig.pages]}
+        isolatedPath={isolatedPath}
+        onBack={onBack}
+      />
     </FogmaCanvas>
   )
 }
