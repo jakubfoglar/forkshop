@@ -372,6 +372,7 @@ function PageTileInner({
         title={label}
         width={TILE_WIDTH}
         heightCap={TILE_HEIGHT}
+        desktopWidth={1440}
         onIframeWheel={handleIframeWheel}
         onIframeDblClick={() => onIsolate(entry.path)}
         className="bg-white shadow-md"

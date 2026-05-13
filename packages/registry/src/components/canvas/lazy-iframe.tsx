@@ -10,6 +10,13 @@ type LazyIframeProps = {
   // If both are provided, `height` wins.
   height?: number
   heightCap?: number
+  /**
+   * When provided, the iframe loads at this intrinsic width (e.g. 1440 for a
+   * desktop thumbnail) and is CSS-scaled down to fit `width × resolvedHeight`.
+   * Without it, the iframe renders at `width` directly (mobile-narrow if width
+   * is small). Useful for sitemap-style thumbnails that want a desktop render.
+   */
+  desktopWidth?: number
   iframeRef?: (element: HTMLIFrameElement | undefined) => void
   className?: string
   onIframeWheel?: (event: WheelEvent, iframe: HTMLIFrameElement) => void
@@ -25,6 +32,7 @@ export function LazyIframe({
   width,
   height,
   heightCap,
+  desktopWidth,
   iframeRef,
   className,
   onIframeWheel,
@@ -63,10 +71,23 @@ export function LazyIframe({
     let dblClickHandler: ((event: MouseEvent) => void) | undefined
     let gestureHandler: ((event: Event) => void) | undefined
     let resizeObserver: ResizeObserver | undefined
+    let styleElement: HTMLStyleElement | undefined
     const onLoad = () => {
       const document_ = iframe.contentDocument
       if (!document_) return
       attached = document_
+      // Hide Next.js dev chrome (the floating "N" badge, toasts, etc.) so it
+      // doesn't bleed into thumbnails or preview tiles.
+      styleElement = document_.createElement("style")
+      styleElement.textContent = `
+  nextjs-portal,
+  [data-nextjs-toast],
+  [data-nextjs-dev-overlay],
+  #__next-build-watcher {
+    display: none !important;
+  }
+`
+      document_.head.append(styleElement)
       if (onIframeWheel) {
         wheelHandler = (event) => onIframeWheel(event, iframe)
         document_.addEventListener("wheel", wheelHandler, { passive: false })
@@ -96,6 +117,7 @@ export function LazyIframe({
     return () => {
       iframe.removeEventListener("load", onLoad)
       resizeObserver?.disconnect()
+      styleElement?.remove()
       if (attached && wheelHandler) attached.removeEventListener("wheel", wheelHandler)
       if (attached && dblClickHandler) attached.removeEventListener("dblclick", dblClickHandler, { capture: true })
       if (attached && gestureHandler) {
@@ -109,22 +131,31 @@ export function LazyIframe({
   const resolvedHeight =
     height ?? (heightCap !== undefined && heightCap > 0 ? heightCap : undefined)
 
+  const useScaling = desktopWidth !== undefined && desktopWidth > 0
+  const scale = useScaling ? width / desktopWidth : 1
+
   return (
-    <iframe
-      ref={(element) => {
-        localRef.current = element
-        iframeRef?.(element ?? undefined)
-      }}
-      src={shouldLoad ? src : undefined}
-      title={title}
-      scrolling="no"
-      style={{
-        width,
-        height: resolvedHeight,
-        border: 0,
-        display: "block",
-      }}
+    <div
+      style={{ width, height: resolvedHeight, overflow: "hidden", position: "relative" }}
       className={className}
-    />
+    >
+      <iframe
+        ref={(element) => {
+          localRef.current = element
+          iframeRef?.(element ?? undefined)
+        }}
+        src={shouldLoad ? src : undefined}
+        title={title}
+        scrolling="no"
+        style={{
+          width: useScaling ? desktopWidth : width,
+          height: useScaling && resolvedHeight !== undefined ? resolvedHeight / scale : resolvedHeight,
+          border: 0,
+          display: "block",
+          transform: useScaling ? `scale(${scale})` : undefined,
+          transformOrigin: useScaling ? "top left" : undefined,
+        }}
+      />
+    </div>
   )
 }
