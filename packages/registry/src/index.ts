@@ -77,3 +77,27 @@ export {
   type SnapGuide,
   type SnapResult,
 } from "./lib/system-snap.js"
+export {
+  isNodePositions,
+  persistNodePositions,
+  type NodePosition,
+  type NodePositions,
+} from "./lib/node-positions.js"
+export {
+  buildMarketingSitemap,
+  buildFooterSitemap,
+  buildGuideSitemap,
+  layoutTreeSitemap,
+  layoutFlatSitemap,
+  type SitemapNode,
+  type SitemapTree,
+  type SitemapFlat,
+  type PositionedSitemapNode,
+  type SitemapLayout,
+  SITEMAP_EXCLUSIONS,
+  SITEMAP_FOOTER_PATHS,
+  SITEMAP_IFRAME_WIDTH,
+  SITEMAP_IFRAME_HEIGHT,
+  SITEMAP_HORIZONTAL_GAP,
+  SITEMAP_VERTICAL_GAP,
+} from "./lib/sitemap-tree.js"
