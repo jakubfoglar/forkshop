@@ -100,6 +100,7 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
     "@fogma/templates/claude-md": "{aliases.mount}/CLAUDE.md",
     "@fogma/css/fogma": "{aliases.mount}/fogma.css",
     "@fogma/tailwind/fogma-preset": "{aliases.tailwind}/fogma-preset.ts",
+    "@fogma/skill/setup": ".claude/skills/fogma-setup.md",
   }
   for (const [address, dest] of Object.entries(overrides)) {
     const existing = files[address]
@@ -117,12 +118,15 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
 
   const primitiveItems = Object.keys(files).filter(isPrimitiveAddress).sort()
 
+  const skillItems = Object.keys(files).filter((addr) => addr.startsWith("@fogma/skill/")).sort()
+
   // Bundle authoring note:
-  // - `fonts` and `skill` are intentionally empty in v1. Fonts will be populated
-  //   when Raveo woff2 files land in packages/registry/fonts/; the setup skill
-  //   files will land when the setup-skill spec is implemented. Both bundles
-  //   exist so `init` already includes them — adding the assets later won't
-  //   require manifest schema changes.
+  // - `fonts` is intentionally empty in v1; it will be populated when Raveo
+  //   woff2 files land in packages/registry/fonts/. The bundle exists so `init`
+  //   already includes it — adding the assets later won't require manifest
+  //   schema changes.
+  // - `skill` is populated dynamically from any `@fogma/skill/*` addresses
+  //   present in the registry's `src/skill/` directory.
   // - `primitives.deps` mirrors packages/registry/package.json `dependencies`.
   //   Keep the pins in sync when bumping the registry.
   const bundles: Record<string, Bundle> = {
@@ -166,7 +170,7 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
     },
     skill: {
       kind: "asset",
-      items: [],
+      items: skillItems,
     },
     init: {
       kind: "composite",
