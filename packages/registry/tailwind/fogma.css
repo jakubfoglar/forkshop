@@ -1,4 +1,5 @@
 :root {
+  --fogma-canvas: #f3f4f6;   /* gray-100 — the canvas backdrop */
   --fogma-surface: #ffffff;
   --fogma-surface-2: #f7f7f8;
   --fogma-fg: #0a0a0a;
@@ -12,8 +13,9 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --fogma-surface: #0a0a0a;
-    --fogma-surface-2: #171717;
+    --fogma-canvas: #0a0a0a;
+    --fogma-surface: #171717;
+    --fogma-surface-2: #1f1f1f;
     --fogma-fg: #fafafa;
     --fogma-fg-muted: #9ca3af;
     --fogma-border: #262626;

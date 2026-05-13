@@ -480,7 +480,7 @@ function ColorCardInner({
         }}
         className="size-1 shrink-0 rounded-xxs"
       />
-      <span className="truncate text-2xs text-fogma-fg-secondary">{node.name}</span>
+      <span className="truncate text-2xs text-fogma-fg-muted">{node.name}</span>
     </div>
   )
 }

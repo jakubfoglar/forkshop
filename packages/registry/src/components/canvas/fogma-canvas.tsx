@@ -419,7 +419,7 @@ export function FogmaCanvas({
     <FogmaCanvasContext.Provider value={contextValue}>
       <div
         ref={containerRef as React.RefObject<HTMLDivElement>}
-        className="relative flex-1 select-none overflow-hidden"
+        className="relative flex-1 select-none overflow-hidden bg-fogma-canvas"
         style={{ cursor: containerCursor, touchAction: "none" }}
         onClick={onContainerClick}
       >
