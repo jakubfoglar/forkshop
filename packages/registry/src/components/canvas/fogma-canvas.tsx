@@ -39,6 +39,8 @@ type FogmaCanvasContextValue = {
   resetZoom: () => void
   animateToBox: (x: number, y: number, w: number, h: number) => void
   setTransform: (transform: Transform) => void
+  applyWheelInput: (input: WheelInput) => void
+  containerRef: RefObject<HTMLDivElement | null>
 }
 
 const FogmaCanvasContext = createContext<FogmaCanvasContextValue | undefined>(undefined)
@@ -389,8 +391,17 @@ export function FogmaCanvas({
   useImperativeHandle(ref, () => handle, [handle])
 
   const contextValue = useMemo<FogmaCanvasContextValue>(
-    () => ({ transformRef, isInteractingRef, fitToView, resetZoom, animateToBox, setTransform }),
-    [fitToView, resetZoom, animateToBox, setTransform],
+    () => ({
+      transformRef,
+      isInteractingRef,
+      fitToView,
+      resetZoom,
+      animateToBox,
+      setTransform,
+      applyWheelInput: applyWheel,
+      containerRef,
+    }),
+    [fitToView, resetZoom, animateToBox, setTransform, applyWheel, containerRef],
   )
 
   const blockStageInteraction = isSpaceHeld || isPanning

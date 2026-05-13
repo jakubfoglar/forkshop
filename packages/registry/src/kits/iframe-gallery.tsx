@@ -4,6 +4,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { CanvasNode } from "../components/canvas/canvas-node.js"
 import { GuideOverlay } from "../components/canvas/guide-overlay.js"
 import { LazyIframe } from "../components/canvas/lazy-iframe.js"
+import { useFogmaCanvas } from "../components/canvas/fogma-canvas.js"
 import type { GetSnapTargets } from "../hooks/use-draggable-node.js"
 import type { NodePosition, NodePositions } from "../lib/node-positions.js"
 import type { SnapGuide, SnapTarget } from "../lib/system-snap.js"
@@ -285,9 +286,27 @@ function GalleryNodeInner({
   onSelectChange: (id: string, selected: boolean) => void
   onHeightChange: (slug: string, height: number) => void
 }) {
+  const { applyWheelInput, transformRef } = useFogmaCanvas()
+
   const handleBodyHeightSync = useCallback(
     (height: number) => onHeightChange(entry.slug, height),
     [entry.slug, onHeightChange],
+  )
+
+  const handleIframeWheel = useCallback(
+    (event: WheelEvent, iframe: HTMLIFrameElement) => {
+      if (event.ctrlKey || event.metaKey) event.preventDefault()
+      const iframeRect = iframe.getBoundingClientRect()
+      const zoom = transformRef.current?.zoom ?? 1
+      applyWheelInput({
+        deltaX: event.deltaX,
+        deltaY: event.deltaY,
+        pinch: event.ctrlKey || event.metaKey,
+        screenX: iframeRect.left + event.clientX * zoom,
+        screenY: iframeRect.top + event.clientY * zoom,
+      })
+    },
+    [applyWheelInput, transformRef],
   )
 
   return (
@@ -311,6 +330,7 @@ function GalleryNodeInner({
         width={cell.width}
         heightCap={cell.height}
         onBodyHeightSync={handleBodyHeightSync}
+        onIframeWheel={handleIframeWheel}
         className="bg-white shadow-md"
       />
     </CanvasNode>

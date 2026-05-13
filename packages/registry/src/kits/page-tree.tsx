@@ -1,11 +1,13 @@
 "use client"
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import { BackButton } from "../components/canvas/back-button.js"
 import { CanvasNode } from "../components/canvas/canvas-node.js"
 import { GuideOverlay } from "../components/canvas/guide-overlay.js"
 import { LazyIframe } from "../components/canvas/lazy-iframe.js"
 import { ResponsiveFrameView } from "../components/canvas/responsive-frame-view.js"
+import { useFogmaCanvas } from "../components/canvas/fogma-canvas.js"
 import type { GetSnapTargets } from "../hooks/use-draggable-node.js"
 import type { NodePosition, NodePositions } from "../lib/node-positions.js"
 import type { SnapGuide, SnapTarget } from "../lib/system-snap.js"
@@ -140,6 +142,11 @@ function PageTreeInner({
     }
   }
 
+  // Show the back button only when isolation was triggered by internal
+  // double-click. When the host controls isolatedPath externally (e.g. sidebar
+  // navigation), the back button is hidden — the host owns that UI.
+  const showBackButton = controlledIsolatedPath === undefined && internalIsolated !== null
+
   // Isolation view: replace the canvas content with a 3-viewport drill-in.
   if (effectiveIsolated !== null) {
     return (
@@ -147,6 +154,7 @@ function PageTreeInner({
         path={effectiveIsolated}
         src={iframeSrcResolver(effectiveIsolated)}
         viewports={viewports}
+        showBackButton={showBackButton}
         onBack={handleBack}
       />
     )
@@ -291,7 +299,24 @@ function PageTileInner({
   onSelectChange: (id: string, selected: boolean) => void
   onIsolate: (path: string) => void
 }) {
+  const { applyWheelInput, transformRef } = useFogmaCanvas()
   const label = entry.label ?? humanize(entry.path)
+
+  const handleIframeWheel = useCallback(
+    (event: WheelEvent, iframe: HTMLIFrameElement) => {
+      if (event.ctrlKey || event.metaKey) event.preventDefault()
+      const iframeRect = iframe.getBoundingClientRect()
+      const zoom = transformRef.current?.zoom ?? 1
+      applyWheelInput({
+        deltaX: event.deltaX,
+        deltaY: event.deltaY,
+        pinch: event.ctrlKey || event.metaKey,
+        screenX: iframeRect.left + event.clientX * zoom,
+        screenY: iframeRect.top + event.clientY * zoom,
+      })
+    },
+    [applyWheelInput, transformRef],
+  )
 
   return (
     <CanvasNode
@@ -314,6 +339,7 @@ function PageTileInner({
         title={label}
         width={TILE_WIDTH}
         heightCap={TILE_HEIGHT}
+        onIframeWheel={handleIframeWheel}
         className="bg-white shadow-md"
       />
     </CanvasNode>
@@ -328,30 +354,49 @@ function IsolationView({
   path,
   src,
   viewports,
+  showBackButton,
   onBack,
 }: {
   path: string
   src: string
   viewports: number[]
+  showBackButton: boolean
   onBack: () => void
 }) {
+  const { applyWheelInput, transformRef, containerRef } = useFogmaCanvas()
   const [measuredHeight, setMeasuredHeight] = useState<number | undefined>(undefined)
+  // Track when containerRef is populated so the portal can attach.
+  const [containerReady, setContainerReady] = useState(false)
+  useEffect(() => {
+    setContainerReady(!!containerRef.current)
+  }, [containerRef])
 
   const handleBodyHeightChange = useCallback((_id: string, height: number) => {
     setMeasuredHeight(height)
   }, [])
 
-  // Isolation boards in ravineo-web receive wheel events via useFogmaCanvas.
-  // Here we provide a no-op; callers that need scroll-canvas-via-iframe
-  // behaviour can extend this kit or wire their own handler.
-  const handleIframeWheel = useCallback(() => {
-    // no-op — wheel events inside the isolation iframe are not propagated to
-    // the canvas by default. Wrap PageTree in a custom host to override.
-  }, [])
+  const handleIframeWheel = useCallback(
+    (event: WheelEvent, iframe: HTMLIFrameElement) => {
+      if (event.ctrlKey || event.metaKey) event.preventDefault()
+      const iframeRect = iframe.getBoundingClientRect()
+      const zoom = transformRef.current?.zoom ?? 1
+      applyWheelInput({
+        deltaX: event.deltaX,
+        deltaY: event.deltaY,
+        pinch: event.ctrlKey || event.metaKey,
+        screenX: iframeRect.left + event.clientX * zoom,
+        screenY: iframeRect.top + event.clientY * zoom,
+      })
+    },
+    [applyWheelInput, transformRef],
+  )
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
-      <BackButton destinationLabel="Overview" onBack={onBack} />
+      {showBackButton &&
+        containerReady &&
+        containerRef.current &&
+        createPortal(<BackButton destinationLabel="Overview" onBack={onBack} />, containerRef.current)}
       <ResponsiveFrameView
         kind="page"
         path={path}
