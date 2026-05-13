@@ -332,6 +332,19 @@ export function useIframeEditWiring({
         }
       }
       iframeWindow.addEventListener("message", agentMessageHandler)
+
+      // Ask the host to replay current agent state — handles reload mid-edit.
+      // Simulate an iframe-to-host hello so the relay (which listens on
+      // window.addEventListener("message", ...)) sees event.source as the iframe
+      // and can post the snapshot back via source.postMessage.
+      try {
+        window.dispatchEvent(new MessageEvent("message", {
+          data: { type: "forkshop:agent-hello" },
+          source: iframeWindow,
+        }))
+      } catch {
+        // MessageEvent constructor or dispatch rejected; ignore.
+      }
     }
 
     iframeElement.addEventListener("load", handleLoad)
