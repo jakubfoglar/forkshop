@@ -5,8 +5,8 @@ import type { FogmaSelection } from "./fogma-sidebar.js"
 //   #/section/blocks       → { kind: "section", sectionId: "blocks" }
 //   #/section/navigation   → { kind: "section", sectionId: "navigation" }
 //   #/page/about           → { kind: "page", path: "/about" }
-//   #/page/customers/beauty-brand-share-of-influence
-//                          → { kind: "page", path: "/customers/beauty-brand-share-of-influence" }
+//   #/page/customers/acme/dashboard
+//                          → { kind: "page", path: "/customers/acme/dashboard" }
 //   #/block/hero           → { kind: "block", slug: "hero" }
 //   (anything else)        → fall back to default
 

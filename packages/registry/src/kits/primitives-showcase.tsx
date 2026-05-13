@@ -21,13 +21,13 @@ export type PrimitivesShowcaseProps = {
  */
 export function PrimitivesShowcase({ primitives }: PrimitivesShowcaseProps) {
   return (
-    <div className="flex flex-col gap-16">
+    <div className="flex flex-col gap-4">
       {primitives.map((p) => (
         <div
           key={p.id}
-          className="rounded-xl border border-fogma-border bg-fogma-surface p-16"
+          className="rounded-xl border border-fogma-border bg-fogma-surface p-4"
         >
-          <p className="mb-8 font-mono text-xs uppercase tracking-wider text-fogma-fg-tertiary">
+          <p className="mb-2 font-mono text-xs uppercase tracking-wider text-fogma-fg-muted">
             {p.name}
           </p>
           <div>{p.render()}</div>
