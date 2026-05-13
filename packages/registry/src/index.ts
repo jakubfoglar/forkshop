@@ -51,3 +51,29 @@ export {
   type TokenRegistry,
   type ClassLookupEntry,
 } from "./lib/token-registry.js"
+export {
+  buildSystemGraph,
+  type ColorNode,
+  type ColorEdge,
+  type SystemGraph,
+} from "./lib/system-graph.js"
+export {
+  layoutSystem,
+  computeSystemLayout,
+  type BlockEntry,
+  type SystemLayoutOptions,
+  type SystemLayout,
+  type PositionedColorNode,
+  type ColorEdgePath,
+  type PositionedBlockRow,
+  type PositionedBlockViewport,
+  type PositionedPrimitiveGroup,
+  type PrimitiveGroupId,
+} from "./lib/system-layout.js"
+export {
+  applySnap,
+  snapPixelsAt,
+  type SnapTarget,
+  type SnapGuide,
+  type SnapResult,
+} from "./lib/system-snap.js"
