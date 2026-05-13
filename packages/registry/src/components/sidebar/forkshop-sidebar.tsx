@@ -38,7 +38,8 @@ type LucideComponent = ComponentType<
 export type ForkshopSelection =
   | { kind: "section"; sectionId: string }
   | { kind: "page"; path: string }
-  | { kind: "block"; slug: string };
+  | { kind: "block"; slug: string }
+  | { kind: "primitive"; id: string };
 
 /**
  * A single entry in a custom sidebar section (e.g. a block, a design token

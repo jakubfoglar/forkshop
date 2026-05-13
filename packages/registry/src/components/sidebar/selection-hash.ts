@@ -22,6 +22,9 @@ export function serializeSelection(selection: ForkshopSelection): string {
     case "block": {
       return `#/block/${encodeURIComponent(selection.slug)}`
     }
+    case "primitive": {
+      return `#/primitive/${encodeURIComponent(selection.id)}`
+    }
   }
 }
 
@@ -43,6 +46,11 @@ export function parseSelection(hash: string): ForkshopSelection | undefined {
     const slug = decodeURIComponent(value.slice("/block/".length))
     if (slug.length === 0) return
     return { kind: "block", slug }
+  }
+  if (value.startsWith("/primitive/")) {
+    const id = decodeURIComponent(value.slice("/primitive/".length))
+    if (id.length === 0) return
+    return { kind: "primitive", id }
   }
   return
 }
