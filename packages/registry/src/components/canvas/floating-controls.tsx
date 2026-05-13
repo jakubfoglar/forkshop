@@ -29,8 +29,8 @@ export function FloatingControls({
             className={cn(
               "rounded-full px-0.5 py-0.125 text-xs font-medium transition-colors",
               composeEnabled
-                ? "bg-blue-50 text-blue-700 hover:bg-blue-100"
-                : "text-fogma-fg-muted hover:bg-gray-100 hover:text-fogma-fg",
+                ? "bg-fogma-accent/10 text-fogma-accent hover:bg-fogma-accent/20"
+                : "text-fogma-fg-muted hover:bg-fogma-surface-2 hover:text-fogma-fg",
             )}
           >
             Compose
@@ -39,7 +39,7 @@ export function FloatingControls({
         <button
           type="button"
           onClick={onFit}
-          className="rounded-full px-0.5 py-0.125 text-xs font-medium text-fogma-fg-muted hover:bg-gray-100 hover:text-fogma-fg"
+          className="rounded-full px-0.5 py-0.125 text-xs font-medium text-fogma-fg-muted hover:bg-fogma-surface-2 hover:text-fogma-fg"
         >
           Fit
         </button>
@@ -49,7 +49,7 @@ export function FloatingControls({
         <button
           type="button"
           onClick={onResetZoom}
-          className="rounded-full px-0.5 py-0.125 text-xs font-medium text-fogma-fg-muted hover:bg-gray-100 hover:text-fogma-fg"
+          className="rounded-full px-0.5 py-0.125 text-xs font-medium text-fogma-fg-muted hover:bg-fogma-surface-2 hover:text-fogma-fg"
         >
           100%
         </button>
