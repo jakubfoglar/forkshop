@@ -261,6 +261,128 @@ After rendering the Phase 3 proposal, wait for the user's reply. Loop:
 
 ## Phase 5 — Consent for config mutations
 
+Run **after** the user accepts the proposal in Phase 4, but **before** any writes. One prompt per opt-in the user kept after iteration. Each prompt opens with a one-line *why* (what the user gets), then the exact change preview, then a `Proceed?` question.
+
+If the user replies anything other than `y`, treat it as `n`. Each decline is local — declining one opt-in does not cancel the others. After all three prompts (or skips), proceed to Phase 6.
+
+### 5a — Locator.js (only if opt-in [1] kept)
+
+Render verbatim:
+
+```
+I'm about to add Locator.js.
+
+Why: lets you Option-click any element in Fogma to jump to its source in
+your editor.
+
+Here's what I'll do:
+
+  next.config.ts — append turbopack rule:
+    ─────────────────────────────────────────
+    + experimental: {
+    +   turbopack: {
+    +     rules: {
+    +       "*.{js,jsx,ts,tsx}": {
+    +         loaders: ["@locator/webpack-loader"],
+    +       },
+    +     },
+    +   },
+    + },
+    ─────────────────────────────────────────
+
+  <aliases.mount>/layout.tsx — add LocatorInit mount:
+    ─────────────────────────────────────────
+    + import { LocatorInit } from "@/components/fogma/locator-init"
+      …
+    + <LocatorInit />
+    ─────────────────────────────────────────
+
+  package.json — add devDependencies:
+    @locator/runtime, @locator/webpack-loader
+
+Proceed? (y / n / show full file diff)
+```
+
+**If `next.config.ts` already has `experimental.turbopack.rules`:** instead of an append, show a *merge proposal* — what the merged block looks like with the new loader added to the existing rules object. Do not overwrite existing rules.
+
+**If the file is `.js` or `.mjs`:** convert the snippet to that module format. For `.mjs`, use ESM `export default`. For `.js` (CJS), use `module.exports =`.
+
+**If the user requests "show full file diff":** print a complete unified diff of the existing file + the proposed change.
+
+### 5b — Live-AI hook (only if opt-in [2] kept)
+
+Render verbatim:
+
+```
+I'm about to install the live-AI hook.
+
+Why: highlights where Claude is editing right now — sidebar entry pulses,
+the rendered block in the canvas glows. Fogma already updates live on
+HMR; the hook adds the visual signal showing what's changing and where.
+
+Here's what I'll do:
+
+  .claude/hooks/post-tool-use.sh — create (one new file, ~30 lines)
+
+  .claude/settings.json — add hook entry:
+    ─────────────────────────────────────────
+      "hooks": {
+        "PostToolUse": [
+          { "matcher": "Edit|Write|MultiEdit",
+    +       "hooks": [{
+    +         "type": "command",
+    +         "command": ".claude/hooks/post-tool-use.sh"
+    +       }]
+          }
+        ]
+      }
+    ─────────────────────────────────────────
+
+  If .claude/settings.json already has a PostToolUse hook, I'll append a
+  new entry alongside it (not overwrite).
+
+Proceed? (y / n / show full file diff)
+```
+
+**If `.claude/settings.json` does not exist:** create it with the minimal hooks block. Surface this in the preview: *"`.claude/settings.json` does not exist — I'll create it with just the hooks entry."*
+
+**If `.claude/settings.json` already has a `PostToolUse` matcher that includes `Edit|Write|MultiEdit`:** show a merge proposal that adds the Fogma hook entry alongside any existing entries in that matcher's `hooks` array.
+
+### 5c — Cadence note (only if opt-in [3] kept)
+
+Render verbatim:
+
+```
+I'm about to append a Fogma cadence note to your root CLAUDE.md.
+
+Why: teaches Claude to break edits on Fogma-watched files into many small
+Edits instead of one big Write — so you watch the page take shape as the
+agent works, instead of a single flash at the end.
+
+Here's the snippet I'd append (~20 lines):
+  ## Fogma — editing cadence
+  …
+
+  I'll append, not rewrite. The snippet is bracketed with comment markers
+  so the fogma-doc-sync skill can refresh it later without touching your
+  other content.
+
+Proceed? (y / n / show full snippet)
+```
+
+**If root `CLAUDE.md` does not exist:** offer to create it with just the cadence note as a starter file. Surface in the preview: *"No root CLAUDE.md found — I'll create one with the cadence note as a starter."*
+
+**If root `CLAUDE.md` already contains a `<!-- fogma:cadence-note start -->` marker:** skip the prompt, mention in the summary that the note is already in place.
+
+### Cross-prompt rules
+
+- One short *Why* paragraph, never more. Justification, not tutorial.
+- Frame each *Why* as the user-visible benefit, not the technical mechanism.
+- Don't oversell. Honest opt-outs build trust.
+- Default to `n` on parse failure or unrecognized response. Safety over momentum.
+- "show full file diff" / "show full snippet" returns a verbatim diff or the full snippet without truncation. After showing, re-prompt `Proceed? (y / n)`.
+- The user can hand-edit a file after seeing the diff and reply *"I did it myself, skip this"* — accept and move on.
+
 ## Phase 6 — Write the artifacts
 
 ## Phase 7 — Final summary
