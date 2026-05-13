@@ -27,3 +27,18 @@ export { inspectElement, type InspectionResult, type AppliedToken } from "./lib/
 export { resolvePaddingClass, resolveGapClass, extractMarginClasses, type ResolvedSpacingClass } from "./lib/spacing-classes.js"
 export { InspectPanel } from "./components/inspect-panel.js"
 export { LocatorInit } from "./components/locator-init.js"
+export {
+  AgentActivityProvider,
+  useAgentSeenPagePaths,
+  useAgentActivePages,
+  useAgentActiveBlocks,
+  usePageActiveFallback,
+  useIsNavigationActive,
+  useSiteWideActivity,
+  useAgentSubstringsForPage,
+  useAgentSubstringsForBlock,
+  deriveAffectedBlocks,
+} from "./components/agent-activity-context.js"
+export type { ActivityEntry } from "./components/agent-activity-context.js"
+export type { ActivityEntry as AgentActivityStateEntry } from "./lib/agent-activity-state.js"
+export { recordActivity, subscribe } from "./lib/agent-activity-state.js"
