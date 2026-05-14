@@ -173,18 +173,18 @@ Render the proposal in the exact format below. Use box-drawing characters (`┌ 
 ```
 I've read your project. Here's what I see:
 
-  <narrative paragraph from Phase 1, 2-3 sentences>
+<narrative paragraph from Phase 1, 2-3 sentences>
 
 Here's the Forkshop I'd build for you:
 
-  /forkshop sidebar
-  ┌─ <Section 1 name>          (<kit name> kit<, layout: "<layout>" if iframe-gallery>)
-  │   • <bullet 1>
-  │   • <bullet 2>
-  ├─ <Section 2 name>          (<kit name> kit)
-  │   • <bullet 1>
-  └─ <Section N name>          (<kit name> kit)
-      • <bullet 1>
+/forkshop sidebar
+┌─ <Section 1 name>          (<kit name> kit<, layout: "<layout>" if iframe-gallery>)
+│   • <bullet 1>
+│   • <bullet 2>
+├─ <Section 2 name>          (<kit name> kit)
+│   • <bullet 1>
+└─ <Section N name>          (<kit name> kit)
+    • <bullet 1>
 
 Mount path:    <aliases.mount, abbreviated to project-relative>
                (or app/(tools)/forkshop/ — say "use tools group" to switch)
