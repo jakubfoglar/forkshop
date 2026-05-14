@@ -12,6 +12,12 @@ const PREVIEW_HIDE_CHROME_CSS = `
   [data-nextjs-toast],
   [data-nextjs-dialog],
   [data-nextjs-dialog-overlay],
+  [data-nextjs-dev-overlay],
+  [data-nextjs-dev-tools-button],
+  [data-nextjs-route-announcer],
+  [data-nextjs-dev-overlay-toast],
+  [data-nextjs-toast-wrapper],
+  .nextjs-toast-errors-parent,
   [id^="__next-build-watcher"] { display: none !important; }
   html, body { min-height: 0 !important; }
   .min-h-screen { min-height: 0 !important; }
