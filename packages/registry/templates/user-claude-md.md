@@ -276,6 +276,8 @@ The mount page derives a `FileMap` from these entries and hands it to `AgentActi
 - `useAgentActivePrimitives()` — primitives currently being edited.
 - `usePageActiveFallback(path)` — true when a page edit can't be attributed to a specific block (drives the soft all-blocks pulse).
 - `useSiteWideActivity()` — `{ active, recentBasename }` for unmapped file edits.
+- `useAgentSubstringsForPage(path)` / `useAgentSubstringsForBlock(slug)` — substring lists scoped to a single page or block, for targeted text-pulse decoration.
+- `useAllAgentSubstrings()` — array of `{ oldString?, newString? }` records, one per active edit. The iframe relay broadcasts the list unfiltered; each iframe walks its own DOM to decide whether to flash. Used by `AgentIframeRelay`.
 - `useAgentSeenPagePaths()` — sticky set of every page path the agent has touched this session (used by the sidebar to extend its tree; see below).
 
 ### Silent synthetic routes
