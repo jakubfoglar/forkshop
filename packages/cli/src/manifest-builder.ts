@@ -100,12 +100,23 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
     "@forkshop/templates/claude-md": "{aliases.mount}/CLAUDE.md",
     "@forkshop/css/forkshop": "{aliases.mount}/forkshop.css",
     "@forkshop/tailwind/forkshop-preset": "{aliases.tailwind}/forkshop-preset.ts",
-    "@forkshop/skill/setup": ".claude/skills/forkshop-setup.md",
   }
   for (const [address, dest] of Object.entries(overrides)) {
     const existing = files[address]
     if (existing && existing.kind === "text") {
       files[address] = { ...existing, destOverride: dest }
+    }
+  }
+
+  // Skill files all land in .claude/skills/forkshop-<name>.md. Pattern-based
+  // so new skill files (doc-sync, etc.) install correctly without a manifest
+  // edit.
+  for (const address of Object.keys(files)) {
+    if (!address.startsWith("@forkshop/skill/")) continue
+    const name = address.slice("@forkshop/skill/".length)
+    const existing = files[address]
+    if (existing && existing.kind === "text") {
+      files[address] = { ...existing, destOverride: `.claude/skills/forkshop-${name}.md` }
     }
   }
 
