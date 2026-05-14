@@ -983,11 +983,16 @@ Override `FORKSHOP_DEV_URL` if your dev server isn't on `http://localhost:3000`.
 
 ### Template 7a — `next.config.ts` turbopack rule (Locator.js)
 
+Restrict the Locator loader to the user's component and lib trees. Running it on `app/**/{layout,page,not-found,loading,error,route}.{ts,tsx}` breaks Next.js's RSC route discovery on Next 16 (every route 404s after a fresh `.next/` cache miss). Including both `components/` and `src/components/` paths covers both `--src-dir` and flat layouts in one template; the non-matching set no-ops.
+
 ```ts
 experimental: {
   turbopack: {
     rules: {
-      "*.{js,jsx,ts,tsx}": { loaders: ["@locator/webpack-loader"] },
+      "components/**/*.{js,jsx,ts,tsx}": { loaders: ["@locator/webpack-loader"] },
+      "lib/**/*.{js,jsx,ts,tsx}": { loaders: ["@locator/webpack-loader"] },
+      "src/components/**/*.{js,jsx,ts,tsx}": { loaders: ["@locator/webpack-loader"] },
+      "src/lib/**/*.{js,jsx,ts,tsx}": { loaders: ["@locator/webpack-loader"] },
     },
   },
 },

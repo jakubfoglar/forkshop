@@ -20,7 +20,22 @@ const nextConfig = {
     resolveExtensions: [".tsx", ".ts", ".jsx", ".js", ".mjs", ".json"],
     resolveAlias: forkshopAliases,
     rules: {
-      "**/*.{tsx,jsx}": {
+      "components/**/*.{js,jsx,ts,tsx}": {
+        loaders: [
+          { loader: "@locator/webpack-loader", options: { env: "development" } },
+        ],
+      },
+      "lib/**/*.{js,jsx,ts,tsx}": {
+        loaders: [
+          { loader: "@locator/webpack-loader", options: { env: "development" } },
+        ],
+      },
+      "src/components/**/*.{js,jsx,ts,tsx}": {
+        loaders: [
+          { loader: "@locator/webpack-loader", options: { env: "development" } },
+        ],
+      },
+      "src/lib/**/*.{js,jsx,ts,tsx}": {
         loaders: [
           { loader: "@locator/webpack-loader", options: { env: "development" } },
         ],

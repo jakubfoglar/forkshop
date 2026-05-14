@@ -1049,6 +1049,38 @@ This bug needs to land **before** any other polish-round work ships. A user who 
 
 ---
 
+## Bug Q (new — surfaced during polish round) — ravineo-playground/site 404s every route even with Locator rule fully disabled
+
+**Where:** `~/Desktop/ravineo_dev/ravineo-playground/site/` — Next 16.2.2 + `src/` convention + `output: "standalone"` + custom instrumentation + middleware.
+
+**Severity:** Unknown — blocks Bug P verification on fixture (c) but does not affect Forkshop itself.
+
+**Symptom:** Surfaced 2026-05-14 while verifying Bug P. After `rm -rf .next/` and `./node_modules/.bin/next dev`, every route (`/`, `/login`, `/forkshop`) returns HTTP 404 with the exact RSC payload pattern Bug P describes (`pagePath:"__next_builtin__layout.js"` + `__next_builtin__not-found.js`). This happens **even with the Locator turbopack rule fully commented out** — so the original Bug P attribution to the Locator loader was at minimum incomplete, or another factor in this specific project triggers the same RSC route-discovery failure.
+
+**Reproducibility:**
+- Fresh `pnpm create next-app@latest --no-src-dir` (Next 16.2.6) + broad Locator pattern → returns 200 (no repro)
+- Fresh `pnpm create next-app@latest --src-dir` (Next 16.2.6) + broad Locator pattern → returns 200 (no repro)
+- Same fixture downgraded to Next 16.2.2 + broad Locator pattern → returns 200 (no repro)
+- `ravineo-playground/site` (Next 16.2.2, src/, standalone, instrumentation, middleware) with Locator rule **disabled** → returns 404 (still broken)
+
+This points at something specific to the site project's combined configuration, not the Locator loader generically. Candidates worth investigating:
+
+- `output: "standalone"` interaction with Next 16 dev mode
+- `src/instrumentation.ts` doing `await import("@/lib/bq-taxonomy-v6")` at server startup
+- `src/middleware.ts` (the polish file's Bug-P entry says middleware "isn't" the cause per Next docs, but worth re-examining for this specific shape)
+- Stale state in `.next/cache/` (cleared) or `node_modules/.cache` (not cleared during verification)
+- Some other plugin / instrumentation hook
+- Interaction with `@google-cloud/bigquery` server-warming code running before route registration finishes
+
+**Status:** Captured here so the next maintainer doesn't repeat the verification path I took. Bug P's narrowed-pattern fix is still a strict improvement (works on fresh fixtures, no regressions) and was shipped. Whatever's breaking the site is separate and out of scope for this polish round.
+
+**Next steps (future session):**
+1. Reproduce on a minimal copy of the site (delete instrumentation, middleware, BQ deps one by one until 200 returns)
+2. Open a Next.js issue if the trigger isolates to a Next 16.2.x regression
+3. Re-verify Bug P on the site once the underlying cause is identified
+
+---
+
 ## Bug I (limitation, not a bug — capturing for future) — Pages board doesn't auto-handle dynamic routes
 
 **Where:** `packages/registry/src/kits/page-tree.tsx` — and how the setup skill populates the pages list.
