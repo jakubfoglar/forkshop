@@ -1,6 +1,6 @@
 ---
 name: forkshop-live-editing
-description: Auto-applies to any Claude session editing files under `components/forkshop/`, `lib/forkshop/`, `app/forkshop/`, `components/ui/`, `components/blocks/`, or any block file referenced in `forkshop.config.ts`. Instructs Claude to chunk large rewrites into many small `Edit`s, prefer `MultiEdit` for multi-region changes, and avoid `Write` when an `Edit` would suffice. Activates implicitly when editing those paths — no invocation phrase needed.
+description: Auto-applies to any Claude session editing files under `**/forkshop/**` (matches both flat `components/forkshop/`, `lib/forkshop/`, `app/forkshop/` and the src-dir variants `src/components/forkshop/`, `src/lib/forkshop/`, `src/app/forkshop/`), `**/components/ui/**`, `**/components/blocks/**`, or any block file referenced in `forkshop.config.ts`. Instructs Claude to chunk large rewrites into many small `Edit`s, prefer `MultiEdit` for multi-region changes, and avoid `Write` when an `Edit` would suffice. Activates implicitly when editing those paths — no invocation phrase needed.
 ---
 
 # Forkshop — live-editing cadence

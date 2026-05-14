@@ -1,6 +1,6 @@
 ---
 name: forkshop-doc-sync
-description: User-invoked when `app/forkshop/CLAUDE.md` has drifted from the actual Forkshop installation — kits added or removed, primitives renamed, hooks/exports changed in `@forkshop/registry`, opt-in features toggled, paths customized. Scans the installation, diffs against the documented surface, proposes section-by-section updates while preserving user-authored rationale. Activates on "sync Forkshop docs", "refresh Forkshop CLAUDE.md", "/forkshop-doc-sync".
+description: User-invoked when `<aliases.mount>/CLAUDE.md` (resolves to `app/forkshop/CLAUDE.md` for flat layouts or `src/app/forkshop/CLAUDE.md` for src-dir layouts) has drifted from the actual Forkshop installation — kits added or removed, primitives renamed, hooks/exports changed in `@forkshop/registry`, opt-in features toggled, paths customized. Scans the installation, diffs against the documented surface, proposes section-by-section updates while preserving user-authored rationale. Activates on "sync Forkshop docs", "refresh Forkshop CLAUDE.md", "/forkshop-doc-sync".
 ---
 
 # Forkshop — doc sync

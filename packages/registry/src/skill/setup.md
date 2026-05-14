@@ -1155,8 +1155,10 @@ Append verbatim:
 <!-- forkshop:cadence-note start - managed; do not edit body, only delete the block -->
 ## Forkshop — editing cadence
 
-When editing files in `components/forkshop/`, `lib/forkshop/`, `app/forkshop/`, or any
-block referenced in `forkshop.config.ts`, prefer many small Edits over one Write.
+When editing files under any `**/forkshop/**` directory (covers both flat and `src/`
+layouts: `components/forkshop/`, `lib/forkshop/`, `app/forkshop/`, plus the
+`src/`-prefixed variants), or any block referenced in `forkshop.config.ts`,
+prefer many small Edits over one Write.
 Forkshop's live preview emits a notification per file write, so:
 
 - Use `MultiEdit` when one change spans multiple regions (single disk write,
