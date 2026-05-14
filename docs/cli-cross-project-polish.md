@@ -818,6 +818,112 @@ Test in both an empty install and one with existing boards.
 
 ---
 
+## Bug O — URL doesn't reflect Forkshop selection (no hash sync); regression from Ravineo Fogma
+
+**Where:** the Forkshop mount component (probably `packages/registry/src/templates/forkshop-page.tsx` or wherever Template 5 generates the user's `app/forkshop/page.tsx`) — needs to consume `selection-hash.ts` to keep URL in sync with selection.
+
+**Severity:** Medium. Doesn't break functionality but loses four useful behaviors:
+
+1. **Shareable links** — can't send a teammate "open this Forkshop view" via URL
+2. **Browser back/forward** — keyboard shortcuts and back-button don't navigate within Forkshop
+3. **Refresh persistence** — F5 / Cmd+R always returns to the default sidebar entry, losing context
+4. **Tab restoration** — closing and reopening the browser loses your current view
+
+The original Ravineo Fogma has this working. Forkshop OSS regressed during extraction.
+
+### Symptom
+
+Reported in ravineo-playground/site: navigate the Forkshop sidebar from "Pages" to "Discover" to "Design System" — URL stays at `localhost:3002/forkshop` throughout. In Ravineo Fogma, the URL would update to `localhost:3000/fogma#pages/discover` or similar as you drilled in.
+
+### Root cause investigation
+
+The extraction sub-spec listed `selection-hash.ts` as one of the sidebar files to port (Task 8 of the extraction plan). Two possible failure modes:
+
+1. **File ported, wiring not done.** `selection-hash.ts` exists with `serializeSelection()` / `parseSelection()` exports, but the Forkshop mount component never calls them. The playground worked without URL sync because users never tested deep linking or refresh; the extraction PR didn't verify hash sync as a feature.
+
+2. **Both ported but something was dropped during a later refactor.** Possible if any of the renames or the rebrand from fogma→forkshop touched the wiring code.
+
+First step in the fix: check whether `packages/registry/src/components/sidebar/selection-hash.ts` (or wherever it lives) exists and exports the right helpers. If yes → just wiring is missing. If no → port it from Ravineo Fogma's `app/(tools)/fogma/sidebar/selection-hash.ts`.
+
+### Fix
+
+In the Forkshop mount component (the one Template 5 generates), wire up three things:
+
+```tsx
+"use client"
+import { useEffect, useState } from "react"
+import { ForkshopCanvas, FogmaSidebar /* etc. */ } from "@/components/forkshop"
+import { serializeSelection, parseSelection } from "@/components/forkshop/sidebar/selection-hash"
+
+const defaultSelection = { kind: "foundations" }  // or whatever your project's default is
+
+export default function ForkshopPage() {
+  // Hydration-safe initial state (don't read location.hash in initializer)
+  const [selection, setSelection] = useState(defaultSelection)
+  const [hasHydrated, setHasHydrated] = useState(false)
+
+  // 1. On mount, hydrate from location.hash
+  useEffect(() => {
+    const fromHash = parseSelection(window.location.hash.replace(/^#/, ""))
+    if (fromHash) setSelection(fromHash)
+    setHasHydrated(true)
+  }, [])
+
+  // 2. On selection change, update location.hash (without triggering navigation)
+  useEffect(() => {
+    if (!hasHydrated) return
+    const newHash = "#" + serializeSelection(selection)
+    if (window.location.hash !== newHash) {
+      window.history.replaceState(null, "", newHash)
+    }
+  }, [selection, hasHydrated])
+
+  // 3. Listen for browser back/forward (popstate)
+  useEffect(() => {
+    function onPopState() {
+      const fromHash = parseSelection(window.location.hash.replace(/^#/, ""))
+      setSelection(fromHash ?? defaultSelection)
+    }
+    window.addEventListener("popstate", onPopState)
+    return () => window.removeEventListener("popstate", onPopState)
+  }, [])
+
+  // ... render the canvas + sidebar with the selection state
+}
+```
+
+Three subtleties to get right:
+
+- **`useState(defaultSelection)` not `useState(() => parseSelection(...))`** — reading `location.hash` in the initializer causes server/client hydration mismatch. Hydrate via post-mount effect with a `hasHydrated` flag. This is the same pattern Ravineo Fogma uses (mentioned in its CLAUDE.md as "the hydration fix in fogma-tool.tsx").
+- **`replaceState`, not `pushState`** — every selection change shouldn't add a history entry, that would pollute the back stack. Use `replaceState` for normal navigation and `pushState` only for explicit "this is a new view I want back-button-able" moments (probably not needed in v1).
+- **The popstate listener handles back/forward correctly** — without it, hitting Back would change the URL but not the visible selection.
+
+### Verification
+
+After fix, in any Forkshop install:
+
+1. Open `/forkshop`, click "Pages" → URL becomes `/forkshop#pages` (or whatever serialized form)
+2. Click into a specific page → URL updates further (`/forkshop#page/about`)
+3. Hit Cmd+R → page reloads, returns to that same selection
+4. Hit browser Back → returns to Pages list (or previous selection)
+5. Copy URL, paste in new tab → opens at that same selection
+6. Forward/back work as expected throughout
+
+No console errors during these navigations.
+
+### Worth checking while in the file
+
+Other potentially-missing wiring from the Ravineo Fogma — these are all things the original tool does that might have been quietly lost:
+
+- **Auto-fit-to-view on selection change** (`fogma-canvas.tsx`'s `fitToView` on selection.kind change)
+- **Transform memory** (save canvas zoom/pan when leaving sitemap→page, restore on return)
+- **iframeKey bump on canvas-kind changes** (forces fresh iframe mount)
+- **Fade transition between canvases** (`useNavigationStack` + snapshot-of-outgoing-canvas pattern)
+
+None of these are individually as visible as the URL sync, but if one or more is missing, Forkshop feels less polished than its source. Worth a quick grep audit during the polish round to confirm they all made it across.
+
+---
+
 ## Bug I (limitation, not a bug — capturing for future) — Pages board doesn't auto-handle dynamic routes
 
 **Where:** `packages/registry/src/kits/page-tree.tsx` — and how the setup skill populates the pages list.
@@ -861,10 +967,11 @@ These were surfaced earlier and have been resolved. Listed here so the next Clau
 8. **Bug A eighth** (decouple dep-install from pnpm). Mechanical and isolated.
 9. **Bug D ninth** (Next 15+ turbopack syntax). One-file template edit; do while in the skill markdown.
 10. **Bug E tenth** (path-flexible skill triggers). Same file family as D; cheap to fix at the same time.
-11. **Bug N eleventh** (user-project CLAUDE.md doesn't enforce canvas-primitive default for custom boards). Documentation fix; medium-effort because the section needs to be well-written and prominently placed near the top.
-12. **Bug C twelfth** (Phase 3 narrative leading whitespace). Cosmetic.
-13. **Bug F thirteenth** (drop redundant layout step). Smallest scope. **Note:** revisit in light of Bug J's fix — if a Forkshop layout.tsx is now part of the install, this "redundant layout" framing may shift. Decide during fix.
-14. **Bug I — skip.** Future kit-polish work, out of scope here.
+11. **Bug O eleventh** (URL hash sync missing; back/forward/refresh/share-links all regressed from Ravineo Fogma). Wire `selection-hash.ts` into the mount component with hydration-safe initial state + popstate listener.
+12. **Bug N twelfth** (user-project CLAUDE.md doesn't enforce canvas-primitive default for custom boards). Documentation fix; medium-effort because the section needs to be well-written and prominently placed near the top.
+13. **Bug C thirteenth** (Phase 3 narrative leading whitespace). Cosmetic.
+14. **Bug F fourteenth** (drop redundant layout step). Smallest scope. **Note:** revisit in light of Bug J's fix — if a Forkshop layout.tsx is now part of the install, this "redundant layout" framing may shift. Decide during fix.
+15. **Bug I — skip.** Future kit-polish work, out of scope here.
 
 **Re-test in all known projects after the polish round**:
 - The original `create-next-app --no-src-dir` cold fixture (regression check)
