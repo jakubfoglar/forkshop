@@ -1,36 +1,38 @@
 import { subscribe } from "@forkshop/lib/agent-activity-state"
 
-export async function GET(req: Request) {
+export const dynamic = "force-dynamic"
+
+export function GET(req: Request): Response {
   if (process.env.NODE_ENV === "production") {
     return new Response(null, { status: 403 })
   }
 
   const encoder = new TextEncoder()
 
-  const stream = new ReadableStream({
+  const stream = new ReadableStream<Uint8Array>({
     start(controller) {
       const send = (event: string, data: unknown) => {
-        controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`))
+        try {
+          controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`))
+        } catch {
+          // Stream closed.
+        }
       }
 
       // Initial snapshot + every subsequent broadcast goes as `event: activity`.
       const unsub = subscribe((entries) => {
-        try {
-          send("activity", { activeFiles: entries })
-        } catch {
-          // Controller already closed; ignore.
-        }
+        send("activity", { activeFiles: entries })
       })
 
       const heartbeat = setInterval(() => {
         try {
           controller.enqueue(encoder.encode(`:keepalive\n\n`))
         } catch {
-          // Controller closed; clearInterval below handles it.
+          // Stream closed; clearInterval below handles it.
         }
       }, 15000)
 
-      const cleanup = () => {
+      req.signal.addEventListener("abort", () => {
         clearInterval(heartbeat)
         unsub()
         try {
@@ -38,17 +40,15 @@ export async function GET(req: Request) {
         } catch {
           // Already closed.
         }
-      }
-
-      req.signal.addEventListener("abort", cleanup)
+      })
     },
   })
 
   return new Response(stream, {
     headers: {
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
-      Connection: "keep-alive",
+      "content-type": "text/event-stream",
+      "cache-control": "no-cache, no-transform",
+      connection: "keep-alive",
     },
   })
 }
