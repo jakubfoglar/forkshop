@@ -653,6 +653,66 @@ Test on multiple route shapes (static, dynamic, block-isolation, kit-rendered, e
 
 ---
 
+## Bug M — Next.js 15+ dev indicator visible inside Forkshop iframes
+
+**Where:** the iframe-CSS injection in `packages/registry/src/components/canvas/use-iframe-preview.ts` (or wherever PREVIEW_EDIT_CSS is built). The CSS selectors that hide Next's dev chrome are out of date for Next 15+.
+
+**Severity:** Medium-cosmetic. Doesn't break functionality, but pollutes every iframe with Next's floating "Rendering... Compiling..." pill, which:
+
+- Visually competes with Forkshop's own UI (AgentSelectionChip lives in similar canvas space)
+- Confuses users who think it might be a Forkshop indicator (the playground/site user expected Forkshop's "Claude editing..." chip and saw Next's pill instead, didn't realize they were different things)
+- Defeats the "the iframe is your real app" illusion — Next's dev UI shouldn't bleed through
+
+### Symptom
+
+In a project running Next 15 or 16, after install + `npm run dev`, every Forkshop iframe has a small floating pill at the bottom-left corner showing "Rendering...", "Compiling...", or similar Next dev-tools state. This persists across all three viewport tiles.
+
+### Root cause
+
+Forkshop's iframe-CSS injection includes selectors to hide Next.js's dev chrome — most likely targeting Next 14's DOM (`[data-nextjs-dev-overlay-toast]`, older portal class names, etc.). Next 15 introduced a redesigned dev indicator that mounts a new `nextjs-portal` custom element with `[data-nextjs-dev-overlay]` (and related) attributes; the old selectors don't match, so the pill renders normally inside iframes.
+
+### Fix
+
+Expand the iframe-CSS injection to cover Next 15+'s new selectors. Concrete addition:
+
+```css
+/* Hide Next.js 15+ dev tools UI inside Forkshop iframes */
+nextjs-portal,
+[data-nextjs-dev-overlay],
+[data-nextjs-dev-tools-button],
+[data-nextjs-toast],
+[data-nextjs-route-announcer] {
+  display: none !important;
+}
+
+/* Keep the older Next 14 selectors that already worked, for compat */
+[data-nextjs-dev-overlay-toast],
+[data-nextjs-toast-wrapper],
+.nextjs-toast-errors-parent {
+  display: none !important;
+}
+```
+
+Inject this into the iframe document the same way `PREVIEW_EDIT_CSS` is currently injected (probably via a `<style>` element in `useIframePreview`'s `onLoad` handler).
+
+### Worth checking while in the file
+
+Other dev-chrome that might bleed through:
+
+- **React DevTools highlight overlay** (when the user has the extension and "Highlight updates" enabled) — probably can't be hidden via CSS; document as a known limitation if so
+- **Vercel Analytics dev banner** (if the user uses `@vercel/analytics` in dev) — has its own DOM, check Vercel's docs for selectors
+- **Sentry's dev-mode "session replay" indicator** — niche, but worth a quick grep
+
+None of these are urgent for v1; just batch the obvious ones into the same iframe-CSS pass.
+
+### Verification
+
+After fix, install Forkshop in a Next 16 project (the playground/site is a perfect test). Open `/forkshop`. The iframes should render their content with **zero Next.js dev indicators visible**. Compiling activity still happens (Next.js is still doing HMR), it's just invisible inside the iframes — which is the right behavior.
+
+The user's own dev-tab (NOT inside Forkshop) should still show the Next dev indicator normally — Forkshop's CSS only applies inside iframes.
+
+---
+
 ## Bug I (limitation, not a bug — capturing for future) — Pages board doesn't auto-handle dynamic routes
 
 **Where:** `packages/registry/src/kits/page-tree.tsx` — and how the setup skill populates the pages list.
@@ -688,16 +748,17 @@ These were surfaced earlier and have been resolved. Listed here so the next Clau
 
 1. **Bug J first** (Forkshop inherits root-layout chrome). Highest visible impact — users see their own site's navbar wrapped around Forkshop. Drop a `src/app/forkshop/layout.tsx` with a fixed-overlay wrapper. Simple, isolated.
 2. **Bug G second** (iframe drift / infinite-grow). Equally visible — iframes don't render right. Inject viewport-decoupling CSS in the iframe-preview hook.
-3. **Bug L third** (HMR doesn't propagate into iframes). Investigation-heavy but high-impact. Either fix HMR plumbing OR force iframe reload on agent-edit events. Worth doing in the same session as G+H since you'll already be in the iframe wiring code.
-4. **Bug H fourth** (LocatorInit mount location). Tied to G/L — same "iframe behavior is broken" cluster. Move LocatorInit into the user's root layout.
-5. **Bug K fifth** (hook-script port detection + fallback). Without this, live-AI silently doesn't fire on any non-3000 port. Two parts: setup-time detection from package.json + runtime port-trying fallback in the hook.
-6. **Bug B sixth** (CLI src/ convention detection). Now you can reliably install in any project without manual file moves.
-7. **Bug A seventh** (decouple dep-install from pnpm). Mechanical and isolated.
-8. **Bug D eighth** (Next 15+ turbopack syntax). One-file template edit; do while in the skill markdown.
-9. **Bug E ninth** (path-flexible skill triggers). Same file family as D; cheap to fix at the same time.
-10. **Bug C tenth** (Phase 3 narrative leading whitespace). Cosmetic.
-11. **Bug F eleventh** (drop redundant layout step). Smallest scope. **Note:** revisit in light of Bug J's fix — if a Forkshop layout.tsx is now part of the install, this "redundant layout" framing may shift. Decide during fix.
-12. **Bug I — skip.** Future kit-polish work, out of scope here.
+3. **Bug L third** (HMR doesn't propagate into iframes). Investigation-heavy but high-impact. Either fix HMR plumbing OR force iframe reload on agent-edit events. Worth doing in the same session as G+M+H since you'll already be in the iframe wiring code.
+4. **Bug M fourth** (Next 15+ dev indicator visible in iframes). Same file family as G+L — the iframe-CSS injection. Cheap to add the missing selectors while you're already there.
+5. **Bug H fifth** (LocatorInit mount location). Tied to G/L/M — same "iframe behavior is broken" cluster. Move LocatorInit into the user's root layout.
+6. **Bug K sixth** (hook-script port detection + fallback). Without this, live-AI silently doesn't fire on any non-3000 port — and the AgentSelectionChip "Claude editing..." pill never appears, which users notice and conflate with Bug M's symptom.
+7. **Bug B seventh** (CLI src/ convention detection). Now you can reliably install in any project without manual file moves.
+8. **Bug A eighth** (decouple dep-install from pnpm). Mechanical and isolated.
+9. **Bug D ninth** (Next 15+ turbopack syntax). One-file template edit; do while in the skill markdown.
+10. **Bug E tenth** (path-flexible skill triggers). Same file family as D; cheap to fix at the same time.
+11. **Bug C eleventh** (Phase 3 narrative leading whitespace). Cosmetic.
+12. **Bug F twelfth** (drop redundant layout step). Smallest scope. **Note:** revisit in light of Bug J's fix — if a Forkshop layout.tsx is now part of the install, this "redundant layout" framing may shift. Decide during fix.
+13. **Bug I — skip.** Future kit-polish work, out of scope here.
 
 **Re-test in all known projects after the polish round**:
 - The original `create-next-app --no-src-dir` cold fixture (regression check)
