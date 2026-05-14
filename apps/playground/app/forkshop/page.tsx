@@ -54,8 +54,18 @@ export default function ForkshopPage() {
           selection={selection}
           onSelect={setSelection}
           sections={[
-            { id: "design-system", title: DesignSystemBoard.defaultTitle, icon: DesignSystemBoard.icon },
-            { id: "components", title: IframeGallery.defaultTitle, icon: IframeGallery.icon },
+            {
+              id: "design-system",
+              title: DesignSystemBoard.defaultTitle,
+              icon: DesignSystemBoard.icon,
+              entries: forkshopConfig.primitives.map((p) => ({ slug: p.id, name: p.name })),
+            },
+            {
+              id: "components",
+              title: IframeGallery.defaultTitle,
+              icon: IframeGallery.icon,
+              entries: forkshopConfig.blocks.map((b) => ({ slug: b.slug, name: b.name })),
+            },
             { id: "pages", title: PageTree.defaultTitle, icon: PageTree.icon },
           ]}
           routes={PAGE_ROUTES}
