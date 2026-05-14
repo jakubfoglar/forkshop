@@ -73,7 +73,7 @@ Kit-worthy criteria: at least two production projects would use the same board s
 To use an existing kit:
 
 ```tsx
-import { DesignSystemBoard } from "@forkshop/registry"
+import { DesignSystemBoard } from "@/components/forkshop/kits/design-system-board"
 
 export function MyDesignBoard({ tailwindConfig, tokenRegistry }) {
   return (
@@ -92,7 +92,9 @@ Each kit accepts typed props — see the `*Props` types exported alongside each 
 Every kit ships with a  and  static property so you get sensible zero-config sidebar wiring:
 
 ```tsx
-import { DesignSystemBoard, IframeGallery, PageTree } from "@forkshop/registry"
+import { DesignSystemBoard } from "@/components/forkshop/kits/design-system-board"
+import { IframeGallery } from "@/components/forkshop/kits/iframe-gallery"
+import { PageTree } from "@/components/forkshop/kits/page-tree"
 
 // In your ForkshopSidebar sections array:
 sections={[
@@ -109,7 +111,8 @@ Override either prop freely —  is just a string and  is a Lucide icon componen
  is a preselected set of Lucide icons for Forkshop's known concepts. Use it instead of importing from  directly to keep the visual identity consistent:
 
 ```tsx
-import { ForkshopIcon, forkshopIcons } from "@forkshop/registry"
+import { ForkshopIcon } from "@/components/forkshop/icon"
+import { forkshopIcons } from "@/lib/forkshop/icons"
 
 // Render an icon:
 <ForkshopIcon icon={forkshopIcons.designSystem} className="size-4" />
@@ -127,7 +130,7 @@ Available keys: , , , , , , , , , , , , , , , , .
 A node is a `<CanvasNode>` with custom children. The node handles drag, label, and outline; you control what renders inside.
 
 ```tsx
-import { CanvasNode } from "@forkshop/registry"
+import { CanvasNode } from "@/components/forkshop/canvas/canvas-node"
 
 // Inside your board component:
 <CanvasNode
@@ -148,7 +151,8 @@ Node positions are persisted to `layouts/system.json` via POST to `/api/forkshop
 For iframe-based nodes, combine with `useIframePreview` to lazy-load and auto-size:
 
 ```tsx
-import { LazyIframe, useIframePreview } from "@forkshop/registry"
+import { LazyIframe } from "@/components/forkshop/canvas/lazy-iframe"
+import { useIframePreview } from "@/lib/forkshop/hooks/use-iframe-preview"
 
 function MyIframeNode({ url, width }) {
   const { iframeRef, height, loaded } = useIframePreview({ url, width })
@@ -196,7 +200,7 @@ Locator injects source-location attributes at build time (`data-source-file`, `d
 ### DesignSystemBoard
 
 ```tsx
-import { DesignSystemBoard, type DesignSystemBoardProps } from "@forkshop/registry"
+import { DesignSystemBoard, type DesignSystemBoardProps } from "@/components/forkshop/kits/design-system-board"
 ```
 
 Renders the full design-system canvas: color graph (raw tokens → semantic aliases as edges), primitive component frames (buttons, badges, inputs), and a typography showcase. Accepts `tailwindConfig` + `tokenRegistry` (built with `buildTokenRegistry`).
@@ -206,7 +210,7 @@ Use this for your **Design** board.
 ### IframeGallery
 
 ```tsx
-import { IframeGallery, type IframeGalleryProps, type IframeGalleryEntry } from "@forkshop/registry"
+import { IframeGallery, type IframeGalleryProps, type IframeGalleryEntry } from "@/components/forkshop/kits/iframe-gallery"
 ```
 
 Stacks or grids a list of iframe entries on the canvas. Each entry has a `slug`, `url`, `label`, and optional `width`. Handles lazy loading, auto-height sizing, click-to-select, and double-click-to-isolate.
@@ -216,7 +220,7 @@ Use this for your **Blocks** or **Components** board.
 ### PageTree
 
 ```tsx
-import { PageTree, type PageTreeProps, type PageTreeEntry } from "@forkshop/registry"
+import { PageTree, type PageTreeProps, type PageTreeEntry } from "@/components/forkshop/kits/page-tree"
 ```
 
 Renders your site sitemap as a tree of iframe tiles. Each entry is a route. Handles layout, click-to-select, and drill-in to 3-viewport isolation.

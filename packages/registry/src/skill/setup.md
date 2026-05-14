@@ -636,13 +636,13 @@ Templates use `{{snake_case}}` placeholder substitution. Multi-line placeholders
 - **`{{board_renders}}`** — one conditional render per accepted section, 10-space indented. Pattern: `{view === "<slug>" && <{{board_name}}BoardView />}`. The pages board gets the extra `isolatedPath` + `onBack` props (see Template 5).
 - **`{{aliases.mount}}`** — resolved from `forkshop.json` aliases at write time; defaults to `app/forkshop` if absent.
 
-**Note on the tailwind config import path in Template 1:** the templates assume the typical mount path `app/forkshop/`, where `@/../tailwind.config` resolves to the repo-root `tailwind.config.{ts,js}`. If the user's `aliases.mount` is nested deeper (e.g., `app/(tools)/forkshop/`), adjust the relative segments accordingly — `@/../tailwind.config` should always resolve to the repo-root tailwind config. If the project's `@` alias maps somewhere other than the repo root, use the explicit relative path that lands on `tailwind.config.{ts,js}` from the mount directory.
+**Note on the tailwind config import path in Template 1:** the template assumes the create-next-app default `"@/*": ["./*"]` tsconfig mapping, where `@/tailwind.config` resolves to the repo-root `tailwind.config.{ts,js}`. If the project's `@/*` maps somewhere other than the repo root (e.g. to `./src/*`), replace the import with the explicit relative path that lands on `tailwind.config.{ts,js}` from the mount directory.
 
 ### Template 1 — `forkshop.config.tsx` (always `.tsx` — primitives use JSX)
 
 ```tsx
 import type { Config } from "tailwindcss"
-import tailwindConfig from "@/../tailwind.config"
+import tailwindConfig from "@/tailwind.config"
 {{primitive_imports}}
 
 export const forkshopConfig = {
@@ -689,7 +689,8 @@ export const forkshopConfig = {
 "use client"
 
 import { useRef } from "react"
-import { ForkshopCanvas, DesignSystemBoard } from "@forkshop/registry"
+import { ForkshopCanvas } from "@/components/forkshop/canvas/forkshop-canvas"
+import { DesignSystemBoard } from "@/components/forkshop/kits/design-system-board"
 import { forkshopConfig } from "./forkshop.config"
 
 // Stage dimensions for the design system board.
@@ -724,7 +725,8 @@ export default function {{board_name}}BoardView() {
 "use client"
 
 import { useRef } from "react"
-import { ForkshopCanvas, IframeGallery } from "@forkshop/registry"
+import { ForkshopCanvas } from "@/components/forkshop/canvas/forkshop-canvas"
+import { IframeGallery } from "@/components/forkshop/kits/iframe-gallery"
 import { forkshopConfig } from "./forkshop.config"
 
 // Stack layout: viewport width 1200, blocks stacked ~600px each.
@@ -755,7 +757,9 @@ export default function {{board_name}}BoardView() {
 "use client"
 
 import { useRef, useState } from "react"
-import { ForkshopCanvas, PageTree, responsiveFrameStageDimensions } from "@forkshop/registry"
+import { ForkshopCanvas } from "@/components/forkshop/canvas/forkshop-canvas"
+import { PageTree } from "@/components/forkshop/kits/page-tree"
+import { responsiveFrameStageDimensions } from "@/components/forkshop/canvas/responsive-frame-view"
 import { forkshopConfig } from "./forkshop.config"
 
 // Grid view dimensions auto-scale with entries; pick generous defaults.
@@ -821,15 +825,12 @@ export default function {{board_name}}BoardView({
 "use client"
 
 import { useState } from "react"
-import {
-  ForkshopSidebar,
-  LocatorInit,
-  AgentActivityProvider,
-  type ForkshopSelection,
-  DesignSystemBoard,
-  IframeGallery,
-  PageTree,
-} from "@forkshop/registry"
+import { ForkshopSidebar, type ForkshopSelection } from "@/components/forkshop/sidebar/forkshop-sidebar"
+import { LocatorInit } from "@/components/forkshop/locator-init"
+import { AgentActivityProvider } from "@/components/forkshop/agent-activity-context"
+import { DesignSystemBoard } from "@/components/forkshop/kits/design-system-board"
+import { IframeGallery } from "@/components/forkshop/kits/iframe-gallery"
+import { PageTree } from "@/components/forkshop/kits/page-tree"
 {{board_imports}}
 import { forkshopConfig } from "./forkshop.config"
 

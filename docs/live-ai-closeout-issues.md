@@ -108,14 +108,35 @@ somewhere other than the repo root. Update the matching docs in
 
 ---
 
-## Status — stopping per the "2-3 issues" budget
+**Resolved (per-symbol imports, design call from Jakub).** Templates 2/3/4/5
+in `setup.md` and every code-block import in `templates/user-claude-md.md`
+were rewritten to import each symbol from its actual user-side destination
+(`@/components/forkshop/...`, `@/lib/forkshop/...`). The playground's
+`workspace:*` + `transpilePackages` plumbing is no longer load-bearing for a
+user install. Resolved by commit
+`fix(templates): switch to per-symbol imports + correct tailwind config path for cold-fixture install`.
 
-The original brief said: *"If you find more than 2-3 issues, stop and report
-back before continuing — that's a signal the spec needs adjustment, not just
-bug fixes."* I'm at 3, and 2 + 3 both stem from the same root cause: the
-setup.md templates were validated against the playground's monorepo /
-workspace setup, not against a real `npx forkshop init` install on a fresh
-create-next-app. Fixing them is a coordinated edit across the templates, the
-CLI rewriter, possibly the manifest's `topLevelBarrel` exclusion, and a doc
-sync — not a one-line fix per issue. Recommend pausing for design alignment
-before I continue.
+The four prose mentions of `@forkshop/registry` in `user-claude-md.md` (lines
+28, 49, 54–55, 61) were left as-is — they're descriptive narrative, not
+imports, and don't break the install. Worth a follow-up doc sweep to align
+with the per-symbol model.
+
+---
+
+## Re-test result (after Issues 1–3 fixed)
+
+Cold fixture rendered cleanly end-to-end:
+
+- `pnpm dev` → `/forkshop` returns HTTP 200 with 18 KB of Forkshop UI markup
+  (`<aside>` sidebar + `forkshop-canvas` stage).
+- `Edit` tool on `app/page.tsx` in the fixture fires the hook (`curl status=200`),
+  the API records the activity, and the SSE stream broadcasts:
+  ```
+  event: activity
+  data: {"activeFiles":[{"filePath":"app/page.tsx","oldString":"…","newString":"…","lastSeenAt":…}]}
+  ```
+- The home page `/` re-renders with the new substring, so the iframe DOM
+  contains the text the AgentIframeRelay will flash. Visual confirmation
+  (sidebar dot + frame glow + text pulse) needs a real browser — not
+  executable from this session — but every data-plane step on the path to
+  those decorations succeeded.
