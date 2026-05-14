@@ -1,7 +1,5 @@
-import { exec } from "node:child_process"
-import { promisify } from "node:util"
 import pc from "picocolors"
-import { buildInstallCommand, detectPackageManager } from "../detect-pm.js"
+import { detectPackageManager } from "../detect-pm.js"
 import { copyManifestFiles, findCollisions } from "../copy-files.js"
 import { detectSrcPrefix } from "../detect-src-dir.js"
 import { writeForkshopJson } from "../forkshop-json.js"
@@ -10,8 +8,7 @@ import { type ForkshopJson, type Manifest } from "../manifest-schema.js"
 import { preflightInit } from "../preflight.js"
 import { resolveBundles } from "../resolve-bundles.js"
 import { resolveDestination } from "../resolve-destination.js"
-
-const execAsync = promisify(exec)
+import { mergeDepsIntoPackageJson } from "../write-deps.js"
 
 export interface InitOptions {
   projectRoot: string
@@ -103,18 +100,18 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
     fileAddresses: resolved.fileAddresses,
   })
 
-  // 7. Install runtime deps.
+  // 7. Merge runtime deps into package.json (don't invoke any package
+  // manager — too fragile across host pnpm/corepack/Node versions).
+  let addedDeps: string[] = []
   if (!noInstall && resolved.deps.length > 0) {
-    const pm = await detectPackageManager(projectRoot)
-    const cmd = buildInstallCommand(pm, resolved.deps)
     try {
-      console.log(pc.dim(`\nRunning: ${cmd}`))
-      await execAsync(cmd, { cwd: projectRoot })
+      addedDeps = await mergeDepsIntoPackageJson(projectRoot, resolved.deps)
     } catch (error) {
       console.error(
         pc.yellow(
-          `\nPackage install failed. Files are written. Retry manually:\n  ${cmd}\n\n${(error as Error).message}`
-        )
+          `\nCouldn't merge deps into package.json: ${(error as Error).message}\n` +
+            `Add these manually:\n  ${resolved.deps.join("\n  ")}`,
+        ),
       )
     }
   }
@@ -135,9 +132,23 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
 
   // 9. Print summary.
   console.log(pc.green(`\nInstalled ${plan.length} files into your project.`))
+  if (addedDeps.length > 0) {
+    const pm = await detectPackageManager(projectRoot)
+    const installCmd =
+      pm === "pnpm" ? "pnpm install"
+      : pm === "yarn" ? "yarn"
+      : pm === "bun" ? "bun install"
+      : "npm install"
+    console.log(
+      pc.dim(
+        `\nAdded ${addedDeps.length} dep${addedDeps.length === 1 ? "" : "s"} to package.json: ${addedDeps.join(", ")}`,
+      ),
+    )
+    console.log(pc.dim(`Run \`${installCmd}\` to fetch them.`))
+  }
   console.log("\nNext steps:")
   console.log("  1. Open Claude Code in this project and type 'set up Forkshop' to finish wiring.")
-  console.log("  2. Or run `pnpm dev` and open /forkshop to see the default layout.")
+  console.log("  2. Or run your dev server and open /forkshop to see the default layout.")
 
   return { ok: true }
 }
