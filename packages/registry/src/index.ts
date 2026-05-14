@@ -30,7 +30,6 @@ export { InspectPanel } from "@forkshop/components/inspect-panel"
 export { LocatorInit } from "@forkshop/components/locator-init"
 export {
   AgentActivityProvider,
-  useAgentSeenPagePaths,
   useAgentActivePages,
   useAgentActiveBlocks,
   useAgentActivePrimitives,

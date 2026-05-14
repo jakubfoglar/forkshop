@@ -12,7 +12,6 @@ import { cn } from "@forkshop/lib/cn";
 import { buildPageTree, type PageTreeNode } from "@forkshop/components/sidebar/page-tree";
 import { HelpModal } from "@forkshop/components/sidebar/help-modal";
 import {
-  useAgentSeenPagePaths,
   useAgentActivePages,
   useAgentActiveBlocks,
   useAgentActivePrimitives,
@@ -86,21 +85,9 @@ export function ForkshopSidebar({
   /** Optional title overrides keyed by route path */
   titleOverrides?: ReadonlyMap<string, string>;
 }) {
-  const seenPagePaths = useAgentSeenPagePaths();
-  const newPagePaths = useMemo(() => {
-    if (seenPagePaths.size === 0) return new Set<string>();
-    const known = new Set([...routes, ...otherRoutes]);
-    const result = new Set<string>();
-    for (const path of seenPagePaths) if (!known.has(path)) result.add(path);
-    return result;
-  }, [seenPagePaths, routes, otherRoutes]);
-  const extendedRoutes = useMemo(
-    () => (newPagePaths.size === 0 ? routes : [...routes, ...newPagePaths]),
-    [routes, newPagePaths],
-  );
   const tree = useMemo(
-    () => buildPageTree(extendedRoutes, titleOverrides),
-    [extendedRoutes, titleOverrides],
+    () => buildPageTree(routes, titleOverrides),
+    [routes, titleOverrides],
   );
   const otherTree = useMemo(
     () => buildPageTree(otherRoutes, titleOverrides),
@@ -231,7 +218,6 @@ export function ForkshopSidebar({
             selection={selection}
             onSelect={onSelect}
             activePages={activePages}
-            newPagePaths={newPagePaths}
           />
         ))}
 
@@ -247,7 +233,6 @@ export function ForkshopSidebar({
                 selection={selection}
                 onSelect={onSelect}
                 activePages={activePages}
-                newPagePaths={newPagePaths}
               />
             ))}
           </>
@@ -279,7 +264,6 @@ function SidebarRow({
   draft = false,
   agentActive = false,
   agentFileLabel,
-  isNew = false,
   onClick,
   onToggleExpand,
 }: {
@@ -292,7 +276,6 @@ function SidebarRow({
   draft?: boolean;
   agentActive?: boolean;
   agentFileLabel?: string;
-  isNew?: boolean;
   onClick: () => void;
   onToggleExpand?: () => void;
 }) {
@@ -346,11 +329,6 @@ function SidebarRow({
             {agentFileLabel}
           </span>
         )}
-        {isNew && (
-          <span className="mr-forkshop-1 shrink-0 rounded-forkshop-lg bg-forkshop-agent px-forkshop-1 py-forkshop-px text-forkshop-5xs font-forkshop-medium uppercase tracking-forkshop-wider text-forkshop-agent-fg">
-            New
-          </span>
-        )}
         {draft && (
           <span className="mr-forkshop-2 shrink-0 rounded-forkshop-lg bg-forkshop-surface-2 px-forkshop-1 py-forkshop-px text-forkshop-5xs font-forkshop-medium uppercase tracking-forkshop-wider text-forkshop-fg-muted">
             Draft
@@ -375,21 +353,18 @@ function PageTreeRow({
   selection,
   onSelect,
   activePages,
-  newPagePaths,
 }: {
   node: PageTreeNode;
   depth: number;
   selection: ForkshopSelection;
   onSelect: (next: ForkshopSelection) => void;
   activePages: ReadonlySet<string>;
-  newPagePaths: ReadonlySet<string>;
 }) {
   const [expanded, setExpanded] = useState(false);
   const hasChildren = node.children.length > 0;
   const active = selection.kind === "page" && selection.path === node.path;
   const agentActive = node.isRoute && activePages.has(node.path);
   const agentFileLabel = agentActive ? pageFileLabel(node.path) : undefined;
-  const isNew = node.isRoute && newPagePaths.has(node.path);
 
   // When the active page lives inside this row's subtree, expand so the
   // active row is visible — covers drill-ins from sitemap/flow canvases.
@@ -416,7 +391,6 @@ function PageTreeRow({
         draft={false}
         agentActive={agentActive}
         agentFileLabel={agentFileLabel}
-        isNew={isNew}
         onClick={() => {
           if (node.isRoute) {
             onSelect({ kind: "page", path: node.path });
@@ -437,7 +411,6 @@ function PageTreeRow({
               selection={selection}
               onSelect={onSelect}
               activePages={activePages}
-              newPagePaths={newPagePaths}
             />
           ))}
         </>

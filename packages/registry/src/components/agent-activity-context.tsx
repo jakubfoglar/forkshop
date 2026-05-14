@@ -48,13 +48,11 @@ export type FileMap = {
 type AgentActivityValue = {
   entries: readonly ActivityEntry[]
   fileMap: FileMap
-  seenPagePaths: ReadonlySet<string>
 }
 
 const Context = createContext<AgentActivityValue>({
   entries: [],
   fileMap: { primitives: [], blocks: [] },
-  seenPagePaths: new Set(),
 })
 
 const STALE_MS = 5500
@@ -67,7 +65,6 @@ export function AgentActivityProvider({
   children: ReactNode
 }) {
   const [entries, setEntries] = useState<readonly ActivityEntry[]>([])
-  const [seenPagePaths, setSeenPagePaths] = useState<ReadonlySet<string>>(() => new Set())
 
   useEffect(() => {
     if (process.env.NODE_ENV === "production") return
@@ -99,28 +96,9 @@ export function AgentActivityProvider({
     return () => clearInterval(interval)
   }, [])
 
-  // Accumulate page paths the agent has touched — sticky so newly-created
-  // pages stay in the sidebar after the 5s activity window closes.
-  useEffect(() => {
-    if (entries.length === 0) return
-    setSeenPagePaths((current) => {
-      let next: Set<string> | undefined
-      for (const entry of entries) {
-        const selection = fileToSelection(entry.filePath, fileMap)
-        if (selection !== undefined && selection !== "site-wide" && selection.kind === "page") {
-          if (!current.has(selection.path)) {
-            if (next === undefined) next = new Set(current)
-            next.add(selection.path)
-          }
-        }
-      }
-      return next ?? current
-    })
-  }, [entries, fileMap])
-
   const value = useMemo<AgentActivityValue>(
-    () => ({ entries, fileMap, seenPagePaths }),
-    [entries, fileMap, seenPagePaths],
+    () => ({ entries, fileMap }),
+    [entries, fileMap],
   )
 
   return <Context.Provider value={value}>{children}</Context.Provider>
@@ -128,13 +106,6 @@ export function AgentActivityProvider({
 
 function useAgentActivity(): AgentActivityValue {
   return useContext(Context)
-}
-
-// Sticky set of every page path Claude has touched during this session.
-// Sidebar uses it (minus the already-known server-side routes) to surface
-// newly-created pages mid-build.
-export function useAgentSeenPagePaths(): ReadonlySet<string> {
-  return useAgentActivity().seenPagePaths
 }
 
 export function useAgentActivePages(): ReadonlySet<string> {
