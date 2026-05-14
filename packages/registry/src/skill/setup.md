@@ -389,6 +389,12 @@ Pick the right template (Template 2 for design-system-board, Template 3 for ifra
 
 Render from Template 5. Replace any CLI-dropped stub. Import every board file written in Step 2, list them in `sidebar_entries` in the order the user accepted.
 
+### Step 3b — `<aliases.mount>/layout.tsx` (always, no opt-in gate)
+
+Render from Template 5b. Forkshop is a full-viewport tool and must not inherit the host project's root-layout chrome (navbar, footer, providers wrappers, etc.). The route-segment layout uses a `fixed inset-0` wrapper that visually covers parent chrome while keeping it in the DOM so providers (analytics, auth context, theme) still mount.
+
+If the file already exists from a prior install or other tool, insert the Forkshop chrome wrapper as the outermost element of the returned JSX and preserve everything inside. Do not delete user-added imports or JSX.
+
 ### Step 4 — `tailwind.config.ts` (automatic, no opt-in gate)
 
 The strategy spec's "never silently mutate" list covers `next.config.ts`, `.claude/settings.json`, and root `CLAUDE.md`. `tailwind.config.ts` is *not* on that list — it's an automatic write, surfaced in Phase 3's "Also touching" callout.
@@ -912,6 +918,25 @@ import PagesBoardView from "./pages-board"
             />
           )}
 ```
+
+### Template 5b — `<aliases.mount>/layout.tsx` (Forkshop route-segment chrome cover)
+
+```tsx
+export default function ForkshopLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      className="fixed inset-0 z-[9999] overflow-hidden bg-forkshop-surface text-forkshop-fg"
+      data-forkshop-mount
+    >
+      {children}
+    </div>
+  )
+}
+```
+
+The fixed-overlay wrapper covers the host project's root-layout chrome (navbar, footer, etc.) while keeping it in the DOM so parent providers (auth, analytics, theme) still mount. `z-[9999]` sits above anything the host renders; `overflow-hidden` lets Forkshop's internal canvas pan/zoom control scrolling. Tokens are `forkshop-`-namespaced so the wrapper looks right regardless of the host project's design system.
+
+If the file already exists, wrap its returned JSX with the chrome cover — preserve any existing imports and any children the file already renders.
 
 ### Template 6 — `.claude/hooks/post-tool-use.sh`
 
