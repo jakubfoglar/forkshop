@@ -430,7 +430,16 @@ Detect the package manager from lockfile presence (`pnpm-lock.yaml` → pnpm, `y
 
 Two writes — both idempotent.
 
-**Step 7a — Write `.claude/hooks/post-tool-use.sh`** from Template 6. After write, `chmod +x .claude/hooks/post-tool-use.sh`.
+**Step 7a — Write `.claude/hooks/post-tool-use.sh`** from Template 6.
+
+Before substituting `{{detected_port}}` in the template, read the user's `package.json` `scripts.dev` value and match `-p <N>` or `--port <N>` (whitespace-separated, integer). Use the captured port if present, otherwise default to `3000`. Examples:
+
+- `"dev": "next dev"` → 3000
+- `"dev": "next dev -p 3010"` → 3010
+- `"dev": "next dev --port 4000"` → 4000
+- `"dev": "next dev --turbopack -p 3030"` → 3030
+
+After write, `chmod +x .claude/hooks/post-tool-use.sh`.
 
 **Step 7b — Merge `.claude/settings.json`** with this algorithm:
 
@@ -646,6 +655,7 @@ Templates use `{{snake_case}}` placeholder substitution. Multi-line placeholders
 - **`{{board_imports}}`** — one `import {{board_name}}BoardView from "./{{board_slug}}-board"` per accepted section. Default imports, in sidebar order.
 - **`{{board_renders}}`** — one conditional render per accepted section, 10-space indented. Pattern: `{view === "<slug>" && <{{board_name}}BoardView />}`. The pages board gets the extra `isolatedPath` + `onBack` props (see Template 5).
 - **`{{aliases.mount}}`** — resolved from `forkshop.json` aliases at write time; defaults to `app/forkshop` if absent.
+- **`{{detected_port}}`** — port for the live-AI hook. Parse `scripts.dev` in the user's `package.json` for `-p <N>` or `--port <N>`; substitute the captured integer or `3000` if no flag is present. Used inside Template 6's `DEFAULT_PORT`.
 
 **Note on the tailwind config import path in Template 1:** the template assumes the create-next-app default `"@/*": ["./*"]` tsconfig mapping, where `@/tailwind.config` resolves to the repo-root `tailwind.config.{ts,js}`. If the project's `@/*` maps somewhere other than the repo root (e.g. to `./src/*`), replace the import with the explicit relative path that lands on `tailwind.config.{ts,js}` from the mount directory.
 
@@ -981,7 +991,12 @@ If the file already exists, wrap its returned JSX with the chrome cover — pres
 #!/usr/bin/env bash
 # Forkshop live-AI hook. Notifies a running Forkshop dev server of file edits.
 # Best-effort; never blocks the tool call.
-# Override FORKSHOP_DEV_URL if your dev server isn't on http://localhost:3000.
+#
+# Port detection (in order of preference):
+#   1. $FORKSHOP_DEV_URL env var (full URL override — wins if set)
+#   2. {{detected_port}} (port from package.json scripts.dev at install time)
+#   3. Per-project cache of the last successful port (auto-learned at runtime)
+#   4. Common-port try-list (3000, 3001, 3002, 3003) — covers Next's auto-bump
 set -uo pipefail
 
 if ! command -v jq >/dev/null 2>&1; then
@@ -1001,15 +1016,51 @@ case "$file_path" in
   *) exit 0 ;;
 esac
 
-url="${FORKSHOP_DEV_URL:-http://localhost:3000}/api/forkshop/agent-activity"
+# Build the prioritized port list.
+DEFAULT_PORT="{{detected_port}}"
+PORTS_TO_TRY="$DEFAULT_PORT 3000 3001 3002 3003"
+
+# Per-project cache (hashed PWD so multiple repos don't collide).
+CACHE_FILE="${TMPDIR:-/tmp}/forkshop-dev-port-$(printf '%s' "$PWD" | shasum 2>/dev/null | cut -c1-8)"
+if [ -f "$CACHE_FILE" ]; then
+  CACHED_PORT="$(cat "$CACHE_FILE" 2>/dev/null)"
+  if [ -n "$CACHED_PORT" ]; then
+    PORTS_TO_TRY="$CACHED_PORT $PORTS_TO_TRY"
+  fi
+fi
+
+# Dedupe while preserving order.
+DEDUPED=""
+for p in $PORTS_TO_TRY; do
+  [ -z "$p" ] && continue
+  case " $DEDUPED " in *" $p "*) ;; *) DEDUPED="$DEDUPED $p" ;; esac
+done
+PORTS_TO_TRY="$DEDUPED"
 
 send_one() {
   local payload="$1"
-  curl -sS -X POST "$url" \
-    -H 'content-type: application/json' \
-    -d "$payload" \
-    --max-time 1 \
-    >/dev/null 2>&1 &
+
+  # FORKSHOP_DEV_URL wins if set (full URL — assume the user knows their port).
+  if [ -n "${FORKSHOP_DEV_URL:-}" ]; then
+    curl -sS -X POST "${FORKSHOP_DEV_URL}/api/forkshop/agent-activity" \
+      -H 'content-type: application/json' \
+      -d "$payload" \
+      --max-time 1 \
+      >/dev/null 2>&1 &
+    return
+  fi
+
+  for port in $PORTS_TO_TRY; do
+    if curl -sS -X POST "http://localhost:${port}/api/forkshop/agent-activity" \
+        -H 'content-type: application/json' \
+        -d "$payload" \
+        --max-time 1 \
+        --fail \
+        >/dev/null 2>&1; then
+      printf '%s' "$port" > "$CACHE_FILE" 2>/dev/null
+      return
+    fi
+  done
 }
 
 case "$tool" in
@@ -1041,7 +1092,7 @@ disown -a 2>/dev/null || true
 exit 0
 ```
 
-Override `FORKSHOP_DEV_URL` if your dev server isn't on `http://localhost:3000`. Requires `jq` — the script exits 0 silently if `jq` isn't installed, so the live-AI loop just doesn't fire (no error).
+Substitute `{{detected_port}}` from `package.json` `scripts.dev` — match `-p <N>` or `--port <N>`; fall back to `3000` if no flag is present. The hook tries this port first, then the per-project cache, then `3000 3001 3002 3003`, caching whichever wins so subsequent edits go straight to the right port. `FORKSHOP_DEV_URL` (full URL) overrides everything for users on weird ports. Requires `jq` — the script exits 0 silently if `jq` isn't installed, so the live-AI loop just doesn't fire (no error).
 
 ### Template 7a — `next.config.ts` turbopack rule (Locator.js)
 
