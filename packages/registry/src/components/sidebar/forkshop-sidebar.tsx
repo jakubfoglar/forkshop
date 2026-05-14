@@ -12,6 +12,7 @@ import { cn } from "@forkshop/lib/cn";
 import { buildPageTree, type PageTreeNode } from "@forkshop/components/sidebar/page-tree";
 import { HelpModal } from "@forkshop/components/sidebar/help-modal";
 import {
+  useAgentSeenPagePaths,
   useAgentActivePages,
   useAgentActiveBlocks,
   useAgentActivePrimitives,
@@ -85,9 +86,25 @@ export function ForkshopSidebar({
   /** Optional title overrides keyed by route path */
   titleOverrides?: ReadonlyMap<string, string>;
 }) {
+  // Agent edits to a file outside `routes` add that path to seenPagePaths.
+  // We extend the tree silently — new entries render identically to configured
+  // routes (no pill, no badge). The user can click them like any other entry.
+  // Sticky for the React-component lifetime; clears on browser reload.
+  const seenPagePaths = useAgentSeenPagePaths();
+  const newPagePaths = useMemo(() => {
+    if (seenPagePaths.size === 0) return new Set<string>();
+    const known = new Set([...routes, ...otherRoutes]);
+    const result = new Set<string>();
+    for (const path of seenPagePaths) if (!known.has(path)) result.add(path);
+    return result;
+  }, [seenPagePaths, routes, otherRoutes]);
+  const extendedRoutes = useMemo(
+    () => (newPagePaths.size === 0 ? routes : [...routes, ...newPagePaths]),
+    [routes, newPagePaths],
+  );
   const tree = useMemo(
-    () => buildPageTree(routes, titleOverrides),
-    [routes, titleOverrides],
+    () => buildPageTree(extendedRoutes, titleOverrides),
+    [extendedRoutes, titleOverrides],
   );
   const otherTree = useMemo(
     () => buildPageTree(otherRoutes, titleOverrides),

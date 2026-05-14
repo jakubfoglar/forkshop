@@ -276,6 +276,15 @@ The mount page derives a `FileMap` from these entries and hands it to `AgentActi
 - `useAgentActivePrimitives()` — primitives currently being edited.
 - `usePageActiveFallback(path)` — true when a page edit can't be attributed to a specific block (drives the soft all-blocks pulse).
 - `useSiteWideActivity()` — `{ active, recentBasename }` for unmapped file edits.
+- `useAgentSeenPagePaths()` — sticky set of every page path the agent has touched this session (used by the sidebar to extend its tree; see below).
+
+### Silent synthetic routes
+
+When the agent edits a page file whose route isn't in the sidebar's `routes` prop, the sidebar adds that path to the tree **silently** — no badge, no pill, no visual distinction from configured routes. The new row is clickable like any other.
+
+These synthetic entries come from `useAgentSeenPagePaths()`, which the sidebar unions with the declared `routes` to produce its rendered tree. The set is sticky for the React-component lifetime and clears on browser reload.
+
+If you're looking at the sidebar and see a leaf you didn't put in your `routes` prop, that's not a bug — it's a recently-edited page Forkshop is surfacing for convenience. Add it to `routes` (or stop editing it) if you want the sidebar to be fully declarative.
 
 ### Production behavior
 
