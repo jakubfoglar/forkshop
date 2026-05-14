@@ -713,6 +713,111 @@ The user's own dev-tab (NOT inside Forkshop) should still show the Next dev indi
 
 ---
 
+## Bug N — User-project CLAUDE.md doesn't make "custom boards = canvas primitives" obvious
+
+**Where:** `packages/registry/src/templates/user-claude-md.md` (the template that installs as `app/forkshop/CLAUDE.md` in user projects).
+
+**Severity:** High for adoption. One of Forkshop's headline value props is "you can build your own canvas boards." If Claude doesn't default to the canvas primitives when users ask for custom boards, every user-built board is a regression to plain HTML — Forkshop's purpose silently erodes.
+
+### Symptom
+
+Reported in the ravineo-playground/site install. User asked their Claude (in that project) to build a custom board for managing segment illustrations. Claude:
+
+1. ✅ Built the API routes (data fetching, regeneration endpoints)
+2. ✅ Wired the board into the sidebar with an icon and route
+3. ✅ Added the CLAUDE.md doc entry
+4. ❌ **Built the board as a plain pipeline strip + grid of cards** — no `<ForkshopCanvas>`, no `<CanvasNode>`, no zoom/pan/drag
+
+The user pushed back: *"but you did not do it as canvas right? i want that... zoom around, reorder cards ... the usual. all of it should be canvas nodes."* Claude acknowledged the mistake and rewrote the board with `ForkshopCanvas` + `CanvasNode`. Outcome was correct, but Claude defaulted wrong.
+
+### Root cause
+
+The user-project CLAUDE.md template likely mentions canvas primitives somewhere, but not strongly or prominently enough. Claude reads the CLAUDE.md, sees "build a board," interprets that as "build a section in the app" using whatever default React layout makes sense for a list of cards. The "boards in Forkshop are canvas-by-default" pattern isn't loud enough in the docs.
+
+### Fix
+
+Add an explicit section near the top of `packages/registry/src/templates/user-claude-md.md` titled something like **"Adding a new board"** or **"Custom boards"** that makes the canvas-primitive default unmistakable. Sketch:
+
+```markdown
+## Adding a new board
+
+When you (or your Claude) want a new section in the Forkshop sidebar 
+with its own content area, the **default shape is a canvas**, not a 
+flat page layout.
+
+### The pattern
+
+Every board file should:
+
+1. Wrap content in `<ForkshopCanvas>` so users get pan + zoom + viewport 
+   controls automatically
+2. Place each interactive item in a `<CanvasNode id="...">` so users can 
+   drag to rearrange and positions persist
+3. Persist positions via `/api/forkshop/positions` (already wired — just 
+   give each CanvasNode a stable `id`)
+
+### When to deviate (rare)
+
+Flat HTML layouts are appropriate ONLY for genuinely non-spatial content:
+
+- A tabular settings page where rows have no spatial relationship
+- A documentation-style reading page
+- A single-form input
+
+For ANY board that displays multiple visual items (cards, previews, 
+diagrams, pipelines, lists with images), use canvas primitives. If 
+you're tempted to write a `<div className="grid">`, stop and use 
+`<ForkshopCanvas>` + `<CanvasNode>`s instead.
+
+### Minimal example
+
+```tsx
+"use client"
+import { ForkshopCanvas, CanvasNode } from "@/components/forkshop/canvas"
+
+export default function MyCustomBoard() {
+  return (
+    <ForkshopCanvas fitMode="both">
+      <CanvasNode id="item-1" defaultX={0} defaultY={0}>
+        <MyCard />
+      </CanvasNode>
+      <CanvasNode id="item-2" defaultX={420} defaultY={0}>
+        <MyOtherCard />
+      </CanvasNode>
+    </ForkshopCanvas>
+  )
+}
+```
+
+### When you build a custom board
+
+Wire it in:
+- `src/app/forkshop/<board-name>-board.tsx` — the board itself
+- `src/app/forkshop/forkshop.config.tsx` — register it in the sidebar nav
+- `src/app/forkshop/page.tsx` — route to it from the canvas selection
+```
+
+This needs to be **near the top of the CLAUDE.md**, not buried in a later section. Claude reads CLAUDE.md top-down and the first occurrence of a pattern usually wins.
+
+### Bonus: shipping a forkshop-add-board skill
+
+For an even firmer guard, ship a fourth Claude Code skill: `forkshop-add-board.md`. Triggers on phrases like *"add a board to Forkshop"*, *"build a custom Forkshop board"*, *"new section in Forkshop"*. The skill explicitly walks through the canvas-primitive scaffold. This is belt-and-suspenders — the CLAUDE.md update alone probably solves 90% of cases.
+
+Optional for v1; lean toward "just fix the CLAUDE.md template first" and revisit if users keep ending up with flat-HTML boards.
+
+### Verification
+
+After fix, in a fresh Forkshop install, ask Claude in that project: *"build me a custom Forkshop board showing all the products in my catalog."* It should:
+
+1. Read app/forkshop/CLAUDE.md
+2. Default to `ForkshopCanvas` + `CanvasNode` per item
+3. Wire positions to the persistence endpoint
+4. Not produce a flat `<div className="grid">` layout
+
+Test in both an empty install and one with existing boards.
+
+---
+
 ## Bug I (limitation, not a bug — capturing for future) — Pages board doesn't auto-handle dynamic routes
 
 **Where:** `packages/registry/src/kits/page-tree.tsx` — and how the setup skill populates the pages list.
@@ -756,9 +861,10 @@ These were surfaced earlier and have been resolved. Listed here so the next Clau
 8. **Bug A eighth** (decouple dep-install from pnpm). Mechanical and isolated.
 9. **Bug D ninth** (Next 15+ turbopack syntax). One-file template edit; do while in the skill markdown.
 10. **Bug E tenth** (path-flexible skill triggers). Same file family as D; cheap to fix at the same time.
-11. **Bug C eleventh** (Phase 3 narrative leading whitespace). Cosmetic.
-12. **Bug F twelfth** (drop redundant layout step). Smallest scope. **Note:** revisit in light of Bug J's fix — if a Forkshop layout.tsx is now part of the install, this "redundant layout" framing may shift. Decide during fix.
-13. **Bug I — skip.** Future kit-polish work, out of scope here.
+11. **Bug N eleventh** (user-project CLAUDE.md doesn't enforce canvas-primitive default for custom boards). Documentation fix; medium-effort because the section needs to be well-written and prominently placed near the top.
+12. **Bug C twelfth** (Phase 3 narrative leading whitespace). Cosmetic.
+13. **Bug F thirteenth** (drop redundant layout step). Smallest scope. **Note:** revisit in light of Bug J's fix — if a Forkshop layout.tsx is now part of the install, this "redundant layout" framing may shift. Decide during fix.
+14. **Bug I — skip.** Future kit-polish work, out of scope here.
 
 **Re-test in all known projects after the polish round**:
 - The original `create-next-app --no-src-dir` cold fixture (regression check)
