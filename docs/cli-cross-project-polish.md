@@ -322,7 +322,185 @@ Lean toward dropping it — fewer install steps, less for the user to wonder abo
 
 ---
 
-## Bug G (limitation, not a bug — capturing for future) — Pages board doesn't auto-handle dynamic routes
+## Bug G — iframe content drifts/grows infinitely on pages using `min-h-screen`
+
+**Where:** `packages/registry/src/components/canvas/responsive-frame-view.tsx` + the iframe-preview hooks that inject CSS into iframe documents (`use-iframe-preview.ts` or wherever `PREVIEW_EDIT_CSS` ships).
+
+**Severity:** High — visible on first impression. Any user project with `min-h-screen` (or `min-h-dvh`, `min-h-svh`) on body / a layout wrapper / a page wrapper triggers this. That's most Tailwind-using Next.js projects.
+
+### Symptom
+
+When `/forkshop` loads in the browser, the Tablet (768) and Mobile (375) iframes show content positioned far below the top, with large empty space above. The position drifts further down over time — content "walks" down the page indefinitely until the iframe is enormous. Desktop (1440) often looks normal because the viewport is already large enough that the feedback loop saturates differently.
+
+### Root cause
+
+ResponsiveFrameView measures the iframe body's `scrollHeight` via ResizeObserver and resizes the iframe to fit. When the iframe contains a page with `min-h-screen` (or similar viewport-bound CSS) on body or a wrapper:
+
+1. Iframe height = N
+2. body's `min-h-screen` = 100vh of iframe = N
+3. scrollHeight = N, ResponsiveFrameView sees this and... sets iframe height to N
+4. But the resize triggers a layout pass, which recomputes 100vh against the (very slightly different) new viewport
+5. New scrollHeight is slightly larger, ResponsiveFrameView measures again, sets larger iframe
+6. Loop runs every frame, iframe grows monotonically
+
+### Fix
+
+Inject CSS into each iframe document that breaks the viewport dependency. This is documented in Ravineo's in-house Fogma `app/(tools)/fogma/CLAUDE.md` as:
+
+> "The marketing layout's `min-h-screen` wrapper is also overridden inside each iframe so the body really does collapse to content."
+
+The actual override CSS:
+
+```css
+html, body { min-height: 0 !important; }
+.min-h-screen { min-height: 0 !important; }
+.min-h-dvh { min-height: 0 !important; }
+.min-h-svh { min-height: 0 !important; }
+.min-h-lvh { min-height: 0 !important; }
+```
+
+Inject this in the same place where `PREVIEW_EDIT_CSS` is injected (via the iframe's `useIframeEditWiring` or `useIframePreview` setup). The injection should happen as soon as the iframe loads, before the first ResizeObserver measurement.
+
+### Verification
+
+After fix, re-run `npm run dev` in playground/site. Visit `/forkshop`. All three viewports (Desktop / Tablet / Mobile) should show the page content starting at the top of the iframe with the iframe height matching the actual content height. No drift over time.
+
+Also test on the cold fixture and `--src-dir` fixture — neither should regress.
+
+### Investigation note
+
+When porting this CSS during extraction, it may have been dropped as "Ravineo-specific" (it isn't — `min-h-screen` is a generic Tailwind utility), or the injection point in the iframe-preview hook may not be applying it correctly. Worth checking the git log for the responsive-frame-view + iframe hook ports during the extraction sub-spec to see what got included or dropped.
+
+---
+
+## Bug H — `<LocatorInit />` mounted on Forkshop page instead of user's root layout; opt-click never activates
+
+**Where:** `packages/registry/src/skill/setup.md` — the Locator.js opt-in phase / Template 5 mount-page generation.
+
+**Severity:** High. The option-click-to-open-editor feature is one of Forkshop's headline capabilities. If LocatorInit is in the wrong place, it silently does nothing — no error, no visible failure, the user just notices clicks don't open their editor.
+
+### Symptom
+
+User option-clicks any element inside an iframe in `/forkshop`. Nothing happens. No editor opens. No console error.
+
+### Root cause
+
+`LocatorInit`'s `useEffect` has explicit guards:
+
+```ts
+if (globalThis.window === globalThis.window.parent) return  // skip if NOT in iframe
+if (!parentPath.startsWith(mountPath)) return               // skip if parent isn't /forkshop
+```
+
+It deliberately **only executes inside iframes**. The setup skill currently mounts it in Forkshop's own page.tsx (the canvas mount, Template 5). That page is the **parent of the iframes** — it's not iframed itself. So LocatorInit there returns early on the first guard and never sets up the option-click handler.
+
+### Where LocatorInit actually needs to be
+
+In the user's **root layout** (`src/app/layout.tsx` for src-dir projects, `app/layout.tsx` otherwise). That layout wraps every page in their app, including the pages that get iframed by Forkshop. Then every iframe document has LocatorInit running.
+
+The Phase 7 summary from the playground/site install captured the wrong reasoning:
+
+> "Skipped a separate src/app/forkshop/layout.tsx since `<LocatorInit mountPath='/forkshop' />` is already mounted in page.tsx (Template 5). Add a layout later if you ever want Locator to apply to sub-routes under /forkshop/*."
+
+This conflates "where LocatorInit is mounted" with "what content gets Locator behavior." The mount IS the runtime; if LocatorInit returns early at its mount location, nothing else matters.
+
+### Fix
+
+Update the setup skill's Locator opt-in phase to:
+
+1. Add `<LocatorInit />` to the user's root layout (`src/app/layout.tsx` or `app/layout.tsx`), not to Forkshop's page.tsx
+2. Either:
+   - Edit the existing root layout in place via Edit, adding the import + JSX (preferred — surgical, predictable)
+   - Or generate a layout if none exists at that path (less likely, App Router projects always have a root layout)
+3. Remove the LocatorInit mounting from Template 5's Forkshop page.tsx (or leave it but no-op — at minimum, drop the misleading "in case of sub-routes" framing)
+
+While editing the root layout, also wrap with the same approach the skill uses for the project's root CLAUDE.md updates: ask explicitly before mutating, since this is touching a file the user authored.
+
+### Repro
+
+In any fresh Forkshop install:
+
+```bash
+# After setup completes, in the user's project:
+grep -r "LocatorInit" src/app/ 2>/dev/null
+# Currently shows: only src/app/forkshop/page.tsx (wrong location)
+# After fix should show: src/app/layout.tsx (right location)
+```
+
+Then visually: option-click any rendered element in a `/forkshop` iframe. Without the fix: nothing happens. With the fix: VSCode/Cursor opens at the right file and line.
+
+### Verification
+
+After fix, in a fresh fixture install:
+1. `npm run dev` (or pnpm dev if pnpm isn't broken)
+2. Visit `/forkshop` in browser
+3. Option-click any rendered text inside an iframe
+4. Confirm editor opens with the source file at the right line
+
+---
+
+## Bug J — Forkshop inherits the user's root-layout chrome (navbar, footer, etc.)
+
+**Where:** `packages/registry/src/skill/setup.md` — Template 5 / the Forkshop mount-route generation.
+
+**Severity:** High. Visible on first install. Users expect `/forkshop` to be a full-page tool (like opening Storybook or Figma) — instead they see their own site's navbar at the top with Forkshop crammed underneath. Confusing first impression.
+
+### Symptom
+
+User installs Forkshop in a Next.js project that has a non-trivial root layout (most real projects — navbar, footer, providers, analytics scripts). Visits `/forkshop`. Sees their site's navbar at the top, then Forkshop's sidebar + canvas occupying the area below. Forkshop is not full-viewport.
+
+Concrete example from the playground/site install:
+
+> User's `src/app/layout.tsx` renders `<html><body><Nav />{children}</body></html>` (Nav contains the "Ravineo Segments" branding + nav items). When `/forkshop` renders, the Nav appears above Forkshop's UI.
+
+### Root cause
+
+Next.js App Router applies root-layout inheritance to every route segment. Forkshop's `src/app/forkshop/page.tsx` is a child of `src/app/layout.tsx` and inherits all chrome that layout renders.
+
+### Fix
+
+Forkshop's setup skill should drop a **route-segment layout** at `src/app/forkshop/layout.tsx` that takes over the viewport visually. The simplest pattern: a fixed-position wrapper covering the parent's chrome:
+
+```tsx
+// src/app/forkshop/layout.tsx
+export default function ForkshopLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      className="fixed inset-0 z-[9999] overflow-hidden bg-forkshop-surface text-forkshop-fg"
+      data-forkshop-mount
+    >
+      {children}
+    </div>
+  )
+}
+```
+
+This:
+- Covers the viewport completely (`fixed inset-0`)
+- Sits above any parent chrome (`z-[9999]`)
+- Uses Forkshop's own bg/text colors (no inheritance from parent CSS)
+- Contains overflow so Forkshop's internal layout (canvas pan/zoom etc.) controls scrolling
+- Doesn't remove the parent's chrome from the DOM — it just covers it visually. Parent providers (analytics, auth context, etc.) keep running, which is generally desirable.
+
+### Alternative considered + rejected
+
+**Route groups with a separate root layout** (`src/app/(forkshop)/forkshop/page.tsx` + `(forkshop)/layout.tsx` rendering its own `<html><body>`). Cleaner architecturally — Forkshop genuinely has its own root layout — but requires restructuring the user's existing app (moving their routes into a `(main)` group with the existing root layout). Too invasive for an install step. Reject.
+
+### Verification
+
+After fix, install in a project with a non-trivial root layout (the playground/site project is a perfect test case — has the Ravineo Segments navbar). Visit `/forkshop`. Confirm:
+- No site navbar visible
+- Forkshop's UI occupies the full viewport
+- Site providers still mount (e.g., if the site has Posthog initialization, it should still fire — verify via Network tab or browser console)
+- Returning to a non-Forkshop page (e.g., `/`) shows the normal site again
+
+### Bonus check while in the file
+
+Test in a project where the user has heavily customized their root layout — e.g., a `<ThemeProvider>` wrapping `{children}`, or a sticky footer. The fixed-overlay approach should sit above all of it.
+
+---
+
+## Bug I (limitation, not a bug — capturing for future) — Pages board doesn't auto-handle dynamic routes
 
 **Where:** `packages/registry/src/kits/page-tree.tsx` — and how the setup skill populates the pages list.
 
@@ -355,13 +533,16 @@ These were surfaced earlier and have been resolved. Listed here so the next Clau
 
 ## Recommended fix order
 
-1. **Bug B first** (CLI src/ convention detection). Highest-leverage fix; unblocks proper cross-project testing.
-2. **Bug A second** (decouple dep-install from pnpm). Mechanical and isolated.
-3. **Bug D third** (Next 15+ turbopack syntax). One-file template edit; do it while you're already in the skill markdown.
-4. **Bug E fourth** (path-flexible skill triggers). Same file family as D; cheap to fix at the same time.
-5. **Bug C fifth** (Phase 3 narrative leading whitespace). Cosmetic; easy to verify after the others.
-6. **Bug F sixth** (drop redundant layout step). Smallest scope; just delete a section.
-7. **Bug G — skip.** Future kit-polish work, out of scope here.
+1. **Bug J first** (Forkshop inherits root-layout chrome). Highest visible impact — users see their own site's navbar wrapped around Forkshop. Drop a `src/app/forkshop/layout.tsx` with a fixed-overlay wrapper. Simple, isolated.
+2. **Bug G second** (iframe drift / infinite-grow). Equally visible — iframes don't render right. Inject viewport-decoupling CSS in the iframe-preview hook.
+3. **Bug H third** (LocatorInit mount location). Tied to G — both block the headline "see your real app + click-to-edit" experience. Move LocatorInit into the user's root layout.
+4. **Bug B fourth** (CLI src/ convention detection). Now you can reliably install in any project without manual file moves.
+5. **Bug A fifth** (decouple dep-install from pnpm). Mechanical and isolated.
+6. **Bug D sixth** (Next 15+ turbopack syntax). One-file template edit; do while in the skill markdown.
+7. **Bug E seventh** (path-flexible skill triggers). Same file family as D; cheap to fix at the same time.
+8. **Bug C eighth** (Phase 3 narrative leading whitespace). Cosmetic.
+9. **Bug F ninth** (drop redundant layout step). Smallest scope. **Note:** revisit in light of Bug J's fix — if a Forkshop layout.tsx is now part of the install, this "redundant layout" framing may shift. Decide during fix.
+10. **Bug I — skip.** Future kit-polish work, out of scope here.
 
 **Re-test in all known projects after the polish round**:
 - The original `create-next-app --no-src-dir` cold fixture (regression check)
