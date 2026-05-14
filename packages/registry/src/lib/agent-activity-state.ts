@@ -7,8 +7,23 @@ export type ActivityEntry = {
 
 type Subscriber = (snapshot: ActivityEntry[]) => void
 
-const state = new Map<string, ActivityEntry>()
-const subscribers = new Set<Subscriber>()
+// state and subscribers live on globalThis so HMR re-execution of this module
+// in Next.js dev doesn't lose subscribers or split state between module
+// instances. The bug without this: an SSE connection subscribes into module
+// instance A; a file edit triggers HMR; the POST handler then runs in module
+// instance B; broadcast(B) iterates an empty subscriber set and the SSE never
+// sees the event.
+declare global {
+  var __forkshopAgentActivityState: Map<string, ActivityEntry> | undefined
+  var __forkshopAgentActivitySubscribers: Set<Subscriber> | undefined
+  var __forkshopAgentActivityPruneTimer: ReturnType<typeof setInterval> | undefined
+}
+
+const state: Map<string, ActivityEntry> = (globalThis.__forkshopAgentActivityState ??=
+  new Map())
+const subscribers: Set<Subscriber> = (globalThis.__forkshopAgentActivitySubscribers ??=
+  new Set())
+
 const IDLE_MS = 5000
 
 function pruneIdle(): void {
@@ -61,11 +76,6 @@ export function subscribe(subscriber: Subscriber): () => void {
   }
 }
 
-// Per-process prune timer. Keyed on globalThis so HMR re-execution of this
-// module doesn't spawn duplicates.
-declare global {
-  var __forkshopAgentActivityPruneTimer: ReturnType<typeof setInterval> | undefined
-}
 if (!globalThis.__forkshopAgentActivityPruneTimer) {
   globalThis.__forkshopAgentActivityPruneTimer = setInterval(pruneIdle, 1000)
 }
