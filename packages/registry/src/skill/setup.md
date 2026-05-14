@@ -866,7 +866,7 @@ export default function ForkshopPage() {
   return (
     <AgentActivityProvider fileMap={FILE_MAP}>
       <LocatorInit mountPath="/forkshop" />
-      <div className="flex h-screen overflow-hidden">
+      <div className="font-forkshop-sans flex h-screen overflow-hidden">
         <ForkshopSidebar
           selection={selection}
           onSelect={setSelection}
