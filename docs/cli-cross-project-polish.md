@@ -592,6 +592,67 @@ If the user is on a *weird* port outside the default fallback range (e.g., 8080)
 
 ---
 
+## Bug L — HMR doesn't propagate into Forkshop iframes; manual reload required after agent edits
+
+**Where:** Unclear without investigation. Candidates: `packages/registry/src/components/canvas/use-iframe-preview.ts`, `lazy-iframe.tsx`, ResponsiveFrameView's iframe-wrapping logic. Possibly also a Next.js config setting in the user's project, or a CSS-injection side effect.
+
+**Severity:** High. This is the single most-visible interaction in Forkshop — Claude edits a file, the iframe should update in place. Currently the user has to manually refresh Forkshop for visual updates to appear. Worst part: the live-AI pulse (sidebar dot, frame glow) probably still fires, so Forkshop signals "Claude just changed this" but the iframe contradicts the signal with stale content.
+
+### Symptom
+
+Reported in the ravineo-playground/site install:
+
+1. User had previously added a dynamic-route page to Forkshop's config (e.g., `/taxonomy-v6/01-segment/<specific-slug>`)
+2. User asked Claude to edit the underlying `[slug]/page.tsx` (in this case, hide the `<BrandFilter />` row)
+3. Claude completed the edit successfully (verified on disk)
+4. Forkshop's iframe showing that page did **not** update visually
+5. Manual reload of Forkshop was required to see the change
+
+In a working state, Next.js Fast Refresh would propagate the edit to the iframe document automatically within ~1 second of the file write.
+
+### Root-cause investigation needed
+
+Before fixing, the next Claude should investigate which of these is happening:
+
+1. **HMR WebSocket isn't connecting from inside iframes.** Open `/forkshop` in browser, open DevTools, switch the top-left context dropdown to one of the iframes, run `document.querySelectorAll('script[src*="hot-update"]').length` — should be > 0 if HMR is wired. Check Network tab in iframe context for `webpack-hmr` or similar WS connection.
+
+2. **HMR fires in the top frame only.** The parent Forkshop document might be the one getting HMR pings, not the iframes. If so, the parent should relay HMR signals to iframes (or just trigger a hard reload of the affected iframe).
+
+3. **Next 16 HMR regression for dynamic routes.** Try reproducing in a static-route iframe — does HMR work there? If yes, the issue is dynamic-route-specific.
+
+4. **Forkshop's CSS injection or wrapping breaks Next's dev-tools mount.** The iframes have PREVIEW_EDIT_CSS injected (or similar). Check if removing the CSS injection restores HMR — would point to a specific style or DOM mutation breaking Next's dev runtime.
+
+5. **Iframe `src` reuse without remount.** If Forkshop reuses a single iframe element and updates `src` without remounting, the new page's HMR client may not connect. Force a key bump on src changes if so.
+
+### Fix options (pick after investigation)
+
+**If HMR is broken in iframes generally:**
+
+- The simplest reliable fix: when the AgentActivityProvider receives a file-edit event for a file mapped to a currently-visible iframe, force that iframe to reload (via `iframe.contentWindow.location.reload()` or by bumping a React `key`). Loses Fast Refresh state preservation, but guarantees visual update.
+
+- Better but harder: bridge HMR signals from the parent window (which DOES get HMR pings) into iframes via postMessage. Iframe receives the signal and triggers its own update without losing state.
+
+**If HMR works for static routes but not dynamic ones:**
+
+- Likely a Next 16 issue; report upstream. Until fixed: force-reload iframes for dynamic-route pages specifically.
+
+**If Forkshop's wrapping breaks HMR:**
+
+- Identify the specific wrapping behavior, gate it on production builds only (HMR only matters in dev).
+
+### Verification
+
+After fix:
+
+1. Open `/forkshop`. Have Claude edit a file mapped to a visible iframe (any kind — static route, dynamic route, kit-rendered block).
+2. Within ~1-2 seconds of the file write, the iframe content should update without manual reload.
+3. Sidebar dot + frame glow + text pulse should fire in parallel (they already work — verified earlier).
+4. State preservation is a nice-to-have but not required for v1 — visual freshness matters more.
+
+Test on multiple route shapes (static, dynamic, block-isolation, kit-rendered, etc.) to confirm the fix applies broadly.
+
+---
+
 ## Bug I (limitation, not a bug — capturing for future) — Pages board doesn't auto-handle dynamic routes
 
 **Where:** `packages/registry/src/kits/page-tree.tsx` — and how the setup skill populates the pages list.
@@ -627,15 +688,16 @@ These were surfaced earlier and have been resolved. Listed here so the next Clau
 
 1. **Bug J first** (Forkshop inherits root-layout chrome). Highest visible impact — users see their own site's navbar wrapped around Forkshop. Drop a `src/app/forkshop/layout.tsx` with a fixed-overlay wrapper. Simple, isolated.
 2. **Bug G second** (iframe drift / infinite-grow). Equally visible — iframes don't render right. Inject viewport-decoupling CSS in the iframe-preview hook.
-3. **Bug H third** (LocatorInit mount location). Tied to G — both block the headline "see your real app + click-to-edit" experience. Move LocatorInit into the user's root layout.
-4. **Bug K fourth** (hook-script port detection + fallback). Without this, live-AI silently doesn't fire on any non-3000 port. Two parts: setup-time detection from package.json + runtime port-trying fallback in the hook.
-5. **Bug B fifth** (CLI src/ convention detection). Now you can reliably install in any project without manual file moves.
-6. **Bug A sixth** (decouple dep-install from pnpm). Mechanical and isolated.
-7. **Bug D seventh** (Next 15+ turbopack syntax). One-file template edit; do while in the skill markdown.
-8. **Bug E eighth** (path-flexible skill triggers). Same file family as D; cheap to fix at the same time.
-9. **Bug C ninth** (Phase 3 narrative leading whitespace). Cosmetic.
-10. **Bug F tenth** (drop redundant layout step). Smallest scope. **Note:** revisit in light of Bug J's fix — if a Forkshop layout.tsx is now part of the install, this "redundant layout" framing may shift. Decide during fix.
-11. **Bug I — skip.** Future kit-polish work, out of scope here.
+3. **Bug L third** (HMR doesn't propagate into iframes). Investigation-heavy but high-impact. Either fix HMR plumbing OR force iframe reload on agent-edit events. Worth doing in the same session as G+H since you'll already be in the iframe wiring code.
+4. **Bug H fourth** (LocatorInit mount location). Tied to G/L — same "iframe behavior is broken" cluster. Move LocatorInit into the user's root layout.
+5. **Bug K fifth** (hook-script port detection + fallback). Without this, live-AI silently doesn't fire on any non-3000 port. Two parts: setup-time detection from package.json + runtime port-trying fallback in the hook.
+6. **Bug B sixth** (CLI src/ convention detection). Now you can reliably install in any project without manual file moves.
+7. **Bug A seventh** (decouple dep-install from pnpm). Mechanical and isolated.
+8. **Bug D eighth** (Next 15+ turbopack syntax). One-file template edit; do while in the skill markdown.
+9. **Bug E ninth** (path-flexible skill triggers). Same file family as D; cheap to fix at the same time.
+10. **Bug C tenth** (Phase 3 narrative leading whitespace). Cosmetic.
+11. **Bug F eleventh** (drop redundant layout step). Smallest scope. **Note:** revisit in light of Bug J's fix — if a Forkshop layout.tsx is now part of the install, this "redundant layout" framing may shift. Decide during fix.
+12. **Bug I — skip.** Future kit-polish work, out of scope here.
 
 **Re-test in all known projects after the polish round**:
 - The original `create-next-app --no-src-dir` cold fixture (regression check)
