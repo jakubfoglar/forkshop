@@ -314,11 +314,13 @@ Install Forkshop in an `--src-dir` project. Edit a file under `src/app/page.tsx`
 
 ### Fix
 
-Either:
-- Drop the redundant layout step entirely from the standard skill flow (Template 5's page.tsx is enough for v1)
-- Or keep it but make it explicitly optional ("if you plan to add sub-routes under /forkshop/*, also create...")
+Resolved by the combined effect of Bug J and Bug H — no separate Bug F change needed. Rationale:
 
-Lean toward dropping it — fewer install steps, less for the user to wonder about. If sub-routes become a thing later, the layout step can come back as a `forkshop add sub-route-locator` opt-in.
+- **Bug J** added a new always-on Step 3b that writes `<aliases.mount>/layout.tsx` from Template 5b — the fixed-overlay chrome wrapper. This file now exists for a load-bearing reason (covering the host's root-layout chrome), so it's no longer "redundant with Template 5's page.tsx" — it's complementary.
+- **Bug H** moved `<LocatorInit />` out of `<aliases.mount>/layout.tsx` entirely. Step 6 now targets the user's **root layout** (`src/app/layout.tsx` or `app/layout.tsx`), since LocatorInit's iframe-guard requires it to be mounted in the parent of the iframe content, not the iframe parent itself.
+- The old Bug F framing ("drop the redundant layout step") no longer applies: the Locator no longer needs `<aliases.mount>/layout.tsx`, and the chrome layout is essential.
+
+Nothing further to ship for Bug F. Decision logged 2026-05-14.
 
 ---
 
