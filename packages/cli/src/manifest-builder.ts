@@ -50,6 +50,17 @@ function extOf(absolutePath: string): "ts" | "tsx" | "md" | "css" | "json" | "sh
   throw new Error(`Unknown extension for ${absolutePath}`)
 }
 
+// Binary font files live under packages/registry/fonts/<family>/<file>.woff2.
+// We address them as `@forkshop/fonts/<family>/<file>` and drop them into the
+// user's public/fonts/forkshop/<file> so the CSS `@font-face` declaration
+// (relative URL `/fonts/forkshop/<file>`) resolves at runtime.
+function fontAddress(registryRoot: string, absolutePath: string): string | undefined {
+  const rel = path.relative(registryRoot, absolutePath).split(path.sep).join("/")
+  if (!rel.startsWith("fonts/")) return undefined
+  const noExt = rel.slice("fonts/".length).replace(/\.woff2?$/, "")
+  return `@forkshop/fonts/${noExt}`
+}
+
 async function walk(dir: string, out: string[] = []): Promise<string[]> {
   let entries: import("node:fs").Dirent[]
   try {
@@ -72,6 +83,7 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
   const srcFiles = await walk(path.join(registryRoot, "src"))
   const tailwindFiles = await walk(path.join(registryRoot, "tailwind"))
   const templateFiles = await walk(path.join(registryRoot, "templates"))
+  const fontFiles = await walk(path.join(registryRoot, "fonts"))
 
   // The registry's own top-level barrel — not consumed by users, so skip it.
   // Only the exact `packages/registry/src/index.ts` is dropped; nested
@@ -92,6 +104,21 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
       kind: "text",
       ext: extOf(absPath),
       content,
+    }
+  }
+
+  // Font binaries — referenced by URL relative to registryBaseUrl. Dropped at
+  // public/fonts/forkshop/<basename> so the @font-face URL `/fonts/forkshop/...`
+  // resolves at runtime.
+  for (const absPath of fontFiles) {
+    const address = fontAddress(registryRoot, absPath)
+    if (!address) continue
+    const rel = path.relative(registryRoot, absPath).split(path.sep).join("/")
+    const basename = path.basename(absPath)
+    files[address] = {
+      kind: "binary",
+      url: rel, // registryBaseUrl + url = the binary's serving URL
+      destOverride: `public/fonts/forkshop/${basename}`,
     }
   }
 
@@ -169,7 +196,7 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
     },
     fonts: {
       kind: "asset",
-      items: [],
+      items: Object.keys(files).filter((addr) => addr.startsWith("@forkshop/fonts/")).sort(),
     },
     "css-and-config": {
       kind: "asset",

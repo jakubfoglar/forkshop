@@ -154,7 +154,34 @@ Resolved by commit
 
 ---
 
-## Issue 5 — Raveo font isn't wired (deferred; preset falls back gracefully)
+## Issue 5 — Raveo font isn't wired in OSS installs
+
+**Resolved.** The CLI now ships `RaveoVF.woff2` as a binary manifest entry,
+dropping it at `public/fonts/forkshop/RaveoVF.woff2` in the user's project.
+`packages/registry/tailwind/forkshop.css` declares an `@font-face` for the
+"Raveo" family pointing at that path, and the preset's `forkshop-sans` chain
+gained a "Raveo" entry between `var(--font-raveo)` and the Inter / system-ui
+fallbacks. So:
+
+- **OSS install path** (no `next/font/local`): `--font-raveo` is unset → chain
+  falls through to "Raveo" → the browser loads the woff2 via @font-face.
+- **Playground** (has `next/font/local`): `--font-raveo` is set → wins the
+  chain. The @font-face declaration is harmless dead weight there.
+
+One incidental CLI fix shipped alongside: `fetch-manifest.ts` now overrides
+the manifest's stored `registryBaseUrl` with the URL the manifest was fetched
+from. Without this, `--registry http://localhost:3001/r` would download
+binaries from `https://forkshop.dev` instead — the local docs server was
+serving a manifest stamped with the production base URL.
+
+Resolved by commit
+`fix(fonts): ship Raveo woff2 in the manifest and load it via @font-face`.
+
+---
+
+## Earlier (pre-fix) text on Issue 5 — left for context
+
+The original deferral rationale (now resolved):
 
 **Symptom.** Even with Issue 4 fixed, the rendered UI uses a system font
 rather than Raveo.

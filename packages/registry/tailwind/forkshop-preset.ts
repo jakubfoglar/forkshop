@@ -46,10 +46,13 @@ export const forkshopPreset: Partial<Config> = {
       // -----------------------------------------------------------------------
       fontFamily: {
         // Resolves to whatever the host wires into --font-raveo (set by
-        // `next/font/local` in the playground's layout.tsx). Falls back to
-        // Inter / system-ui when the variable is unset (e.g. SSR before
-        // hydration, or hosts that don't load Raveo).
-        "forkshop-sans": ["var(--font-raveo)", "Inter", "system-ui", "sans-serif"],
+        // `next/font/local` in the playground's layout.tsx). When the variable
+        // is unset (the typical OSS install path), falls through to the
+        // "Raveo" family declared via @font-face in forkshop.css — which loads
+        // the woff2 the CLI dropped into the user's public/fonts/forkshop/.
+        // Inter / system-ui remain as the final fallback (SSR before hydration,
+        // hosts that haven't run init yet, etc).
+        "forkshop-sans": ["var(--font-raveo)", "Raveo", "Inter", "system-ui", "sans-serif"],
       },
 
       // -----------------------------------------------------------------------

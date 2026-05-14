@@ -1,3 +1,18 @@
+/*
+ * Raveo variable font. The browser will fetch from /fonts/forkshop/RaveoVF.woff2,
+ * which the CLI drops into the user's public/ at install time. If the host wires
+ * its own next/font/local in the root layout (the playground does), that sets
+ * --font-raveo and takes precedence in the preset's font chain; this @font-face
+ * is the host-agnostic fallback so the OSS install path works without next/font.
+ */
+@font-face {
+  font-family: "Raveo";
+  src: url("/fonts/forkshop/RaveoVF.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --forkshop-canvas: #f3f4f6;   /* gray-100 — the canvas backdrop */
   --forkshop-surface: #ffffff;

@@ -24,5 +24,10 @@ export async function fetchManifest(registryUrl: string): Promise<Manifest> {
         `Update with npm i -g forkshop@latest.`
     )
   }
-  return manifest
+  // Bind binary URLs to the host we just fetched from. The manifest's stored
+  // registryBaseUrl is whatever the registry server was configured with at
+  // build time — when the user passes `--registry`, they expect binaries to
+  // come from that same host, not the embedded production URL.
+  const trailing = registryUrl.endsWith("/") ? registryUrl : `${registryUrl}/`
+  return { ...manifest, registryBaseUrl: trailing }
 }
