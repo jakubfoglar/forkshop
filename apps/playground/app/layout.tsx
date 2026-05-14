@@ -1,4 +1,5 @@
 import localFont from "next/font/local"
+import { LocatorInit } from "@forkshop/registry"
 import "./globals.css"
 
 const raveo = localFont({
@@ -17,7 +18,10 @@ const raveo = localFont({
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={raveo.variable}>
-      <body className="font-forkshop-sans bg-forkshop-surface text-forkshop-fg">{children}</body>
+      <body className="font-forkshop-sans bg-forkshop-surface text-forkshop-fg">
+        <LocatorInit mountPath="/forkshop" />
+        {children}
+      </body>
     </html>
   )
 }

@@ -3,7 +3,6 @@
 import { useState } from "react"
 import {
   ForkshopSidebar,
-  LocatorInit,
   AgentActivityProvider,
   AgentSelectionChip,
   type ForkshopSelection,
@@ -49,7 +48,6 @@ export default function ForkshopPage() {
 
   return (
     <AgentActivityProvider fileMap={FILE_MAP}>
-      <LocatorInit mountPath="/forkshop" />
       <div className="flex h-screen overflow-hidden">
         <ForkshopSidebar
           selection={selection}

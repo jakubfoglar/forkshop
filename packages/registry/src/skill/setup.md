@@ -284,7 +284,8 @@ say yes to.
 
   [1] Locator.js — Option-click any element to open its file at the right line.
         Adds a turbopack rule to next.config.js, mounts <LocatorInit /> in
-        app/forkshop/layout.tsx, installs @locator/runtime + @locator/webpack-loader.
+        your root layout (so it activates inside Forkshop iframes), installs
+        @locator/runtime + @locator/webpack-loader.
 
   [2] Live-AI hook — sidebar pulses + canvas glows where Claude is editing.
         Adds one hook entry to .claude/settings.json, writes a small
@@ -340,7 +341,7 @@ If any answer is `Show me…`, render the full code diff or snippet inline (the 
 
 The full-diff content for each:
 
-**Locator.js full diff** — `next.config.{ts,js,mjs}` turbopack rule (or merge proposal if `experimental` already exists), plus the new `<aliases.mount>/layout.tsx` mounting `<LocatorInit />` (or merged into existing file if present), plus the two devDependencies for `package.json`.
+**Locator.js full diff** — `next.config.{ts,js,mjs}` turbopack rule (or merge proposal if `experimental` already exists), plus the edit that adds `<LocatorInit mountPath="/forkshop" />` to the user's root layout (`src/app/layout.tsx` or `app/layout.tsx`) inside `<body>`, plus the two devDependencies for `package.json`.
 
 **Live-AI hook full diff** — render the full `.claude/hooks/post-tool-use.sh` content (Template 6) as a code-fenced block. Then render the proposed merged `.claude/settings.json` content as a code-fenced JSON block, with the Forkshop additions prefixed `+` for visibility. If `.claude/settings.json` is absent, the diff shows the to-be-created file. If a hook referencing `post-tool-use.sh` already exists, show *"Hook already wired — no changes needed."* and skip the diff.
 
@@ -418,7 +419,11 @@ The file imports the Raveo `@font-face` declarations and defines `forkshop-*` CS
 ### Step 6 — Locator.js wiring (only if opt-in 5a was consented)
 
 Apply Template 7a to `next.config.{ts,js,mjs}`.
-Apply Template 7b to `<aliases.mount>/layout.tsx` (create the file if absent).
+
+Apply Template 7b to the user's **root layout** (`src/app/layout.tsx` for src-dir projects, `app/layout.tsx` otherwise). The mount target must be the root layout, not Forkshop's own page/layout — `<LocatorInit />` has explicit guards that early-return when not running inside an iframe, so it only does useful work when the user's page code is iframed by Forkshop. Mounted in `app/forkshop/page.tsx` or `app/forkshop/layout.tsx`, it would never activate.
+
+The root layout is user-authored. Before writing, surface the exact diff inline (the same "Show me" treatment used in Phase 5 consent) so the user sees what's being added. If the user said no to Locator in Phase 5, skip this step entirely. If they said yes, write the edit — they consented to the wiring as part of the Locator opt-in.
+
 Detect the package manager from lockfile presence (`pnpm-lock.yaml` → pnpm, `yarn.lock` → yarn, `bun.lockb` → bun, otherwise npm) and run `<pm> add -D @locator/runtime @locator/webpack-loader`. If the install fails, print the install command for the user to retry manually and proceed (files are already wired; the user just needs the dep).
 
 ### Step 7 — Live-AI hook installation (only if opt-in 5b was consented)
@@ -833,7 +838,6 @@ export default function {{board_name}}BoardView({
 import "./forkshop.css"
 import { useState } from "react"
 import { ForkshopSidebar, type ForkshopSelection } from "@/components/forkshop/sidebar/forkshop-sidebar"
-import { LocatorInit } from "@/components/forkshop/locator-init"
 import { AgentActivityProvider } from "@/components/forkshop/agent-activity-context"
 import { DesignSystemBoard } from "@/components/forkshop/kits/design-system-board"
 import { IframeGallery } from "@/components/forkshop/kits/iframe-gallery"
@@ -871,7 +875,6 @@ export default function ForkshopPage() {
 
   return (
     <AgentActivityProvider fileMap={FILE_MAP}>
-      <LocatorInit mountPath="/forkshop" />
       <div className="font-forkshop-sans flex h-screen overflow-hidden">
         <ForkshopSidebar
           selection={selection}
@@ -1027,24 +1030,20 @@ If `experimental` already exists in the user's config, merge into its `turbopack
 
 For `.js`/`.mjs` configs, embed the same fields in the existing module-export shape.
 
-### Template 7b — `<aliases.mount>/layout.tsx` (Locator.js mount)
+### Template 7b — User's root layout (Locator.js mount)
 
-Create the file if absent:
+Edit the user's root layout (`src/app/layout.tsx` for src-dir projects, `app/layout.tsx` otherwise) in place. App Router projects always have a root layout — the file exists. Add the import at the top and the `<LocatorInit mountPath="/forkshop" />` element as the first child of the `<body>` (or as the outermost child of whatever wrapper sits directly inside `<body>`):
 
 ```tsx
 import { LocatorInit } from "@/components/forkshop/locator-init"
 
-export default function ForkshopLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <LocatorInit />
-      {children}
-    </>
-  )
-}
+// inside <body>, as the first child:
+<LocatorInit mountPath="/forkshop" />
 ```
 
-If the file already exists, insert the import at the top of the file and the `<LocatorInit />` element as the first child of the returned JSX.
+`LocatorInit` has explicit guards: it skips when `globalThis.window === globalThis.window.parent` (not in iframe) and when the parent's path doesn't start with `mountPath`. Mounted in the user's root layout, it activates inside every page that Forkshop iframes — and stays inert in the user's normal browser tab. Mounting it inside Forkshop's own page or route-segment layout would no-op the first guard (Forkshop's page is the iframe parent, not the iframe itself).
+
+If `<body>` already has children, insert `<LocatorInit />` adjacent to them, preserving everything else. If a `<ThemeProvider>` or other context wrapper wraps `{children}`, mount `<LocatorInit />` inside that wrapper (so it lives at the same nesting depth as the page content it'll discover).
 
 ### Template 8 — Root `CLAUDE.md` cadence note
 
