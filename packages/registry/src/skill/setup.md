@@ -836,8 +836,9 @@ export default function {{board_name}}BoardView({
 "use client"
 
 import "./forkshop.css"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { ForkshopSidebar, type ForkshopSelection } from "@/components/forkshop/sidebar/forkshop-sidebar"
+import { parseSelection, serializeSelection } from "@/components/forkshop/sidebar/selection-hash"
 import { AgentActivityProvider } from "@/components/forkshop/agent-activity-context"
 import { DesignSystemBoard } from "@/components/forkshop/kits/design-system-board"
 import { IframeGallery } from "@/components/forkshop/kits/iframe-gallery"
@@ -846,6 +847,11 @@ import { PageTree } from "@/components/forkshop/kits/page-tree"
 import { forkshopConfig } from "./forkshop.config"
 
 const PAGE_ROUTES = [{{page_routes}}] as const
+
+const DEFAULT_SELECTION: ForkshopSelection = {
+  kind: "section",
+  sectionId: "{{first_section_id}}",
+}
 
 const FILE_MAP = {
   primitives: forkshopConfig.primitives
@@ -857,10 +863,38 @@ const FILE_MAP = {
 } as const
 
 export default function ForkshopPage() {
-  const [selection, setSelection] = useState<ForkshopSelection>({
-    kind: "section",
-    sectionId: "{{first_section_id}}",
-  })
+  const [selection, setSelection] = useState<ForkshopSelection>(DEFAULT_SELECTION)
+  const [hasHydrated, setHasHydrated] = useState(false)
+
+  // Hydrate from location.hash post-mount (NOT in useState initializer —
+  // would mismatch server/client renders). Setting hasHydrated last unblocks
+  // the URL-mirror effect below.
+  useEffect(() => {
+    const fromHash = parseSelection(window.location.hash)
+    if (fromHash) setSelection(fromHash)
+    setHasHydrated(true)
+  }, [])
+
+  // Mirror the current selection into the URL hash so /forkshop can be
+  // bookmarked, refreshed, and shared. replaceState keeps the back stack
+  // clean — sidebar clicks shouldn't pile history entries.
+  useEffect(() => {
+    if (!hasHydrated) return
+    const next = serializeSelection(selection)
+    if (window.location.hash !== next) {
+      window.history.replaceState({}, "", next)
+    }
+  }, [selection, hasHydrated])
+
+  // Browser back/forward — re-parse the hash and update local state.
+  useEffect(() => {
+    function onPopState() {
+      const fromHash = parseSelection(window.location.hash)
+      setSelection(fromHash ?? DEFAULT_SELECTION)
+    }
+    window.addEventListener("popstate", onPopState)
+    return () => window.removeEventListener("popstate", onPopState)
+  }, [])
 
   // Determine which main view to show.
   const view: {{view_union}} =

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   ForkshopSidebar,
   AgentActivityProvider,
@@ -9,6 +9,8 @@ import {
   DesignSystemBoard,
   IframeGallery,
   PageTree,
+  parseSelection,
+  serializeSelection,
 } from "@forkshop/registry"
 import DesignSystemBoardView from "./design-system-board"
 import ComponentsBoardView from "./components-board"
@@ -16,6 +18,11 @@ import PagesBoardView from "./pages-board"
 import { forkshopConfig } from "./forkshop.config"
 
 const PAGE_ROUTES = ["/sample", "/sample/about", "/sample/dashboard"] as const
+
+const DEFAULT_SELECTION: ForkshopSelection = {
+  kind: "section",
+  sectionId: "design-system",
+}
 
 const FILE_MAP = {
   primitives: forkshopConfig.primitives
@@ -27,10 +34,31 @@ const FILE_MAP = {
 }
 
 export default function ForkshopPage() {
-  const [selection, setSelection] = useState<ForkshopSelection>({
-    kind: "section",
-    sectionId: "design-system",
-  })
+  const [selection, setSelection] = useState<ForkshopSelection>(DEFAULT_SELECTION)
+  const [hasHydrated, setHasHydrated] = useState(false)
+
+  useEffect(() => {
+    const fromHash = parseSelection(window.location.hash)
+    if (fromHash) setSelection(fromHash)
+    setHasHydrated(true)
+  }, [])
+
+  useEffect(() => {
+    if (!hasHydrated) return
+    const next = serializeSelection(selection)
+    if (window.location.hash !== next) {
+      window.history.replaceState({}, "", next)
+    }
+  }, [selection, hasHydrated])
+
+  useEffect(() => {
+    function onPopState() {
+      const fromHash = parseSelection(window.location.hash)
+      setSelection(fromHash ?? DEFAULT_SELECTION)
+    }
+    window.addEventListener("popstate", onPopState)
+    return () => window.removeEventListener("popstate", onPopState)
+  }, [])
 
   // Determine which main view to show.
   const view: "design-system" | "components" | "pages" =
