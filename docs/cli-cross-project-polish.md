@@ -500,6 +500,98 @@ Test in a project where the user has heavily customized their root layout — e.
 
 ---
 
+## Bug K — Live-AI hook hardcodes :3000; breaks when Next runs on any other port
+
+**Where:** `packages/registry/src/skill/setup.md` — port-detection logic during install + `.claude/hooks/post-tool-use.sh` template — the URL the hook POSTs to.
+
+**Severity:** High. Hits any user whose dev server is on a port other than 3000 — very common because (a) users with multiple Next projects open at once get auto-bumped to 3001, 3002, etc., and (b) some users configure non-standard ports in `package.json` scripts. When this happens, the entire live-AI feature is silently broken — no error, no warning, just no sidebar pulses or frame glow.
+
+### Symptom
+
+User runs `npm run dev`. Next.js says `Local: http://localhost:3002` (port 3000 occupied by another project). User opens Forkshop in browser. Has Claude edit a file. **Nothing pulses.** Sidebar dot doesn't fire, frame glow doesn't appear. Looks like the live-AI feature is broken, but actually the hook script is POSTing to `localhost:3000/api/forkshop/agent-activity` which doesn't respond.
+
+The setup-skill summary in playground/site flagged this explicitly:
+
+> "Note: your dev server in the message is on :3002, but the live-AI hook script defaults to :3000. If you're running on :3002, set FORKSHOP_DEV_URL=http://localhost:3002 in your environment before starting Claude Code, or the sidebar pulses/glow won't fire."
+
+That's helpful documentation, but the user shouldn't have to set an env var manually. The hook should figure it out.
+
+### Two-part fix
+
+**Part 1 — Setup-time detection (install-time correctness for the common case)**
+
+During the hook-install phase (Phase 6 of the setup skill), parse the user's `package.json` `scripts.dev` value. Look for `-p <port>` or `--port <port>` flags:
+
+```ts
+// in the setup-skill template logic
+const devScript = pkg.scripts?.dev ?? ""
+const portMatch = devScript.match(/(?:-p|--port)\s+(\d+)/)
+const detectedPort = portMatch ? portMatch[1] : "3000"
+```
+
+Write `detectedPort` into the hook script's default URL. If the user has `"dev": "next dev -p 3002"`, the hook script gets `http://localhost:3002/api/forkshop/agent-activity` baked in from day one.
+
+If no port flag found, default to 3000 (Next's own default).
+
+**Part 2 — Runtime fallback (resilience when port drifts after install)**
+
+Even with Part 1, the user can hit port drift at runtime (port 3000 occupied → Next auto-bumps to 3001 → user thinks Forkshop's broken). The hook script should try a short list of common ports before giving up:
+
+In `packages/registry/src/templates/.claude/hooks/post-tool-use.sh`, replace the hardcoded URL with try-list logic:
+
+```sh
+#!/usr/bin/env bash
+
+# ... existing payload-building logic ...
+
+DEFAULT_URL="${FORKSHOP_DEV_URL:-http://localhost:3000/api/forkshop/agent-activity}"
+PORTS_TO_TRY="3000 3001 3002 3003"
+
+# Cache the last successful port between hook invocations.
+CACHE_FILE="${TMPDIR:-/tmp}/forkshop-dev-port-$(echo "$PWD" | shasum | cut -c1-8)"
+if [ -f "$CACHE_FILE" ]; then
+  CACHED_PORT=$(cat "$CACHE_FILE")
+  PORTS_TO_TRY="$CACHED_PORT $PORTS_TO_TRY"
+fi
+
+# Try the configured URL first; fall back to common ports.
+if [ -n "$FORKSHOP_DEV_URL" ]; then
+  if curl --fail --silent --max-time 0.5 -X POST "$FORKSHOP_DEV_URL" -d "$PAYLOAD" -H "Content-Type: application/json" > /dev/null 2>&1; then
+    exit 0
+  fi
+fi
+
+for PORT in $PORTS_TO_TRY; do
+  URL="http://localhost:$PORT/api/forkshop/agent-activity"
+  if curl --fail --silent --max-time 0.5 -X POST "$URL" -d "$PAYLOAD" -H "Content-Type: application/json" > /dev/null 2>&1; then
+    echo "$PORT" > "$CACHE_FILE"
+    exit 0
+  fi
+done
+
+# All failed — silent exit, don't pollute Claude Code with noise.
+exit 0
+```
+
+Key properties:
+- Cache the last-successful port per-project (via PWD hash) so after the first hit, subsequent edits go straight to the right port
+- Fast timeout per attempt (0.5s) so failures don't block the editor
+- Try the cached port first (which is also one of the common ports usually)
+- Silent fail on all attempts — the user notices nothing breaks; if live-AI doesn't fire, they figure it out separately
+- Honor `FORKSHOP_DEV_URL` env override if set (backwards-compat with current behavior)
+
+### Verification
+
+After fix, three scenarios should all work without env-var setup:
+
+1. **Default port** (Next.js on 3000): Edit a file via Claude. Sidebar pulses immediately.
+2. **Auto-bumped port** (3000 occupied, Next ends up on 3001): Edit a file via Claude. First edit may take ~50ms longer (trying 3000 then 3001), but pulses fire. Subsequent edits are instant (cached).
+3. **Configured non-standard port** (`"dev": "next dev -p 3010"`): Setup-time detection writes 3010 into the hook. Pulses fire immediately on first edit.
+
+If the user is on a *weird* port outside the default fallback range (e.g., 8080), they still need `FORKSHOP_DEV_URL` — but Part 1's setup-time parsing should catch even that case if it's in `package.json`.
+
+---
+
 ## Bug I (limitation, not a bug — capturing for future) — Pages board doesn't auto-handle dynamic routes
 
 **Where:** `packages/registry/src/kits/page-tree.tsx` — and how the setup skill populates the pages list.
@@ -536,13 +628,14 @@ These were surfaced earlier and have been resolved. Listed here so the next Clau
 1. **Bug J first** (Forkshop inherits root-layout chrome). Highest visible impact — users see their own site's navbar wrapped around Forkshop. Drop a `src/app/forkshop/layout.tsx` with a fixed-overlay wrapper. Simple, isolated.
 2. **Bug G second** (iframe drift / infinite-grow). Equally visible — iframes don't render right. Inject viewport-decoupling CSS in the iframe-preview hook.
 3. **Bug H third** (LocatorInit mount location). Tied to G — both block the headline "see your real app + click-to-edit" experience. Move LocatorInit into the user's root layout.
-4. **Bug B fourth** (CLI src/ convention detection). Now you can reliably install in any project without manual file moves.
-5. **Bug A fifth** (decouple dep-install from pnpm). Mechanical and isolated.
-6. **Bug D sixth** (Next 15+ turbopack syntax). One-file template edit; do while in the skill markdown.
-7. **Bug E seventh** (path-flexible skill triggers). Same file family as D; cheap to fix at the same time.
-8. **Bug C eighth** (Phase 3 narrative leading whitespace). Cosmetic.
-9. **Bug F ninth** (drop redundant layout step). Smallest scope. **Note:** revisit in light of Bug J's fix — if a Forkshop layout.tsx is now part of the install, this "redundant layout" framing may shift. Decide during fix.
-10. **Bug I — skip.** Future kit-polish work, out of scope here.
+4. **Bug K fourth** (hook-script port detection + fallback). Without this, live-AI silently doesn't fire on any non-3000 port. Two parts: setup-time detection from package.json + runtime port-trying fallback in the hook.
+5. **Bug B fifth** (CLI src/ convention detection). Now you can reliably install in any project without manual file moves.
+6. **Bug A sixth** (decouple dep-install from pnpm). Mechanical and isolated.
+7. **Bug D seventh** (Next 15+ turbopack syntax). One-file template edit; do while in the skill markdown.
+8. **Bug E eighth** (path-flexible skill triggers). Same file family as D; cheap to fix at the same time.
+9. **Bug C ninth** (Phase 3 narrative leading whitespace). Cosmetic.
+10. **Bug F tenth** (drop redundant layout step). Smallest scope. **Note:** revisit in light of Bug J's fix — if a Forkshop layout.tsx is now part of the install, this "redundant layout" framing may shift. Decide during fix.
+11. **Bug I — skip.** Future kit-polish work, out of scope here.
 
 **Re-test in all known projects after the polish round**:
 - The original `create-next-app --no-src-dir` cold fixture (regression check)
