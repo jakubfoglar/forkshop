@@ -29,20 +29,15 @@ export function AgentSelectionChip({
   const activePrimitives = useAgentActivePrimitives()
   const siteWide = useSiteWideActivity()
 
-  const isPageActive = pageSelectionPath !== undefined && activePages.has(pageSelectionPath)
-  const isBlockActive = blockSelectionSlug !== undefined && activeBlocks.has(blockSelectionSlug)
-  const isPrimitiveActive =
-    primitiveSelectionId !== undefined && activePrimitives.has(primitiveSelectionId)
-
-  // Build the label. Selection-specific signal wins over site-wide.
-  let label: string | undefined
-  if (isPageActive) label = pageFileLabel(pageSelectionPath!)
-  else if (isBlockActive) label = `${blockSelectionSlug!}.tsx`
-  else if (isPrimitiveActive) label = `${primitiveSelectionId!}.tsx`
-  else if (activePages.size > 0) label = pageFileLabel(firstSetEntry(activePages))
-  else if (activeBlocks.size > 0) label = `${firstSetEntry(activeBlocks)}.tsx`
-  else if (activePrimitives.size > 0) label = `${firstSetEntry(activePrimitives)}.tsx`
-  else if (siteWide.active && siteWide.recentBasename !== undefined) label = siteWide.recentBasename
+  const label = deriveChipLabel({
+    pageSelectionPath,
+    blockSelectionSlug,
+    primitiveSelectionId,
+    activePages,
+    activeBlocks,
+    activePrimitives,
+    siteWide,
+  })
 
   return (
     <>
@@ -76,4 +71,41 @@ function pageFileLabel(path: string): string {
 function firstSetEntry<T>(set: ReadonlySet<T>): T {
   const iter = set.values().next()
   return iter.value as T
+}
+
+// Selection-aware label derivation. Order: selection-specific match (the user
+// is viewing the file Claude is editing) beats any site-wide fallback; within
+// site-wide, page/block/primitive beat the unmapped-file basename. Returns
+// undefined when nothing is active — chip hides.
+export function deriveChipLabel({
+  pageSelectionPath,
+  blockSelectionSlug,
+  primitiveSelectionId,
+  activePages,
+  activeBlocks,
+  activePrimitives,
+  siteWide,
+}: {
+  pageSelectionPath?: string
+  blockSelectionSlug?: string
+  primitiveSelectionId?: string
+  activePages: ReadonlySet<string>
+  activeBlocks: ReadonlySet<string>
+  activePrimitives: ReadonlySet<string>
+  siteWide: { active: boolean; recentBasename?: string }
+}): string | undefined {
+  if (pageSelectionPath !== undefined && activePages.has(pageSelectionPath)) {
+    return pageFileLabel(pageSelectionPath)
+  }
+  if (blockSelectionSlug !== undefined && activeBlocks.has(blockSelectionSlug)) {
+    return `${blockSelectionSlug}.tsx`
+  }
+  if (primitiveSelectionId !== undefined && activePrimitives.has(primitiveSelectionId)) {
+    return `${primitiveSelectionId}.tsx`
+  }
+  if (activePages.size > 0) return pageFileLabel(firstSetEntry(activePages))
+  if (activeBlocks.size > 0) return `${firstSetEntry(activeBlocks)}.tsx`
+  if (activePrimitives.size > 0) return `${firstSetEntry(activePrimitives)}.tsx`
+  if (siteWide.active && siteWide.recentBasename !== undefined) return siteWide.recentBasename
+  return undefined
 }
