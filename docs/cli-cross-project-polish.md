@@ -924,6 +924,131 @@ None of these are individually as visible as the URL sync, but if one or more is
 
 ---
 
+## Bug P — Locator.js webpack-loader breaks every route in Next 16 projects (404s after .next/ cache miss)
+
+**Where:** the setup-skill phase that adds the Locator.js `turbopack.rules` block to the user's `next.config.ts`. Loader pattern is `**/*.{tsx,jsx}` — runs on every file including Next's special files (`app/layout.tsx`, `app/page.tsx`, `app/not-found.tsx`, `route.ts`).
+
+**Severity:** **Critical.** This is the most serious bug in the polish file so far. When triggered, **every route in the user's project 404s.** The user's app stops working, not just Forkshop. This is the only bug in the file that breaks the host project rather than Forkshop itself.
+
+### Symptom (from ravineo-playground/site)
+
+After install + a fresh `pnpm run dev` (i.e., post-`.next/` cache nuke):
+
+- `curl localhost:3000/` → 404
+- `curl localhost:3000/login` → 404
+- `curl localhost:3000/forkshop` → 404
+- Every route in the app returns 404
+- Page files exist on disk in the right locations
+- Middleware isn't causing it (Next docs confirm middleware can't trigger this pattern)
+- RSC response shows `pagePath:"__next_builtin__layout.js"` and `__next_builtin__not-found.js` — Next has fallen back to built-in defaults because **it failed to discover the user's app/ directory**
+
+### Root cause
+
+The `turbopack.rules` block added by the setup skill (Bug D's neighbor — the Locator wiring) configures `@locator/webpack-loader` to run on `**/*.{tsx,jsx}`. That pattern includes Next.js's special files:
+
+- `app/layout.tsx`
+- `app/page.tsx`
+- `app/not-found.tsx`
+- `app/loading.tsx`
+- `app/error.tsx`
+- (and similar files at every route segment)
+
+The Locator loader transforms these files to add `data-source-file` / `data-source-line` attributes for option-click-to-open-editor. **Next 16's RSC compiler rejects the transformed output for these special files** — they have strict expectations about the shape of layout/page modules that Locator's transform apparently violates. Route registration fails silently. Next falls back to its built-in 404 layout.
+
+The reason it sometimes "worked before":
+
+- Earlier dev sessions populated `.next/cache/` with pre-Locator-transform output for these files
+- `.next/` cache hits skipped the loader on subsequent runs → no breakage
+- First fresh `pnpm dev` after a `.next/` clear is when the bomb goes off
+
+This means the bug is **latent** — users may not notice immediately after install, but the first time they `rm -rf .next/` or run a fresh `pnpm install` or pull a teammate's branch that triggers a cache reset, their app dies until they realize what's wrong.
+
+### Fix options (in order of preference)
+
+**Option 1 (recommended): Narrow the loader pattern to exclude Next's special files.**
+
+In the `turbopack.rules` config, change the matcher from `**/*.{tsx,jsx}` to something that excludes Next.js's route segment files. Two approaches:
+
+```ts
+// 1a — exclude pattern (if Turbopack supports it; check docs)
+turbopack: {
+  rules: {
+    "**/*.{tsx,jsx}": {
+      loaders: [{ loader: "@locator/webpack-loader", options: { env: "development" } }],
+      // Skip Next route-segment files
+      exclude: [
+        "**/layout.{tsx,jsx}",
+        "**/page.{tsx,jsx}",
+        "**/not-found.{tsx,jsx}",
+        "**/loading.{tsx,jsx}",
+        "**/error.{tsx,jsx}",
+        "**/route.{ts,tsx,js,jsx}",
+      ],
+    },
+  },
+}
+
+// 1b — invert the pattern (more brittle but more compatible)
+turbopack: {
+  rules: {
+    "components/**/*.{tsx,jsx}": { loaders: [...] },
+    "lib/**/*.{tsx,jsx}": { loaders: [...] },
+    "src/components/**/*.{tsx,jsx}": { loaders: [...] },
+    // NOT app/**/*.{tsx,jsx} — that's the dangerous one
+  },
+}
+```
+
+Trade-off: option-click won't work for elements rendered directly from the special files (e.g., a `<h1>` typed inline in `app/page.tsx`). But it WILL work for elements rendered from components those files import (the common case — `app/page.tsx` rarely renders content directly; it composes `<MyHero />`, `<MyFeatureRow />`, etc., which DO get the Locator transform). So the user-facing capability survives ~95% of cases.
+
+**Option 2: Upstream Locator.js fix for Next 16 RSC compat.**
+
+File an issue at `@locator/babel-jsx` / `@locator/webpack-loader` repo describing the symptom. Wait for an upstream fix. Pin Locator versions if a fixed release lands. Slow path; Forkshop users hit the bug in the meantime.
+
+**Option 3: Disable opt-click on Next 16 entirely until upstream is fixed.**
+
+In the setup skill, detect Next version. If >= 16, **skip** the Locator opt-in and tell the user: *"Option-click to open editor is temporarily disabled on Next 16 due to an upstream Locator.js compatibility issue. Will be re-enabled in a future Forkshop release."* Less ideal — users lose the feature — but it's safe.
+
+**Option 4: Sandbox the transform to a virtual filesystem.**
+
+Run the Locator loader on a virtual copy of each file, then verify the output parses cleanly via a quick AST check before letting it reach the RSC compiler. Complex and high-effort; reject.
+
+### Recommendation
+
+**Implement Option 1 (1a if Turbopack supports `exclude`, fall back to 1b otherwise).** Verify the exact Turbopack rule syntax for exclusions against Next 16's docs. Test in both `--src-dir` and `--no-src-dir` fixtures to confirm:
+
+1. Routes load correctly (Next discovers app/ properly)
+2. Option-click works on rendered elements from `components/`, `lib/`, etc.
+3. Option-click doesn't work on text typed directly into layout.tsx/page.tsx (acceptable trade-off)
+
+### Repro
+
+```bash
+# In any Forkshop-installed Next 16 project:
+rm -rf .next/
+pnpm run dev   # or npm run dev
+# Wait for ready, then:
+curl -sI http://localhost:3000/
+# Currently: HTTP/1.1 404 Not Found
+# Expected: HTTP/1.1 200 OK
+```
+
+### Verification
+
+After fix, run the repro on:
+- ravineo-playground/site (the original reporter — uses src/, Next 16)
+- A fresh `pnpm create next-app@latest --src-dir` fixture
+- A fresh `pnpm create next-app@latest --no-src-dir` fixture
+- influencers-scrapers if practical
+
+All should return 200 on `/` after a fresh dev start with no `.next/` cache.
+
+### Severity escalation note
+
+This bug needs to land **before** any other polish-round work ships. A user who installs Forkshop, gets their app silently broken on the next cache miss, and has to debug "why does my whole project 404" is a worst-case first-impression — significantly worse than a missing pulse or stale iframe. **Treat as P0**; the other bugs in this file are P1.
+
+---
+
 ## Bug I (limitation, not a bug — capturing for future) — Pages board doesn't auto-handle dynamic routes
 
 **Where:** `packages/registry/src/kits/page-tree.tsx` — and how the setup skill populates the pages list.
@@ -957,7 +1082,8 @@ These were surfaced earlier and have been resolved. Listed here so the next Clau
 
 ## Recommended fix order
 
-1. **Bug J first** (Forkshop inherits root-layout chrome). Highest visible impact — users see their own site's navbar wrapped around Forkshop. Drop a `src/app/forkshop/layout.tsx` with a fixed-overlay wrapper. Simple, isolated.
+0. **Bug P first — P0/critical** (Locator loader breaks every route in Next 16 after `.next/` cache miss). Treat as a stop-the-line bug; this isn't first-impression UX, this is "Forkshop silently broke the user's whole app." Narrow the turbopack rule pattern to exclude Next's special files (`layout.tsx`, `page.tsx`, `not-found.tsx`, `loading.tsx`, `error.tsx`, `route.ts`). Verify with a fresh `rm -rf .next/ && pnpm dev` repro that routes return 200.
+1. **Bug J second** (Forkshop inherits root-layout chrome). Highest visible impact — users see their own site's navbar wrapped around Forkshop. Drop a `src/app/forkshop/layout.tsx` with a fixed-overlay wrapper. Simple, isolated.
 2. **Bug G second** (iframe drift / infinite-grow). Equally visible — iframes don't render right. Inject viewport-decoupling CSS in the iframe-preview hook.
 3. **Bug L third** (HMR doesn't propagate into iframes). Investigation-heavy but high-impact. Either fix HMR plumbing OR force iframe reload on agent-edit events. Worth doing in the same session as G+M+H since you'll already be in the iframe wiring code.
 4. **Bug M fourth** (Next 15+ dev indicator visible in iframes). Same file family as G+L — the iframe-CSS injection. Cheap to add the missing selectors while you're already there.
