@@ -351,7 +351,7 @@ Render these as inline fenced code blocks with `─────` boxes around th
 
 ### Edge cases
 
-- **If `next.config.ts` already has `experimental.turbopack.rules`:** the "Show me" diff shows a *merge proposal* (new loader added to existing rules object) rather than a raw append. The skill never overwrites existing rules.
+- **If `next.config.ts` already has `turbopack.rules` (Next 15+) or `experimental.turbopack.rules` (Next 14):** the "Show me" diff shows a *merge proposal* (new loader added to existing rules object) rather than a raw append. The skill never overwrites existing rules.
 - **If the next config is `.js`/`.mjs`:** convert the turbopack rule snippet to that module format.
 - **If `.claude/settings.json` does not exist:** note this in the preamble for [2]: *"`.claude/settings.json` doesn't exist — I'll create it with just the hook entry."* The diff path shows the full file content.
 - **If `.claude/settings.json` already has a `PostToolUse` matcher covering `Edit|Write|MultiEdit`:** show a merge proposal that adds Forkshop's hook entry alongside any existing entries.
@@ -1098,8 +1098,11 @@ Substitute `{{detected_port}}` from `package.json` `scripts.dev` — match `-p <
 
 Restrict the Locator loader to the user's component and lib trees. Running it on `app/**/{layout,page,not-found,loading,error,route}.{ts,tsx}` breaks Next.js's RSC route discovery on Next 16 (every route 404s after a fresh `.next/` cache miss). Including both `components/` and `src/components/` paths covers both `--src-dir` and flat layouts in one template; the non-matching set no-ops.
 
-```ts
-experimental: {
+**Pick the shape based on the user's Next version** (read `package.json` `dependencies.next` or `devDependencies.next`; parse the major). The `turbopack` key was promoted out of `experimental` in Next 15.3 and the legacy `experimental.turbo` location is removed in Next 16. Use:
+
+- **Next 15.x or 16.x+ → top-level `turbopack`**:
+
+  ```ts
   turbopack: {
     rules: {
       "components/**/*.{js,jsx,ts,tsx}": { loaders: ["@locator/webpack-loader"] },
@@ -1108,10 +1111,24 @@ experimental: {
       "src/lib/**/*.{js,jsx,ts,tsx}": { loaders: ["@locator/webpack-loader"] },
     },
   },
-},
-```
+  ```
 
-If `experimental` already exists in the user's config, merge into its `turbopack.rules` object — do not replace the existing `experimental` block.
+- **Next 14.x → `experimental.turbopack`**:
+
+  ```ts
+  experimental: {
+    turbopack: {
+      rules: {
+        "components/**/*.{js,jsx,ts,tsx}": { loaders: ["@locator/webpack-loader"] },
+        "lib/**/*.{js,jsx,ts,tsx}": { loaders: ["@locator/webpack-loader"] },
+        "src/components/**/*.{js,jsx,ts,tsx}": { loaders: ["@locator/webpack-loader"] },
+        "src/lib/**/*.{js,jsx,ts,tsx}": { loaders: ["@locator/webpack-loader"] },
+      },
+    },
+  },
+  ```
+
+If the chosen key already exists in the user's config, merge into its `turbopack.rules` object — do not replace the existing block.
 
 For `.js`/`.mjs` configs, embed the same fields in the existing module-export shape.
 
