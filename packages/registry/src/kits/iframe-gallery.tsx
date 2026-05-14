@@ -6,6 +6,7 @@ import { GuideOverlay } from "@forkshop/components/canvas/guide-overlay"
 import { LazyIframe } from "@forkshop/components/canvas/lazy-iframe"
 import { useRegisterIframe } from "@forkshop/components/iframe-registry"
 import { useForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
+import { useAgentActiveBlocks } from "@forkshop/components/agent-activity-context"
 import type { GetSnapTargets } from "@forkshop/hooks/use-draggable-node"
 import type { NodePosition, NodePositions } from "@forkshop/lib/node-positions"
 import type { SnapGuide, SnapTarget } from "@forkshop/lib/system-snap"
@@ -298,6 +299,8 @@ function GalleryNodeInner({
   const { applyWheelInput, transformRef } = useForkshopCanvas()
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
   useRegisterIframe(iframeRef)
+  const activeBlocks = useAgentActiveBlocks()
+  const agentActive = activeBlocks.has(entry.slug)
 
   const handleBodyHeightSync = useCallback(
     (height: number) => onHeightChange(entry.slug, height),
@@ -330,6 +333,8 @@ function GalleryNodeInner({
       override={override}
       label={entry.name}
       isSelected={isSelected}
+      agentActive={agentActive}
+      agentFileLabel={agentActive ? `${entry.slug}.tsx` : undefined}
       onPositionChange={onPositionChange}
       getSnapTargets={getSnapTargets}
       onGuidesChange={onGuidesChange}

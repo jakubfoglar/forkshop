@@ -5,6 +5,7 @@ import {
   ForkshopSidebar,
   LocatorInit,
   AgentActivityProvider,
+  AgentSelectionChip,
   type ForkshopSelection,
   DesignSystemBoard,
   IframeGallery,
@@ -71,6 +72,11 @@ export default function ForkshopPage() {
           routes={PAGE_ROUTES}
         />
         <div className="relative flex flex-1 overflow-hidden">
+          <AgentSelectionChip
+            pageSelectionPath={selection.kind === "page" ? selection.path : undefined}
+            blockSelectionSlug={selection.kind === "block" ? selection.slug : undefined}
+            primitiveSelectionId={selection.kind === "primitive" ? selection.id : undefined}
+          />
           {view === "design-system" && <DesignSystemBoardView />}
           {view === "components" && <ComponentsBoardView />}
           {view === "pages" && (

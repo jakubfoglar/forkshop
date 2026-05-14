@@ -44,6 +44,7 @@ export type { ActivityEntry, FileMap } from "@forkshop/components/agent-activity
 export type { ActivityEntry as AgentActivityStateEntry } from "@forkshop/lib/agent-activity-state"
 export { recordActivity, subscribe } from "@forkshop/lib/agent-activity-state"
 export { AgentIframeRelay } from "@forkshop/components/agent-iframe-relay"
+export { AgentSelectionChip } from "@forkshop/components/agent-selection-chip"
 export { filePathToRoute, fileToSelection } from "@forkshop/lib/file-to-selection"
 export {
   buildTokenRegistry,

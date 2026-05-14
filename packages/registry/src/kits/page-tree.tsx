@@ -9,6 +9,7 @@ import { LazyIframe } from "@forkshop/components/canvas/lazy-iframe"
 import { ResponsiveFrameView } from "@forkshop/components/canvas/responsive-frame-view"
 import { useRegisterIframe } from "@forkshop/components/iframe-registry"
 import { useForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
+import { useAgentActivePages } from "@forkshop/components/agent-activity-context"
 import type { GetSnapTargets } from "@forkshop/hooks/use-draggable-node"
 import type { NodePosition, NodePositions } from "@forkshop/lib/node-positions"
 import type { SnapGuide, SnapTarget } from "@forkshop/lib/system-snap"
@@ -336,6 +337,8 @@ function PageTileInner({
   const { applyWheelInput, transformRef } = useForkshopCanvas()
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
   useRegisterIframe(iframeRef)
+  const activePages = useAgentActivePages()
+  const agentActive = activePages.has(entry.path)
   const label = entry.label ?? humanize(entry.path)
 
   const handleIframeWheel = useCallback(
@@ -364,6 +367,8 @@ function PageTileInner({
       override={override}
       label={label}
       isSelected={isSelected}
+      agentActive={agentActive}
+      agentFileLabel={agentActive ? pageFileLabel(entry.path) : undefined}
       onIsolate={() => onIsolate(entry.path)}
       onPositionChange={onPositionChange}
       getSnapTargets={getSnapTargets}
@@ -403,6 +408,8 @@ function IsolationView({
   onBack: () => void
 }) {
   const { applyWheelInput, transformRef, containerRef } = useForkshopCanvas()
+  const activePages = useAgentActivePages()
+  const agentActive = activePages.has(path)
   const [measuredHeight, setMeasuredHeight] = useState<number | undefined>(undefined)
   // Track when containerRef is populated so the portal can attach.
   const [containerReady, setContainerReady] = useState(false)
@@ -444,6 +451,7 @@ function IsolationView({
         onBodyHeightChange={handleBodyHeightChange}
         onIframeWheel={handleIframeWheel}
         viewports={viewports}
+        agentActive={agentActive}
       />
     </div>
   )
@@ -455,6 +463,13 @@ function IsolationView({
 
 function nodeId(path: string): string {
   return `page-tree:${path}`
+}
+
+function pageFileLabel(path: string): string {
+  if (path === "/") return "page.tsx"
+  const segments = path.split("/").filter(Boolean)
+  const last = segments[segments.length - 1] ?? "page"
+  return `${last}/page.tsx`
 }
 
 function humanize(path: string): string {

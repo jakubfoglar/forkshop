@@ -3,6 +3,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { Config } from "tailwindcss"
 import { CanvasNode } from "@forkshop/components/canvas/canvas-node"
+import { useAgentActivePrimitives } from "@forkshop/components/agent-activity-context"
 import { useForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
 import { GuideOverlay } from "@forkshop/components/canvas/guide-overlay"
 import { useDraggableNode, type GetSnapTargets } from "@forkshop/hooks/use-draggable-node"
@@ -208,25 +209,16 @@ function DesignSystemBoardInner({
       />
 
       {positionedPrimitives.map((p) => (
-        <CanvasNode
+        <PrimitiveCanvasNode
           key={p.id}
-          id={p.id}
-          layoutX={p.x}
-          layoutY={p.y}
-          width={p.width}
-          height={p.height}
+          primitive={p}
           override={nodePositions[p.id]}
-          label={p.name}
           isSelected={selectedId === p.id}
           onPositionChange={handlePositionChange}
           getSnapTargets={getSnapTargets}
           onGuidesChange={handleGuidesChange}
           onSelectChange={handleSelectChange}
-          style={{ height: p.height, transition: "box-shadow 120ms ease-out" }}
-          className="border border-forkshop-border bg-forkshop-surface shadow-xs"
-        >
-          <div className="p-forkshop-4">{p.render()}</div>
-        </CanvasNode>
+        />
       ))}
 
       <CanvasNode
@@ -256,6 +248,49 @@ function DesignSystemBoardInner({
 // ---------------------------------------------------------------------------
 // Colors section (raw + semantic nodes + SVG edges)
 // ---------------------------------------------------------------------------
+
+function PrimitiveCanvasNode({
+  primitive,
+  override,
+  isSelected,
+  onPositionChange,
+  getSnapTargets,
+  onGuidesChange,
+  onSelectChange,
+}: {
+  primitive: PositionedPrimitive
+  override: NodePosition | undefined
+  isSelected: boolean
+  onPositionChange: (id: string, x: number, y: number) => void
+  getSnapTargets: GetSnapTargets
+  onGuidesChange: (guides: SnapGuide[]) => void
+  onSelectChange: (id: string, selected: boolean) => void
+}) {
+  const activePrimitives = useAgentActivePrimitives()
+  const agentActive = activePrimitives.has(primitive.id)
+  return (
+    <CanvasNode
+      id={primitive.id}
+      layoutX={primitive.x}
+      layoutY={primitive.y}
+      width={primitive.width}
+      height={primitive.height}
+      override={override}
+      label={primitive.name}
+      isSelected={isSelected}
+      agentActive={agentActive}
+      agentFileLabel={agentActive ? `${primitive.id}.tsx` : undefined}
+      onPositionChange={onPositionChange}
+      getSnapTargets={getSnapTargets}
+      onGuidesChange={onGuidesChange}
+      onSelectChange={onSelectChange}
+      style={{ height: primitive.height, transition: "box-shadow 120ms ease-out" }}
+      className="border border-forkshop-border bg-forkshop-surface shadow-xs"
+    >
+      <div className="p-forkshop-4">{primitive.render()}</div>
+    </CanvasNode>
+  )
+}
 
 function outlineFor(isSelected: boolean, isHovered: boolean): string {
   if (isSelected) return "calc(1.5px / var(--canvas-zoom, 1)) solid #3b82f6"
