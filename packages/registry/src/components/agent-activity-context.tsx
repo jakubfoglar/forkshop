@@ -284,3 +284,23 @@ export function useAgentSubstringsForBlock(
     return result
   }, [entries, fileMap, slug])
 }
+
+// All substrings from currently-active entries, regardless of which page or
+// block they belong to. The relay broadcasts this set to every iframe; each
+// iframe's text-walker filters by what actually appears in its own DOM, which
+// is a more reliable filter than selection-state matching.
+export function useAllAgentSubstrings(): readonly {
+  oldString?: string
+  newString?: string
+}[] {
+  const { entries } = useAgentActivity()
+  return useMemo(() => {
+    const result: { oldString?: string; newString?: string }[] = []
+    for (const entry of entries) {
+      if (entry.oldString !== undefined || entry.newString !== undefined) {
+        result.push({ oldString: entry.oldString, newString: entry.newString })
+      }
+    }
+    return result
+  }, [entries])
+}

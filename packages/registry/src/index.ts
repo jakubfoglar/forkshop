@@ -38,6 +38,7 @@ export {
   useSiteWideActivity,
   useAgentSubstringsForPage,
   useAgentSubstringsForBlock,
+  useAllAgentSubstrings,
   deriveAffectedBlocks,
 } from "@forkshop/components/agent-activity-context"
 export type { ActivityEntry, FileMap } from "@forkshop/components/agent-activity-context"

@@ -4,23 +4,18 @@ import { useEffect } from "react"
 import { useIframeRegistry } from "@forkshop/components/iframe-registry"
 import {
   useAgentActiveBlocks,
-  useAgentSubstringsForPage,
-  useAgentSubstringsForBlock,
-  usePageActiveFallback,
+  useAllAgentSubstrings,
 } from "@forkshop/components/agent-activity-context"
 
-export function AgentIframeRelay({
-  pageSelectionPath,
-  blockSelectionSlug,
-}: {
-  pageSelectionPath: string | undefined
-  blockSelectionSlug: string | undefined
-}) {
+// Pushes agent-activity state into every registered iframe via postMessage.
+// Broadcasts unfiltered: each iframe's text-walker decides whether the
+// substring matches anything in its own DOM. This removes coupling to
+// selection state and means the relay works in any canvas regardless of
+// whether the host knows which page/block the user is viewing.
+export function AgentIframeRelay() {
   const registry = useIframeRegistry()
   const activeBlocks = useAgentActiveBlocks()
-  const pageSubstrings = useAgentSubstringsForPage(pageSelectionPath)
-  const blockSubstrings = useAgentSubstringsForBlock(blockSelectionSlug)
-  const pageActiveForSelection = usePageActiveFallback(pageSelectionPath)
+  const allSubstrings = useAllAgentSubstrings()
 
   // Push: broadcast block highlights to every iframe.
   useEffect(() => {
@@ -35,51 +30,40 @@ export function AgentIframeRelay({
     }
   }, [registry, activeBlocks])
 
-  // Push: broadcast page-active fallback to every iframe.
+  // Push: broadcast every active substring to every iframe.
   useEffect(() => {
     if (!registry) return
+    if (allSubstrings.length === 0) return
     for (const iframe of registry.getAll()) {
       try {
         iframe.contentWindow?.postMessage(
-          { type: "forkshop:agent-page-active", active: pageActiveForSelection },
+          { type: "forkshop:agent-text", strings: allSubstrings },
           "*",
         )
       } catch {
         // ignore
       }
     }
-  }, [registry, pageActiveForSelection])
+  }, [registry, allSubstrings])
 
-  // Push: broadcast text-substring flashes.
-  useEffect(() => {
-    if (!registry) return
-    const strings = pageSelectionPath === undefined ? blockSubstrings : pageSubstrings
-    if (strings.length === 0) return
-    for (const iframe of registry.getAll()) {
-      try {
-        iframe.contentWindow?.postMessage({ type: "forkshop:agent-text", strings }, "*")
-      } catch {
-        // ignore
-      }
-    }
-  }, [registry, pageSubstrings, blockSubstrings, pageSelectionPath])
-
-  // Hello-replay: when an iframe says hello on mount, post the current snapshot
-  // back to that specific source only.
+  // Hello-replay: when an iframe says hello on mount (via use-iframe-edit-
+  // wiring's synthesized message event), post the current snapshot back to
+  // that specific source only.
   useEffect(() => {
     function onMessage(event: MessageEvent) {
       if (event.data?.type !== "forkshop:agent-hello") return
       const source = event.source as Window | null
       if (!source) return
       try {
-        source.postMessage({ type: "forkshop:agent-block", slugs: [...activeBlocks] }, "*")
         source.postMessage(
-          { type: "forkshop:agent-page-active", active: pageActiveForSelection },
+          { type: "forkshop:agent-block", slugs: [...activeBlocks] },
           "*",
         )
-        const strings = pageSelectionPath === undefined ? blockSubstrings : pageSubstrings
-        if (strings.length > 0) {
-          source.postMessage({ type: "forkshop:agent-text", strings }, "*")
+        if (allSubstrings.length > 0) {
+          source.postMessage(
+            { type: "forkshop:agent-text", strings: allSubstrings },
+            "*",
+          )
         }
       } catch {
         // ignore
@@ -87,7 +71,7 @@ export function AgentIframeRelay({
     }
     window.addEventListener("message", onMessage)
     return () => window.removeEventListener("message", onMessage)
-  }, [activeBlocks, pageActiveForSelection, pageSubstrings, blockSubstrings, pageSelectionPath])
+  }, [activeBlocks, allSubstrings])
 
   return null
 }

@@ -431,7 +431,7 @@ export function ForkshopCanvas({
   return (
     <ForkshopCanvasContext.Provider value={contextValue}>
       <IframeRegistryProvider>
-        <AgentIframeRelay pageSelectionPath={undefined} blockSelectionSlug={undefined} />
+        <AgentIframeRelay />
         <div
           ref={containerRef as React.RefObject<HTMLDivElement>}
           className="relative flex-1 select-none overflow-hidden overscroll-contain bg-forkshop-canvas"
