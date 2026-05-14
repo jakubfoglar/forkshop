@@ -6,6 +6,63 @@ Everything in `app/forkshop/` is yours to customize. This file documents how the
 
 ---
 
+## Adding a new board
+
+**The default shape of a Forkshop board is a canvas — not a flat page layout.**
+
+When you (or your Claude) want a new section in the Forkshop sidebar with its own content area, the board file should:
+
+1. Wrap content in `<ForkshopCanvas>` so users get pan + zoom + viewport controls automatically.
+2. Place each interactive item in a `<CanvasNode id="...">` so users can drag to rearrange and positions persist.
+3. Persist positions via `/api/forkshop/positions` — give each `CanvasNode` a stable `id` (e.g. `"product:hero"`, `"section:colors"`) and the kit hooks already shipped will handle save/restore.
+
+### When to deviate (rare)
+
+Flat HTML layouts are appropriate ONLY for genuinely non-spatial content:
+
+- A tabular settings page where rows have no spatial relationship
+- A documentation-style reading page
+- A single-form input
+
+For ANY board that displays multiple visual items (cards, previews, diagrams, pipelines, lists with images), use canvas primitives. **If you're tempted to write `<div className="grid">`, stop and use `<ForkshopCanvas>` + `<CanvasNode>` instead.**
+
+### Sketch
+
+```tsx
+"use client"
+import { ForkshopCanvas } from "@/components/forkshop/canvas/forkshop-canvas"
+import { CanvasNode } from "@/components/forkshop/canvas/canvas-node"
+
+export default function MyCustomBoard() {
+  // Position state — load initial values from /api/forkshop/positions
+  // (the same endpoint the page-tree and design-system kits use); call
+  // onPositionChange to persist drag moves. See page-tree.tsx for a
+  // complete reference of the controlled-position wiring.
+  return (
+    <ForkshopCanvas fitMode="both">
+      <CanvasNode id="item-1" layoutX={0} layoutY={0} width={400} height={300} {...positionProps}>
+        <MyCard />
+      </CanvasNode>
+      <CanvasNode id="item-2" layoutX={420} layoutY={0} width={400} height={300} {...positionProps}>
+        <MyOtherCard />
+      </CanvasNode>
+    </ForkshopCanvas>
+  )
+}
+```
+
+For the full controlled-position pattern (override + onPositionChange + snap targets), copy the wiring from the `PageTree` kit's source — it's the cleanest reference for rolling a custom board.
+
+### Wiring a new board
+
+After writing the board file, register it in three places:
+
+- `app/forkshop/<board-name>-board.tsx` — the board itself (the file above)
+- `app/forkshop/forkshop.config.tsx` — add your board to the sidebar nav
+- `app/forkshop/page.tsx` — route to it from the canvas selection switch
+
+---
+
 ## Mental model
 
 ### Selection state
