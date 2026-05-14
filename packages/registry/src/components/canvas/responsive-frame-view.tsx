@@ -1,9 +1,14 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { CanvasLabel } from "@forkshop/components/canvas/canvas-label"
 import { useRegisterIframe } from "@forkshop/components/iframe-registry"
+import { useAgentEditEpoch } from "@forkshop/components/agent-activity-context"
 import { PREVIEW_HIDE_CHROME_CSS } from "@forkshop/hooks/use-iframe-preview"
+
+type IframeIdentity =
+  | { kind: "page"; path: string }
+  | { kind: "block"; slug: string }
 
 const BLOCK_VIEWPORT_GAP = 32
 const ISOLATION_LABEL_HEIGHT = 80
@@ -77,6 +82,18 @@ export function ResponsiveFrameView(props: ResponsiveFrameViewProps) {
     props.kind === "page" ? (props.title ?? props.path) : `${props.slug} — ${props.title}`
   const isPage = props.kind === "page"
 
+  // Stable identity used to look up the agent-edit epoch for this iframe set.
+  // All three viewports share one identity so they reload together when Claude
+  // touches the underlying file.
+  const identity = useMemo<IframeIdentity>(
+    () =>
+      props.kind === "page"
+        ? { kind: "page", path: props.path }
+        : { kind: "block", slug: props.slug },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [props.kind, props.kind === "page" ? props.path : props.slug],
+  )
+
   const viewportLayout = buildViewportLayout(viewports)
 
   const [viewportHeights, setViewportHeights] = useState<readonly number[]>(() =>
@@ -138,6 +155,7 @@ export function ResponsiveFrameView(props: ResponsiveFrameViewProps) {
             height={viewportHeights[index] ?? DEFAULT_VIEWPORT_HEIGHT}
             viewportIndex={index}
             agentActive={agentActive ?? false}
+            identity={identity}
             onIframeMount={onIframeMount}
             onLocalHeightChange={handleViewportHeightChange}
             onOgImageDetected={index === 0 && isPage ? setOgImageUrl : undefined}
@@ -188,6 +206,7 @@ function Viewport({
   height,
   viewportIndex,
   agentActive,
+  identity,
   onIframeMount,
   onLocalHeightChange,
   onOgImageDetected,
@@ -199,6 +218,7 @@ function Viewport({
   height: number
   viewportIndex: number
   agentActive: boolean
+  identity: IframeIdentity
   onIframeMount?: (index: number, iframe: HTMLIFrameElement | undefined) => void
   onLocalHeightChange: (index: number, height: number) => void
   onOgImageDetected?: (url: string | undefined) => void
@@ -208,6 +228,30 @@ function Viewport({
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
   useRegisterIframe(iframeRef)
   const [shouldLoad, setShouldLoad] = useState(false)
+
+  // Reload the iframe each time the agent-edit epoch for this iframe's
+  // identity advances. Next.js Fast Refresh isn't reaching iframe documents
+  // in Forkshop's nested setup, so we force a fresh load instead. Debounced
+  // ~250ms so a burst of edits collapses into one reload.
+  const editEpoch = useAgentEditEpoch(identity)
+  const reloadedAtRef = useRef(0)
+  useEffect(() => {
+    if (!shouldLoad) return
+    if (editEpoch === 0 || editEpoch <= reloadedAtRef.current) return
+    const epochAtSchedule = editEpoch
+    const timer = setTimeout(() => {
+      reloadedAtRef.current = epochAtSchedule
+      const win = iframeElement?.contentWindow
+      if (!win) return
+      try {
+        win.location.reload()
+      } catch {
+        // cross-origin or pre-load — fall back to bumping src.
+        if (iframeElement) iframeElement.src = iframeElement.src
+      }
+    }, 250)
+    return () => clearTimeout(timer)
+  }, [editEpoch, shouldLoad, iframeElement])
 
   useEffect(() => {
     onIframeMount?.(viewportIndex, iframeElement)

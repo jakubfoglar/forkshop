@@ -244,6 +244,35 @@ export function useSiteWideActivity(): {
   }, [entries, fileMap])
 }
 
+// Monotonic epoch (lastSeenAt of the most recent matching entry) for the given
+// iframe identity. Bumps each time an edit lands for a file mapping to that
+// page or block. Consumers (ResponsiveFrameView) treat each bump as a signal
+// to reload the iframe — Next.js Fast Refresh doesn't propagate into the
+// iframe documents reliably in Forkshop's nested setup, so we force a fresh
+// load instead.
+export function useAgentEditEpoch(
+  identity: { kind: "page"; path: string } | { kind: "block"; slug: string } | undefined,
+): number {
+  const { entries, fileMap } = useAgentActivity()
+  return useMemo(() => {
+    if (identity === undefined) return 0
+    let max = 0
+    for (const entry of entries) {
+      const selection = fileToSelection(entry.filePath, fileMap)
+      if (selection === undefined || selection === "site-wide") continue
+      const matches =
+        (identity.kind === "page" &&
+          selection.kind === "page" &&
+          selection.path === identity.path) ||
+        (identity.kind === "block" &&
+          selection.kind === "block" &&
+          selection.slug === identity.slug)
+      if (matches && entry.lastSeenAt > max) max = entry.lastSeenAt
+    }
+    return max
+  }, [entries, fileMap, identity])
+}
+
 export function useAgentSubstringsForPage(
   pagePath: string | undefined,
 ): readonly { oldString?: string; newString?: string }[] {

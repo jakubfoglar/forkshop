@@ -39,6 +39,7 @@ export {
   useAgentSubstringsForPage,
   useAgentSubstringsForBlock,
   useAllAgentSubstrings,
+  useAgentEditEpoch,
   deriveAffectedBlocks,
 } from "@forkshop/components/agent-activity-context"
 export type { ActivityEntry, FileMap } from "@forkshop/components/agent-activity-context"
