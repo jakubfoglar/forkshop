@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { CanvasLabel } from "@forkshop/components/canvas/canvas-label"
 import { useRegisterIframe } from "@forkshop/components/iframe-registry"
+import { PREVIEW_HIDE_CHROME_CSS } from "@forkshop/hooks/use-iframe-preview"
 
 const BLOCK_VIEWPORT_GAP = 32
 const ISOLATION_LABEL_HEIGHT = 80
@@ -244,24 +245,14 @@ function Viewport({
       if (!document_) return
       attachedDocument = document_
 
-      // The marketing layout wraps everything in min-h-screen, which in an
-      // iframe == iframe height — body.scrollHeight then reports the iframe
-      // size we set, not the actual content extent. Override min-height so the
-      // layout sizes to its content; the iframe then sizes correctly.
-      // Also hide chrome that would otherwise pollute every previewed page —
-      // the cookie banner and Next.js dev-tools button.
+      // Decouple body height from iframe viewport (so min-h-screen pages don't
+      // feedback-loop with the ResizeObserver sync below) and hide host-page
+      // chrome (cookie banners, Next dev indicators) that would otherwise
+      // appear inside every preview tile. Shared with useIframePreview so both
+      // iframe paths stay in sync.
       const previewStyle = document_.createElement("style")
       previewStyle.dataset.forkshopPreview = "true"
-      previewStyle.textContent = `
-        html, body { min-height: 0 !important; height: auto !important; }
-        [class*="min-h-screen"] { min-height: 0 !important; }
-        [data-cookie-banner] { display: none !important; }
-        nextjs-portal,
-        [data-nextjs-toast],
-        [data-nextjs-dialog],
-        [data-nextjs-dialog-overlay],
-        [id^="__next-build-watcher"] { display: none !important; }
-      `
+      previewStyle.textContent = PREVIEW_HIDE_CHROME_CSS
       document_.head.append(previewStyle)
 
       wheelHandler = (event) => onIframeWheel(event, iframe)

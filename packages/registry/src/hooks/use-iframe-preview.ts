@@ -5,8 +5,9 @@ import { useEffect, useRef, useState, type RefObject } from "react"
 // Hides dev/prod chrome that pollutes preview iframes (Next.js dev tools,
 // build watcher, cookie banner) and decouples body height from the iframe
 // viewport so ResizeObserver-based height sync doesn't feedback-loop with
-// `min-h-screen` on host pages. Injected as a <style> into each iframe.
-const PREVIEW_HIDE_CHROME_CSS = `
+// `min-h-screen` on host pages. Exported so ResponsiveFrameView (which has
+// its own inline iframe-loading path) can use the same injection.
+export const PREVIEW_HIDE_CHROME_CSS = `
   [data-cookie-banner] { display: none !important; }
   nextjs-portal,
   [data-nextjs-toast],
@@ -19,11 +20,11 @@ const PREVIEW_HIDE_CHROME_CSS = `
   [data-nextjs-toast-wrapper],
   .nextjs-toast-errors-parent,
   [id^="__next-build-watcher"] { display: none !important; }
-  html, body { min-height: 0 !important; }
-  .min-h-screen { min-height: 0 !important; }
-  .min-h-dvh { min-height: 0 !important; }
-  .min-h-svh { min-height: 0 !important; }
-  .min-h-lvh { min-height: 0 !important; }
+  html, body { min-height: 0 !important; height: auto !important; }
+  [class*="min-h-screen"],
+  [class*="min-h-dvh"],
+  [class*="min-h-svh"],
+  [class*="min-h-lvh"] { min-height: 0 !important; }
 `
 
 // Lazy-loads an iframe (via IntersectionObserver) and keeps its height synced
