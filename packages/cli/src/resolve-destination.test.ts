@@ -52,4 +52,23 @@ describe("resolveDestination", () => {
     const dest = resolveDestination("@forkshop/fonts/raveo-regular", file, aliases)
     expect(dest).toBe("app/fonts/raveo/raveo-regular.woff2")
   })
+
+  it("prepends srcPrefix to text-file destinations for src/ projects", () => {
+    const srcAliases = { ...aliases, srcPrefix: "src/" }
+    const file: ManifestFile = { kind: "text", ext: "tsx", content: "" }
+    const dest = resolveDestination("@forkshop/components/canvas/canvas-node", file, srcAliases)
+    expect(dest).toBe("src/components/forkshop/canvas/canvas-node.tsx")
+  })
+
+  it("prepends srcPrefix to destOverride templates for src/ projects", () => {
+    const srcAliases = { ...aliases, srcPrefix: "src/" }
+    const file: ManifestFile = {
+      kind: "text",
+      ext: "md",
+      content: "",
+      destOverride: "{aliases.mount}/CLAUDE.md",
+    }
+    const dest = resolveDestination("@forkshop/templates/claude-md", file, srcAliases)
+    expect(dest).toBe("src/app/forkshop/CLAUDE.md")
+  })
 })

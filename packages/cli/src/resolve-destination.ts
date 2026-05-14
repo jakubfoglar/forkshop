@@ -1,10 +1,14 @@
 import type { ForkshopJson, ManifestFile } from "./manifest-schema.js"
 
 function workspaceRelative(value: string, aliases: ForkshopJson["aliases"]): string {
+  const srcPrefix = aliases.srcPrefix ?? ""
+  let stripped: string
   if (value.startsWith(aliases.base)) {
-    return value.slice(aliases.base.length)
+    stripped = value.slice(aliases.base.length)
+  } else {
+    stripped = value.replace(/^@\//, "")
   }
-  return value.replace(/^@\//, "")
+  return srcPrefix + stripped
 }
 
 function applyOverride(template: string, aliases: ForkshopJson["aliases"]): string {

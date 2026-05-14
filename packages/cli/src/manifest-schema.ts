@@ -65,6 +65,13 @@ export interface ForkshopJson {
     api: string
     tailwind: string
     mount: string
+    /**
+     * Disk-path prefix prepended to all workspace-relative destinations.
+     * `""` for projects where `@/*` resolves to `./*` (flat layout, default).
+     * `"src/"` for projects where `@/*` resolves to `./src/*` (Next's
+     * `--src-dir` convention). Detected at `init` from `tsconfig.json`.
+     */
+    srcPrefix?: string
   }
   installedBundles: string[]
   files: Record<string, ForkshopJsonFile>

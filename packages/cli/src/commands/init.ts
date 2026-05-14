@@ -3,6 +3,7 @@ import { promisify } from "node:util"
 import pc from "picocolors"
 import { buildInstallCommand, detectPackageManager } from "../detect-pm.js"
 import { copyManifestFiles, findCollisions } from "../copy-files.js"
+import { detectSrcPrefix } from "../detect-src-dir.js"
 import { writeForkshopJson } from "../forkshop-json.js"
 import { fetchManifest } from "../fetch-manifest.js"
 import { type ForkshopJson, type Manifest } from "../manifest-schema.js"
@@ -60,6 +61,20 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
   // 3. Fetch manifest (or use injected one for tests).
   const manifest = options.manifest ?? (await fetchManifest(registryUrl))
 
+  // 3b. Detect src/ convention so file destinations land where `@/*` resolves.
+  const srcPrefix = await detectSrcPrefix(projectRoot)
+  const aliases: ForkshopJson["aliases"] = {
+    ...DEFAULT_FORKSHOP_ALIASES,
+    srcPrefix,
+  }
+  if (srcPrefix) {
+    console.log(
+      pc.dim(
+        `\nDetected \`src/\` convention from tsconfig.json — installing under src/.`,
+      ),
+    )
+  }
+
   // 4. Resolve init bundle.
   const resolved = resolveBundles(manifest, ["init"])
 
@@ -67,7 +82,7 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
   const destinations = resolved.fileAddresses.map((address) => {
     const file = manifest.files[address]
     if (!file) throw new Error(`Missing file in manifest: ${address}`)
-    return resolveDestination(address, file, DEFAULT_FORKSHOP_ALIASES)
+    return resolveDestination(address, file, aliases)
   })
   const collisions = await findCollisions(projectRoot, destinations)
   if (collisions.length > 0 && !force) {
@@ -84,7 +99,7 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
   const plan = await copyManifestFiles({
     projectRoot,
     manifest,
-    aliases: DEFAULT_FORKSHOP_ALIASES,
+    aliases,
     fileAddresses: resolved.fileAddresses,
   })
 
@@ -110,7 +125,7 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
     registryVersion: manifest.version,
     installedAt: new Date().toISOString(),
     registryUrl,
-    aliases: DEFAULT_FORKSHOP_ALIASES,
+    aliases,
     installedBundles: resolved.bundleNames,
     files: Object.fromEntries(
       plan.map((entry) => [entry.address, { dest: entry.dest, sha: entry.sha }])
