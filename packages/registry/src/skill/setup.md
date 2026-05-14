@@ -824,6 +824,7 @@ export default function {{board_name}}BoardView({
 ```tsx
 "use client"
 
+import "./forkshop.css"
 import { useState } from "react"
 import { ForkshopSidebar, type ForkshopSelection } from "@/components/forkshop/sidebar/forkshop-sidebar"
 import { LocatorInit } from "@/components/forkshop/locator-init"
@@ -1068,4 +1069,4 @@ If the CLI did not write this file during `init`, write it from this template:
 }
 ```
 
-The CLI's mount-page stub imports this file via `import "./forkshop.css"`. Don't add the import again here — assume it's in place.
+Template 5 (the mount page) imports this file via `import "./forkshop.css"` so the `--forkshop-*` color variables resolve at runtime. Without that import every `bg-forkshop-*` / `border-forkshop-*` class renders against an undefined variable — backgrounds fall to white, borders fall to `currentColor` (black).
