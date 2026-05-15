@@ -131,7 +131,6 @@ describe("manifest snapshot", () => {
       "@forkshop/components/canvas/node-frame",
       "@forkshop/components/canvas/forkshop-canvas",
       "@forkshop/components/sidebar/forkshop-sidebar",
-      "@forkshop/hooks/use-iframe-preview",
       "@forkshop/lib/edit-mode",
       "@forkshop/api/edit/route",
       "@forkshop/types/node",

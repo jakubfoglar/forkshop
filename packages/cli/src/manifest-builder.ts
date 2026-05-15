@@ -170,7 +170,7 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
   // - `primitives.deps` mirrors packages/registry/package.json `dependencies`.
   //   Keep the pins in sync when bumping the registry.
   // - Layout bundles replaced the old `kits/*` bundles after the Node/NodeType
-  //   refactor. Each Layout is a single file (gallery, tree, design-system-graph).
+  //   refactor. Each Layout is a single file (gallery, tree, design-system-view).
   const bundles: Record<string, Bundle> = {
     primitives: {
       kind: "primitive",
@@ -190,9 +190,9 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
       kind: "kit",
       items: ["@forkshop/layouts/tree"],
     },
-    "layouts/design-system-graph": {
+    "layouts/design-system-view": {
       kind: "kit",
-      items: ["@forkshop/layouts/design-system-graph"],
+      items: ["@forkshop/layouts/design-system-view"],
     },
     fonts: {
       kind: "asset",
@@ -216,7 +216,7 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
         "primitives",
         "layouts/gallery",
         "layouts/tree",
-        "layouts/design-system-graph",
+        "layouts/design-system-view",
         "fonts",
         "skill",
         "css-and-config",

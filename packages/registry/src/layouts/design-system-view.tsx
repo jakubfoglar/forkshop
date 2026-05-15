@@ -41,7 +41,7 @@ export type PrimitiveGroup = {
   primitives: AnyNode[]
 }
 
-export type DesignSystemGraphProps = {
+export type DesignSystemViewProps = {
   tokens: TokenRegistry
   primitives: PrimitiveGroup[]
   typography?: AnyNode
@@ -84,16 +84,16 @@ function layoutPrimitiveGroups(
 // Main component
 // ---------------------------------------------------------------------------
 
-const _DesignSystemGraph = memo(DesignSystemGraphInner)
-export const DesignSystemGraph: typeof _DesignSystemGraph & {
+const _DesignSystemView = memo(DesignSystemViewInner)
+export const DesignSystemView: typeof _DesignSystemView & {
   icon: typeof forkshopIcons.designSystem
   defaultTitle: string
-} = Object.assign(_DesignSystemGraph, {
+} = Object.assign(_DesignSystemView, {
   icon: forkshopIcons.designSystem,
   defaultTitle: "Foundations",
 })
 
-function DesignSystemGraphInner({
+function DesignSystemViewInner({
   tokens,
   primitives,
   typography,
@@ -101,7 +101,7 @@ function DesignSystemGraphInner({
   onPositionChange,
   selectedId,
   onSelectChange,
-}: DesignSystemGraphProps) {
+}: DesignSystemViewProps) {
   const graph = useMemo(() => buildSystemGraph(tokens), [tokens])
   const layout = useMemo(() => layoutSystem(graph, [], {}), [graph])
 

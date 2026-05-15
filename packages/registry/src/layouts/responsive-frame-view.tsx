@@ -5,7 +5,30 @@ import { CanvasLabel } from "@forkshop/components/canvas/canvas-label"
 import { useRegisterIframe } from "@forkshop/components/iframe-registry"
 import { useAgentEditEpoch } from "@forkshop/components/agent-activity-context"
 import { useForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
-import { PREVIEW_HIDE_CHROME_CSS } from "@forkshop/hooks/use-iframe-preview"
+
+// Hides dev/prod chrome that pollutes preview iframes (Next.js dev tools,
+// build watcher, cookie banner) and decouples body height from the iframe
+// viewport so ResizeObserver-based height sync doesn't feedback-loop with
+// `min-h-screen` on host pages.
+const PREVIEW_HIDE_CHROME_CSS = `
+  [data-cookie-banner] { display: none !important; }
+  nextjs-portal,
+  [data-nextjs-toast],
+  [data-nextjs-dialog],
+  [data-nextjs-dialog-overlay],
+  [data-nextjs-dev-overlay],
+  [data-nextjs-dev-tools-button],
+  [data-nextjs-route-announcer],
+  [data-nextjs-dev-overlay-toast],
+  [data-nextjs-toast-wrapper],
+  .nextjs-toast-errors-parent,
+  [id^="__next-build-watcher"] { display: none !important; }
+  html, body { min-height: 0 !important; height: auto !important; }
+  [class*="min-h-screen"],
+  [class*="min-h-dvh"],
+  [class*="min-h-svh"],
+  [class*="min-h-lvh"] { min-height: 0 !important; }
+`
 
 type IframeIdentity =
   | { kind: "page"; path: string }
@@ -310,8 +333,7 @@ function Viewport({
       // Decouple body height from iframe viewport (so min-h-screen pages don't
       // feedback-loop with the ResizeObserver sync below) and hide host-page
       // chrome (cookie banners, Next dev indicators) that would otherwise
-      // appear inside every preview tile. Shared with useIframePreview so both
-      // iframe paths stay in sync.
+      // appear inside every preview tile.
       const previewStyle = document_.createElement("style")
       previewStyle.dataset.forkshopPreview = "true"
       previewStyle.textContent = PREVIEW_HIDE_CHROME_CSS

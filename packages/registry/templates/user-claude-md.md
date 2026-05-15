@@ -205,21 +205,7 @@ import { CanvasNode } from "@/components/forkshop/canvas/canvas-node"
 
 Node positions are persisted to `layouts/system.json` via POST to `/api/forkshop/positions`. Assign stable `id` values (e.g. `"section:colors"`, `"page:/about"`) so positions survive page reloads and HMR.
 
-For iframe-based nodes, combine with `useIframePreview` to lazy-load and auto-size:
-
-```tsx
-import { LazyIframe } from "@/components/forkshop/canvas/lazy-iframe"
-import { useIframePreview } from "@/lib/forkshop/hooks/use-iframe-preview"
-
-function MyIframeNode({ url, width }) {
-  const { iframeRef, height, loaded } = useIframePreview({ url, width })
-  return (
-    <CanvasNode id={`page:${url}`} x={x} y={y} width={width} height={height}>
-      <LazyIframe ref={iframeRef} src={url} width={width} height={height} />
-    </CanvasNode>
-  )
-}
-```
+For iframe-based nodes, use the `iframe-route` or `iframe-component` NodeType — they handle lazy-loading, body-height sync, and wheel forwarding internally.
 
 ---
 

@@ -11,10 +11,10 @@ export type {
 export { Gallery, type GalleryProps, type GalleryEntry } from "@forkshop/layouts/gallery"
 export { Tree, type TreeProps, type TreeEntry } from "@forkshop/layouts/tree"
 export {
-  DesignSystemGraph,
-  type DesignSystemGraphProps,
+  DesignSystemView,
+  type DesignSystemViewProps,
   type PrimitiveGroup,
-} from "@forkshop/layouts/design-system-graph"
+} from "@forkshop/layouts/design-system-view"
 export {
   ResponsiveFrameView,
   type ResponsiveFrameViewProps,

@@ -5,7 +5,7 @@ import {
   ForkshopSidebar,
   AgentActivityProvider,
   AgentSelectionChip,
-  DesignSystemGraph,
+  DesignSystemView,
   Gallery,
   Tree,
   ResponsiveFrameView,
@@ -301,8 +301,8 @@ export default function ForkshopPage() {
           sections={[
             {
               id: "foundations",
-              title: DesignSystemGraph.defaultTitle,
-              icon: DesignSystemGraph.icon,
+              title: DesignSystemView.defaultTitle,
+              icon: DesignSystemView.icon,
               entryKind: "primitive",
               entries: forkshopConfig.primitives.map((p) => ({ slug: p.id, name: p.name })),
             },
@@ -329,7 +329,7 @@ export default function ForkshopPage() {
               fitMode="both"
             >
               {({ nodePositions, onPositionChange }) => (
-                <DesignSystemGraph
+                <DesignSystemView
                   tokens={tokens}
                   primitives={primitiveGroups}
                   typography={typographyNode}

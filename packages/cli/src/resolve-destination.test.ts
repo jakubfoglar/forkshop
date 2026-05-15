@@ -22,8 +22,8 @@ describe("resolveDestination", () => {
 
   it("maps a hooks file to lib/forkshop/hooks/", () => {
     const file: ManifestFile = { kind: "text", ext: "ts", content: "" }
-    const dest = resolveDestination("@forkshop/hooks/use-iframe-preview", file, aliases)
-    expect(dest).toBe("lib/forkshop/hooks/use-iframe-preview.ts")
+    const dest = resolveDestination("@forkshop/hooks/use-draggable-node", file, aliases)
+    expect(dest).toBe("lib/forkshop/hooks/use-draggable-node.ts")
   })
 
   it("maps an api file to app/api/forkshop/", () => {
