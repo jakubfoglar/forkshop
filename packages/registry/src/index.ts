@@ -125,3 +125,18 @@ export {
   type PageTreeEntry,
 } from "@forkshop/kits/page-tree"
 export { forkshopIcons, type ForkshopIconName } from "@forkshop/lib/icons"
+export type {
+  BaseNode,
+  AnyNode,
+  InlineReactNode,
+  IframeRouteNode,
+  IframeComponentNode,
+} from "@forkshop/types/node"
+export type { NodeType, RenderProps, DrillInProps } from "@forkshop/types/node-type"
+export {
+  BUILTIN_NODE_TYPES,
+  inlineReactNodeType,
+  iframeRouteNodeType,
+  iframeComponentNodeType,
+} from "@forkshop/node-types"
+export { NodeView, type NodeViewProps, resolveNodeType } from "@forkshop/components/canvas/node-view"
