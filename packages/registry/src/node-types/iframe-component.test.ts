@@ -37,13 +37,31 @@ describe("iframeComponentNodeType", () => {
     expect(iframeComponentNodeType.match(inlineNode as AnyNode)).toBe(false)
   })
 
-  it("activityKey() prefers componentPath over slug", () => {
-    expect(iframeComponentNodeType.activityKey?.(componentNode)).toBe("components/blocks/hero.tsx")
+  it("agentMatch returns active=true when slug is in blocks set", () => {
+    const activity = {
+      pages: new Set<string>(),
+      blocks: new Set(["hero"]),
+      primitives: new Set<string>(),
+    }
+    expect(iframeComponentNodeType.agentMatch?.(componentNode, activity).active).toBe(true)
   })
 
-  it("activityKey() falls back to slug when componentPath is absent", () => {
-    const noPath: IframeComponentNode = { ...componentNode, componentPath: undefined }
-    expect(iframeComponentNodeType.activityKey?.(noPath)).toBe("hero")
+  it("agentMatch returns active=false when slug is not in blocks set", () => {
+    const activity = {
+      pages: new Set<string>(),
+      blocks: new Set(["footer"]),
+      primitives: new Set<string>(),
+    }
+    expect(iframeComponentNodeType.agentMatch?.(componentNode, activity).active).toBe(false)
+  })
+
+  it("agentMatch includes fileLabel when active", () => {
+    const activity = {
+      pages: new Set<string>(),
+      blocks: new Set(["hero"]),
+      primitives: new Set<string>(),
+    }
+    expect(iframeComponentNodeType.agentMatch?.(componentNode, activity).fileLabel).toBe("hero.tsx")
   })
 
   it("defaultMode is 'click-into' and enterMode is 'double-click'", () => {

@@ -104,5 +104,15 @@ export const iframeRouteNodeType: NodeType<IframeRouteNode> = {
   drillIn: ({ node, onBack }) => <IframeRouteDrillIn node={node} onBack={onBack} />,
   defaultMode: "click-into",
   enterMode: "double-click",
-  activityKey: (node) => node.routePath,
+  agentMatch: (node, activity) => {
+    const hit = activity.pages.has(node.routePath)
+    return { active: hit, fileLabel: hit ? pageFileLabel(node.routePath) : undefined }
+  },
+}
+
+function pageFileLabel(path: string): string {
+  if (path === "/") return "page.tsx"
+  const segments = path.split("/").filter(Boolean)
+  const last = segments[segments.length - 1] ?? "page"
+  return `${last}/page.tsx`
 }

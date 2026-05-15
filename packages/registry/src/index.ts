@@ -24,7 +24,13 @@ export type {
   IframeRouteNode,
   IframeComponentNode,
 } from "@forkshop/types/node"
-export type { NodeType, RenderProps, DrillInProps } from "@forkshop/types/node-type"
+export type {
+  NodeType,
+  RenderProps,
+  DrillInProps,
+  AgentActivitySnapshot,
+  AgentMatchResult,
+} from "@forkshop/types/node-type"
 export {
   BUILTIN_NODE_TYPES,
   inlineReactNodeType,

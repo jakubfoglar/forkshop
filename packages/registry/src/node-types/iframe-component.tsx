@@ -103,5 +103,8 @@ export const iframeComponentNodeType: NodeType<IframeComponentNode> = {
   drillIn: ({ node, onBack }) => <IframeComponentDrillIn node={node} onBack={onBack} />,
   defaultMode: "click-into",
   enterMode: "double-click",
-  activityKey: (node) => node.componentPath ?? node.slug,
+  agentMatch: (node, activity) => {
+    const hit = activity.blocks.has(node.slug)
+    return { active: hit, fileLabel: hit ? `${node.slug}.tsx` : undefined }
+  },
 }

@@ -35,8 +35,41 @@ describe("iframeRouteNodeType", () => {
     expect(iframeRouteNodeType.match(inlineNode as AnyNode)).toBe(false)
   })
 
-  it("activityKey() returns the routePath", () => {
-    expect(iframeRouteNodeType.activityKey?.(routeNode)).toBe("/about")
+  it("agentMatch returns active=true when routePath is in pages set", () => {
+    const activity = {
+      pages: new Set(["/about"]),
+      blocks: new Set<string>(),
+      primitives: new Set<string>(),
+    }
+    expect(iframeRouteNodeType.agentMatch?.(routeNode, activity).active).toBe(true)
+  })
+
+  it("agentMatch returns active=false when routePath is not in pages set", () => {
+    const activity = {
+      pages: new Set(["/other"]),
+      blocks: new Set<string>(),
+      primitives: new Set<string>(),
+    }
+    expect(iframeRouteNodeType.agentMatch?.(routeNode, activity).active).toBe(false)
+  })
+
+  it("agentMatch includes fileLabel when active", () => {
+    const activity = {
+      pages: new Set(["/about"]),
+      blocks: new Set<string>(),
+      primitives: new Set<string>(),
+    }
+    expect(iframeRouteNodeType.agentMatch?.(routeNode, activity).fileLabel).toBe("about/page.tsx")
+  })
+
+  it("agentMatch fileLabel for root path is 'page.tsx'", () => {
+    const rootNode: IframeRouteNode = { ...routeNode, routePath: "/" }
+    const activity = {
+      pages: new Set(["/"]),
+      blocks: new Set<string>(),
+      primitives: new Set<string>(),
+    }
+    expect(iframeRouteNodeType.agentMatch?.(rootNode, activity).fileLabel).toBe("page.tsx")
   })
 
   it("defaultMode is 'click-into' and enterMode is 'double-click'", () => {

@@ -3,7 +3,7 @@ import { inlineReactNodeType } from "@forkshop/node-types/inline-react"
 import type { AnyNode, InlineReactNode, IframeRouteNode } from "@forkshop/types/node"
 
 const inlineNode: InlineReactNode = {
-  id: "p:button",
+  id: "primitive:button",
   kind: "inline-react",
   x: 0,
   y: 0,
@@ -36,13 +36,50 @@ describe("inlineReactNodeType", () => {
     expect(inlineReactNodeType.match(iframeNode as AnyNode)).toBe(false)
   })
 
-  it("activityKey() returns the filePath", () => {
-    expect(inlineReactNodeType.activityKey?.(inlineNode)).toBe("components/ui/button.tsx")
+  it("agentMatch returns active=true when filePath is in primitives set", () => {
+    const activity = {
+      pages: new Set<string>(),
+      blocks: new Set<string>(),
+      primitives: new Set(["components/ui/button.tsx"]),
+    }
+    expect(inlineReactNodeType.agentMatch?.(inlineNode, activity).active).toBe(true)
   })
 
-  it("activityKey() returns undefined when filePath is absent", () => {
+  it("agentMatch returns active=true when stripped id is in primitives set", () => {
+    const activity = {
+      pages: new Set<string>(),
+      blocks: new Set<string>(),
+      primitives: new Set(["button"]),
+    }
+    expect(inlineReactNodeType.agentMatch?.(inlineNode, activity).active).toBe(true)
+  })
+
+  it("agentMatch returns active=true when full id is in primitives set", () => {
+    const activity = {
+      pages: new Set<string>(),
+      blocks: new Set<string>(),
+      primitives: new Set(["primitive:button"]),
+    }
+    expect(inlineReactNodeType.agentMatch?.(inlineNode, activity).active).toBe(true)
+  })
+
+  it("agentMatch returns active=false when nothing matches", () => {
+    const activity = {
+      pages: new Set<string>(),
+      blocks: new Set<string>(),
+      primitives: new Set(["other"]),
+    }
+    expect(inlineReactNodeType.agentMatch?.(inlineNode, activity).active).toBe(false)
+  })
+
+  it("agentMatch returns active=false when filePath absent and id not matched", () => {
     const noPath: InlineReactNode = { ...inlineNode, filePath: undefined }
-    expect(inlineReactNodeType.activityKey?.(noPath)).toBeUndefined()
+    const activity = {
+      pages: new Set<string>(),
+      blocks: new Set<string>(),
+      primitives: new Set<string>(),
+    }
+    expect(inlineReactNodeType.agentMatch?.(noPath, activity).active).toBe(false)
   })
 
   it("defaultMode is 'interactive-live' and enterMode is 'never'", () => {
