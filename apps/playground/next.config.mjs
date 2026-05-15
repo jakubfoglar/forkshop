@@ -7,7 +7,7 @@ const registrySrc = path.resolve(__dirname, "../../packages/registry/src")
 // Map every top-level dir under packages/registry/src/ to its @forkshop/* alias.
 // Done per-subdir (not a single "@forkshop" prefix alias) so we don't accidentally
 // shadow the "@forkshop/registry" workspace package itself.
-const forkshopSubdirs = ["api", "components", "hooks", "kits", "lib"]
+const forkshopSubdirs = ["api", "components", "hooks", "kits", "layouts", "lib", "node-types", "types"]
 const forkshopAliases = Object.fromEntries(
   forkshopSubdirs.map((dir) => [`@forkshop/${dir}`, path.join(registrySrc, dir)])
 )

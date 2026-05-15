@@ -114,11 +114,7 @@ export {
   SITEMAP_HORIZONTAL_GAP,
   SITEMAP_VERTICAL_GAP,
 } from "@forkshop/lib/sitemap-tree"
-export {
-  IframeGallery,
-  type IframeGalleryProps,
-  type IframeGalleryEntry,
-} from "@forkshop/kits/iframe-gallery"
+export { Gallery, type GalleryProps, type GalleryEntry } from "@forkshop/layouts/gallery"
 export {
   PageTree,
   type PageTreeProps,
