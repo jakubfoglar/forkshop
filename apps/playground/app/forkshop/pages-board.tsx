@@ -11,6 +11,15 @@ import {
 } from "@forkshop/registry"
 import { forkshopConfig } from "./forkshop.config"
 
+function humanize(path: string): string {
+  if (path === "/") return "Home"
+  return path
+    .split("/")
+    .filter(Boolean)
+    .map((seg) => seg.replace(/[-_]/g, " ").replace(/^\w/, (c) => c.toUpperCase()))
+    .join(" / ")
+}
+
 const GRID_STAGE_W = 1264
 const GRID_STAGE_H = 400
 
@@ -41,7 +50,7 @@ export default function PagesBoardView({
         height: 280,
         routePath: p.path,
       }
-      return { id: node.id, path: p.path, node }
+      return { id: node.id, label: humanize(p.path), path: p.path, node }
     })
   }, [])
 
