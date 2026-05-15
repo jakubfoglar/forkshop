@@ -4,7 +4,6 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { ReactNode } from "react"
 import { NodeView } from "@forkshop/components/canvas/node-view"
 import { GuideOverlay } from "@forkshop/components/canvas/guide-overlay"
-import { useCanvasDrillIn } from "@forkshop/components/canvas/drill-in-provider"
 import type { GetSnapTargets } from "@forkshop/hooks/use-draggable-node"
 import type { NodePositions } from "@forkshop/lib/node-positions"
 import type { SnapGuide, SnapTarget } from "@forkshop/lib/system-snap"
@@ -99,7 +98,6 @@ function SitemapView({
   selectedId?: string
   onSelectChange?: (id: string, selected: boolean) => void
 }) {
-  const drill = useCanvasDrillIn()
   const cells = useMemo(() => buildTileLayout(entries), [entries])
   const { width: stageWidth, height: stageHeight } = useMemo(() => stageSize(cells), [cells])
   const [activeGuides, setActiveGuides] = useState<readonly SnapGuide[]>([])
@@ -158,7 +156,6 @@ function SitemapView({
             node={positionedNode}
             override={nodePositions[cell.id]}
             isSelected={selectedId === cell.id}
-            onIsolate={() => drill.mark(positionedNode)}
             onPositionChange={handlePositionChange}
             getSnapTargets={getSnapTargets}
             onGuidesChange={handleGuidesChange}

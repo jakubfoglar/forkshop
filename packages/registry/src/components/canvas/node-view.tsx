@@ -9,6 +9,7 @@ import type { NodePosition } from "@forkshop/lib/node-positions"
 import type { SnapGuide } from "@forkshop/lib/system-snap"
 import type { GetSnapTargets } from "@forkshop/hooks/use-draggable-node"
 import { useNodeAgentActive } from "@forkshop/lib/use-node-agent-active"
+import { useCanvasDrillIn } from "@forkshop/components/canvas/drill-in-provider"
 
 export function resolveNodeType(
   node: AnyNode,
@@ -54,8 +55,10 @@ export function NodeView({
   const { nodeTypes } = useForkshopCanvas()
   const nodeType = resolveNodeType(node, nodeTypes)
   const derivedActivity = useNodeAgentActive(node)
+  const drill = useCanvasDrillIn()
   const effectiveAgentActive = agentActive !== undefined ? agentActive : derivedActivity.agentActive
   const effectiveAgentFileLabel = agentFileLabel ?? derivedActivity.agentFileLabel
+  const effectiveOnIsolate = onIsolate ?? (() => drill.mark(node))
   if (!nodeType) {
     if (typeof console !== "undefined") {
       console.warn(`[forkshop] No NodeType matched node ${node.id} (kind=${node.kind})`)
@@ -67,7 +70,7 @@ export function NodeView({
     isSelected,
     agentActive: effectiveAgentActive,
     agentFileLabel: effectiveAgentFileLabel,
-    onIsolate,
+    onIsolate: effectiveOnIsolate,
   }
   return (
     <NodeFrame
@@ -82,7 +85,7 @@ export function NodeView({
       agentActive={effectiveAgentActive}
       agentFileLabel={effectiveAgentFileLabel}
       onSelect={onSelect}
-      onIsolate={onIsolate}
+      onIsolate={effectiveOnIsolate}
       onPositionChange={onPositionChange}
       getSnapTargets={getSnapTargets}
       onGuidesChange={onGuidesChange}
