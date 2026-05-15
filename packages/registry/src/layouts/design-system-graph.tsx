@@ -49,7 +49,6 @@ export type DesignSystemGraphProps = {
   onPositionChange?: (id: string, x: number, y: number) => void
   selectedId?: string
   onSelectChange?: (id: string, selected: boolean) => void
-  focusedEntryId?: string
 }
 
 // ---------------------------------------------------------------------------
@@ -102,7 +101,6 @@ function DesignSystemGraphInner({
   onPositionChange,
   selectedId,
   onSelectChange,
-  focusedEntryId,
 }: DesignSystemGraphProps) {
   const graph = useMemo(() => buildSystemGraph(tokens), [tokens])
   const layout = useMemo(() => layoutSystem(graph, [], {}), [graph])
@@ -111,32 +109,6 @@ function DesignSystemGraphInner({
     () => layoutPrimitiveGroups(primitives, layout.primitivesBodyY),
     [primitives, layout.primitivesBodyY],
   )
-
-  const { drill } = useForkshopCanvas()
-  useEffect(() => {
-    if (focusedEntryId === undefined) {
-      // Match against every node we render: primitives, typography, and color nodes.
-      const ownsDrill =
-        drill.node !== null &&
-        (positionedPrimitives.some((pp) => pp.node.id === drill.node?.id) ||
-          (typography !== undefined && typography.id === drill.node?.id) ||
-          layout.rawColorNodes.some((n) => n.id === drill.node?.id) ||
-          layout.semanticColorNodes.some((n) => n.id === drill.node?.id))
-      if (ownsDrill) drill.clear()
-      return
-    }
-    const primitiveMatch = positionedPrimitives.find((pp) => pp.node.id === focusedEntryId)
-    if (primitiveMatch) {
-      drill.mark(primitiveMatch.node)
-      return
-    }
-    if (typography && typography.id === focusedEntryId) {
-      drill.mark(typography)
-      return
-    }
-    // Color nodes are not currently drill-in targets, but keep the door open for
-    // a custom NodeType that opts in.
-  }, [focusedEntryId, positionedPrimitives, typography, layout, drill])
 
   const typographyDefaultX = layout.width + TYPOGRAPHY_GAP
   const typographyDefaultY = 0

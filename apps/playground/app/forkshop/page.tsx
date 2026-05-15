@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import {
   ForkshopSidebar,
   AgentActivityProvider,
@@ -8,6 +8,8 @@ import {
   DesignSystemGraph,
   Gallery,
   Tree,
+  ResponsiveFrameView,
+  responsiveFrameStageDimensions,
   buildTokenRegistry,
   parseSelection,
   serializeSelection,
@@ -41,6 +43,7 @@ const FILE_MAP = {
 const FOUNDATIONS_STAGE = { width: 3000, height: 2400 } as const
 const COMPONENTS_STAGE = { width: 1200, height: 2200 } as const
 const PAGES_STAGE = { width: 1264, height: 400 } as const
+const PRIMITIVE_STAGE = { width: 1200, height: 800 } as const
 
 const DISPLAY_SAMPLES = [
   { className: "text-display-3xl", label: "display-3xl" },
@@ -105,6 +108,87 @@ function humanizePagePath(path: string): string {
     .join(" / ")
 }
 
+type View =
+  | { kind: "foundations-overview" }
+  | { kind: "components-overview" }
+  | { kind: "pages-overview" }
+  | { kind: "single-primitive"; id: string }
+  | { kind: "single-block"; slug: string }
+  | { kind: "single-page"; path: string }
+
+function deriveView(selection: ForkshopSelection): View {
+  if (selection.kind === "primitive") return { kind: "single-primitive", id: selection.id }
+  if (selection.kind === "block") return { kind: "single-block", slug: selection.slug }
+  if (selection.kind === "page") return { kind: "single-page", path: selection.path }
+  if (selection.kind === "section") {
+    if (selection.sectionId === "components") return { kind: "components-overview" }
+    if (selection.sectionId === "pages") return { kind: "pages-overview" }
+  }
+  return { kind: "foundations-overview" }
+}
+
+function SinglePrimitiveBoard({ primitiveId }: { primitiveId: string }) {
+  const primitive = forkshopConfig.primitives.find((p) => p.id === primitiveId)
+  if (!primitive) return null
+  return (
+    <PlaygroundBoard stageWidth={PRIMITIVE_STAGE.width} stageHeight={PRIMITIVE_STAGE.height} fitMode="both">
+      {() => (
+        <div className="absolute inset-0 flex items-center justify-center p-forkshop-8">
+          <div className="bg-white p-forkshop-8 shadow-md">{primitive.render()}</div>
+        </div>
+      )}
+    </PlaygroundBoard>
+  )
+}
+
+function SingleBlockBoard({ slug }: { slug: string }) {
+  const block = forkshopConfig.blocks.find((b) => b.slug === slug)
+  const [measuredHeight, setMeasuredHeight] = useState<number | undefined>(undefined)
+  const handleBodyHeightChange = useCallback((_id: string, h: number) => setMeasuredHeight(h), [])
+  const { width, height } = useMemo(
+    () => responsiveFrameStageDimensions(measuredHeight, [1440, 768, 375]),
+    [measuredHeight],
+  )
+  if (!block) return null
+  return (
+    <PlaygroundBoard stageWidth={width} stageHeight={height} fitMode="width">
+      {() => (
+        <ResponsiveFrameView
+          kind="block"
+          path={block.slug}
+          source={block.iframeSrc}
+          viewports={[1440, 768, 375]}
+          measuredHeight={measuredHeight}
+          onBodyHeightChange={handleBodyHeightChange}
+        />
+      )}
+    </PlaygroundBoard>
+  )
+}
+
+function SinglePageBoard({ path }: { path: string }) {
+  const [measuredHeight, setMeasuredHeight] = useState<number | undefined>(undefined)
+  const handleBodyHeightChange = useCallback((_id: string, h: number) => setMeasuredHeight(h), [])
+  const { width, height } = useMemo(
+    () => responsiveFrameStageDimensions(measuredHeight, [1440, 768, 375]),
+    [measuredHeight],
+  )
+  return (
+    <PlaygroundBoard stageWidth={width} stageHeight={height} fitMode="width">
+      {() => (
+        <ResponsiveFrameView
+          kind="page"
+          path={path}
+          source={path}
+          viewports={[1440, 768, 375]}
+          measuredHeight={measuredHeight}
+          onBodyHeightChange={handleBodyHeightChange}
+        />
+      )}
+    </PlaygroundBoard>
+  )
+}
+
 export default function ForkshopPage() {
   const [selection, setSelection] = useState<ForkshopSelection>(DEFAULT_SELECTION)
   const [hasHydrated, setHasHydrated] = useState(false)
@@ -132,31 +216,7 @@ export default function ForkshopPage() {
     return () => window.removeEventListener("popstate", onPopState)
   }, [])
 
-  // Determine which main view to show.
-  const view: "foundations" | "components" | "pages" =
-    selection.kind === "page"
-      ? "pages"
-      : selection.kind === "block"
-        ? "components"
-        : selection.kind === "primitive"
-          ? "foundations"
-          : selection.kind === "section" &&
-              (selection.sectionId === "foundations" ||
-                selection.sectionId === "components" ||
-                selection.sectionId === "pages")
-            ? selection.sectionId
-            : "foundations"
-
-  const selectedNodeId =
-    selection.kind === "primitive"
-      ? `primitive:${selection.id}`
-      : selection.kind === "block"
-        ? `block:${selection.slug}`
-        : selection.kind === "page"
-          ? `page:${selection.path}`
-          : undefined
-
-  const focusedEntryId = selectedNodeId
+  const view = deriveView(selection)
 
   // Layout-specific data
   const tokens = useMemo(() => buildTokenRegistry(forkshopConfig.tailwindConfig), [])
@@ -262,7 +322,7 @@ export default function ForkshopPage() {
             blockSelectionSlug={selection.kind === "block" ? selection.slug : undefined}
             primitiveSelectionId={selection.kind === "primitive" ? selection.id : undefined}
           />
-          {view === "foundations" && (
+          {view.kind === "foundations-overview" && (
             <PlaygroundBoard
               stageWidth={FOUNDATIONS_STAGE.width}
               stageHeight={FOUNDATIONS_STAGE.height}
@@ -273,15 +333,13 @@ export default function ForkshopPage() {
                   tokens={tokens}
                   primitives={primitiveGroups}
                   typography={typographyNode}
-                  selectedId={selectedNodeId}
-                  focusedEntryId={focusedEntryId}
                   nodePositions={nodePositions}
                   onPositionChange={onPositionChange}
                 />
               )}
             </PlaygroundBoard>
           )}
-          {view === "components" && (
+          {view.kind === "components-overview" && (
             <PlaygroundBoard
               stageWidth={COMPONENTS_STAGE.width}
               stageHeight={COMPONENTS_STAGE.height}
@@ -291,15 +349,13 @@ export default function ForkshopPage() {
                 <Gallery
                   entries={blockEntries}
                   layout="stack"
-                  selectedId={selectedNodeId}
-                  focusedEntryId={focusedEntryId}
                   nodePositions={nodePositions}
                   onPositionChange={onPositionChange}
                 />
               )}
             </PlaygroundBoard>
           )}
-          {view === "pages" && (
+          {view.kind === "pages-overview" && (
             <PlaygroundBoard
               stageWidth={PAGES_STAGE.width}
               stageHeight={PAGES_STAGE.height}
@@ -308,14 +364,15 @@ export default function ForkshopPage() {
               {({ nodePositions, onPositionChange }) => (
                 <Tree
                   entries={pageEntries}
-                  selectedId={selectedNodeId}
-                  focusedEntryId={focusedEntryId}
                   nodePositions={nodePositions}
                   onPositionChange={onPositionChange}
                 />
               )}
             </PlaygroundBoard>
           )}
+          {view.kind === "single-primitive" && <SinglePrimitiveBoard primitiveId={view.id} />}
+          {view.kind === "single-block" && <SingleBlockBoard slug={view.slug} />}
+          {view.kind === "single-page" && <SinglePageBoard path={view.path} />}
         </div>
       </div>
     </AgentActivityProvider>

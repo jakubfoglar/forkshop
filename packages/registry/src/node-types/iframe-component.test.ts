@@ -64,12 +64,4 @@ describe("iframeComponentNodeType", () => {
     expect(iframeComponentNodeType.agentMatch?.(componentNode, activity).fileLabel).toBe("hero.tsx")
   })
 
-  it("defaultMode is 'click-into' and enterMode is 'double-click'", () => {
-    expect(iframeComponentNodeType.defaultMode).toBe("click-into")
-    expect(iframeComponentNodeType.enterMode).toBe("double-click")
-  })
-
-  it("has a drillIn function", () => {
-    expect(typeof iframeComponentNodeType.drillIn).toBe("function")
-  })
 })

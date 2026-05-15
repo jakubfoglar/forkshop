@@ -41,7 +41,6 @@ export type NodeFrameProps = {
   agentActive?: boolean
   agentFileLabel?: string
   onSelect?: () => void
-  onIsolate?: () => void
   onPositionChange: (id: string, x: number, y: number) => void
   getSnapTargets: GetSnapTargets
   onGuidesChange?: (guides: SnapGuide[]) => void
@@ -63,7 +62,6 @@ export function NodeFrame({
   agentActive = false,
   agentFileLabel,
   onSelect,
-  onIsolate,
   onPositionChange,
   getSnapTargets,
   onGuidesChange,
@@ -101,14 +99,6 @@ export function NodeFrame({
           : (event: ReactMouseEvent<HTMLDivElement>) => {
               event.stopPropagation()
               onSelect()
-            }
-      }
-      onDoubleClick={
-        onIsolate === undefined
-          ? undefined
-          : (event: ReactMouseEvent<HTMLDivElement>) => {
-              event.stopPropagation()
-              onIsolate()
             }
       }
       style={{

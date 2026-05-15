@@ -82,12 +82,4 @@ describe("inlineReactNodeType", () => {
     expect(inlineReactNodeType.agentMatch?.(noPath, activity).active).toBe(false)
   })
 
-  it("defaultMode is 'interactive-live' and enterMode is 'never'", () => {
-    expect(inlineReactNodeType.defaultMode).toBe("interactive-live")
-    expect(inlineReactNodeType.enterMode).toBe("never")
-  })
-
-  it("has no drillIn", () => {
-    expect(inlineReactNodeType.drillIn).toBeUndefined()
-  })
 })

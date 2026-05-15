@@ -72,12 +72,4 @@ describe("iframeRouteNodeType", () => {
     expect(iframeRouteNodeType.agentMatch?.(rootNode, activity).fileLabel).toBe("page.tsx")
   })
 
-  it("defaultMode is 'click-into' and enterMode is 'double-click'", () => {
-    expect(iframeRouteNodeType.defaultMode).toBe("click-into")
-    expect(iframeRouteNodeType.enterMode).toBe("double-click")
-  })
-
-  it("has a drillIn function", () => {
-    expect(typeof iframeRouteNodeType.drillIn).toBe("function")
-  })
 })

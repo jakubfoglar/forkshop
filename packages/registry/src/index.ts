@@ -15,6 +15,11 @@ export {
   type DesignSystemGraphProps,
   type PrimitiveGroup,
 } from "@forkshop/layouts/design-system-graph"
+export {
+  ResponsiveFrameView,
+  type ResponsiveFrameViewProps,
+  responsiveFrameStageDimensions,
+} from "@forkshop/layouts/responsive-frame-view"
 
 // NodeType contract + types
 export type {
@@ -27,7 +32,6 @@ export type {
 export type {
   NodeType,
   RenderProps,
-  DrillInProps,
   AgentActivitySnapshot,
   AgentMatchResult,
 } from "@forkshop/types/node-type"
@@ -94,9 +98,6 @@ export {
   serializeSelection,
   parseSelection,
 } from "@forkshop/components/sidebar/selection-hash"
-
-// Responsive frame (public — user code computes isolation stage dimensions)
-export { responsiveFrameStageDimensions } from "@forkshop/components/canvas/responsive-frame-view"
 
 // Node positions (public — user code may persist and hydrate positions)
 export {

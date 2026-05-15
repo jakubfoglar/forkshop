@@ -49,7 +49,7 @@ export function NodeView({
   className,
   style,
 }: NodeViewProps): ReactNode {
-  const { nodeTypes, drill } = useForkshopCanvas()
+  const { nodeTypes } = useForkshopCanvas()
   const nodeType = resolveNodeType(node, nodeTypes)
   const derivedActivity = useNodeAgentActive(node)
   const effectiveAgentActive = agentActive !== undefined ? agentActive : derivedActivity.agentActive
@@ -60,14 +60,11 @@ export function NodeView({
     }
     return null
   }
-  const enterMode = nodeType.enterMode ?? "double-click"
-  const handleIsolate = enterMode === "never" ? undefined : () => drill.mark(node)
   const renderProps: RenderProps<AnyNode> = {
     node,
     isSelected,
     agentActive: effectiveAgentActive,
     agentFileLabel: effectiveAgentFileLabel,
-    onIsolate: handleIsolate,
   }
   return (
     <NodeFrame
@@ -82,7 +79,6 @@ export function NodeView({
       agentActive={effectiveAgentActive}
       agentFileLabel={effectiveAgentFileLabel}
       onSelect={onSelect}
-      onIsolate={handleIsolate}
       onPositionChange={onPositionChange}
       getSnapTargets={getSnapTargets}
       onGuidesChange={onGuidesChange}

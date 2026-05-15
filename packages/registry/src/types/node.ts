@@ -19,7 +19,6 @@ export type InlineReactNode = BaseNode & {
 export type IframeRouteNode = BaseNode & {
   kind: "iframe-route"
   routePath: string
-  drillInMode?: "single" | "responsive"
 }
 
 export type IframeComponentNode = BaseNode & {
@@ -27,7 +26,6 @@ export type IframeComponentNode = BaseNode & {
   slug: string
   previewSrc: string
   componentPath?: string
-  drillInMode?: "single" | "responsive"
 }
 
 export type AnyNode = InlineReactNode | IframeRouteNode | IframeComponentNode

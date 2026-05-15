@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { CanvasLabel } from "@forkshop/components/canvas/canvas-label"
 import { useRegisterIframe } from "@forkshop/components/iframe-registry"
 import { useAgentEditEpoch } from "@forkshop/components/agent-activity-context"
+import { useForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
 import { PREVIEW_HIDE_CHROME_CSS } from "@forkshop/hooks/use-iframe-preview"
 
 type IframeIdentity =
@@ -45,20 +46,21 @@ export function responsiveFrameStageDimensions(
   return { width, height }
 }
 
-type ResponsiveFrameViewProps = (
-  // `source` (optional) overrides the iframe URL while `path` stays the
-  // identity key — used for synthetic preview paths like /X/_locked that load
-  // a different URL than they tree under.
-  | { kind: "page"; path: string; source?: string; title?: string; description?: string }
-  | { kind: "block"; slug: string; title: string; description: string }
-) & {
-  measuredHeight: number | undefined
-  onBodyHeightChange: (id: string, height: number) => void
-  onIframeWheel: (event: WheelEvent, iframe: HTMLIFrameElement) => void
-  onIframeMount?: (index: number, iframe: HTMLIFrameElement | undefined) => void
-  agentActive?: boolean
-  /** Viewport widths to render. Defaults to [1440, 768, 375]. */
+export type ResponsiveFrameViewProps = {
+  /** Logical identifier for activity matching and agent glow (route path or block slug). */
+  path: string
+  /** URL to iframe at each viewport. */
+  source: string
+  /** Viewport widths in pixels. Defaults to [1440, 768, 375]. */
   viewports?: number[]
+  /** Drives labels and OG-image rendering. Defaults to "page". */
+  kind?: "page" | "block"
+  /** Measured body height (for stage-fit calculations from the parent). */
+  measuredHeight?: number
+  /** Fires when iframes report body height. */
+  onBodyHeightChange?: (id: string, height: number) => void
+  /** Optional agent-active flag (parent can drive glow indicator). */
+  agentActive?: boolean
 }
 
 // Displayed at 50% of native (1200×630) so the OG preview doesn't dominate
@@ -69,29 +71,44 @@ const OG_IMAGE_GAP = 32
 
 export function ResponsiveFrameView(props: ResponsiveFrameViewProps) {
   const {
+    path,
+    source,
+    viewports = DEFAULT_VIEWPORTS,
+    kind = "page",
     measuredHeight,
     onBodyHeightChange,
-    onIframeWheel,
-    onIframeMount,
     agentActive,
-    viewports = DEFAULT_VIEWPORTS,
   } = props
-  const id = props.kind === "page" ? props.path : `block:${props.slug}`
-  const source = props.kind === "page" ? (props.source ?? props.path) : `/forkshop/block/${props.slug}`
-  const title =
-    props.kind === "page" ? (props.title ?? props.path) : `${props.slug} — ${props.title}`
-  const isPage = props.kind === "page"
+  const id = kind === "page" ? path : `block:${path}`
+  const title = kind === "page" ? path : `${path}`
+  const isPage = kind === "page"
+
+  const { applyWheelInput, transformRef } = useForkshopCanvas()
+  const handleIframeWheel = useCallback(
+    (event: WheelEvent, iframe: HTMLIFrameElement) => {
+      if (event.ctrlKey || event.metaKey) event.preventDefault()
+      const iframeRect = iframe.getBoundingClientRect()
+      const zoom = transformRef.current?.zoom ?? 1
+      applyWheelInput({
+        deltaX: event.deltaX,
+        deltaY: event.deltaY,
+        pinch: event.ctrlKey || event.metaKey,
+        screenX: iframeRect.left + event.clientX * zoom,
+        screenY: iframeRect.top + event.clientY * zoom,
+      })
+    },
+    [applyWheelInput, transformRef],
+  )
 
   // Stable identity used to look up the agent-edit epoch for this iframe set.
-  // All three viewports share one identity so they reload together when Claude
+  // All viewports share one identity so they reload together when Claude
   // touches the underlying file.
   const identity = useMemo<IframeIdentity>(
     () =>
-      props.kind === "page"
-        ? { kind: "page", path: props.path }
-        : { kind: "block", slug: props.slug },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [props.kind, props.kind === "page" ? props.path : props.slug],
+      kind === "page"
+        ? { kind: "page", path }
+        : { kind: "block", slug: path },
+    [kind, path],
   )
 
   const viewportLayout = buildViewportLayout(viewports)
@@ -119,7 +136,7 @@ export function ResponsiveFrameView(props: ResponsiveFrameViewProps) {
   )
 
   useEffect(() => {
-    onBodyHeightChange(id, maxHeight)
+    onBodyHeightChange?.(id, maxHeight)
   }, [id, maxHeight, onBodyHeightChange])
 
   // Reset the captured OG image when the page changes; the new iframe load
@@ -156,10 +173,9 @@ export function ResponsiveFrameView(props: ResponsiveFrameViewProps) {
             viewportIndex={index}
             agentActive={agentActive ?? false}
             identity={identity}
-            onIframeMount={onIframeMount}
             onLocalHeightChange={handleViewportHeightChange}
             onOgImageDetected={index === 0 && isPage ? setOgImageUrl : undefined}
-            onIframeWheel={onIframeWheel}
+            onIframeWheel={handleIframeWheel}
           />
         ))}
         {isPage && ogImageUrl && (
@@ -207,7 +223,6 @@ function Viewport({
   viewportIndex,
   agentActive,
   identity,
-  onIframeMount,
   onLocalHeightChange,
   onOgImageDetected,
   onIframeWheel,
@@ -219,7 +234,6 @@ function Viewport({
   viewportIndex: number
   agentActive: boolean
   identity: IframeIdentity
-  onIframeMount?: (index: number, iframe: HTMLIFrameElement | undefined) => void
   onLocalHeightChange: (index: number, height: number) => void
   onOgImageDetected?: (url: string | undefined) => void
   onIframeWheel: (event: WheelEvent, iframe: HTMLIFrameElement) => void
@@ -260,10 +274,6 @@ function Viewport({
     }, 250)
     return () => clearTimeout(timer)
   }, [editEpoch, shouldLoad, iframeElement])
-
-  useEffect(() => {
-    onIframeMount?.(viewportIndex, iframeElement)
-  }, [iframeElement, viewportIndex, onIframeMount])
 
   useEffect(() => {
     if (shouldLoad) return
