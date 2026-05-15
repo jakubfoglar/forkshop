@@ -122,6 +122,7 @@ export default function ForkshopPage() {
             <PagesBoardView
               isolatedPath={isolatedPath}
               onBack={() => setSelection({ kind: "section", sectionId: "pages" })}
+              onIsolate={(path) => setSelection({ kind: "page", path })}
               selectedNodeId={selectedNodeId}
             />
           )}

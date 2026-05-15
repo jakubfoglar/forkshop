@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useRef, useState } from "react"
+import { useMemo, useRef } from "react"
 import {
   ForkshopCanvas,
   Tree,
@@ -32,15 +32,16 @@ const { width: ISOLATION_STAGE_W, height: ISOLATION_STAGE_H } = responsiveFrameS
 export default function PagesBoardView({
   isolatedPath: controlledIsolatedPath,
   onBack: onBackProp,
+  onIsolate,
   selectedNodeId,
 }: {
   isolatedPath?: string
   onBack?: () => void
+  onIsolate?: (path: string) => void
   selectedNodeId?: string
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
-  const [internalIsolated, setInternalIsolated] = useState<string | null>(null)
   const { nodePositions, onPositionChange } = useForkshopPositions()
 
   const entries = useMemo<TreeEntry[]>(() => {
@@ -58,17 +59,11 @@ export default function PagesBoardView({
     })
   }, [])
 
-  const isIsolated =
-    controlledIsolatedPath !== undefined ? true : internalIsolated !== null
+  const isIsolated = controlledIsolatedPath !== undefined
 
   const stageWidth = isIsolated ? ISOLATION_STAGE_W : GRID_STAGE_W
   const stageHeight = isIsolated ? ISOLATION_STAGE_H : GRID_STAGE_H
   const fitMode = isIsolated ? "width" : "both"
-
-  const handleBack = () => {
-    setInternalIsolated(null)
-    onBackProp?.()
-  }
 
   return (
     <ForkshopCanvas
@@ -82,8 +77,10 @@ export default function PagesBoardView({
       <Tree
         entries={entries}
         isolatedPath={controlledIsolatedPath}
-        onBack={handleBack}
-        onIsolatedPathChange={setInternalIsolated}
+        onBack={onBackProp}
+        onIsolatedPathChange={(path) => {
+          if (path !== null) onIsolate?.(path)
+        }}
         nodePositions={nodePositions}
         onPositionChange={onPositionChange}
         selectedId={selectedNodeId}

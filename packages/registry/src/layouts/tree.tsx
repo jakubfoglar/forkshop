@@ -97,22 +97,13 @@ function TreeInner({
 
   const handleIsolate = (path: string) => {
     setInternalIsolated(path)
-    if (controlledIsolatedPath === undefined) {
-      onIsolatedPathChange?.(path)
-    }
+    onIsolatedPathChange?.(path)
   }
 
   const handleBack = () => {
-    if (onBack) {
-      setInternalIsolated(null)
-      if (controlledIsolatedPath === undefined) {
-        onIsolatedPathChange?.(null)
-      }
-      onBack()
-    } else {
-      setInternalIsolated(null)
-      onIsolatedPathChange?.(null)
-    }
+    setInternalIsolated(null)
+    onIsolatedPathChange?.(null)
+    onBack?.()
   }
 
   const showBackButton = controlledIsolatedPath === undefined && internalIsolated !== null
