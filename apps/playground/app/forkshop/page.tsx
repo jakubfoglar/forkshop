@@ -64,12 +64,16 @@ export default function ForkshopPage() {
   const view: "design-system" | "components" | "pages" =
     selection.kind === "page"
       ? "pages"
-      : selection.kind === "section" &&
-          (selection.sectionId === "design-system" ||
-            selection.sectionId === "components" ||
-            selection.sectionId === "pages")
-        ? selection.sectionId
-        : "design-system"
+      : selection.kind === "block"
+        ? "components"
+        : selection.kind === "primitive"
+          ? "design-system"
+          : selection.kind === "section" &&
+              (selection.sectionId === "design-system" ||
+                selection.sectionId === "components" ||
+                selection.sectionId === "pages")
+            ? selection.sectionId
+            : "design-system"
 
   // When the user clicked a page leaf in the sidebar, isolate that page.
   const isolatedPath = selection.kind === "page" ? selection.path : undefined
