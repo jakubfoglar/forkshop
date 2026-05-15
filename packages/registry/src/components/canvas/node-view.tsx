@@ -8,6 +8,7 @@ import { useForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
 import type { NodePosition } from "@forkshop/lib/node-positions"
 import type { SnapGuide } from "@forkshop/lib/system-snap"
 import type { GetSnapTargets } from "@forkshop/hooks/use-draggable-node"
+import { useNodeAgentActive } from "@forkshop/lib/use-node-agent-active"
 
 export function resolveNodeType(
   node: AnyNode,
@@ -39,7 +40,7 @@ export function NodeView({
   node,
   override,
   isSelected,
-  agentActive = false,
+  agentActive,
   agentFileLabel,
   onSelect,
   onIsolate,
@@ -52,6 +53,9 @@ export function NodeView({
 }: NodeViewProps): ReactNode {
   const { nodeTypes } = useForkshopCanvas()
   const nodeType = resolveNodeType(node, nodeTypes)
+  const derivedActivity = useNodeAgentActive(node)
+  const effectiveAgentActive = agentActive !== undefined ? agentActive : derivedActivity.agentActive
+  const effectiveAgentFileLabel = agentFileLabel ?? derivedActivity.agentFileLabel
   if (!nodeType) {
     if (typeof console !== "undefined") {
       console.warn(`[forkshop] No NodeType matched node ${node.id} (kind=${node.kind})`)
@@ -61,8 +65,8 @@ export function NodeView({
   const renderProps: RenderProps<AnyNode> = {
     node,
     isSelected,
-    agentActive,
-    agentFileLabel,
+    agentActive: effectiveAgentActive,
+    agentFileLabel: effectiveAgentFileLabel,
   }
   return (
     <NodeFrame
@@ -74,8 +78,8 @@ export function NodeView({
       override={override}
       label={node.label}
       isSelected={isSelected}
-      agentActive={agentActive}
-      agentFileLabel={agentFileLabel}
+      agentActive={effectiveAgentActive}
+      agentFileLabel={effectiveAgentFileLabel}
       onSelect={onSelect}
       onIsolate={onIsolate}
       onPositionChange={onPositionChange}
