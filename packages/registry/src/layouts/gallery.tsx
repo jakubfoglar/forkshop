@@ -11,6 +11,7 @@ import type { AnyNode } from "@forkshop/types/node"
 import { forkshopIcons } from "@forkshop/lib/icons"
 
 const DEFAULT_INITIAL_HEIGHT = 600
+const EMPTY_MEASURED_HEIGHTS: Readonly<Record<string, number>> = {}
 
 const DEFAULTS = {
   stack: { viewportWidth: 1200, rowGap: 32, columnGap: 0 },
@@ -126,12 +127,10 @@ function GalleryInner({
   const rowGap = rgProp ?? DEFAULTS[layout].rowGap
   const columnGap = cgProp ?? DEFAULTS[layout].columnGap
 
-  const measuredHeights: Readonly<Record<string, number>> = {}
-
   const { cells, stageWidth, stageHeight } = useMemo(() => {
     return layout === "stack"
-      ? buildStackLayout(entries, measuredHeights, viewportWidth, rowGap)
-      : buildGridLayout(entries, measuredHeights, viewportWidth, rowGap, columnGap)
+      ? buildStackLayout(entries, EMPTY_MEASURED_HEIGHTS, viewportWidth, rowGap)
+      : buildGridLayout(entries, EMPTY_MEASURED_HEIGHTS, viewportWidth, rowGap, columnGap)
   }, [entries, layout, viewportWidth, rowGap, columnGap])
 
   const [activeGuides, setActiveGuides] = useState<readonly SnapGuide[]>([])
