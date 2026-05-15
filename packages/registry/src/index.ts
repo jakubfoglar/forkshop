@@ -1,6 +1,5 @@
 export { ForkshopIcon, type ForkshopIconComponent } from "@forkshop/components/icon"
 export { ForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
-export { CanvasNode } from "@forkshop/components/canvas/canvas-node"
 export { CanvasLabel } from "@forkshop/components/canvas/canvas-label"
 export { CanvasClickOverlay } from "@forkshop/components/canvas/canvas-click-overlay"
 export { FloatingControls } from "@forkshop/components/canvas/floating-controls"
