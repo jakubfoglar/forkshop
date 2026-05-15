@@ -14,6 +14,8 @@ import {
   type RefObject,
 } from "react"
 import type { Transform } from "@forkshop/hooks/use-draggable-node"
+import type { NodeType } from "@forkshop/types/node-type"
+import type { AnyNode } from "@forkshop/types/node"
 import { IframeRegistryProvider } from "@forkshop/components/iframe-registry"
 import { AgentIframeRelay } from "@forkshop/components/agent-iframe-relay"
 
@@ -43,6 +45,7 @@ type ForkshopCanvasContextValue = {
   setTransform: (transform: Transform) => void
   applyWheelInput: (input: WheelInput) => void
   containerRef: RefObject<HTMLDivElement | null>
+  nodeTypes: ReadonlyArray<NodeType<AnyNode>>
 }
 
 const ForkshopCanvasContext = createContext<ForkshopCanvasContextValue | undefined>(undefined)
@@ -73,6 +76,7 @@ export function ForkshopCanvas({
   onContainerClick,
   containerRef,
   stageRef,
+  nodeTypes = [],
   children,
 }: {
   ref?: RefObject<ForkshopCanvasHandle | null>
@@ -84,6 +88,7 @@ export function ForkshopCanvas({
   onContainerClick?: (event: React.MouseEvent<HTMLDivElement>) => void
   containerRef: RefObject<HTMLDivElement | null>
   stageRef: RefObject<HTMLDivElement | null>
+  nodeTypes?: ReadonlyArray<NodeType<AnyNode>>
   children: ReactNode
 }) {
   const [transform, setTransformState] = useState<Transform>(
@@ -402,8 +407,9 @@ export function ForkshopCanvas({
       setTransform,
       applyWheelInput: applyWheel,
       containerRef,
+      nodeTypes,
     }),
-    [fitToView, resetZoom, animateToBox, setTransform, applyWheel, containerRef],
+    [fitToView, resetZoom, animateToBox, setTransform, applyWheel, containerRef, nodeTypes],
   )
 
   const blockStageInteraction = isSpaceHeld || isPanning
