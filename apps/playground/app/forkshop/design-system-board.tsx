@@ -10,6 +10,7 @@ import {
   type InlineReactNode,
 } from "@forkshop/registry"
 import { forkshopConfig } from "./forkshop.config"
+import { useForkshopPositions } from "./use-forkshop-positions"
 
 const STAGE_W = 3000
 const STAGE_H = 2400
@@ -68,9 +69,10 @@ function TypographySamples() {
   )
 }
 
-export default function DesignSystemBoardView() {
+export default function DesignSystemBoardView({ selectedNodeId }: { selectedNodeId?: string } = {}) {
   const containerRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
+  const { nodePositions, onPositionChange } = useForkshopPositions()
 
   const tokens = useMemo(() => buildTokenRegistry(forkshopConfig.tailwindConfig), [])
 
@@ -121,6 +123,9 @@ export default function DesignSystemBoardView() {
         tokens={tokens}
         primitives={primitiveGroups}
         typography={typographyNode}
+        nodePositions={nodePositions}
+        onPositionChange={onPositionChange}
+        selectedId={selectedNodeId}
       />
     </ForkshopCanvas>
   )

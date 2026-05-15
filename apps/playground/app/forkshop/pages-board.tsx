@@ -10,6 +10,7 @@ import {
   type IframeRouteNode,
 } from "@forkshop/registry"
 import { forkshopConfig } from "./forkshop.config"
+import { useForkshopPositions } from "./use-forkshop-positions"
 
 function humanize(path: string): string {
   if (path === "/") return "Home"
@@ -31,13 +32,16 @@ const { width: ISOLATION_STAGE_W, height: ISOLATION_STAGE_H } = responsiveFrameS
 export default function PagesBoardView({
   isolatedPath: controlledIsolatedPath,
   onBack: onBackProp,
+  selectedNodeId,
 }: {
   isolatedPath?: string
   onBack?: () => void
+  selectedNodeId?: string
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
   const [internalIsolated, setInternalIsolated] = useState<string | null>(null)
+  const { nodePositions, onPositionChange } = useForkshopPositions()
 
   const entries = useMemo<TreeEntry[]>(() => {
     return forkshopConfig.pages.map((p): TreeEntry => {
@@ -80,6 +84,9 @@ export default function PagesBoardView({
         isolatedPath={controlledIsolatedPath}
         onBack={handleBack}
         onIsolatedPathChange={setInternalIsolated}
+        nodePositions={nodePositions}
+        onPositionChange={onPositionChange}
+        selectedId={selectedNodeId}
       />
     </ForkshopCanvas>
   )

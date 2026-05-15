@@ -9,13 +9,15 @@ import {
   type IframeComponentNode,
 } from "@forkshop/registry"
 import { forkshopConfig } from "./forkshop.config"
+import { useForkshopPositions } from "./use-forkshop-positions"
 
 const STAGE_W = 1200
 const STAGE_H = 2200
 
-export default function ComponentsBoardView() {
+export default function ComponentsBoardView({ selectedNodeId }: { selectedNodeId?: string } = {}) {
   const containerRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
+  const { nodePositions, onPositionChange } = useForkshopPositions()
 
   const entries = useMemo<GalleryEntry[]>(() => {
     return forkshopConfig.blocks.map((b): GalleryEntry => {
@@ -43,7 +45,13 @@ export default function ComponentsBoardView() {
       fitMode="width"
       nodeTypes={BUILTIN_NODE_TYPES}
     >
-      <Gallery entries={entries} layout="stack" />
+      <Gallery
+          entries={entries}
+          layout="stack"
+          nodePositions={nodePositions}
+          onPositionChange={onPositionChange}
+          selectedId={selectedNodeId}
+        />
     </ForkshopCanvas>
   )
 }

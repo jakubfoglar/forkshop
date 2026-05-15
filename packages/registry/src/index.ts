@@ -91,3 +91,10 @@ export {
 
 // Responsive frame (public — user code computes isolation stage dimensions)
 export { responsiveFrameStageDimensions } from "@forkshop/components/canvas/responsive-frame-view"
+
+// Node positions (public — user code may persist and hydrate positions)
+export {
+  isNodePositions,
+  type NodePosition,
+  type NodePositions,
+} from "@forkshop/lib/node-positions"
