@@ -41,6 +41,10 @@ export {
 // Dispatcher
 export { NodeView, type NodeViewProps } from "@forkshop/components/canvas/node-view"
 export { NodeDrillIn, type NodeDrillInProps } from "@forkshop/components/canvas/node-drill-in"
+export {
+  ForkshopDrillProvider,
+  useCanvasDrillIn,
+} from "@forkshop/components/canvas/drill-in-provider"
 
 // Standalone UI (top-level mount points)
 export { ForkshopIcon, type ForkshopIconComponent } from "@forkshop/components/icon"

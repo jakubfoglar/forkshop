@@ -1,9 +1,7 @@
 "use client"
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { createPortal } from "react-dom"
 import type { ReactNode } from "react"
-import { BackButton } from "@forkshop/components/canvas/back-button"
 import { NodeView } from "@forkshop/components/canvas/node-view"
 import { GuideOverlay } from "@forkshop/components/canvas/guide-overlay"
 import { ResponsiveFrameView } from "@forkshop/components/canvas/responsive-frame-view"
@@ -38,7 +36,6 @@ export type TreeProps = {
   isolatedPath?: string
   onBack?: () => void
   onIsolatedPathChange?: (path: string | null) => void
-  showBackButton?: boolean
 }
 
 type TileCell = {
@@ -87,7 +84,6 @@ function TreeInner({
   isolatedPath: controlledIsolatedPath,
   onBack,
   onIsolatedPathChange,
-  showBackButton = true,
 }: TreeProps) {
   const [internalIsolated, setInternalIsolated] = useState<string | null>(null)
   const effectiveIsolated =
@@ -115,8 +111,6 @@ function TreeInner({
         path={effectiveIsolated}
         src={isolated?.path ?? effectiveIsolated}
         viewports={viewports}
-        onBack={handleBack}
-        showBackButton={showBackButton}
       />
     )
   }
@@ -223,23 +217,15 @@ function IsolationView({
   path,
   src,
   viewports,
-  onBack,
-  showBackButton,
 }: {
   path: string
   src: string
   viewports: number[]
-  onBack: () => void
-  showBackButton: boolean
 }) {
-  const { applyWheelInput, transformRef, containerRef } = useForkshopCanvas()
+  const { applyWheelInput, transformRef } = useForkshopCanvas()
   const activePages = useAgentActivePages()
   const agentActive = activePages.has(path)
   const [measuredHeight, setMeasuredHeight] = useState<number | undefined>(undefined)
-  const [containerReady, setContainerReady] = useState(false)
-  useEffect(() => {
-    setContainerReady(!!containerRef.current)
-  }, [containerRef])
 
   const handleBodyHeightChange = useCallback((_id: string, height: number) => {
     setMeasuredHeight(height)
@@ -262,24 +248,15 @@ function IsolationView({
   )
 
   return (
-    <div style={{ position: "relative", width: "100%", height: "100%" }}>
-      {showBackButton &&
-        containerReady &&
-        containerRef.current &&
-        createPortal(
-          <BackButton destinationLabel="Overview" onBack={onBack} />,
-          containerRef.current,
-        )}
-      <ResponsiveFrameView
-        kind="page"
-        path={path}
-        source={src}
-        measuredHeight={measuredHeight}
-        onBodyHeightChange={handleBodyHeightChange}
-        onIframeWheel={handleIframeWheel}
-        viewports={viewports}
-        agentActive={agentActive}
-      />
-    </div>
+    <ResponsiveFrameView
+      kind="page"
+      path={path}
+      source={src}
+      measuredHeight={measuredHeight}
+      onBodyHeightChange={handleBodyHeightChange}
+      onIframeWheel={handleIframeWheel}
+      viewports={viewports}
+      agentActive={agentActive}
+    />
   )
 }

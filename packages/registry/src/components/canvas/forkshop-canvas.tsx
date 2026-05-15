@@ -18,6 +18,8 @@ import type { NodeType } from "@forkshop/types/node-type"
 import type { AnyNode } from "@forkshop/types/node"
 import { IframeRegistryProvider } from "@forkshop/components/iframe-registry"
 import { AgentIframeRelay } from "@forkshop/components/agent-iframe-relay"
+import { useCanvasDrillIn } from "@forkshop/components/canvas/drill-in-provider"
+import { BackButton } from "@forkshop/components/canvas/back-button"
 
 export type WheelInput = {
   deltaX: number
@@ -77,6 +79,7 @@ export function ForkshopCanvas({
   containerRef,
   stageRef,
   nodeTypes = [],
+  onBack,
   children,
 }: {
   ref?: RefObject<ForkshopCanvasHandle | null>
@@ -89,8 +92,11 @@ export function ForkshopCanvas({
   containerRef: RefObject<HTMLDivElement | null>
   stageRef: RefObject<HTMLDivElement | null>
   nodeTypes?: ReadonlyArray<NodeType<AnyNode>>
+  onBack?: () => void
   children: ReactNode
 }) {
+  const drillState = useCanvasDrillIn()
+
   const [transform, setTransformState] = useState<Transform>(
     initialTransform ?? { zoom: 0.5, panX: 80, panY: 80 },
   )
@@ -444,6 +450,17 @@ export function ForkshopCanvas({
           style={{ cursor: containerCursor, touchAction: "none" }}
           onClick={onContainerClick}
         >
+          {onBack && drillState.active && (
+            <div className="absolute left-4 top-4 z-20">
+              <BackButton
+                destinationLabel="Overview"
+                onBack={() => {
+                  drillState.clear()
+                  onBack()
+                }}
+              />
+            </div>
+          )}
           <div ref={stageRef as React.RefObject<HTMLDivElement>} style={stageStyle}>
             {children}
           </div>

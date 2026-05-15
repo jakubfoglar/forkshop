@@ -80,6 +80,7 @@ export default function ComponentsBoardView({
       stageHeight={stageHeight}
       fitMode="width"
       nodeTypes={BUILTIN_NODE_TYPES}
+      onBack={onBack}
     >
       {isolatedNode ? (
         <NodeDrillIn node={isolatedNode} onBack={onBack ?? (() => {})} />

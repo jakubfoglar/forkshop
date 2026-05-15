@@ -34,13 +34,11 @@ export default function PagesBoardView({
   onBack: onBackProp,
   onIsolate,
   selectedNodeId,
-  showBackButton,
 }: {
   isolatedPath?: string
   onBack?: () => void
   onIsolate?: (path: string) => void
   selectedNodeId?: string
-  showBackButton?: boolean
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
@@ -75,6 +73,7 @@ export default function PagesBoardView({
       stageHeight={stageHeight}
       fitMode={fitMode}
       nodeTypes={BUILTIN_NODE_TYPES}
+      onBack={onBackProp}
     >
       <Tree
         entries={entries}
@@ -86,7 +85,6 @@ export default function PagesBoardView({
         nodePositions={nodePositions}
         onPositionChange={onPositionChange}
         selectedId={selectedNodeId}
-        showBackButton={showBackButton}
       />
     </ForkshopCanvas>
   )

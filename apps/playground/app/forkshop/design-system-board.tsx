@@ -147,6 +147,7 @@ export default function DesignSystemBoardView({
       stageHeight={stageHeight}
       fitMode="both"
       nodeTypes={BUILTIN_NODE_TYPES}
+      onBack={onBack}
     >
       {isolatedNode ? (
         <NodeDrillIn node={isolatedNode} onBack={onBack ?? (() => {})} />

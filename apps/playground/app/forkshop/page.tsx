@@ -5,6 +5,8 @@ import {
   ForkshopSidebar,
   AgentActivityProvider,
   AgentSelectionChip,
+  ForkshopDrillProvider,
+  useCanvasDrillIn,
   type ForkshopSelection,
   DesignSystemGraph,
   Gallery,
@@ -34,9 +36,17 @@ const FILE_MAP = {
 }
 
 export default function ForkshopPage() {
+  return (
+    <ForkshopDrillProvider>
+      <ForkshopPageInner />
+    </ForkshopDrillProvider>
+  )
+}
+
+function ForkshopPageInner() {
   const [selection, setSelection] = useState<ForkshopSelection>(DEFAULT_SELECTION)
   const [hasHydrated, setHasHydrated] = useState(false)
-  const [drillSource, setDrillSource] = useState<"canvas" | "sidebar">("sidebar")
+  const drill = useCanvasDrillIn()
 
   useEffect(() => {
     const fromHash = parseSelection(window.location.hash)
@@ -55,12 +65,12 @@ export default function ForkshopPage() {
   useEffect(() => {
     function onPopState() {
       const fromHash = parseSelection(window.location.hash)
-      setDrillSource("sidebar")
+      drill.clear()
       setSelection(fromHash ?? DEFAULT_SELECTION)
     }
     window.addEventListener("popstate", onPopState)
     return () => window.removeEventListener("popstate", onPopState)
-  }, [])
+  }, [drill])
 
   // Determine which main view to show.
   const view: "foundations" | "components" | "pages" =
@@ -93,7 +103,7 @@ export default function ForkshopPage() {
           : undefined
 
   const handleSidebarSelect = (next: ForkshopSelection) => {
-    setDrillSource("sidebar")
+    drill.clear()
     setSelection(next)
   }
 
@@ -146,11 +156,10 @@ export default function ForkshopPage() {
               isolatedPath={isolatedPath}
               onBack={() => setSelection({ kind: "section", sectionId: "pages" })}
               onIsolate={(path) => {
-                setDrillSource("canvas")
+                drill.mark()
                 setSelection({ kind: "page", path })
               }}
               selectedNodeId={selectedNodeId}
-              showBackButton={selection.kind === "page" && drillSource === "canvas"}
             />
           )}
         </div>
