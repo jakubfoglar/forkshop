@@ -6,7 +6,7 @@ import {
   AgentActivityProvider,
   AgentSelectionChip,
   type ForkshopSelection,
-  DesignSystemBoard,
+  DesignSystemGraph,
   Gallery,
   Tree,
   parseSelection,
@@ -83,8 +83,8 @@ export default function ForkshopPage() {
           sections={[
             {
               id: "design-system",
-              title: DesignSystemBoard.defaultTitle,
-              icon: DesignSystemBoard.icon,
+              title: DesignSystemGraph.defaultTitle,
+              icon: DesignSystemGraph.icon,
               entries: forkshopConfig.primitives.map((p) => ({ slug: p.id, name: p.name })),
             },
             {
