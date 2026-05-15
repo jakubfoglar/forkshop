@@ -6,6 +6,7 @@ export type RenderProps<T extends AnyNode> = {
   isSelected: boolean
   agentActive: boolean
   agentFileLabel?: string
+  onIsolate?: () => void
 }
 
 export type DrillInProps<T extends AnyNode> = {

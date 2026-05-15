@@ -67,6 +67,7 @@ export function NodeView({
     isSelected,
     agentActive: effectiveAgentActive,
     agentFileLabel: effectiveAgentFileLabel,
+    onIsolate,
   }
   return (
     <NodeFrame

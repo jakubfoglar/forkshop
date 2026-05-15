@@ -9,7 +9,7 @@ import { useForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
 import { useRegisterIframe } from "@forkshop/components/iframe-registry"
 import { useAgentActivePages } from "@forkshop/components/agent-activity-context"
 
-function IframeRouteRender({ node }: { node: IframeRouteNode }) {
+function IframeRouteRender({ node, onIsolate }: { node: IframeRouteNode; onIsolate?: () => void }) {
   const { applyWheelInput, transformRef } = useForkshopCanvas()
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
   useRegisterIframe(iframeRef)
@@ -38,6 +38,7 @@ function IframeRouteRender({ node }: { node: IframeRouteNode }) {
       heightCap={node.height}
       desktopWidth={1440}
       onIframeWheel={handleIframeWheel}
+      onIframeDblClick={onIsolate === undefined ? undefined : () => onIsolate()}
       iframeRef={(el) => {
         iframeRef.current = el ?? null
       }}
@@ -99,7 +100,7 @@ function IframeRouteDrillIn({
 export const iframeRouteNodeType: NodeType<IframeRouteNode> = {
   id: "iframe-route",
   match: (node): node is IframeRouteNode => node.kind === "iframe-route",
-  render: ({ node }) => <IframeRouteRender node={node} />,
+  render: ({ node, onIsolate }) => <IframeRouteRender node={node} onIsolate={onIsolate} />,
   drillIn: ({ node, onBack }) => <IframeRouteDrillIn node={node} onBack={onBack} />,
   defaultMode: "click-into",
   enterMode: "double-click",
