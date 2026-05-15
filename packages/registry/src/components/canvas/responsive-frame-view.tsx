@@ -227,6 +227,14 @@ function Viewport({
   const [iframeElement, setIframeElement] = useState<HTMLIFrameElement>()
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
   useRegisterIframe(iframeRef)
+  // useCallback is required here: an inline ref callback creates a new function
+  // identity on every render, which causes React to call it with null (detach)
+  // then with the element (attach) — each call triggers setIframeElement →
+  // re-render → new callback identity → infinite loop.
+  const handleIframeRef = useCallback((element: HTMLIFrameElement | null) => {
+    iframeRef.current = element
+    setIframeElement(element ?? undefined)
+  }, [])
   const [shouldLoad, setShouldLoad] = useState(false)
 
   // Reload the iframe each time the agent-edit epoch for this iframe's
@@ -378,7 +386,7 @@ function Viewport({
         <CanvasLabel style={{ pointerEvents: "none" }}>{viewport.label}</CanvasLabel>
       </div>
       <iframe
-        ref={(element) => { iframeRef.current = element; setIframeElement(element ?? undefined) }}
+        ref={handleIframeRef}
         src={shouldLoad ? source : undefined}
         title={title}
         scrolling="no"
