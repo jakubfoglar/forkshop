@@ -74,6 +74,15 @@ export default function ForkshopPage() {
   // When the user clicked a page leaf in the sidebar, isolate that page.
   const isolatedPath = selection.kind === "page" ? selection.path : undefined
 
+  const selectedNodeId =
+    selection.kind === "primitive"
+      ? `primitive:${selection.id}`
+      : selection.kind === "block"
+        ? `block:${selection.slug}`
+        : selection.kind === "page"
+          ? `page:${selection.path}`
+          : undefined
+
   return (
     <AgentActivityProvider fileMap={FILE_MAP}>
       <div className="flex h-screen overflow-hidden">
@@ -103,12 +112,13 @@ export default function ForkshopPage() {
             blockSelectionSlug={selection.kind === "block" ? selection.slug : undefined}
             primitiveSelectionId={selection.kind === "primitive" ? selection.id : undefined}
           />
-          {view === "design-system" && <DesignSystemBoardView />}
-          {view === "components" && <ComponentsBoardView />}
+          {view === "design-system" && <DesignSystemBoardView selectedNodeId={selectedNodeId} />}
+          {view === "components" && <ComponentsBoardView selectedNodeId={selectedNodeId} />}
           {view === "pages" && (
             <PagesBoardView
               isolatedPath={isolatedPath}
               onBack={() => setSelection({ kind: "section", sectionId: "pages" })}
+              selectedNodeId={selectedNodeId}
             />
           )}
         </div>
