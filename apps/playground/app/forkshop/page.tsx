@@ -8,7 +8,7 @@ import {
   type ForkshopSelection,
   DesignSystemBoard,
   Gallery,
-  PageTree,
+  Tree,
   parseSelection,
   serializeSelection,
 } from "@forkshop/registry"
@@ -93,7 +93,7 @@ export default function ForkshopPage() {
               icon: Gallery.icon,
               entries: forkshopConfig.blocks.map((b) => ({ slug: b.slug, name: b.name })),
             },
-            { id: "pages", title: PageTree.defaultTitle, icon: PageTree.icon },
+            { id: "pages", title: Tree.defaultTitle, icon: Tree.icon },
           ]}
           routes={PAGE_ROUTES}
         />
