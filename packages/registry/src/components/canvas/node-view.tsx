@@ -9,7 +9,6 @@ import type { NodePosition } from "@forkshop/lib/node-positions"
 import type { SnapGuide } from "@forkshop/lib/system-snap"
 import type { GetSnapTargets } from "@forkshop/hooks/use-draggable-node"
 import { useNodeAgentActive } from "@forkshop/lib/use-node-agent-active"
-import { useCanvasDrillIn } from "@forkshop/components/canvas/drill-in-provider"
 
 export function resolveNodeType(
   node: AnyNode,
@@ -28,7 +27,6 @@ export type NodeViewProps = {
   agentActive?: boolean
   agentFileLabel?: string
   onSelect?: () => void
-  onIsolate?: () => void
   onPositionChange: (id: string, x: number, y: number) => void
   getSnapTargets: GetSnapTargets
   onGuidesChange?: (guides: SnapGuide[]) => void
@@ -44,7 +42,6 @@ export function NodeView({
   agentActive,
   agentFileLabel,
   onSelect,
-  onIsolate,
   onPositionChange,
   getSnapTargets,
   onGuidesChange,
@@ -52,25 +49,25 @@ export function NodeView({
   className,
   style,
 }: NodeViewProps): ReactNode {
-  const { nodeTypes } = useForkshopCanvas()
+  const { nodeTypes, drill } = useForkshopCanvas()
   const nodeType = resolveNodeType(node, nodeTypes)
   const derivedActivity = useNodeAgentActive(node)
-  const drill = useCanvasDrillIn()
   const effectiveAgentActive = agentActive !== undefined ? agentActive : derivedActivity.agentActive
   const effectiveAgentFileLabel = agentFileLabel ?? derivedActivity.agentFileLabel
-  const effectiveOnIsolate = onIsolate ?? (() => drill.mark(node))
   if (!nodeType) {
     if (typeof console !== "undefined") {
       console.warn(`[forkshop] No NodeType matched node ${node.id} (kind=${node.kind})`)
     }
     return null
   }
+  const enterMode = nodeType.enterMode ?? "double-click"
+  const handleIsolate = enterMode === "never" ? undefined : () => drill.mark(node)
   const renderProps: RenderProps<AnyNode> = {
     node,
     isSelected,
     agentActive: effectiveAgentActive,
     agentFileLabel: effectiveAgentFileLabel,
-    onIsolate: effectiveOnIsolate,
+    onIsolate: handleIsolate,
   }
   return (
     <NodeFrame
@@ -85,7 +82,7 @@ export function NodeView({
       agentActive={effectiveAgentActive}
       agentFileLabel={effectiveAgentFileLabel}
       onSelect={onSelect}
-      onIsolate={effectiveOnIsolate}
+      onIsolate={handleIsolate}
       onPositionChange={onPositionChange}
       getSnapTargets={getSnapTargets}
       onGuidesChange={onGuidesChange}

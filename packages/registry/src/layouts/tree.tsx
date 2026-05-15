@@ -4,6 +4,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { ReactNode } from "react"
 import { NodeView } from "@forkshop/components/canvas/node-view"
 import { GuideOverlay } from "@forkshop/components/canvas/guide-overlay"
+import { useForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
 import type { GetSnapTargets } from "@forkshop/hooks/use-draggable-node"
 import type { NodePositions } from "@forkshop/lib/node-positions"
 import type { SnapGuide, SnapTarget } from "@forkshop/lib/system-snap"
@@ -29,6 +30,7 @@ export type TreeProps = {
   onPositionChange?: (id: string, x: number, y: number) => void
   selectedId?: string
   onSelectChange?: (id: string, selected: boolean) => void
+  focusedEntryId?: string
 }
 
 type TileCell = {
@@ -73,6 +75,7 @@ function TreeInner({
   onPositionChange,
   selectedId,
   onSelectChange,
+  focusedEntryId,
 }: TreeProps) {
   return (
     <SitemapView
@@ -81,6 +84,7 @@ function TreeInner({
       onPositionChange={onPositionChange}
       selectedId={selectedId}
       onSelectChange={onSelectChange}
+      focusedEntryId={focusedEntryId}
     />
   )
 }
@@ -91,13 +95,27 @@ function SitemapView({
   onPositionChange,
   selectedId,
   onSelectChange,
+  focusedEntryId,
 }: {
   entries: TreeEntry[]
   nodePositions: NodePositions
   onPositionChange?: (id: string, x: number, y: number) => void
   selectedId?: string
   onSelectChange?: (id: string, selected: boolean) => void
+  focusedEntryId?: string
 }) {
+  const { drill } = useForkshopCanvas()
+  useEffect(() => {
+    if (focusedEntryId === undefined) {
+      if (drill.node !== null && entries.some((e) => e.id === drill.node?.id)) {
+        drill.clear()
+      }
+      return
+    }
+    const entry = entries.find((e) => e.id === focusedEntryId)
+    if (entry) drill.mark(entry.node)
+  }, [focusedEntryId, entries, drill])
+
   const cells = useMemo(() => buildTileLayout(entries), [entries])
   const { width: stageWidth, height: stageHeight } = useMemo(() => stageSize(cells), [cells])
   const [activeGuides, setActiveGuides] = useState<readonly SnapGuide[]>([])

@@ -18,9 +18,8 @@ import type { NodeType } from "@forkshop/types/node-type"
 import type { AnyNode } from "@forkshop/types/node"
 import { IframeRegistryProvider } from "@forkshop/components/iframe-registry"
 import { AgentIframeRelay } from "@forkshop/components/agent-iframe-relay"
-import { useCanvasDrillIn } from "@forkshop/components/canvas/drill-in-provider"
 import { BackButton } from "@forkshop/components/canvas/back-button"
-import { NodeDrillIn } from "@forkshop/components/canvas/node-drill-in"
+import { resolveNodeType } from "@forkshop/components/canvas/node-view"
 
 export type WheelInput = {
   deltaX: number
@@ -39,6 +38,13 @@ export type ForkshopCanvasHandle = {
   applyWheelInput: (input: WheelInput) => void
 }
 
+export type ForkshopDrill = {
+  node: AnyNode | null
+  active: boolean
+  mark: (node: AnyNode) => void
+  clear: () => void
+}
+
 type ForkshopCanvasContextValue = {
   transformRef: RefObject<Transform>
   isInteractingRef: RefObject<boolean>
@@ -49,6 +55,7 @@ type ForkshopCanvasContextValue = {
   applyWheelInput: (input: WheelInput) => void
   containerRef: RefObject<HTMLDivElement | null>
   nodeTypes: ReadonlyArray<NodeType<AnyNode>>
+  drill: ForkshopDrill
 }
 
 const ForkshopCanvasContext = createContext<ForkshopCanvasContextValue | undefined>(undefined)
@@ -80,7 +87,6 @@ export function ForkshopCanvas({
   containerRef,
   stageRef,
   nodeTypes = [],
-  onBack,
   children,
 }: {
   ref?: RefObject<ForkshopCanvasHandle | null>
@@ -93,10 +99,11 @@ export function ForkshopCanvas({
   containerRef: RefObject<HTMLDivElement | null>
   stageRef: RefObject<HTMLDivElement | null>
   nodeTypes?: ReadonlyArray<NodeType<AnyNode>>
-  onBack?: () => void
   children: ReactNode
 }) {
-  const drillState = useCanvasDrillIn()
+  const [drillNode, setDrillNode] = useState<AnyNode | null>(null)
+  const drillMark = useCallback((n: AnyNode) => setDrillNode(n), [])
+  const drillClear = useCallback(() => setDrillNode(null), [])
 
   const [transform, setTransformState] = useState<Transform>(
     initialTransform ?? { zoom: 0.5, panX: 80, panY: 80 },
@@ -404,6 +411,16 @@ export function ForkshopCanvas({
   )
   useImperativeHandle(ref, () => handle, [handle])
 
+  const drill = useMemo<ForkshopDrill>(
+    () => ({
+      node: drillNode,
+      active: drillNode !== null,
+      mark: drillMark,
+      clear: drillClear,
+    }),
+    [drillNode, drillMark, drillClear],
+  )
+
   const contextValue = useMemo<ForkshopCanvasContextValue>(
     () => ({
       transformRef,
@@ -415,8 +432,9 @@ export function ForkshopCanvas({
       applyWheelInput: applyWheel,
       containerRef,
       nodeTypes,
+      drill,
     }),
-    [fitToView, resetZoom, animateToBox, setTransform, applyWheel, containerRef, nodeTypes],
+    [fitToView, resetZoom, animateToBox, setTransform, applyWheel, containerRef, nodeTypes, drill],
   )
 
   const blockStageInteraction = isSpaceHeld || isPanning
@@ -451,30 +469,8 @@ export function ForkshopCanvas({
           style={{ cursor: containerCursor, touchAction: "none" }}
           onClick={onContainerClick}
         >
-          {onBack && drillState.active && (
-            <div className="absolute left-4 top-4 z-20">
-              <BackButton
-                destinationLabel="Overview"
-                onBack={() => {
-                  drillState.clear()
-                  onBack()
-                }}
-              />
-            </div>
-          )}
-          {drillState.active && drillState.node ? (
-            <div
-              ref={stageRef as React.RefObject<HTMLDivElement>}
-              style={{ ...stageStyle, transform: "translate(0px, 0px) scale(1)" }}
-            >
-              <NodeDrillIn
-                node={drillState.node}
-                onBack={() => {
-                  drillState.clear()
-                  onBack?.()
-                }}
-              />
-            </div>
+          {drillNode ? (
+            <DrillSubtree node={drillNode} nodeTypes={nodeTypes} onClose={drillClear} />
           ) : (
             <div ref={stageRef as React.RefObject<HTMLDivElement>} style={stageStyle}>
               {children}
@@ -483,5 +479,44 @@ export function ForkshopCanvas({
         </div>
       </IframeRegistryProvider>
     </ForkshopCanvasContext.Provider>
+  )
+}
+
+function DrillSubtree({
+  node,
+  nodeTypes,
+  onClose,
+}: {
+  node: AnyNode
+  nodeTypes: ReadonlyArray<NodeType<AnyNode>>
+  onClose: () => void
+}) {
+  const nodeType = resolveNodeType(node, nodeTypes)
+  if (!nodeType) return null
+
+  const body = nodeType.drillIn ? (
+    nodeType.drillIn({ node, onBack: onClose })
+  ) : (
+    <div className="flex h-full w-full items-center justify-center p-forkshop-8">
+      <div className="bg-white shadow-md p-forkshop-8">
+        {nodeType.render({ node, isSelected: false, agentActive: false })}
+      </div>
+    </div>
+  )
+
+  return (
+    <div
+      className="relative h-full w-full overflow-auto bg-forkshop-canvas"
+      // Reset --canvas-zoom to 1 so descendants that compute
+      // calc(1px / var(--canvas-zoom)) get correct sizing. The drill subtree
+      // is rendered outside the panned stage, but inherited custom-property
+      // values would otherwise leak in from any ancestor that set them.
+      style={{ ["--canvas-zoom" as string]: "1" }}
+    >
+      <div className="absolute left-4 top-4 z-20">
+        <BackButton onBack={onClose} />
+      </div>
+      {body}
+    </div>
   )
 }
