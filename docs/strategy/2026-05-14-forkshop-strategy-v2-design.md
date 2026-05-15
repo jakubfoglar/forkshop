@@ -15,7 +15,7 @@ This v2 supersedes the 2026-05-13 strategy after a thorough product/architecture
 | 3 | License | MIT | FSL-1.1-Apache-2.0 for engine; MIT for user-surface files |
 | 4 | Concepts | kits + primitives + blocks + pages + sections + entries (~8) | Node / NodeType / Layout / Board / Kit (5) |
 | 5 | Plugin architecture | None | NodeType plugin contract (formal, user-extensible) |
-| 6 | Drill-in | Hardcoded to ResponsiveFrameView | Per-NodeType `drillIn` function |
+| 6 | Drill-in | Hardcoded to ResponsiveFrameView | Removed for 1.0; each sidebar leaf is its own board (see "Strategy refinements" at the bottom) |
 | 7 | Kits at 1.0 | 3 named board layouts | 3 audience-specific starters: `marketing`, `saas`, `default` |
 | 8 | Live AI | Ravineo-flavored, single producer | Vendor-neutral protocol; Claude Code pack ships at 1.0 |
 | 9 | Styling | User installs Tailwind preset | Engine ships compiled CSS; no theme overrides at 1.0 |
@@ -57,21 +57,21 @@ Five concepts replace the previous ~8 (kits, primitives, blocks, pages, sections
 
 ### Node
 
-A positioned instance on the canvas. Has `(x, y)`, a `kind`, and content. Three behavior modes:
+A positioned instance on the canvas. Has `(x, y)`, a `kind`, and content. The `kind` discriminator selects rendering shape:
 
-- `interactive-live` — rendered inline in the canvas's React tree, always interactive. Used for small primitive showcases (button, badge, input).
-- `click-into` — rendered in an isolated iframe. Transparent overlay captures pan/select clicks until double-click "enters" the iframe. Used for full pages and component-preview blocks.
-- `static` — snapshot/frozen rendering, used as a zoom-far-out optimization. No v1 spec required; engine internal.
+- `inline-react` — interactive React rendering inline on the canvas. Used for small primitive showcases (button, badge, input).
+- `iframe-route` — full-page iframes of Next.js routes (pages). Wrapped in an iframe-host with wheel forwarding and body-height sync.
+- `iframe-component` — component-preview iframes (blocks). Same iframe-host plumbing as `iframe-route`.
 
 ### NodeType
 
-A plugin defining a *kind* of node: its rendering, its default mode, and optionally its drill-in renderer.
+A plugin defining a *kind* of node: how it matches, how it renders, and how it ties into the agent-activity system.
 
 Built-in NodeTypes at 1.0:
 
-- `inline-react` — interactive-live React renders (primitives, variants)
-- `iframe-route` — click-into iframes of full Next.js routes (pages)
-- `iframe-component` — click-into iframes of component-preview routes (blocks)
+- `inline-react` — interactive React renders (primitives, variants)
+- `iframe-route` — iframes of full Next.js routes (pages)
+- `iframe-component` — iframes of component-preview routes (blocks)
 
 User-side NodeTypes can live in `app/forkshop/node-types/`. Community packages (`@forkshop/remotion`, `@forkshop/react-pdf`, etc.) can ship NodeType bundles in 1.x.
 
@@ -81,26 +81,27 @@ User-side NodeTypes can live in `app/forkshop/node-types/`. Community packages (
 interface NodeType<T extends AnyNode> {
   id: string
   match: (node: AnyNode) => node is T
-  render: (props: RenderProps<T>) => ReactNode      // small canvas view
-  drillIn?: (props: DrillInProps<T>) => ReactNode   // optional drill-in view
-                                                     // if absent, engine shows `render` scaled up
-  defaultMode?: "interactive-live" | "click-into" | "static"
-  enterMode?: "double-click" | "single-click" | "never"
-  activityKey?: (node: T) => string                 // for live AI matching
+  render: (props: RenderProps<T>) => ReactNode
+  agentMatch?: (node: T, activity: AgentActivitySnapshot) => AgentMatchResult
 }
 ```
 
-The engine owns drill-in *mechanics* (transition animation, back button, breadcrumbs, escape/browser-back). The NodeType owns drill-in *content*. `ResponsiveFrameView` becomes the default `drillIn` for `iframe-route` and `iframe-component` — a shared engine utility, not a top-level concept.
+`agentMatch` lets each NodeType declare how it maps to the agent-activity snapshot (which exposes `pages`, `blocks`, and `primitives` sets). It replaces the older `activityKey` field — instead of returning a single string for the engine to look up, the NodeType performs the match itself and returns whether the node is active plus an optional file label.
+
+**Single-node views.** Each sidebar leaf maps to its own board. There is no canvas-double-click "drill-in" mechanism at 1.0 — the engine stays simple, with one source of truth (selection) for what's currently on the canvas. Showing a single block or page in a responsive multi-viewport view is the job of the `ResponsiveFrameView` Layout; kits compose boards out of Layouts. Future versions may add a canvas-level drill-in affordance, but the architecture preserves the option to do this cleanly because Layouts are positioning-only and NodeTypes own their rendering.
 
 ### Layout
 
-An engine-shipped React component that arranges multiple nodes on a Board. Three Layouts at 1.0:
+An engine-shipped React component that arranges multiple nodes on a Board. Four Layouts at 1.0:
 
-| Layout | What it does | Maps to current file |
+| Layout | What it does | Source file |
 |---|---|---|
-| `Gallery` | Stack or grid of iframe nodes; single-viewport or 3-viewport (desktop/tablet/mobile) | `iframe-gallery.tsx` |
-| `Tree` | Filesystem-discovered routes as hierarchical sitemap | `page-tree.tsx` |
-| `DesignSystemGraph` | Color tokens as graph (raw ↔ semantic edges) + primitive frames + typography | `design-system-board.tsx` + `system-layout.ts` |
+| `Gallery` | Stack or grid of iframe nodes at a single viewport width | `layouts/gallery.tsx` |
+| `Tree` | Filesystem-discovered routes as a hierarchical sitemap | `layouts/tree.tsx` |
+| `DesignSystemView` | Color tokens as a graph (raw ↔ semantic edges) + primitive frames + typography | `layouts/design-system-view.tsx` |
+| `ResponsiveFrameView` | One iframe source rendered at multiple viewport widths (default 1440 / 768 / 375) | `layouts/responsive-frame-view.tsx` |
+
+**Naming convention.** Short evocative names for simple Layouts (`Gallery`, `Tree`); `*View` suffix for compositional Layouts that arrange multiple sub-views around a single concept (`DesignSystemView`, `ResponsiveFrameView`).
 
 Layouts are strict (typed prop interfaces), not user-extensible at 1.0. Custom rendering happens at the NodeType level (inside cells of a Gallery), not the Layout level. If a Layout doesn't fit, the user adjusts via NodeType or accepts the constraint — adding a new Layout is a contribution path, not a user extension point.
 
@@ -127,9 +128,9 @@ Forkshop ships as three artifacts in production.
 Everything the user shouldn't need to read or modify. ~7,000 LOC.
 
 - Canvas engine: pan, zoom, virtualization, drag-position persistence
-- Sidebar shell: fixed shape, drill-in/back stack, selection state
+- Sidebar shell: fixed shape, selection state
 - NodeType plugin contract + built-in NodeTypes (`inline-react`, `iframe-route`, `iframe-component`)
-- Layouts: Gallery, Tree, DesignSystemGraph
+- Layouts: Gallery, Tree, DesignSystemView, ResponsiveFrameView
 - Hooks: iframe wiring (edit, spacing, preview, block-dblclick, draggable-node)
 - Lib: token-registry, system-graph, system-layout, system-snap, edit-mode, inspect-element, file-to-selection, spacing-classes, sitemap-tree, agent-activity-state
 - API route handlers (re-exported by user's `app/api/forkshop/*`)
@@ -334,8 +335,7 @@ The hard rule: **refactor before public release.** 1.0 ships on the new architec
 - Built-in SVG icon set (replaces `lucide-react` / `iconoir-react`)
 - Drop `motion` dependency (already unused)
 - NodeType plugin contract + 3 built-in types (`inline-react`, `iframe-route`, `iframe-component`)
-- Per-NodeType `drillIn` (ResponsiveFrameView becomes a default for iframe types, not engine-mandated)
-- Layouts as engine code (Gallery, Tree, DesignSystemGraph)
+- Layouts as engine code (Gallery, Tree, DesignSystemView, ResponsiveFrameView)
 - Sidebar shell (fixed shape, no public customization API)
 
 **Engine capabilities (mostly already built, polished + renamed):**
@@ -532,7 +532,7 @@ These are not in 1.0. Some return as paid Pro Kits later (specifically `@forksho
 
 This strategy answers cross-cutting questions. Implementation is broken into separate specs (to be written next):
 
-1. **NodeType + Layout extraction** — extract the engine surface from the existing registry, define the NodeType plugin contract, refactor `canvas-node.tsx` into a type-dispatcher, port existing primitives into NodeType + Layout shapes, define `RenderProps` / `DrillInProps` TypeScript shapes.
+1. **NodeType + Layout extraction** — extract the engine surface from the existing registry, define the NodeType plugin contract, refactor `canvas-node.tsx` into a type-dispatcher, port existing primitives into NodeType + Layout shapes, define `RenderProps` TypeScript shapes.
 2. **Engine packaging + compiled CSS pipeline** — tsup build, Tailwind compile step, SVG icon set, `"use client"` preservation, sourcemaps, dependency cleanup, exact `package.json` exports map for `@forkshop/engine`.
 3. **CLI rework** — new `init` flow (installs engine, scaffolds thin surface, drops kit-specific files), `update` command, updated manifest schema (thin scaffolds only).
 4. **Kits rewrite** — three new kits (marketing, saas, default), kit config shape, scaffolding logic, project-type heuristics, MDX-detection logic.
@@ -541,13 +541,27 @@ This strategy answers cross-cutting questions. Implementation is broken into sep
 
 ## Open questions deferred to implementation specs
 
-- Exact NodeType contract TypeScript shape (`RenderProps`, `DrillInProps` parameter details)
+- Exact NodeType contract TypeScript shape (`RenderProps` parameter details)
 - Manifest schema v2 (thinner — just scaffolds)
 - License-key infrastructure choice (Stripe / Lemon Squeezy / Polar) — deferred to Pro launch
 - Exact `package.json` exports map for `@forkshop/engine`
 - Tailwind v3 vs v4 preset shape
 
 These are implementation details, not strategy. Settled in the downstream specs.
+
+## Strategy refinements after initial drafting
+
+The following decisions were made after the strategy v2 spec was drafted, during the NodeType + Layout extraction implementation and follow-up cleanup. They refine but don't supersede the v2 vision.
+
+**1. Four Layouts at 1.0, not three.** `ResponsiveFrameView` was promoted from a drill-in implementation detail to a standalone Layout because the responsive multi-viewport view is a high-value use case for web pages and benefits from evolving on its own track.
+
+**2. Drill-in removed for 1.0.** The original spec had per-NodeType `drillIn` functions and engine-managed drill-in mechanics. In practice the layering between selection state, drill state, and canvas chrome accumulated complexity without earning its keep. Removed entirely for 1.0; each sidebar leaf is its own board. Future versions can re-introduce canvas-driven drill-in if a use case demands it.
+
+**3. `agentMatch` replaces `activityKey`.** The original NodeType contract had a single-string `activityKey(node) => string` field, with the engine doing the lookup. The new shape gives each NodeType a richer matcher: `agentMatch(node, snapshot) => { active, fileLabel? }`. This lets user-defined NodeTypes plug into the agent-activity system on their own terms.
+
+**4. `NodeType.defaultMode` / `enterMode` removed.** These existed to gate drill-in behavior. Without drill-in they have no consumers.
+
+**5. Layout naming convention.** Short evocative names for simple Layouts (`Gallery`, `Tree`); `*View` suffix for compositional Layouts (`DesignSystemView`, `ResponsiveFrameView`). The `DesignSystemBoard` → `DesignSystemGraph` → `DesignSystemView` evolution converged here.
 
 ## Supersedes
 
