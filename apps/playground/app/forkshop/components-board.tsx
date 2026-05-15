@@ -1,16 +1,38 @@
 "use client"
 
-import { useRef } from "react"
-import { ForkshopCanvas, IframeGallery } from "@forkshop/registry"
+import { useMemo, useRef } from "react"
+import {
+  ForkshopCanvas,
+  Gallery,
+  BUILTIN_NODE_TYPES,
+  type GalleryEntry,
+  type IframeComponentNode,
+} from "@forkshop/registry"
 import { forkshopConfig } from "./forkshop.config"
 
-// Stack layout: viewport width 1200, 3 blocks stacked ~600px each → ~1900px total height.
 const STAGE_W = 1200
 const STAGE_H = 2200
 
 export default function ComponentsBoardView() {
   const containerRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
+
+  const entries = useMemo<GalleryEntry[]>(() => {
+    return forkshopConfig.blocks.map((b): GalleryEntry => {
+      const node: IframeComponentNode = {
+        id: `block:${b.slug}`,
+        kind: "iframe-component",
+        x: 0,
+        y: 0,
+        width: 1200,
+        height: 600,
+        slug: b.slug,
+        previewSrc: b.iframeSrc,
+        componentPath: b.sourcePath,
+      }
+      return { id: node.id, label: b.name, node }
+    })
+  }, [])
 
   return (
     <ForkshopCanvas
@@ -19,8 +41,9 @@ export default function ComponentsBoardView() {
       stageWidth={STAGE_W}
       stageHeight={STAGE_H}
       fitMode="width"
+      nodeTypes={BUILTIN_NODE_TYPES}
     >
-      <IframeGallery entries={[...forkshopConfig.blocks]} layout="stack" />
+      <Gallery entries={entries} layout="stack" />
     </ForkshopCanvas>
   )
 }
