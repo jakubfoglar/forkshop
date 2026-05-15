@@ -5,12 +5,14 @@ import {
   ForkshopCanvas,
   Tree,
   BUILTIN_NODE_TYPES,
-  responsiveFrameStageDimensions,
   type TreeEntry,
   type IframeRouteNode,
 } from "@forkshop/registry"
 import { forkshopConfig } from "./forkshop.config"
 import { useForkshopPositions } from "./use-forkshop-positions"
+
+const STAGE_W = 1264
+const STAGE_H = 400
 
 function humanize(path: string): string {
   if (path === "/") return "Home"
@@ -21,23 +23,11 @@ function humanize(path: string): string {
     .join(" / ")
 }
 
-const GRID_STAGE_W = 1264
-const GRID_STAGE_H = 400
-
-const { width: ISOLATION_STAGE_W, height: ISOLATION_STAGE_H } = responsiveFrameStageDimensions(
-  undefined,
-  [1440, 768, 375],
-)
-
 export default function PagesBoardView({
-  isolatedPath: controlledIsolatedPath,
-  onBack: onBackProp,
-  onIsolate,
+  onBack,
   selectedNodeId,
 }: {
-  isolatedPath?: string
   onBack?: () => void
-  onIsolate?: (path: string) => void
   selectedNodeId?: string
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -59,32 +49,21 @@ export default function PagesBoardView({
     })
   }, [])
 
-  const isIsolated = controlledIsolatedPath !== undefined
-
-  const stageWidth = isIsolated ? ISOLATION_STAGE_W : GRID_STAGE_W
-  const stageHeight = isIsolated ? ISOLATION_STAGE_H : GRID_STAGE_H
-  const fitMode = isIsolated ? "width" : "both"
-
   return (
     <ForkshopCanvas
       containerRef={containerRef}
       stageRef={stageRef}
-      stageWidth={stageWidth}
-      stageHeight={stageHeight}
-      fitMode={fitMode}
+      stageWidth={STAGE_W}
+      stageHeight={STAGE_H}
+      fitMode="both"
       nodeTypes={BUILTIN_NODE_TYPES}
-      onBack={onBackProp}
+      onBack={onBack}
     >
       <Tree
         entries={entries}
-        isolatedPath={controlledIsolatedPath}
-        onBack={onBackProp}
-        onIsolatedPathChange={(path) => {
-          if (path !== null) onIsolate?.(path)
-        }}
+        selectedId={selectedNodeId}
         nodePositions={nodePositions}
         onPositionChange={onPositionChange}
-        selectedId={selectedNodeId}
       />
     </ForkshopCanvas>
   )

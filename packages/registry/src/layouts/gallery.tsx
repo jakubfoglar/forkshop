@@ -4,6 +4,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { ReactNode } from "react"
 import { NodeView } from "@forkshop/components/canvas/node-view"
 import { GuideOverlay } from "@forkshop/components/canvas/guide-overlay"
+import { useCanvasDrillIn } from "@forkshop/components/canvas/drill-in-provider"
 import type { GetSnapTargets } from "@forkshop/hooks/use-draggable-node"
 import type { NodePositions } from "@forkshop/lib/node-positions"
 import type { SnapGuide, SnapTarget } from "@forkshop/lib/system-snap"
@@ -123,6 +124,7 @@ function GalleryInner({
   selectedId,
   onSelectChange,
 }: GalleryProps) {
+  const drill = useCanvasDrillIn()
   const viewportWidth = vpwProp ?? DEFAULTS[layout].viewportWidth
   const rowGap = rgProp ?? DEFAULTS[layout].rowGap
   const columnGap = cgProp ?? DEFAULTS[layout].columnGap
@@ -194,6 +196,7 @@ function GalleryInner({
             node={positionedNode}
             override={nodePositions[cell.id]}
             isSelected={selectedId === cell.id}
+            onIsolate={() => drill.mark(positionedNode)}
             onPositionChange={handlePositionChange}
             getSnapTargets={getSnapTargets}
             onGuidesChange={handleGuidesChange}

@@ -7,34 +7,37 @@ import {
   useState,
   type ReactNode,
 } from "react"
+import type { AnyNode } from "@forkshop/types/node"
 
 type DrillInValue = {
   active: boolean
-  mark: () => void
+  node: AnyNode | null
+  mark: (node: AnyNode) => void
   clear: () => void
 }
 
 const DrillInContext = createContext<DrillInValue | null>(null)
 
+const NOOP_VALUE: DrillInValue = {
+  active: false,
+  node: null,
+  mark: () => {},
+  clear: () => {},
+}
+
 export function ForkshopDrillProvider({ children }: { children: ReactNode }) {
-  const [active, setActive] = useState(false)
-  const mark = useCallback(() => setActive(true), [])
-  const clear = useCallback(() => setActive(false), [])
-  return (
-    <DrillInContext.Provider value={{ active, mark, clear }}>
-      {children}
-    </DrillInContext.Provider>
-  )
+  const [node, setNode] = useState<AnyNode | null>(null)
+  const mark = useCallback((n: AnyNode) => setNode(n), [])
+  const clear = useCallback(() => setNode(null), [])
+  const value: DrillInValue = {
+    active: node !== null,
+    node,
+    mark,
+    clear,
+  }
+  return <DrillInContext.Provider value={value}>{children}</DrillInContext.Provider>
 }
 
 export function useCanvasDrillIn(): DrillInValue {
-  const value = useContext(DrillInContext)
-  if (!value) {
-    return {
-      active: false,
-      mark: () => {},
-      clear: () => {},
-    }
-  }
-  return value
+  return useContext(DrillInContext) ?? NOOP_VALUE
 }

@@ -4,9 +4,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { ReactNode } from "react"
 import { NodeView } from "@forkshop/components/canvas/node-view"
 import { GuideOverlay } from "@forkshop/components/canvas/guide-overlay"
-import { ResponsiveFrameView } from "@forkshop/components/canvas/responsive-frame-view"
-import { useForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
-import { useAgentActivePages } from "@forkshop/components/agent-activity-context"
+import { useCanvasDrillIn } from "@forkshop/components/canvas/drill-in-provider"
 import type { GetSnapTargets } from "@forkshop/hooks/use-draggable-node"
 import type { NodePositions } from "@forkshop/lib/node-positions"
 import type { SnapGuide, SnapTarget } from "@forkshop/lib/system-snap"
@@ -28,14 +26,10 @@ export type TreeEntry = {
 
 export type TreeProps = {
   entries: TreeEntry[]
-  viewports?: number[]
   nodePositions?: NodePositions
   onPositionChange?: (id: string, x: number, y: number) => void
   selectedId?: string
   onSelectChange?: (id: string, selected: boolean) => void
-  isolatedPath?: string
-  onBack?: () => void
-  onIsolatedPathChange?: (path: string | null) => void
 }
 
 type TileCell = {
@@ -76,45 +70,11 @@ export const Tree: typeof _Tree & {
 
 function TreeInner({
   entries,
-  viewports = [1440, 768, 375],
   nodePositions = {},
   onPositionChange,
   selectedId,
   onSelectChange,
-  isolatedPath: controlledIsolatedPath,
-  onBack,
-  onIsolatedPathChange,
 }: TreeProps) {
-  const [internalIsolated, setInternalIsolated] = useState<string | null>(null)
-  const effectiveIsolated =
-    controlledIsolatedPath !== undefined
-      ? entries.some((e) => e.path === controlledIsolatedPath)
-        ? controlledIsolatedPath
-        : null
-      : internalIsolated
-
-  const handleIsolate = (path: string) => {
-    setInternalIsolated(path)
-    onIsolatedPathChange?.(path)
-  }
-
-  const handleBack = () => {
-    setInternalIsolated(null)
-    onIsolatedPathChange?.(null)
-    onBack?.()
-  }
-
-  if (effectiveIsolated !== null) {
-    const isolated = entries.find((e) => e.path === effectiveIsolated)
-    return (
-      <IsolationView
-        path={effectiveIsolated}
-        src={isolated?.path ?? effectiveIsolated}
-        viewports={viewports}
-      />
-    )
-  }
-
   return (
     <SitemapView
       entries={entries}
@@ -122,7 +82,6 @@ function TreeInner({
       onPositionChange={onPositionChange}
       selectedId={selectedId}
       onSelectChange={onSelectChange}
-      onIsolate={handleIsolate}
     />
   )
 }
@@ -133,15 +92,14 @@ function SitemapView({
   onPositionChange,
   selectedId,
   onSelectChange,
-  onIsolate,
 }: {
   entries: TreeEntry[]
   nodePositions: NodePositions
   onPositionChange?: (id: string, x: number, y: number) => void
   selectedId?: string
   onSelectChange?: (id: string, selected: boolean) => void
-  onIsolate: (path: string) => void
 }) {
+  const drill = useCanvasDrillIn()
   const cells = useMemo(() => buildTileLayout(entries), [entries])
   const { width: stageWidth, height: stageHeight } = useMemo(() => stageSize(cells), [cells])
   const [activeGuides, setActiveGuides] = useState<readonly SnapGuide[]>([])
@@ -200,7 +158,7 @@ function SitemapView({
             node={positionedNode}
             override={nodePositions[cell.id]}
             isSelected={selectedId === cell.id}
-            onIsolate={() => onIsolate(entry.path)}
+            onIsolate={() => drill.mark(positionedNode)}
             onPositionChange={handlePositionChange}
             getSnapTargets={getSnapTargets}
             onGuidesChange={handleGuidesChange}
@@ -210,53 +168,5 @@ function SitemapView({
       })}
       <GuideOverlay width={stageWidth} height={stageHeight} guides={activeGuides} />
     </>
-  )
-}
-
-function IsolationView({
-  path,
-  src,
-  viewports,
-}: {
-  path: string
-  src: string
-  viewports: number[]
-}) {
-  const { applyWheelInput, transformRef } = useForkshopCanvas()
-  const activePages = useAgentActivePages()
-  const agentActive = activePages.has(path)
-  const [measuredHeight, setMeasuredHeight] = useState<number | undefined>(undefined)
-
-  const handleBodyHeightChange = useCallback((_id: string, height: number) => {
-    setMeasuredHeight(height)
-  }, [])
-
-  const handleIframeWheel = useCallback(
-    (event: WheelEvent, iframe: HTMLIFrameElement) => {
-      if (event.ctrlKey || event.metaKey) event.preventDefault()
-      const iframeRect = iframe.getBoundingClientRect()
-      const zoom = transformRef.current?.zoom ?? 1
-      applyWheelInput({
-        deltaX: event.deltaX,
-        deltaY: event.deltaY,
-        pinch: event.ctrlKey || event.metaKey,
-        screenX: iframeRect.left + event.clientX * zoom,
-        screenY: iframeRect.top + event.clientY * zoom,
-      })
-    },
-    [applyWheelInput, transformRef],
-  )
-
-  return (
-    <ResponsiveFrameView
-      kind="page"
-      path={path}
-      source={src}
-      measuredHeight={measuredHeight}
-      onBodyHeightChange={handleBodyHeightChange}
-      onIframeWheel={handleIframeWheel}
-      viewports={viewports}
-      agentActive={agentActive}
-    />
   )
 }

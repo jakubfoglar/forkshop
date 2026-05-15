@@ -20,6 +20,7 @@ import { IframeRegistryProvider } from "@forkshop/components/iframe-registry"
 import { AgentIframeRelay } from "@forkshop/components/agent-iframe-relay"
 import { useCanvasDrillIn } from "@forkshop/components/canvas/drill-in-provider"
 import { BackButton } from "@forkshop/components/canvas/back-button"
+import { NodeDrillIn } from "@forkshop/components/canvas/node-drill-in"
 
 export type WheelInput = {
   deltaX: number
@@ -461,9 +462,24 @@ export function ForkshopCanvas({
               />
             </div>
           )}
-          <div ref={stageRef as React.RefObject<HTMLDivElement>} style={stageStyle}>
-            {children}
-          </div>
+          {drillState.active && drillState.node ? (
+            <div
+              ref={stageRef as React.RefObject<HTMLDivElement>}
+              style={{ ...stageStyle, transform: "translate(0px, 0px) scale(1)" }}
+            >
+              <NodeDrillIn
+                node={drillState.node}
+                onBack={() => {
+                  drillState.clear()
+                  onBack?.()
+                }}
+              />
+            </div>
+          ) : (
+            <div ref={stageRef as React.RefObject<HTMLDivElement>} style={stageStyle}>
+              {children}
+            </div>
+          )}
         </div>
       </IframeRegistryProvider>
     </ForkshopCanvasContext.Provider>

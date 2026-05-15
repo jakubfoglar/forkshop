@@ -4,7 +4,6 @@ import { useMemo, useRef } from "react"
 import {
   ForkshopCanvas,
   DesignSystemGraph,
-  NodeDrillIn,
   BUILTIN_NODE_TYPES,
   buildTokenRegistry,
   type PrimitiveGroup,
@@ -72,11 +71,9 @@ function TypographySamples() {
 
 export default function DesignSystemBoardView({
   selectedNodeId,
-  isolatedPrimitiveId,
   onBack,
 }: {
   selectedNodeId?: string
-  isolatedPrimitiveId?: string
   onBack?: () => void
 } = {}) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -119,49 +116,24 @@ export default function DesignSystemBoardView({
     [],
   )
 
-  const isolatedNode = useMemo<InlineReactNode | null>(() => {
-    if (!isolatedPrimitiveId) return null
-    const primitive = forkshopConfig.primitives.find((p) => p.id === isolatedPrimitiveId)
-    if (!primitive) return null
-    return {
-      id: `primitive:${primitive.id}`,
-      kind: "inline-react",
-      x: 0,
-      y: 0,
-      width: 800,
-      height: 600,
-      label: primitive.name,
-      filePath: primitive.sourcePath,
-      render: primitive.render,
-    }
-  }, [isolatedPrimitiveId])
-
-  const stageWidth = isolatedNode ? 1200 : STAGE_W
-  const stageHeight = isolatedNode ? 800 : STAGE_H
-
   return (
     <ForkshopCanvas
       containerRef={containerRef}
       stageRef={stageRef}
-      stageWidth={stageWidth}
-      stageHeight={stageHeight}
+      stageWidth={STAGE_W}
+      stageHeight={STAGE_H}
       fitMode="both"
       nodeTypes={BUILTIN_NODE_TYPES}
       onBack={onBack}
     >
-      {isolatedNode ? (
-        <NodeDrillIn node={isolatedNode} onBack={onBack ?? (() => {})} />
-      ) : (
-        <DesignSystemGraph
-          tokens={tokens}
-          primitives={primitiveGroups}
-          typography={typographyNode}
-          nodePositions={nodePositions}
-          onPositionChange={onPositionChange}
-          selectedId={selectedNodeId}
-        />
-      )}
+      <DesignSystemGraph
+        tokens={tokens}
+        primitives={primitiveGroups}
+        typography={typographyNode}
+        selectedId={selectedNodeId}
+        nodePositions={nodePositions}
+        onPositionChange={onPositionChange}
+      />
     </ForkshopCanvas>
   )
 }
-

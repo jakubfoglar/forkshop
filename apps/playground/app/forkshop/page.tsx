@@ -8,6 +8,7 @@ import {
   ForkshopDrillProvider,
   useCanvasDrillIn,
   type ForkshopSelection,
+  type AnyNode,
   DesignSystemGraph,
   Gallery,
   Tree,
@@ -33,6 +34,51 @@ const FILE_MAP = {
   blocks: forkshopConfig.blocks
     .filter((b): b is typeof b & { sourcePath: string } => "sourcePath" in b && b.sourcePath !== undefined)
     .map((b) => ({ slug: b.slug, sourcePath: b.sourcePath })),
+}
+
+function selectionToNode(selection: ForkshopSelection): AnyNode | null {
+  if (selection.kind === "page") {
+    return {
+      id: `page:${selection.path}`,
+      kind: "iframe-route",
+      x: 0,
+      y: 0,
+      width: 1264,
+      height: 800,
+      routePath: selection.path,
+    }
+  }
+  if (selection.kind === "block") {
+    const block = forkshopConfig.blocks.find((b) => b.slug === selection.slug)
+    if (!block) return null
+    return {
+      id: `block:${block.slug}`,
+      kind: "iframe-component",
+      x: 0,
+      y: 0,
+      width: 1200,
+      height: 800,
+      slug: block.slug,
+      previewSrc: block.iframeSrc,
+      componentPath: block.sourcePath,
+    }
+  }
+  if (selection.kind === "primitive") {
+    const primitive = forkshopConfig.primitives.find((p) => p.id === selection.id)
+    if (!primitive) return null
+    return {
+      id: `primitive:${primitive.id}`,
+      kind: "inline-react",
+      x: 0,
+      y: 0,
+      width: 800,
+      height: 600,
+      label: primitive.name,
+      filePath: primitive.sourcePath,
+      render: primitive.render,
+    }
+  }
+  return null
 }
 
 export default function ForkshopPage() {
@@ -65,12 +111,20 @@ function ForkshopPageInner() {
   useEffect(() => {
     function onPopState() {
       const fromHash = parseSelection(window.location.hash)
-      drill.clear()
       setSelection(fromHash ?? DEFAULT_SELECTION)
     }
     window.addEventListener("popstate", onPopState)
     return () => window.removeEventListener("popstate", onPopState)
-  }, [drill])
+  }, [])
+
+  useEffect(() => {
+    const node = selectionToNode(selection)
+    if (node) {
+      drill.mark(node)
+    } else {
+      drill.clear()
+    }
+  }, [selection, drill])
 
   // Determine which main view to show.
   const view: "foundations" | "components" | "pages" =
@@ -87,12 +141,6 @@ function ForkshopPageInner() {
             ? selection.sectionId
             : "foundations"
 
-  // When the user clicked a page leaf in the sidebar, isolate that page.
-  const isolatedPath = selection.kind === "page" ? selection.path : undefined
-
-  const isolatedBlockSlug = selection.kind === "block" ? selection.slug : undefined
-  const isolatedPrimitiveId = selection.kind === "primitive" ? selection.id : undefined
-
   const selectedNodeId =
     selection.kind === "primitive"
       ? `primitive:${selection.id}`
@@ -102,17 +150,12 @@ function ForkshopPageInner() {
           ? `page:${selection.path}`
           : undefined
 
-  const handleSidebarSelect = (next: ForkshopSelection) => {
-    drill.clear()
-    setSelection(next)
-  }
-
   return (
     <AgentActivityProvider fileMap={FILE_MAP}>
       <div className="flex h-screen overflow-hidden">
         <ForkshopSidebar
           selection={selection}
-          onSelect={handleSidebarSelect}
+          onSelect={setSelection}
           sections={[
             {
               id: "foundations",
@@ -140,25 +183,18 @@ function ForkshopPageInner() {
           {view === "foundations" && (
             <DesignSystemBoardView
               selectedNodeId={selectedNodeId}
-              isolatedPrimitiveId={isolatedPrimitiveId}
               onBack={() => setSelection({ kind: "section", sectionId: "foundations" })}
             />
           )}
           {view === "components" && (
             <ComponentsBoardView
               selectedNodeId={selectedNodeId}
-              isolatedSlug={isolatedBlockSlug}
               onBack={() => setSelection({ kind: "section", sectionId: "components" })}
             />
           )}
           {view === "pages" && (
             <PagesBoardView
-              isolatedPath={isolatedPath}
               onBack={() => setSelection({ kind: "section", sectionId: "pages" })}
-              onIsolate={(path) => {
-                drill.mark()
-                setSelection({ kind: "page", path })
-              }}
               selectedNodeId={selectedNodeId}
             />
           )}

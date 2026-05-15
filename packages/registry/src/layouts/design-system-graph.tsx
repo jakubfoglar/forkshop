@@ -4,6 +4,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { NodeView } from "@forkshop/components/canvas/node-view"
 import { GuideOverlay } from "@forkshop/components/canvas/guide-overlay"
 import { useForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
+import { useCanvasDrillIn } from "@forkshop/components/canvas/drill-in-provider"
 import type { GetSnapTargets } from "@forkshop/hooks/use-draggable-node"
 import type { NodePosition, NodePositions } from "@forkshop/lib/node-positions"
 import { buildSystemGraph } from "@forkshop/lib/system-graph"
@@ -102,6 +103,7 @@ function DesignSystemGraphInner({
   selectedId,
   onSelectChange,
 }: DesignSystemGraphProps) {
+  const drill = useCanvasDrillIn()
   const graph = useMemo(() => buildSystemGraph(tokens), [tokens])
   const layout = useMemo(() => layoutSystem(graph, [], {}), [graph])
 
@@ -210,6 +212,7 @@ function DesignSystemGraphInner({
             node={positionedNode}
             override={nodePositions[pp.node.id]}
             isSelected={selectedId === pp.node.id}
+            onIsolate={() => drill.mark(positionedNode)}
             onPositionChange={handlePositionChange}
             getSnapTargets={getSnapTargets}
             onGuidesChange={handleGuidesChange}
@@ -218,23 +221,27 @@ function DesignSystemGraphInner({
         )
       })}
 
-      {typography && (
-        <NodeView
-          node={{
-            ...typography,
-            x: typographyDefaultX,
-            y: typographyDefaultY,
-            width: typography.width > 0 ? typography.width : TYPOGRAPHY_WIDTH,
-            height: typography.height > 0 ? typography.height : TYPOGRAPHY_HEIGHT,
-          }}
-          override={nodePositions[typography.id]}
-          isSelected={selectedId === typography.id}
-          onPositionChange={handlePositionChange}
-          getSnapTargets={getSnapTargets}
-          onGuidesChange={handleGuidesChange}
-          onSelectChange={handleSelectChange}
-        />
-      )}
+      {typography && (() => {
+        const typographyNode: AnyNode = {
+          ...typography,
+          x: typographyDefaultX,
+          y: typographyDefaultY,
+          width: typography.width > 0 ? typography.width : TYPOGRAPHY_WIDTH,
+          height: typography.height > 0 ? typography.height : TYPOGRAPHY_HEIGHT,
+        }
+        return (
+          <NodeView
+            node={typographyNode}
+            override={nodePositions[typography.id]}
+            isSelected={selectedId === typography.id}
+            onIsolate={() => drill.mark(typographyNode)}
+            onPositionChange={handlePositionChange}
+            getSnapTargets={getSnapTargets}
+            onGuidesChange={handleGuidesChange}
+            onSelectChange={handleSelectChange}
+          />
+        )
+      })()}
 
       <GuideOverlay width={layout.width} height={layout.height} guides={activeGuides} />
     </>
