@@ -115,11 +115,7 @@ export {
   SITEMAP_VERTICAL_GAP,
 } from "@forkshop/lib/sitemap-tree"
 export { Gallery, type GalleryProps, type GalleryEntry } from "@forkshop/layouts/gallery"
-export {
-  PageTree,
-  type PageTreeProps,
-  type PageTreeEntry,
-} from "@forkshop/kits/page-tree"
+export { Tree, type TreeProps, type TreeEntry } from "@forkshop/layouts/tree"
 export { forkshopIcons, type ForkshopIconName } from "@forkshop/lib/icons"
 export type {
   BaseNode,
