@@ -20,19 +20,19 @@ describe("buildManifest", () => {
     expect(manifest.registryBaseUrl).toBe("https://forkshop.dev/r/")
   })
 
-  it("includes the canvas-node primitive in the manifest", () => {
-    const file = manifest.files["@forkshop/components/canvas/canvas-node"]
+  it("includes the node-view primitive in the manifest", () => {
+    const file = manifest.files["@forkshop/components/canvas/node-view"]
     expect(file).toBeDefined()
-    if (!file) throw new Error("canvas-node missing")
+    if (!file) throw new Error("node-view missing")
     expect(file.kind).toBe("text")
     if (file.kind === "text") {
       expect(file.ext).toBe("tsx")
-      expect(file.content).toContain("CanvasNode")
+      expect(file.content).toContain("NodeView")
     }
   })
 
-  it("includes the iframe-gallery kit", () => {
-    expect(manifest.files["@forkshop/kits/iframe-gallery"]).toBeDefined()
+  it("includes the gallery layout", () => {
+    expect(manifest.files["@forkshop/layouts/gallery"]).toBeDefined()
   })
 
   it("defines the primitives bundle with correct kind", () => {
@@ -49,7 +49,7 @@ describe("buildManifest", () => {
     expect(bundle.kind).toBe("composite")
     if (bundle.kind === "composite") {
       expect(bundle.includes).toContain("primitives")
-      expect(bundle.includes).toContain("kits/iframe-gallery")
+      expect(bundle.includes).toContain("layouts/gallery")
     }
   })
 
@@ -127,12 +127,16 @@ describe("manifest snapshot", () => {
 
     // Sanity-check: the primitives bundle should include the well-known core files.
     const required = [
-      "@forkshop/components/canvas/canvas-node",
+      "@forkshop/components/canvas/node-view",
+      "@forkshop/components/canvas/node-frame",
       "@forkshop/components/canvas/forkshop-canvas",
       "@forkshop/components/sidebar/forkshop-sidebar",
       "@forkshop/hooks/use-iframe-preview",
       "@forkshop/lib/edit-mode",
       "@forkshop/api/edit/route",
+      "@forkshop/types/node",
+      "@forkshop/types/node-type",
+      "@forkshop/node-types/index",
     ]
     for (const address of required) {
       expect(bundle.items, `missing ${address}`).toContain(address)

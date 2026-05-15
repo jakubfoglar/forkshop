@@ -1,7 +1,7 @@
 import { promises as fs } from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it } from "vitest"
 import { detectSrcPrefix } from "./detect-src-dir.js"
 
 async function makeProject(tsconfig: string | undefined): Promise<string> {

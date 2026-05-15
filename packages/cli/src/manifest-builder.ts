@@ -152,7 +152,9 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
     addr.startsWith("@forkshop/components/") ||
     addr.startsWith("@forkshop/hooks/") ||
     addr.startsWith("@forkshop/lib/") ||
-    addr.startsWith("@forkshop/api/")
+    addr.startsWith("@forkshop/api/") ||
+    addr.startsWith("@forkshop/types/") ||
+    addr.startsWith("@forkshop/node-types/")
 
   const primitiveItems = Object.keys(files).filter(isPrimitiveAddress).sort()
 
@@ -167,6 +169,8 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
   //   present in the registry's `src/skill/` directory.
   // - `primitives.deps` mirrors packages/registry/package.json `dependencies`.
   //   Keep the pins in sync when bumping the registry.
+  // - Layout bundles replaced the old `kits/*` bundles after the Node/NodeType
+  //   refactor. Each Layout is a single file (gallery, tree, design-system-graph).
   const bundles: Record<string, Bundle> = {
     primitives: {
       kind: "primitive",
@@ -178,21 +182,17 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
         "@locator/runtime@^0.5.1",
       ],
     },
-    "kits/iframe-gallery": {
+    "layouts/gallery": {
       kind: "kit",
-      items: ["@forkshop/kits/iframe-gallery"],
+      items: ["@forkshop/layouts/gallery"],
     },
-    "kits/page-tree": {
+    "layouts/tree": {
       kind: "kit",
-      items: ["@forkshop/kits/page-tree"],
+      items: ["@forkshop/layouts/tree"],
     },
-    "kits/design-system-board": {
+    "layouts/design-system-graph": {
       kind: "kit",
-      items: [
-        "@forkshop/kits/design-system-board",
-        "@forkshop/kits/typography-frame",
-        "@forkshop/kits/primitives-showcase",
-      ],
+      items: ["@forkshop/layouts/design-system-graph"],
     },
     fonts: {
       kind: "asset",
@@ -214,9 +214,9 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
       kind: "composite",
       includes: [
         "primitives",
-        "kits/iframe-gallery",
-        "kits/page-tree",
-        "kits/design-system-board",
+        "layouts/gallery",
+        "layouts/tree",
+        "layouts/design-system-graph",
         "fonts",
         "skill",
         "css-and-config",
