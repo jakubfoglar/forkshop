@@ -20,5 +20,5 @@ export type NodeType<T extends AnyNode = AnyNode> = {
   drillIn?: (props: DrillInProps<T>) => ReactNode
   defaultMode?: "interactive-live" | "click-into" | "static"
   enterMode?: "double-click" | "single-click" | "never"
-  activityKey?: (node: T) => string
+  activityKey?: (node: T) => string | undefined
 }
