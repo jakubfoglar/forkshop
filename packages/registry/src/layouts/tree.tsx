@@ -38,6 +38,7 @@ export type TreeProps = {
   isolatedPath?: string
   onBack?: () => void
   onIsolatedPathChange?: (path: string | null) => void
+  showBackButton?: boolean
 }
 
 type TileCell = {
@@ -86,6 +87,7 @@ function TreeInner({
   isolatedPath: controlledIsolatedPath,
   onBack,
   onIsolatedPathChange,
+  showBackButton = true,
 }: TreeProps) {
   const [internalIsolated, setInternalIsolated] = useState<string | null>(null)
   const effectiveIsolated =
@@ -114,6 +116,7 @@ function TreeInner({
         src={isolated?.path ?? effectiveIsolated}
         viewports={viewports}
         onBack={handleBack}
+        showBackButton={showBackButton}
       />
     )
   }
@@ -221,11 +224,13 @@ function IsolationView({
   src,
   viewports,
   onBack,
+  showBackButton,
 }: {
   path: string
   src: string
   viewports: number[]
   onBack: () => void
+  showBackButton: boolean
 }) {
   const { applyWheelInput, transformRef, containerRef } = useForkshopCanvas()
   const activePages = useAgentActivePages()
@@ -258,7 +263,8 @@ function IsolationView({
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
-      {containerReady &&
+      {showBackButton &&
+        containerReady &&
         containerRef.current &&
         createPortal(
           <BackButton destinationLabel="Overview" onBack={onBack} />,

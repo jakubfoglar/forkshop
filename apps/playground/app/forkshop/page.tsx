@@ -36,6 +36,7 @@ const FILE_MAP = {
 export default function ForkshopPage() {
   const [selection, setSelection] = useState<ForkshopSelection>(DEFAULT_SELECTION)
   const [hasHydrated, setHasHydrated] = useState(false)
+  const [drillSource, setDrillSource] = useState<"canvas" | "sidebar">("sidebar")
 
   useEffect(() => {
     const fromHash = parseSelection(window.location.hash)
@@ -54,6 +55,7 @@ export default function ForkshopPage() {
   useEffect(() => {
     function onPopState() {
       const fromHash = parseSelection(window.location.hash)
+      setDrillSource("sidebar")
       setSelection(fromHash ?? DEFAULT_SELECTION)
     }
     window.addEventListener("popstate", onPopState)
@@ -90,12 +92,17 @@ export default function ForkshopPage() {
           ? `page:${selection.path}`
           : undefined
 
+  const handleSidebarSelect = (next: ForkshopSelection) => {
+    setDrillSource("sidebar")
+    setSelection(next)
+  }
+
   return (
     <AgentActivityProvider fileMap={FILE_MAP}>
       <div className="flex h-screen overflow-hidden">
         <ForkshopSidebar
           selection={selection}
-          onSelect={setSelection}
+          onSelect={handleSidebarSelect}
           sections={[
             {
               id: "foundations",
@@ -138,8 +145,12 @@ export default function ForkshopPage() {
             <PagesBoardView
               isolatedPath={isolatedPath}
               onBack={() => setSelection({ kind: "section", sectionId: "pages" })}
-              onIsolate={(path) => setSelection({ kind: "page", path })}
+              onIsolate={(path) => {
+                setDrillSource("canvas")
+                setSelection({ kind: "page", path })
+              }}
               selectedNodeId={selectedNodeId}
+              showBackButton={selection.kind === "page" && drillSource === "canvas"}
             />
           )}
         </div>

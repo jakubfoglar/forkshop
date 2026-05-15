@@ -1,7 +1,6 @@
 "use client"
 
 import { useMemo, useRef } from "react"
-import { createPortal } from "react-dom"
 import {
   ForkshopCanvas,
   Gallery,
@@ -83,7 +82,7 @@ export default function ComponentsBoardView({
       nodeTypes={BUILTIN_NODE_TYPES}
     >
       {isolatedNode ? (
-        <IsolatedView containerRef={containerRef} node={isolatedNode} onBack={onBack ?? (() => {})} />
+        <NodeDrillIn node={isolatedNode} onBack={onBack ?? (() => {})} />
       ) : (
         <Gallery
           entries={entries}
@@ -97,32 +96,3 @@ export default function ComponentsBoardView({
   )
 }
 
-function IsolatedView({
-  containerRef,
-  node,
-  onBack,
-}: {
-  containerRef: React.RefObject<HTMLDivElement | null>
-  node: IframeComponentNode
-  onBack: () => void
-}) {
-  return (
-    <>
-      <NodeDrillIn node={node} onBack={onBack} />
-      {containerRef.current &&
-        createPortal(<BackButtonOverlay onBack={onBack} />, containerRef.current)}
-    </>
-  )
-}
-
-function BackButtonOverlay({ onBack }: { onBack: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onBack}
-      className="absolute left-4 top-4 z-10 rounded-md bg-white px-3 py-1.5 text-sm font-medium shadow-md hover:bg-gray-100"
-    >
-      ← Overview
-    </button>
-  )
-}
