@@ -1,14 +1,11 @@
 "use client"
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
-import type { Config } from "tailwindcss"
-import { CanvasNode } from "@forkshop/components/canvas/canvas-node"
-import { useAgentActivePrimitives } from "@forkshop/components/agent-activity-context"
-import { useForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
+import { NodeView } from "@forkshop/components/canvas/node-view"
 import { GuideOverlay } from "@forkshop/components/canvas/guide-overlay"
-import { useDraggableNode, type GetSnapTargets } from "@forkshop/hooks/use-draggable-node"
+import { useForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
+import type { GetSnapTargets } from "@forkshop/hooks/use-draggable-node"
 import type { NodePosition, NodePositions } from "@forkshop/lib/node-positions"
-import { buildTokenRegistry } from "@forkshop/lib/token-registry"
 import { buildSystemGraph } from "@forkshop/lib/system-graph"
 import {
   layoutSystem,
@@ -17,10 +14,10 @@ import {
   type PositionedColorNode,
   type SystemLayout,
 } from "@forkshop/lib/system-layout"
-import { type SnapGuide, type SnapTarget } from "@forkshop/lib/system-snap"
-import { TypographyFrame, type TypographyFrameProps } from "@forkshop/kits/typography-frame"
-import { type PrimitiveDescriptor } from "@forkshop/kits/primitives-showcase"
+import type { SnapGuide, SnapTarget } from "@forkshop/lib/system-snap"
+import type { TokenRegistry } from "@forkshop/lib/token-registry"
 import { forkshopIcons } from "@forkshop/lib/icons"
+import type { AnyNode, InlineReactNode } from "@forkshop/types/node"
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -30,7 +27,6 @@ const TYPOGRAPHY_WIDTH = 720
 const TYPOGRAPHY_HEIGHT = 920
 const TYPOGRAPHY_GAP = 80
 
-// Default frame size for each primitive group if not specified
 const DEFAULT_PRIMITIVE_WIDTH = 720
 const DEFAULT_PRIMITIVE_HEIGHT = 480
 const PRIMITIVE_GAP = 40
@@ -39,24 +35,19 @@ const PRIMITIVE_GAP = 40
 // Public API
 // ---------------------------------------------------------------------------
 
-export type DesignSystemBoardProps = {
-  /** Tailwind config used to build the token registry (colors, spacing, etc.). */
-  tailwindConfig: Config
-  /**
-   * UI primitive frames to render in the "Primitives" section.
-   * Each entry has an `id`, `name`, and a `render` function returning React content.
-   * Optionally include `width` and `height` to control frame dimensions.
-   */
-  primitives: (PrimitiveDescriptor & { width?: number; height?: number })[]
-  /** Options forwarded to the TypographyFrame. */
-  typographyOptions?: Omit<TypographyFrameProps, "children">
-  /** Controlled node positions (overrides). Pass from persistent state. */
+export type PrimitiveGroup = {
+  id: string
+  label: string
+  primitives: AnyNode[]
+}
+
+export type DesignSystemGraphProps = {
+  tokens: TokenRegistry
+  primitives: PrimitiveGroup[]
+  typography?: AnyNode
   nodePositions?: NodePositions
-  /** Called when the user drags a node. Update `nodePositions` accordingly. */
   onPositionChange?: (id: string, x: number, y: number) => void
-  /** Currently selected node id. */
   selectedId?: string
-  /** Called when selection changes. */
   onSelectChange?: (id: string, selected: boolean) => void
 }
 
@@ -64,60 +55,58 @@ export type DesignSystemBoardProps = {
 // Primitive layout helper
 // ---------------------------------------------------------------------------
 
-type SizedPrimitive = PrimitiveDescriptor & { width: number; height: number }
-type PositionedPrimitive = SizedPrimitive & { x: number; y: number }
+type PositionedPrimitiveNode = {
+  node: AnyNode
+  x: number
+  y: number
+  width: number
+  height: number
+}
 
-function layoutPrimitives(
-  primitives: (PrimitiveDescriptor & { width?: number; height?: number })[],
+function layoutPrimitiveGroups(
+  groups: PrimitiveGroup[],
   startY: number,
-): { positioned: PositionedPrimitive[]; totalHeight: number } {
-  const sized: SizedPrimitive[] = primitives.map((p) => ({
-    ...p,
-    width: p.width ?? DEFAULT_PRIMITIVE_WIDTH,
-    height: p.height ?? DEFAULT_PRIMITIVE_HEIGHT,
-  }))
-
-  const positioned: PositionedPrimitive[] = []
+): PositionedPrimitiveNode[] {
+  const positioned: PositionedPrimitiveNode[] = []
   let cursorY = startY
-  for (const p of sized) {
-    positioned.push({ ...p, x: 0, y: cursorY })
-    cursorY += p.height + PRIMITIVE_GAP
+  for (const group of groups) {
+    for (const node of group.primitives) {
+      const width = node.width > 0 ? node.width : DEFAULT_PRIMITIVE_WIDTH
+      const height = node.height > 0 ? node.height : DEFAULT_PRIMITIVE_HEIGHT
+      positioned.push({ node, x: 0, y: cursorY, width, height })
+      cursorY += height + PRIMITIVE_GAP
+    }
   }
-  const totalHeight = positioned.length > 0 ? cursorY - startY - PRIMITIVE_GAP : 0
-  return { positioned, totalHeight }
+  return positioned
 }
 
 // ---------------------------------------------------------------------------
-// Main board component
+// Main component
 // ---------------------------------------------------------------------------
 
-const _DesignSystemBoard = memo(DesignSystemBoardInner)
-export const DesignSystemBoard: typeof _DesignSystemBoard & {
+const _DesignSystemGraph = memo(DesignSystemGraphInner)
+export const DesignSystemGraph: typeof _DesignSystemGraph & {
   icon: typeof forkshopIcons.designSystem
   defaultTitle: string
-} = Object.assign(_DesignSystemBoard, {
+} = Object.assign(_DesignSystemGraph, {
   icon: forkshopIcons.designSystem,
-  defaultTitle: "Design System",
+  defaultTitle: "Foundations",
 })
 
-function DesignSystemBoardInner({
-  tailwindConfig,
+function DesignSystemGraphInner({
+  tokens,
   primitives,
-  typographyOptions,
+  typography,
   nodePositions = {},
   onPositionChange,
   selectedId,
   onSelectChange,
-}: DesignSystemBoardProps) {
-  const tokens = useMemo(() => buildTokenRegistry(tailwindConfig), [tailwindConfig])
+}: DesignSystemGraphProps) {
   const graph = useMemo(() => buildSystemGraph(tokens), [tokens])
-
-  // Use layoutSystem with no block rows to get the color column layout
   const layout = useMemo(() => layoutSystem(graph, [], {}), [graph])
 
-  // Lay out the primitive frames below the colors section
-  const { positioned: positionedPrimitives } = useMemo(
-    () => layoutPrimitives(primitives, layout.primitivesBodyY),
+  const positionedPrimitives = useMemo(
+    () => layoutPrimitiveGroups(primitives, layout.primitivesBodyY),
     [primitives, layout.primitivesBodyY],
   )
 
@@ -151,26 +140,30 @@ function DesignSystemBoardInner({
         height: node.height,
       })
     }
-    for (const p of positionedPrimitives) {
-      const override = nodePositions[p.id]
+    for (const pp of positionedPrimitives) {
+      const override = nodePositions[pp.node.id]
       targets.push({
-        id: p.id,
-        x: override?.x ?? p.x,
-        y: override?.y ?? p.y,
-        width: p.width,
-        height: p.height,
+        id: pp.node.id,
+        x: override?.x ?? pp.x,
+        y: override?.y ?? pp.y,
+        width: pp.width,
+        height: pp.height,
       })
     }
-    const typoOverride = nodePositions["foundation:typography"]
-    targets.push({
-      id: "foundation:typography",
-      x: typoOverride?.x ?? typographyDefaultX,
-      y: typoOverride?.y ?? typographyDefaultY,
-      width: TYPOGRAPHY_WIDTH,
-      height: TYPOGRAPHY_HEIGHT,
-    })
+    if (typography) {
+      const override = nodePositions[typography.id]
+      const w = typography.width > 0 ? typography.width : TYPOGRAPHY_WIDTH
+      const h = typography.height > 0 ? typography.height : TYPOGRAPHY_HEIGHT
+      targets.push({
+        id: typography.id,
+        x: override?.x ?? typographyDefaultX,
+        y: override?.y ?? typographyDefaultY,
+        width: w,
+        height: h,
+      })
+    }
     return targets
-  }, [layout, nodePositions, positionedPrimitives, typographyDefaultX, typographyDefaultY])
+  }, [layout, nodePositions, positionedPrimitives, typography, typographyDefaultX, typographyDefaultY])
 
   const allTargetsRef = useRef(allTargets)
   useEffect(() => {
@@ -183,16 +176,11 @@ function DesignSystemBoardInner({
   )
 
   const handlePositionChange = useCallback(
-    (id: string, x: number, y: number) => {
-      onPositionChange?.(id, x, y)
-    },
+    (id: string, x: number, y: number) => onPositionChange?.(id, x, y),
     [onPositionChange],
   )
-
   const handleSelectChange = useCallback(
-    (id: string, selected: boolean) => {
-      onSelectChange?.(id, selected)
-    },
+    (id: string, selected: boolean) => onSelectChange?.(id, selected),
     [onSelectChange],
   )
 
@@ -208,37 +196,45 @@ function DesignSystemBoardInner({
         onSelectChange={handleSelectChange}
       />
 
-      {positionedPrimitives.map((p) => (
-        <PrimitiveCanvasNode
-          key={p.id}
-          primitive={p}
-          override={nodePositions[p.id]}
-          isSelected={selectedId === p.id}
+      {positionedPrimitives.map((pp) => {
+        const positionedNode: AnyNode = {
+          ...pp.node,
+          x: pp.x,
+          y: pp.y,
+          width: pp.width,
+          height: pp.height,
+        }
+        return (
+          <NodeView
+            key={pp.node.id}
+            node={positionedNode}
+            override={nodePositions[pp.node.id]}
+            isSelected={selectedId === pp.node.id}
+            onPositionChange={handlePositionChange}
+            getSnapTargets={getSnapTargets}
+            onGuidesChange={handleGuidesChange}
+            onSelectChange={handleSelectChange}
+          />
+        )
+      })}
+
+      {typography && (
+        <NodeView
+          node={{
+            ...typography,
+            x: typographyDefaultX,
+            y: typographyDefaultY,
+            width: typography.width > 0 ? typography.width : TYPOGRAPHY_WIDTH,
+            height: typography.height > 0 ? typography.height : TYPOGRAPHY_HEIGHT,
+          }}
+          override={nodePositions[typography.id]}
+          isSelected={selectedId === typography.id}
           onPositionChange={handlePositionChange}
           getSnapTargets={getSnapTargets}
           onGuidesChange={handleGuidesChange}
           onSelectChange={handleSelectChange}
         />
-      ))}
-
-      <CanvasNode
-        id="foundation:typography"
-        layoutX={typographyDefaultX}
-        layoutY={typographyDefaultY}
-        width={TYPOGRAPHY_WIDTH}
-        height={TYPOGRAPHY_HEIGHT}
-        override={nodePositions["foundation:typography"]}
-        label="Typography"
-        isSelected={selectedId === "foundation:typography"}
-        onPositionChange={handlePositionChange}
-        getSnapTargets={getSnapTargets}
-        onGuidesChange={handleGuidesChange}
-        onSelectChange={handleSelectChange}
-        style={{ height: TYPOGRAPHY_HEIGHT, transition: "box-shadow 120ms ease-out" }}
-        className="border border-forkshop-border bg-forkshop-surface shadow-xs"
-      >
-        <TypographyFrame {...typographyOptions} />
-      </CanvasNode>
+      )}
 
       <GuideOverlay width={layout.width} height={layout.height} guides={activeGuides} />
     </>
@@ -248,55 +244,6 @@ function DesignSystemBoardInner({
 // ---------------------------------------------------------------------------
 // Colors section (raw + semantic nodes + SVG edges)
 // ---------------------------------------------------------------------------
-
-function PrimitiveCanvasNode({
-  primitive,
-  override,
-  isSelected,
-  onPositionChange,
-  getSnapTargets,
-  onGuidesChange,
-  onSelectChange,
-}: {
-  primitive: PositionedPrimitive
-  override: NodePosition | undefined
-  isSelected: boolean
-  onPositionChange: (id: string, x: number, y: number) => void
-  getSnapTargets: GetSnapTargets
-  onGuidesChange: (guides: SnapGuide[]) => void
-  onSelectChange: (id: string, selected: boolean) => void
-}) {
-  const activePrimitives = useAgentActivePrimitives()
-  const agentActive = activePrimitives.has(primitive.id)
-  return (
-    <CanvasNode
-      id={primitive.id}
-      layoutX={primitive.x}
-      layoutY={primitive.y}
-      width={primitive.width}
-      height={primitive.height}
-      override={override}
-      label={primitive.name}
-      isSelected={isSelected}
-      agentActive={agentActive}
-      agentFileLabel={agentActive ? `${primitive.id}.tsx` : undefined}
-      onPositionChange={onPositionChange}
-      getSnapTargets={getSnapTargets}
-      onGuidesChange={onGuidesChange}
-      onSelectChange={onSelectChange}
-      style={{ height: primitive.height, transition: "box-shadow 120ms ease-out" }}
-      className="border border-forkshop-border bg-forkshop-surface shadow-xs"
-    >
-      <div className="p-forkshop-4">{primitive.render()}</div>
-    </CanvasNode>
-  )
-}
-
-function outlineFor(isSelected: boolean, isHovered: boolean): string {
-  if (isSelected) return "calc(1.5px / var(--canvas-zoom, 1)) solid #3b82f6"
-  if (isHovered) return "calc(1px / var(--canvas-zoom, 1)) solid #93c5fd"
-  return "none"
-}
 
 type ConnectionIndex = {
   edgesByNode: Map<string, Set<string>>
@@ -434,7 +381,6 @@ function ColorsSection({
           key={positioned.id}
           positioned={positioned}
           isDimmed={isDimming && !(highlightedNodes?.has(positioned.id) ?? false)}
-          isHovered={hoveredId === positioned.id}
           override={nodePositions[positioned.id]}
           getSnapTargets={getSnapTargets}
           onGuidesChange={onGuidesChange}
@@ -450,7 +396,27 @@ function ColorsSection({
 }
 
 // ---------------------------------------------------------------------------
-// Individual color card
+// Color swatch body — rendered by the inline-react node type
+// ---------------------------------------------------------------------------
+
+function ColorSwatchBody({ hex, name }: { hex: string; name: string }) {
+  return (
+    <div className="flex h-full items-center gap-forkshop-1 px-forkshop-1">
+      <span
+        aria-hidden="true"
+        style={{
+          background: hex,
+          boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.08)",
+        }}
+        className="size-forkshop-4 shrink-0 rounded-forkshop-xxs"
+      />
+      <span className="truncate text-forkshop-xs text-forkshop-fg-muted">{name}</span>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Individual color card — NodeView-backed, with hover-driven dimming
 // ---------------------------------------------------------------------------
 
 const ColorCard = memo(ColorCardInner)
@@ -458,7 +424,6 @@ const ColorCard = memo(ColorCardInner)
 function ColorCardInner({
   positioned,
   isDimmed,
-  isHovered,
   override,
   getSnapTargets,
   onGuidesChange,
@@ -470,7 +435,6 @@ function ColorCardInner({
 }: {
   positioned: PositionedColorNode
   isDimmed: boolean
-  isHovered: boolean
   override: NodePosition | undefined
   getSnapTargets: GetSnapTargets
   onGuidesChange: (guides: SnapGuide[]) => void
@@ -480,50 +444,41 @@ function ColorCardInner({
   onHoverIn: () => void
   onHoverOut: () => void
 }) {
-  const { transformRef } = useForkshopCanvas()
-  const { containerRef, x, y, dragHandleProps } = useDraggableNode({
-    id: positioned.id,
-    layoutX: positioned.x,
-    layoutY: positioned.y,
-    width: positioned.width,
-    height: positioned.height,
-    override,
-    transformRef,
-    getSnapTargets,
-    onGuidesChange,
-    onCommit: onPositionChange,
-    onSelectChange: (selected) => onSelectChange(positioned.id, selected),
-  })
-  const { node } = positioned
+  const { hex, name } = positioned.node
+  const inlineNode = useMemo<InlineReactNode>(
+    () => ({
+      id: positioned.id,
+      kind: "inline-react",
+      x: positioned.x,
+      y: positioned.y,
+      width: positioned.width,
+      height: positioned.height,
+      render: () => <ColorSwatchBody hex={hex} name={name} />,
+    }),
+    // hex/name are stable for a given layout; rebuild when positioned id changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [positioned.id, positioned.x, positioned.y, positioned.width, positioned.height, hex, name],
+  )
+
   return (
-    <div
-      ref={containerRef}
-      onMouseEnter={onHoverIn}
-      onMouseLeave={onHoverOut}
-      {...dragHandleProps}
-      style={{
-        position: "absolute",
-        left: x,
-        top: y,
-        width: positioned.width,
-        height: positioned.height,
-        opacity: isDimmed ? 0.25 : 1,
-        transition: "opacity 120ms ease-out",
-        touchAction: "none",
-        outline: outlineFor(isSelected, isHovered),
-        outlineOffset: 0,
-      }}
-      className="flex items-center gap-forkshop-1 rounded-forkshop-xxs border border-forkshop-border bg-forkshop-surface px-forkshop-1 shadow-xs"
-    >
-      <span
-        aria-hidden="true"
+    // Wrapper only for hover events; NodeFrame inside is position:absolute
+    // and positions itself, so this element has no effective layout footprint.
+    <div onMouseEnter={onHoverIn} onMouseLeave={onHoverOut}>
+      <NodeView
+        node={inlineNode}
+        override={override}
+        isSelected={isSelected}
+        onPositionChange={onPositionChange}
+        getSnapTargets={getSnapTargets}
+        onGuidesChange={onGuidesChange}
+        onSelectChange={onSelectChange}
+        className="flex items-center rounded-forkshop-xxs border border-forkshop-border bg-forkshop-surface shadow-xs"
         style={{
-          background: node.hex,
-          boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.08)",
+          height: positioned.height,
+          opacity: isDimmed ? 0.25 : 1,
+          transition: "opacity 120ms ease-out, box-shadow 120ms ease-out",
         }}
-        className="size-forkshop-4 shrink-0 rounded-forkshop-xxs"
       />
-      <span className="truncate text-forkshop-xs text-forkshop-fg-muted">{node.name}</span>
     </div>
   )
 }

@@ -89,13 +89,11 @@ export {
   type NodePosition,
   type NodePositions,
 } from "@forkshop/lib/node-positions"
-export { DesignSystemBoard, type DesignSystemBoardProps } from "@forkshop/kits/design-system-board"
-export { TypographyFrame, type TypographyFrameProps } from "@forkshop/kits/typography-frame"
 export {
-  PrimitivesShowcase,
-  type PrimitivesShowcaseProps,
-  type PrimitiveDescriptor,
-} from "@forkshop/kits/primitives-showcase"
+  DesignSystemGraph,
+  type DesignSystemGraphProps,
+  type PrimitiveGroup,
+} from "@forkshop/layouts/design-system-graph"
 export {
   buildMarketingSitemap,
   buildFooterSitemap,
