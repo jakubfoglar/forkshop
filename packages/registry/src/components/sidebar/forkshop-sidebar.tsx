@@ -56,11 +56,17 @@ export type SidebarSection = {
   title: string;
   /**
    * Child entries. When non-empty the section row becomes collapsible and
-   * clicking an entry produces `{ kind: "block", slug: entry.slug }`.
+   * clicking an entry produces a selection of the section's `entryKind`
+   * (default `"block"`).
    */
   entries?: SidebarEntry[];
   /** Optional icon for the section row itself */
   icon?: LucideComponent;
+  /**
+   * Selection kind emitted when an entry under this section is clicked.
+   * Defaults to "block".
+   */
+  entryKind?: "block" | "primitive";
 };
 
 // ---------------------------------------------------------------------------
@@ -123,11 +129,14 @@ export function ForkshopSidebar({
 
   // Auto-expand a section when the active selection is one of its entries.
   useEffect(() => {
-    if (selection.kind === "block") {
-      for (const section of sections) {
-        if (section.entries?.some((e) => e.slug === selection.slug)) {
-          setExpandedSections((prev) => ({ ...prev, [section.id]: true }));
-        }
+    for (const section of sections) {
+      const entryKind = section.entryKind ?? "block";
+      const isMatch =
+        entryKind === "block"
+          ? selection.kind === "block" && section.entries?.some((e) => e.slug === selection.slug)
+          : selection.kind === "primitive" && section.entries?.some((e) => e.slug === selection.id);
+      if (isMatch) {
+        setExpandedSections((prev) => ({ ...prev, [section.id]: true }));
       }
     }
   }, [selection, sections]);
@@ -168,6 +177,7 @@ export function ForkshopSidebar({
                   )
                 : [];
               const hasChildren = entriesSorted.length > 0;
+              const entryKind = section.entryKind ?? "block";
               return (
                 <div key={section.id}>
                   <SidebarRow
@@ -209,13 +219,18 @@ export function ForkshopSidebar({
                         depth={2}
                         icon={entry.icon}
                         active={
-                          selection.kind === "block" &&
-                          selection.slug === entry.slug
+                          entryKind === "block"
+                            ? selection.kind === "block" && selection.slug === entry.slug
+                            : selection.kind === "primitive" && selection.id === entry.slug
                         }
                         agentActive={activeBlocks.has(entry.slug) || activePrimitives.has(entry.slug)}
                         agentFileLabel={`${entry.slug}.tsx`}
                         onClick={() =>
-                          onSelect({ kind: "block", slug: entry.slug })
+                          onSelect(
+                            entryKind === "block"
+                              ? { kind: "block", slug: entry.slug }
+                              : { kind: "primitive", id: entry.slug },
+                          )
                         }
                       />
                     ))}

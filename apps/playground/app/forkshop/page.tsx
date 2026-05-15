@@ -98,6 +98,7 @@ export default function ForkshopPage() {
               id: "design-system",
               title: DesignSystemGraph.defaultTitle,
               icon: DesignSystemGraph.icon,
+              entryKind: "primitive",
               entries: forkshopConfig.primitives.map((p) => ({ slug: p.id, name: p.name })),
             },
             {
