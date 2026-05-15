@@ -16,6 +16,11 @@ const forkshopAliases = Object.fromEntries(
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ["@forkshop/registry"],
+  // @locator/runtime is browser-only (depends on solid-js/web's browser build
+  // for setStyleProperty). Externalize so Next's SSR pass doesn't try to bundle it.
+  experimental: {
+    serverComponentsExternalPackages: ["@locator/runtime"],
+  },
   turbopack: {
     resolveExtensions: [".tsx", ".ts", ".jsx", ".js", ".mjs", ".json"],
     resolveAlias: forkshopAliases,
