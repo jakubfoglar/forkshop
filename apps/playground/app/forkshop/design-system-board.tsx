@@ -1,9 +1,11 @@
 "use client"
 
 import { useMemo, useRef } from "react"
+import { createPortal } from "react-dom"
 import {
   ForkshopCanvas,
   DesignSystemGraph,
+  NodeDrillIn,
   BUILTIN_NODE_TYPES,
   buildTokenRegistry,
   type PrimitiveGroup,
@@ -69,7 +71,15 @@ function TypographySamples() {
   )
 }
 
-export default function DesignSystemBoardView({ selectedNodeId }: { selectedNodeId?: string } = {}) {
+export default function DesignSystemBoardView({
+  selectedNodeId,
+  isolatedPrimitiveId,
+  onBack,
+}: {
+  selectedNodeId?: string
+  isolatedPrimitiveId?: string
+  onBack?: () => void
+} = {}) {
   const containerRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
   const { nodePositions, onPositionChange } = useForkshopPositions()
@@ -110,23 +120,63 @@ export default function DesignSystemBoardView({ selectedNodeId }: { selectedNode
     [],
   )
 
+  const isolatedNode = useMemo<InlineReactNode | null>(() => {
+    if (!isolatedPrimitiveId) return null
+    const primitive = forkshopConfig.primitives.find((p) => p.id === isolatedPrimitiveId)
+    if (!primitive) return null
+    return {
+      id: `primitive:${primitive.id}`,
+      kind: "inline-react",
+      x: 0,
+      y: 0,
+      width: 800,
+      height: 600,
+      label: primitive.name,
+      filePath: primitive.sourcePath,
+      render: primitive.render,
+    }
+  }, [isolatedPrimitiveId])
+
+  const stageWidth = isolatedNode ? 1200 : STAGE_W
+  const stageHeight = isolatedNode ? 800 : STAGE_H
+
   return (
     <ForkshopCanvas
       containerRef={containerRef}
       stageRef={stageRef}
-      stageWidth={STAGE_W}
-      stageHeight={STAGE_H}
+      stageWidth={stageWidth}
+      stageHeight={stageHeight}
       fitMode="both"
       nodeTypes={BUILTIN_NODE_TYPES}
     >
-      <DesignSystemGraph
-        tokens={tokens}
-        primitives={primitiveGroups}
-        typography={typographyNode}
-        nodePositions={nodePositions}
-        onPositionChange={onPositionChange}
-        selectedId={selectedNodeId}
-      />
+      {isolatedNode ? (
+        <>
+          <NodeDrillIn node={isolatedNode} onBack={onBack ?? (() => {})} />
+          {containerRef.current &&
+            createPortal(<BackButtonOverlay onBack={onBack ?? (() => {})} />, containerRef.current)}
+        </>
+      ) : (
+        <DesignSystemGraph
+          tokens={tokens}
+          primitives={primitiveGroups}
+          typography={typographyNode}
+          nodePositions={nodePositions}
+          onPositionChange={onPositionChange}
+          selectedId={selectedNodeId}
+        />
+      )}
     </ForkshopCanvas>
+  )
+}
+
+function BackButtonOverlay({ onBack }: { onBack: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onBack}
+      className="absolute left-4 top-4 z-10 rounded-md bg-white px-3 py-1.5 text-sm font-medium shadow-md hover:bg-gray-100"
+    >
+      ← Overview
+    </button>
   )
 }

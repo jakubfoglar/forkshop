@@ -21,7 +21,7 @@ const PAGE_ROUTES = ["/sample", "/sample/about", "/sample/dashboard"] as const
 
 const DEFAULT_SELECTION: ForkshopSelection = {
   kind: "section",
-  sectionId: "design-system",
+  sectionId: "foundations",
 }
 
 const FILE_MAP = {
@@ -61,22 +61,25 @@ export default function ForkshopPage() {
   }, [])
 
   // Determine which main view to show.
-  const view: "design-system" | "components" | "pages" =
+  const view: "foundations" | "components" | "pages" =
     selection.kind === "page"
       ? "pages"
       : selection.kind === "block"
         ? "components"
         : selection.kind === "primitive"
-          ? "design-system"
+          ? "foundations"
           : selection.kind === "section" &&
-              (selection.sectionId === "design-system" ||
+              (selection.sectionId === "foundations" ||
                 selection.sectionId === "components" ||
                 selection.sectionId === "pages")
             ? selection.sectionId
-            : "design-system"
+            : "foundations"
 
   // When the user clicked a page leaf in the sidebar, isolate that page.
   const isolatedPath = selection.kind === "page" ? selection.path : undefined
+
+  const isolatedBlockSlug = selection.kind === "block" ? selection.slug : undefined
+  const isolatedPrimitiveId = selection.kind === "primitive" ? selection.id : undefined
 
   const selectedNodeId =
     selection.kind === "primitive"
@@ -95,7 +98,7 @@ export default function ForkshopPage() {
           onSelect={setSelection}
           sections={[
             {
-              id: "design-system",
+              id: "foundations",
               title: DesignSystemGraph.defaultTitle,
               icon: DesignSystemGraph.icon,
               entryKind: "primitive",
@@ -117,8 +120,20 @@ export default function ForkshopPage() {
             blockSelectionSlug={selection.kind === "block" ? selection.slug : undefined}
             primitiveSelectionId={selection.kind === "primitive" ? selection.id : undefined}
           />
-          {view === "design-system" && <DesignSystemBoardView selectedNodeId={selectedNodeId} />}
-          {view === "components" && <ComponentsBoardView selectedNodeId={selectedNodeId} />}
+          {view === "foundations" && (
+            <DesignSystemBoardView
+              selectedNodeId={selectedNodeId}
+              isolatedPrimitiveId={isolatedPrimitiveId}
+              onBack={() => setSelection({ kind: "section", sectionId: "foundations" })}
+            />
+          )}
+          {view === "components" && (
+            <ComponentsBoardView
+              selectedNodeId={selectedNodeId}
+              isolatedSlug={isolatedBlockSlug}
+              onBack={() => setSelection({ kind: "section", sectionId: "components" })}
+            />
+          )}
           {view === "pages" && (
             <PagesBoardView
               isolatedPath={isolatedPath}
