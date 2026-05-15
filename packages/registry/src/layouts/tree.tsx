@@ -106,8 +106,6 @@ function TreeInner({
     onBack?.()
   }
 
-  const showBackButton = controlledIsolatedPath === undefined && internalIsolated !== null
-
   if (effectiveIsolated !== null) {
     const isolated = entries.find((e) => e.path === effectiveIsolated)
     return (
@@ -115,7 +113,6 @@ function TreeInner({
         path={effectiveIsolated}
         src={isolated?.path ?? effectiveIsolated}
         viewports={viewports}
-        showBackButton={showBackButton}
         onBack={handleBack}
       />
     )
@@ -223,13 +220,11 @@ function IsolationView({
   path,
   src,
   viewports,
-  showBackButton,
   onBack,
 }: {
   path: string
   src: string
   viewports: number[]
-  showBackButton: boolean
   onBack: () => void
 }) {
   const { applyWheelInput, transformRef, containerRef } = useForkshopCanvas()
@@ -263,8 +258,7 @@ function IsolationView({
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
-      {showBackButton &&
-        containerReady &&
+      {containerReady &&
         containerRef.current &&
         createPortal(
           <BackButton destinationLabel="Overview" onBack={onBack} />,
