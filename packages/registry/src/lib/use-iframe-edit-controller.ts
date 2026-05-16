@@ -118,10 +118,14 @@ export function useIframeEditController({
       editGenerationRef.current += 1
       setEditingElement(undefined)
       setError(undefined)
+      // The iframe reloaded (likely HMR after a sibling viewport saved). Refresh
+      // the editable set so this viewport recognizes the new text as editable
+      // instead of showing it as gray-locked on hover.
+      void refetchEditableSet()
     }
     iframe.addEventListener("load", handleLoad)
     return () => iframe.removeEventListener("load", handleLoad)
-  }, [iframe])
+  }, [iframe, refetchEditableSet])
 
   const handleEnterEdit = useCallback((element: Element) => {
     editGenerationRef.current += 1
