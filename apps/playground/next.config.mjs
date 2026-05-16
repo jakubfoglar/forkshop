@@ -47,7 +47,7 @@ const nextConfig = {
       },
     },
   },
-  webpack: (config) => {
+  webpack: (config, { dev }) => {
     config.resolve.extensionAlias = {
       ".js": [".ts", ".tsx", ".js"],
       ".jsx": [".tsx", ".jsx"],
@@ -55,6 +55,19 @@ const nextConfig = {
     config.resolve.alias = {
       ...(config.resolve.alias ?? {}),
       ...forkshopAliases,
+    }
+    // Locator.js source-loc transform — only in dev. Attaches __source props
+    // (fileName + lineNumber + columnNumber) to every JSX element so
+    // Option-click in the iframe can open the file in VS Code at the right
+    // line. The `turbopack.rules` block above is the Next 15+ / `next dev
+    // --turbo` equivalent; this webpack rule covers default `next dev`
+    // (webpack) on Next 14 where the top-level `turbopack` key is unknown.
+    if (dev) {
+      config.module.rules.push({
+        test: /\.(jsx?|tsx?)$/,
+        exclude: /node_modules/,
+        use: ["@locator/webpack-loader"],
+      })
     }
     return config
   },
