@@ -104,6 +104,30 @@ Run `pnpm check` from the repo root before marking any task complete.
 
 ---
 
+## First-time setup for engine builds
+
+The engine pulls icons from `@central-icons-react/square-outlined-radius-0-stroke-2` (Central Icon Set from iconists.co), which validates a license key at install time via a `preinstall` script. Without the key, `pnpm install` fails the moment the engine workspace's deps install.
+
+Setup:
+
+1. Copy `.envrc.example` → `.envrc` and fill in the key:
+   ```
+   export CENTRAL_LICENSE_KEY=<your-key>
+   ```
+   (Env var name confirmed against `node_modules/@central-icons-react/.../license-check.js` — `process.env.CENTRAL_LICENSE_KEY`.)
+2. `direnv allow .` (install [direnv](https://direnv.net) if you don't have it).
+3. `pnpm install` — should now succeed.
+
+Only the engine workspace needs the key. If you're contributing to CLI, docs, or playground without touching `packages/engine/src/`, you can scope install to skip engine:
+
+```
+pnpm install --filter '!@forkshop/engine'
+```
+
+The published `@forkshop/engine` artifact bundles the icon SVG markup at engine-build time (per `docs/specs/2026-05-16-engine-packaging-design.md`) — downstream users of Forkshop never need an iconists key.
+
+---
+
 ## How to add a new primitive
 
 Primitives live in `packages/engine/src/components/` or `packages/engine/src/hooks/`.
