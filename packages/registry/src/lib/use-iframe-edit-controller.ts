@@ -63,6 +63,9 @@ export function useIframeEditController({
   const [error, setError] = useState<string | undefined>(undefined)
   const [editableSet, setEditableSet] = useState<Set<string> | undefined>(undefined)
   const originalTextRef = useRef<string>("")
+  // Generation counter: incremented on every enter/discard/iframe-reload. Save
+  // captures the value at POST start and bails on resolve if it has changed.
+  const editGenerationRef = useRef(0)
 
   // Fetch source + build editable set when iframe + sourceFile are ready.
   useEffect(() => {
@@ -87,7 +90,27 @@ export function useIframeEditController({
     return () => { cancelled = true }
   }, [iframe, sourceFile, editApiPath])
 
+  // If the iframe document reloads mid-edit (HMR, navigation, manual refresh),
+  // the editingElement reference is now detached. Clear edit state so a stray
+  // Save doesn't POST against a stale snapshot.
+  useEffect(() => {
+    if (!iframe) return
+    let firstLoadSeen = false
+    const handleLoad = () => {
+      if (!firstLoadSeen) {
+        firstLoadSeen = true
+        return
+      }
+      editGenerationRef.current += 1
+      setEditingElement(undefined)
+      setError(undefined)
+    }
+    iframe.addEventListener("load", handleLoad)
+    return () => iframe.removeEventListener("load", handleLoad)
+  }, [iframe])
+
   const handleEnterEdit = useCallback((element: Element) => {
+    editGenerationRef.current += 1
     originalTextRef.current = element.textContent ?? ""
     ;(element as HTMLElement).contentEditable = "true"
     ;(element as HTMLElement).dataset.editing = ""
@@ -109,17 +132,26 @@ export function useIframeEditController({
     if (editingElement) {
       editingElement.textContent = originalTextRef.current
     }
+    editGenerationRef.current += 1
     exitEdit()
   }, [editingElement, exitEdit])
 
-  const save = useCallback(async () => {
-    if (!editingElement || !sourceFile) return
+  const saveInternal = useCallback(async (): Promise<{ ok: boolean }> => {
+    if (!editingElement || !sourceFile) return { ok: false }
+    // If the element was detached (iframe reloaded between Cmd+Enter dispatch
+    // and our useCallback running), bail without POSTing.
+    if (!editingElement.isConnected) {
+      setEditingElement(undefined)
+      setError(undefined)
+      return { ok: false }
+    }
     const newText = editingElement.textContent ?? ""
     const originalText = originalTextRef.current
     if (newText === originalText) {
       exitEdit()
-      return
+      return { ok: true }
     }
+    const generationAtStart = editGenerationRef.current
     setIsSaving(true)
     setError(undefined)
     const result = await postEdit({
@@ -128,17 +160,37 @@ export function useIframeEditController({
       originalText,
       newText,
     })
+    // If discard/switch/another enter ran while the POST was in flight, the
+    // edit we just committed was already abandoned by the user. Don't update
+    // state, don't surface success. (The file write isn't undone — that's
+    // acceptable; consistency of UI state is the goal.)
+    if (editGenerationRef.current !== generationAtStart) {
+      setIsSaving(false)
+      return { ok: false }
+    }
     setIsSaving(false)
     if (result.ok) {
       exitEdit()
+      return { ok: true }
     } else {
       setError(result.error)
+      return { ok: false }
     }
   }, [editingElement, sourceFile, editApiPath, exitEdit])
 
-  const handleSwitchEdit = useCallback((newElement: Element) => {
-    void save().then(() => handleEnterEdit(newElement))
-  }, [save, handleEnterEdit])
+  // Public save narrows the internal result to Promise<void> — callers don't
+  // care about success/failure beyond observing `error` and `isSaving`.
+  const save = useCallback(async (): Promise<void> => {
+    await saveInternal()
+  }, [saveInternal])
+
+  const handleSwitchEdit = useCallback(async (newElement: Element) => {
+    const result = await saveInternal()
+    // Only enter the new element if save succeeded. On failure the popover
+    // stays on the old element with its error visible; the user can fix or
+    // discard.
+    if (result.ok) handleEnterEdit(newElement)
+  }, [saveInternal, handleEnterEdit])
 
   const handleNavigate = useCallback((_path: string) => {
     // Edit mode swallows navigation — the iframe stays on its current route.
