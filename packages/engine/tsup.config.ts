@@ -17,6 +17,7 @@ export default defineConfig({
   splitting: true,
   treeshake: true,
   clean: true,
+  metafile: true,
   // Empty env: prevents esbuild from substituting process.env.NODE_ENV at
   // engine-build time. The consumer's bundler does that substitution at their
   // build time, which is how production-mode degradation is meant to work.

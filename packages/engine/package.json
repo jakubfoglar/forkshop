@@ -14,9 +14,11 @@
     "./api/agent-activity/stream/route": "./src/api/agent-activity/stream/route.ts"
   },
   "scripts": {
+    "build":     "tsx scripts/build.ts",
+    "dev":       "tsx scripts/build.ts --watch",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src && tsx scripts/check-canonical-imports.ts && tsx scripts/check-no-icon-libs.ts",
-    "test": "vitest run"
+    "lint":      "eslint src && tsx scripts/check-canonical-imports.ts && tsx scripts/check-no-icon-libs.ts",
+    "test":      "vitest run"
   },
   "peerDependencies": {
     "next": ">=14",
