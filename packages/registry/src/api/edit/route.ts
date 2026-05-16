@@ -48,3 +48,25 @@ export async function POST(request: Request) {
   await writeFile(absolute, updated, "utf-8")
   return NextResponse.json({ ok: true })
 }
+
+export async function GET(request: Request) {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "Source API is dev-only" }, { status: 403 })
+  }
+  const url = new URL(request.url)
+  const pagePath = url.searchParams.get("path")
+  if (!pagePath) {
+    return NextResponse.json({ error: "Missing path" }, { status: 400 })
+  }
+  const projectRoot = process.cwd()
+  const absolute = resolve(projectRoot, pagePath)
+  if (!absolute.startsWith(projectRoot + sep)) {
+    return NextResponse.json({ error: "Path escapes project root" }, { status: 400 })
+  }
+  try {
+    const source = await readFile(absolute, "utf-8")
+    return NextResponse.json({ source })
+  } catch {
+    return NextResponse.json({ error: `Cannot read ${pagePath}` }, { status: 404 })
+  }
+}
