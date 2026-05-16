@@ -1,8 +1,8 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import type { NodePositions } from "@forkshop/registry"
-import { isNodePositions } from "@forkshop/registry"
+import type { NodePositions } from "@forkshop/engine"
+import { isNodePositions } from "@forkshop/engine"
 
 const ENDPOINT = "/api/forkshop/positions"
 

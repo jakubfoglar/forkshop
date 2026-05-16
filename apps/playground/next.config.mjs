@@ -2,11 +2,11 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const registrySrc = path.resolve(__dirname, "../../packages/registry/src")
+const registrySrc = path.resolve(__dirname, "../../packages/engine/src")
 
-// Map every top-level dir under packages/registry/src/ to its @forkshop/* alias.
+// Map every top-level dir under packages/engine/src/ to its @forkshop/* alias.
 // Done per-subdir (not a single "@forkshop" prefix alias) so we don't accidentally
-// shadow the "@forkshop/registry" workspace package itself.
+// shadow the "@forkshop/engine" workspace package itself.
 const forkshopSubdirs = ["api", "components", "hooks", "kits", "layouts", "lib", "node-types", "types"]
 const forkshopAliases = Object.fromEntries(
   forkshopSubdirs.map((dir) => [`@forkshop/${dir}`, path.join(registrySrc, dir)])
@@ -15,7 +15,7 @@ const forkshopAliases = Object.fromEntries(
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ["@forkshop/registry"],
+  transpilePackages: ["@forkshop/engine"],
   // @locator/runtime is browser-only (depends on solid-js/web's browser build
   // for setStyleProperty). Externalize so Next's SSR pass doesn't try to bundle it.
   experimental: {

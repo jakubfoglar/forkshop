@@ -1,1 +1,1 @@
-export { GET } from "@forkshop/registry/api/agent-activity/stream/route"
+export { GET } from "@forkshop/engine/api/agent-activity/stream/route"

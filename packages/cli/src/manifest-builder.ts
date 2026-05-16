@@ -15,7 +15,7 @@ export interface BuildManifestOptions {
 const DEFAULT_BASE_URL = "https://forkshop.dev/r/"
 
 /**
- * Maps an absolute file path inside packages/registry to a canonical @forkshop/* address.
+ * Maps an absolute file path inside packages/engine to a canonical @forkshop/* address.
  * Files under src/ get the address derived from their path-from-src.
  * Files under tailwind/ get @forkshop/tailwind/<name> or @forkshop/css/<name> for .css.
  * Files under templates/ get @forkshop/templates/<name>.
@@ -50,7 +50,7 @@ function extOf(absolutePath: string): "ts" | "tsx" | "md" | "css" | "json" | "sh
   throw new Error(`Unknown extension for ${absolutePath}`)
 }
 
-// Binary font files live under packages/registry/fonts/<family>/<file>.woff2.
+// Binary font files live under packages/engine/fonts/<family>/<file>.woff2.
 // We address them as `@forkshop/fonts/<family>/<file>` and drop them into the
 // user's public/fonts/forkshop/<file> so the CSS `@font-face` declaration
 // (relative URL `/fonts/forkshop/<file>`) resolves at runtime.
@@ -86,7 +86,7 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
   const fontFiles = await walk(path.join(registryRoot, "fonts"))
 
   // The registry's own top-level barrel — not consumed by users, so skip it.
-  // Only the exact `packages/registry/src/index.ts` is dropped; nested
+  // Only the exact `packages/engine/src/index.ts` is dropped; nested
   // `components/foo/index.ts` files (if introduced later) are still included.
   const topLevelBarrel = path.join(registryRoot, "src", "index.ts")
 
@@ -162,12 +162,12 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
 
   // Bundle authoring note:
   // - `fonts` is intentionally empty in v1; it will be populated when Raveo
-  //   woff2 files land in packages/registry/fonts/. The bundle exists so `init`
+  //   woff2 files land in packages/engine/fonts/. The bundle exists so `init`
   //   already includes it — adding the assets later won't require manifest
   //   schema changes.
   // - `skill` is populated dynamically from any `@forkshop/skill/*` addresses
   //   present in the registry's `src/skill/` directory.
-  // - `primitives.deps` mirrors packages/registry/package.json `dependencies`.
+  // - `primitives.deps` mirrors packages/engine/package.json `dependencies`.
   //   Keep the pins in sync when bumping the registry.
   // - Layout bundles replaced the old `kits/*` bundles after the Node/NodeType
   //   refactor. Each Layout is a single file (gallery, tree, design-system-view).

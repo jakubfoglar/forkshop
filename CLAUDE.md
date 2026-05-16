@@ -14,7 +14,7 @@ packages/
                 `forkshop add`, `forkshop diff`. See "packages/cli" section below.
 
   registry/     The source. All components, hooks, lib utilities, API routes,
-                and kits live here. Published as @forkshop/registry.
+                and kits live here. Published as @forkshop/engine.
     src/
       components/   Primitives — canvas, sidebar, icon, etc.
       hooks/        iframe hooks, draggable-node hook
@@ -66,7 +66,7 @@ Build: `pnpm --filter forkshop build`. Test: `pnpm --filter forkshop test`.
 Serves the static registry at `/r/registry.json` (and binary assets under
 `/r/fonts/*.woff2`). The route handler at `apps/docs/app/r/registry.json/route.ts`
 calls `buildManifest()` (exported from the CLI package's `manifest-builder.ts`),
-which walks `packages/registry/{src,tailwind,templates}` and emits the manifest.
+which walks `packages/engine/{src,tailwind,templates}` and emits the manifest.
 
 A pre-build validator (`apps/docs/scripts/validate-registry.ts`) ensures every
 `@forkshop/...` import in registry source resolves to a known canonical address.
@@ -77,11 +77,11 @@ It also confirms every bundle's items exist in the files map. Run via
 
 ## Canonical-alias convention
 
-Every cross-file import inside `packages/registry/src/**` must use the `@forkshop/*`
+Every cross-file import inside `packages/engine/src/**` must use the `@forkshop/*`
 alias (e.g., `import { foo } from "@forkshop/lib/edit-mode"`), never a relative path.
 The CLI's path-rewriter assumes this. A lint check at
-`packages/registry/scripts/check-canonical-imports.ts` enforces it as part of
-`pnpm --filter @forkshop/registry lint`.
+`packages/engine/scripts/check-canonical-imports.ts` enforces it as part of
+`pnpm --filter @forkshop/engine lint`.
 
 The registry's own `tsconfig.json` maps `@forkshop/*` → `./src/*` so local typecheck
 and Vitest resolve correctly. The playground (`apps/playground`) needs additional
@@ -106,7 +106,7 @@ Run `pnpm check` from the repo root before marking any task complete.
 
 ## How to add a new primitive
 
-Primitives live in `packages/registry/src/components/` or `packages/registry/src/hooks/`.
+Primitives live in `packages/engine/src/components/` or `packages/engine/src/hooks/`.
 
 Placement:
 - Canvas primitives (nodes, overlays, iframes) → `components/canvas/`
@@ -119,12 +119,12 @@ Naming:
 - Export: named export matching PascalCase (`export function ForkshopCanvas`)
 - Client-only components: add `"use client"` at the top
 
-After adding a primitive, export it from `packages/registry/src/index.ts`. Keep exports grouped logically — canvas primitives together, hooks together, lib together, kits last.
+After adding a primitive, export it from `packages/engine/src/index.ts`. Keep exports grouped logically — canvas primitives together, hooks together, lib together, kits last.
 
 Example:
 
 ```tsx
-// packages/registry/src/components/canvas/my-overlay.tsx
+// packages/engine/src/components/canvas/my-overlay.tsx
 "use client"
 
 export interface MyOverlayProps {
@@ -137,7 +137,7 @@ export function MyOverlay({ ... }: MyOverlayProps) {
 ```
 
 ```ts
-// packages/registry/src/index.ts
+// packages/engine/src/index.ts
 export { MyOverlay, type MyOverlayProps } from "./components/canvas/my-overlay.js"
 ```
 
@@ -147,7 +147,7 @@ Note the `.js` extension in the import path — required for ESM compatibility w
 
 ## How to add a new kit
 
-Kits live in `packages/registry/src/kits/`.
+Kits live in `packages/engine/src/kits/`.
 
 **Kit-worthy criteria:** at least two production projects would use the same board shape with different data. If the layout math, node wiring, and iframe hooks would be identical across projects — only the data feed differs — it's a kit.
 
@@ -167,13 +167,13 @@ A kit is a React component with a typed `*Props` interface. Export both from `in
 Shipped 2026-05-16. Forkshop's defining feature: hover text in an iframed page → blue ring if editable, gray dashed ring if locked. Click editable text → contenteditable + Save/Discard popover. ⌘↵ saves to the TSX file (Next.js HMR picks up the change). Esc discards. Multi-viewport boards (`ResponsiveFrameView`) live-sync edits across all viewports as you type.
 
 **Architecture (internal):**
-- `packages/registry/src/lib/use-iframe-edit-controller.ts` — controller hook. Owns edit state machine (`editingElement`, `isSaving`, `error`, generation counter), composes `useIframeEditWiring`, POSTs to the edit API on save.
-- `packages/registry/src/components/canvas/iframe-edit-overlay.tsx` — thin wrapper. Composes the controller + `EditPopover`. Tree-shakes in production via `process.env.NODE_ENV === "production"` early-return.
-- `packages/registry/src/lib/extract-string-literals.ts` — pure function. Builds the per-iframe "editable Set" from a TSX source file. Captures quoted literals, simple template literals, AND JSX text children with HTML entity decoding + whitespace normalization. Also exports `resolveJsxTextSpan` for the save flow.
-- `packages/registry/src/hooks/use-iframe-edit-wiring.ts` — listener machinery inside the iframe document. Carries an optional `editableSet` parameter; without it, falls back to "all text editable" (back-compat).
-- `packages/registry/src/components/canvas/edit-popover.tsx` — floating Save/Discard widget. Tracks the edited element through canvas pan/zoom via a `requestAnimationFrame` loop.
-- `packages/registry/src/api/edit/route.ts` — dev-only POST (save) + GET (read source) handlers. Path-escape checked, 403 in production.
-- `packages/registry/src/lib/edit-mode.ts` — `PREVIEW_EDIT_CSS` (hover/editing/locked outlines), `isTextElement`, `computeDomPath`.
+- `packages/engine/src/lib/use-iframe-edit-controller.ts` — controller hook. Owns edit state machine (`editingElement`, `isSaving`, `error`, generation counter), composes `useIframeEditWiring`, POSTs to the edit API on save.
+- `packages/engine/src/components/canvas/iframe-edit-overlay.tsx` — thin wrapper. Composes the controller + `EditPopover`. Tree-shakes in production via `process.env.NODE_ENV === "production"` early-return.
+- `packages/engine/src/lib/extract-string-literals.ts` — pure function. Builds the per-iframe "editable Set" from a TSX source file. Captures quoted literals, simple template literals, AND JSX text children with HTML entity decoding + whitespace normalization. Also exports `resolveJsxTextSpan` for the save flow.
+- `packages/engine/src/hooks/use-iframe-edit-wiring.ts` — listener machinery inside the iframe document. Carries an optional `editableSet` parameter; without it, falls back to "all text editable" (back-compat).
+- `packages/engine/src/components/canvas/edit-popover.tsx` — floating Save/Discard widget. Tracks the edited element through canvas pan/zoom via a `requestAnimationFrame` loop.
+- `packages/engine/src/api/edit/route.ts` — dev-only POST (save) + GET (read source) handlers. Path-escape checked, 403 in production.
+- `packages/engine/src/lib/edit-mode.ts` — `PREVIEW_EDIT_CSS` (hover/editing/locked outlines), `isTextElement`, `computeDomPath`.
 
 **Safety model:** each Node carries `sourceFile?: string`. The controller GETs that file at iframe load, extracts its string literals + JSX text into a `Set<string>`, and the hover handler gates editing on `set.has(textContent.trim())`. Sub-component internals never enter the set, so you cannot accidentally edit shared components from a page board. Production builds tree-shake the entire wiring.
 
@@ -196,10 +196,10 @@ All Forkshop-internal styling must be decoupled from any host project's brand.
 
 Rules:
 - All CSS tokens must be `forkshop-*`-namespaced (e.g. `forkshop-fg`, `forkshop-canvas-bg`, `forkshop-accent`). **Never** `text`, `background`, or any other non-namespaced token that collides with Tailwind defaults.
-- Icons via `<ForkshopIcon icon={X} />` from `@forkshop/registry`. Never import raw Iconoir or any other icon library directly in registry code.
+- Icons via `<ForkshopIcon icon={X} />` from `@forkshop/engine`. Never import raw Iconoir or any other icon library directly in registry code.
 - Font via Raveo only. Loaded by the playground via `next/font/local`. The registry itself does not load fonts — it assumes the host has loaded them.
-- CSS variables are defined in `packages/registry/tailwind/forkshop.css`. The tailwind preset (`forkshop.config.ts`) references them.
-- The `forkshop-*` Tailwind preset is configured in `packages/registry/tailwind/`. Users add it to their `tailwind.config.ts`.
+- CSS variables are defined in `packages/engine/tailwind/forkshop.css`. The tailwind preset (`forkshop.config.ts`) references them.
+- The `forkshop-*` Tailwind preset is configured in `packages/engine/tailwind/`. Users add it to their `tailwind.config.ts`.
 
 When in doubt: would this style break if the host project uses a different design system? If yes, it needs a `forkshop-` namespace.
 
@@ -240,7 +240,7 @@ Shipped. The manifest is generated dynamically by `buildManifest()` in
 `/r/registry.json`, and consumed by the CLI's `init` / `add` / `diff` commands.
 
 Schema lives in `packages/cli/src/manifest-schema.ts`. Bundles enumerate files
-plus their runtime deps; the builder reads `packages/registry/package.json` for
+plus their runtime deps; the builder reads `packages/engine/package.json` for
 version pins.
 
 ---
@@ -249,7 +249,7 @@ version pins.
 
 No schedule. Manual.
 
-1. Bump versions in `packages/registry/package.json` and `packages/cli/package.json`.
+1. Bump versions in `packages/engine/package.json` and `packages/cli/package.json`.
 2. `git tag v0.x.y`
 3. `git push && git push --tags`
 4. GitHub Actions auto-publishes to npm (when Actions workflow is set up).
@@ -263,7 +263,7 @@ Pre-release: use `0.x.y` versions. No stability guarantees until `1.0.0`.
 Every change that affects user-facing primitives or kits must also update:
 
 ```
-packages/registry/src/templates/user-claude-md.md
+packages/engine/src/templates/user-claude-md.md
 ```
 
 This file is the CLAUDE.md that gets auto-loaded into a user's Claude Code session when they're working in `app/forkshop/`. If it drifts from the actual API, future agents will work from wrong information.
@@ -277,7 +277,7 @@ Changes that require a doc sync:
 
 ---
 
-## Maintaining `packages/registry/src/skill/setup.md`
+## Maintaining `packages/engine/src/skill/setup.md`
 
 The setup skill is one of three markdown skills shipped via the registry (`setup.md`, `live-editing.md`, `doc-sync.md`). Only `setup.md` requires extensive structure — the other two are short reference cards.
 
@@ -309,7 +309,7 @@ If you edit Phase 5, preserve this contract — the skill's UX depends on the si
 
 ### Testing changes
 
-1. Edit `packages/registry/src/skill/setup.md`.
+1. Edit `packages/engine/src/skill/setup.md`.
 2. Run `pnpm --filter docs validate-registry` — catches placeholder leaks (any `{{...}}` outside the `## Scaffolding templates` section, unless inside a fenced or inline code block).
 3. Sync into a fixture project's `.claude/skills/forkshop-setup.md` for fast local iteration. The marketing fixture at `~/Desktop/ravineo_dev/forkshop-fixtures/marketing-fixture/` (if present) is a known-good test bed; otherwise `pnpm create next-app` a fresh one and add a stub `forkshop.json` + `app/forkshop/CLAUDE.md`.
 4. Open Claude Code in the fixture and exercise the affected phase by invoking *"set up Forkshop"*.

@@ -1,13 +1,13 @@
 ---
 name: forkshop-doc-sync
-description: User-invoked when `<aliases.mount>/CLAUDE.md` (resolves to `app/forkshop/CLAUDE.md` for flat layouts or `src/app/forkshop/CLAUDE.md` for src-dir layouts) has drifted from the actual Forkshop installation — kits added or removed, primitives renamed, hooks/exports changed in `@forkshop/registry`, opt-in features toggled, paths customized. Scans the installation, diffs against the documented surface, proposes section-by-section updates while preserving user-authored rationale. Activates on "sync Forkshop docs", "refresh Forkshop CLAUDE.md", "/forkshop-doc-sync".
+description: User-invoked when `<aliases.mount>/CLAUDE.md` (resolves to `app/forkshop/CLAUDE.md` for flat layouts or `src/app/forkshop/CLAUDE.md` for src-dir layouts) has drifted from the actual Forkshop installation — kits added or removed, primitives renamed, hooks/exports changed in `@forkshop/engine`, opt-in features toggled, paths customized. Scans the installation, diffs against the documented surface, proposes section-by-section updates while preserving user-authored rationale. Activates on "sync Forkshop docs", "refresh Forkshop CLAUDE.md", "/forkshop-doc-sync".
 ---
 
 # Forkshop — doc sync
 
 You are refreshing the user's `app/forkshop/CLAUDE.md` so it matches the *current* state of their Forkshop installation. This is the file that gets auto-loaded into Claude Code sessions inside `app/forkshop/`. When it drifts, future agents work from stale information.
 
-You run **on demand**, not automatically. The user invoked you because they suspect the docs are out of date — they probably added a board, swapped a kit, or noticed a hook referenced in CLAUDE.md no longer exists in `@forkshop/registry`. Your job is to surface every drift, propose a fix, and apply only what the user accepts.
+You run **on demand**, not automatically. The user invoked you because they suspect the docs are out of date — they probably added a board, swapped a kit, or noticed a hook referenced in CLAUDE.md no longer exists in `@forkshop/engine`. Your job is to surface every drift, propose a fix, and apply only what the user accepts.
 
 The hard rule: **preserve user-authored rationale.** Anywhere the user has added their own paragraph — explaining why they forked a primitive, why they renamed a section, what their fixture data represents — that text is sacred. Re-flow around it. Never overwrite.
 
@@ -83,7 +83,7 @@ These are the highest-yield drift candidates in any Forkshop installation. Walk 
 
 1. **Sidebar layout** — does the "File layout" section's tree match the actual files in `<aliases.mount>/`? Boards renamed, added, removed.
 2. **Kit list** — "The three kits" section. If the user dropped one or added a custom board, the heading is wrong.
-3. **Consumer hooks** — every name in the "Consumer hooks" list must still be exported from `@forkshop/registry`. Cross-check against `<aliases.base>/components/forkshop/agent-activity-context.tsx` exports.
+3. **Consumer hooks** — every name in the "Consumer hooks" list must still be exported from `@forkshop/engine`. Cross-check against `<aliases.base>/components/forkshop/agent-activity-context.tsx` exports.
 4. **API routes** — request/response shapes documented in the file should match `<aliases.api>/edit/route.ts`, `<aliases.api>/positions/route.ts`, `<aliases.api>/agent-activity/route.ts`.
 5. **`forkshop.config.ts` example block** — should reflect the user's actual primitive/block/page entries, not the original placeholder names.
 6. **Opt-ins** — Locator.js / live-AI hook / cadence note sections should match whether each is actually installed.

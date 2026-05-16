@@ -1,7 +1,7 @@
 import { promises as fs } from "node:fs"
 import path from "node:path"
 
-const REGISTRY_FONTS_ROOT = path.resolve(process.cwd(), "../../packages/registry/fonts")
+const REGISTRY_FONTS_ROOT = path.resolve(process.cwd(), "../../packages/engine/fonts")
 
 export const dynamic = "force-static"
 

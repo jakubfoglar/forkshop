@@ -166,7 +166,7 @@ ls src/app/forkshop      # should exist
 
 ## Bug C — Setup skill's narrative output has spurious leading whitespace
 
-**Where:** `packages/registry/src/skill/setup.md`, line 173 onward (the Phase 3 proposal template).
+**Where:** `packages/engine/src/skill/setup.md`, line 173 onward (the Phase 3 proposal template).
 
 **Severity:** Low-cosmetic, but consistent. Every install renders the project recognition narrative ("This is the Ravineo Creator Clusters Explorer...") with a leading 2-space indent on the first line, looking like a misaligned paragraph in the user's Claude Code session.
 
@@ -202,7 +202,7 @@ The author of the skill likely intended the indentation to mean "this is a quote
 
 ### Fix
 
-In `packages/registry/src/skill/setup.md`, find the Phase 3 proposal template (around line 173) and remove the 2-space indentation from the narrative placeholder, the sidebar tree, and any other indented content slots. Plain left-aligned text:
+In `packages/engine/src/skill/setup.md`, find the Phase 3 proposal template (around line 173) and remove the 2-space indentation from the narrative placeholder, the sidebar tree, and any other indented content slots. Plain left-aligned text:
 
 ```markdown
 I've read your project. Here's what I see:
@@ -232,7 +232,7 @@ Easiest visual diff: take a screenshot of Phase 3 before and after the fix in th
 
 ## Bug D — Setup skill uses Next 14 `experimental.turbopack` syntax, breaks on Next 15+
 
-**Where:** `packages/registry/src/skill/setup.md` — the template that configures the Locator.js webpack-loader rule in the user's `next.config.{js,ts,mjs}`.
+**Where:** `packages/engine/src/skill/setup.md` — the template that configures the Locator.js webpack-loader rule in the user's `next.config.{js,ts,mjs}`.
 
 **Severity:** High. Any project on Next 15+ (the stable release with the turbopack key promoted out of experimental) will get a config that either no-ops or errors. Next 16 will eventually be the default.
 
@@ -283,7 +283,7 @@ Both should produce a working Locator.js wiring with no manual patches needed fr
 
 ## Bug E — Sibling skill activation triggers don't account for `src/` prefix
 
-**Where:** `packages/registry/src/skill/live-editing.md` and `packages/registry/src/skill/doc-sync.md` — the activation triggers / matching patterns.
+**Where:** `packages/engine/src/skill/live-editing.md` and `packages/engine/src/skill/doc-sync.md` — the activation triggers / matching patterns.
 
 **Severity:** Medium. The skill installs successfully but its trigger phrases reference paths that don't match the user's actual install when the project uses `src/` convention. Reported by the Claude session: *"Sibling skill descriptions still reference `app/forkshop/`, `components/forkshop/`, etc. without the `src/` prefix — they'll partially match your paths. If they don't auto-fire, just invoke them by phrase."*
 
@@ -308,7 +308,7 @@ Install Forkshop in an `--src-dir` project. Edit a file under `src/app/page.tsx`
 
 ## Bug F (minor) — Skill template prescribes `src/app/forkshop/layout.tsx` that's redundant with Template 5's page.tsx
 
-**Where:** `packages/registry/src/skill/setup.md` — Locator.js wiring phase (Template 5 + the layout step that follows it).
+**Where:** `packages/engine/src/skill/setup.md` — Locator.js wiring phase (Template 5 + the layout step that follows it).
 
 **Severity:** Low/cosmetic. The Claude session in the playground/site install skipped this step deliberately because it noticed `<LocatorInit mountPath="/forkshop" />` was already in `page.tsx` (Template 5). A separate layout.tsx is only useful if the user wants Locator to apply to sub-routes under `/forkshop/*` (which Forkshop itself doesn't have today).
 
@@ -326,7 +326,7 @@ Nothing further to ship for Bug F. Decision logged 2026-05-14.
 
 ## Bug G — iframe content drifts/grows infinitely on pages using `min-h-screen`
 
-**Where:** `packages/registry/src/components/canvas/responsive-frame-view.tsx` + the iframe-preview hooks that inject CSS into iframe documents (`use-iframe-preview.ts` or wherever `PREVIEW_EDIT_CSS` ships).
+**Where:** `packages/engine/src/components/canvas/responsive-frame-view.tsx` + the iframe-preview hooks that inject CSS into iframe documents (`use-iframe-preview.ts` or wherever `PREVIEW_EDIT_CSS` ships).
 
 **Severity:** High — visible on first impression. Any user project with `min-h-screen` (or `min-h-dvh`, `min-h-svh`) on body / a layout wrapper / a page wrapper triggers this. That's most Tailwind-using Next.js projects.
 
@@ -377,7 +377,7 @@ When porting this CSS during extraction, it may have been dropped as "Ravineo-sp
 
 ## Bug H — `<LocatorInit />` mounted on Forkshop page instead of user's root layout; opt-click never activates
 
-**Where:** `packages/registry/src/skill/setup.md` — the Locator.js opt-in phase / Template 5 mount-page generation.
+**Where:** `packages/engine/src/skill/setup.md` — the Locator.js opt-in phase / Template 5 mount-page generation.
 
 **Severity:** High. The option-click-to-open-editor feature is one of Forkshop's headline capabilities. If LocatorInit is in the wrong place, it silently does nothing — no error, no visible failure, the user just notices clicks don't open their editor.
 
@@ -443,7 +443,7 @@ After fix, in a fresh fixture install:
 
 ## Bug J — Forkshop inherits the user's root-layout chrome (navbar, footer, etc.)
 
-**Where:** `packages/registry/src/skill/setup.md` — Template 5 / the Forkshop mount-route generation.
+**Where:** `packages/engine/src/skill/setup.md` — Template 5 / the Forkshop mount-route generation.
 
 **Severity:** High. Visible on first install. Users expect `/forkshop` to be a full-page tool (like opening Storybook or Figma) — instead they see their own site's navbar at the top with Forkshop crammed underneath. Confusing first impression.
 
@@ -504,7 +504,7 @@ Test in a project where the user has heavily customized their root layout — e.
 
 ## Bug K — Live-AI hook hardcodes :3000; breaks when Next runs on any other port
 
-**Where:** `packages/registry/src/skill/setup.md` — port-detection logic during install + `.claude/hooks/post-tool-use.sh` template — the URL the hook POSTs to.
+**Where:** `packages/engine/src/skill/setup.md` — port-detection logic during install + `.claude/hooks/post-tool-use.sh` template — the URL the hook POSTs to.
 
 **Severity:** High. Hits any user whose dev server is on a port other than 3000 — very common because (a) users with multiple Next projects open at once get auto-bumped to 3001, 3002, etc., and (b) some users configure non-standard ports in `package.json` scripts. When this happens, the entire live-AI feature is silently broken — no error, no warning, just no sidebar pulses or frame glow.
 
@@ -539,7 +539,7 @@ If no port flag found, default to 3000 (Next's own default).
 
 Even with Part 1, the user can hit port drift at runtime (port 3000 occupied → Next auto-bumps to 3001 → user thinks Forkshop's broken). The hook script should try a short list of common ports before giving up:
 
-In `packages/registry/src/templates/.claude/hooks/post-tool-use.sh`, replace the hardcoded URL with try-list logic:
+In `packages/engine/src/templates/.claude/hooks/post-tool-use.sh`, replace the hardcoded URL with try-list logic:
 
 ```sh
 #!/usr/bin/env bash
@@ -596,7 +596,7 @@ If the user is on a *weird* port outside the default fallback range (e.g., 8080)
 
 ## Bug L — HMR doesn't propagate into Forkshop iframes; manual reload required after agent edits
 
-**Where:** Unclear without investigation. Candidates: `packages/registry/src/components/canvas/use-iframe-preview.ts`, `lazy-iframe.tsx`, ResponsiveFrameView's iframe-wrapping logic. Possibly also a Next.js config setting in the user's project, or a CSS-injection side effect.
+**Where:** Unclear without investigation. Candidates: `packages/engine/src/components/canvas/use-iframe-preview.ts`, `lazy-iframe.tsx`, ResponsiveFrameView's iframe-wrapping logic. Possibly also a Next.js config setting in the user's project, or a CSS-injection side effect.
 
 **Severity:** High. This is the single most-visible interaction in Forkshop — Claude edits a file, the iframe should update in place. Currently the user has to manually refresh Forkshop for visual updates to appear. Worst part: the live-AI pulse (sidebar dot, frame glow) probably still fires, so Forkshop signals "Claude just changed this" but the iframe contradicts the signal with stale content.
 
@@ -657,7 +657,7 @@ Test on multiple route shapes (static, dynamic, block-isolation, kit-rendered, e
 
 ## Bug M — Next.js 15+ dev indicator visible inside Forkshop iframes
 
-**Where:** the iframe-CSS injection in `packages/registry/src/components/canvas/use-iframe-preview.ts` (or wherever PREVIEW_EDIT_CSS is built). The CSS selectors that hide Next's dev chrome are out of date for Next 15+.
+**Where:** the iframe-CSS injection in `packages/engine/src/components/canvas/use-iframe-preview.ts` (or wherever PREVIEW_EDIT_CSS is built). The CSS selectors that hide Next's dev chrome are out of date for Next 15+.
 
 **Severity:** Medium-cosmetic. Doesn't break functionality, but pollutes every iframe with Next's floating "Rendering... Compiling..." pill, which:
 
@@ -717,7 +717,7 @@ The user's own dev-tab (NOT inside Forkshop) should still show the Next dev indi
 
 ## Bug N — User-project CLAUDE.md doesn't make "custom boards = canvas primitives" obvious
 
-**Where:** `packages/registry/src/templates/user-claude-md.md` (the template that installs as `app/forkshop/CLAUDE.md` in user projects).
+**Where:** `packages/engine/src/templates/user-claude-md.md` (the template that installs as `app/forkshop/CLAUDE.md` in user projects).
 
 **Severity:** High for adoption. One of Forkshop's headline value props is "you can build your own canvas boards." If Claude doesn't default to the canvas primitives when users ask for custom boards, every user-built board is a regression to plain HTML — Forkshop's purpose silently erodes.
 
@@ -738,7 +738,7 @@ The user-project CLAUDE.md template likely mentions canvas primitives somewhere,
 
 ### Fix
 
-Add an explicit section near the top of `packages/registry/src/templates/user-claude-md.md` titled something like **"Adding a new board"** or **"Custom boards"** that makes the canvas-primitive default unmistakable. Sketch:
+Add an explicit section near the top of `packages/engine/src/templates/user-claude-md.md` titled something like **"Adding a new board"** or **"Custom boards"** that makes the canvas-primitive default unmistakable. Sketch:
 
 ```markdown
 ## Adding a new board
@@ -822,7 +822,7 @@ Test in both an empty install and one with existing boards.
 
 ## Bug O — URL doesn't reflect Forkshop selection (no hash sync); regression from Ravineo Fogma
 
-**Where:** the Forkshop mount component (probably `packages/registry/src/templates/forkshop-page.tsx` or wherever Template 5 generates the user's `app/forkshop/page.tsx`) — needs to consume `selection-hash.ts` to keep URL in sync with selection.
+**Where:** the Forkshop mount component (probably `packages/engine/src/templates/forkshop-page.tsx` or wherever Template 5 generates the user's `app/forkshop/page.tsx`) — needs to consume `selection-hash.ts` to keep URL in sync with selection.
 
 **Severity:** Medium. Doesn't break functionality but loses four useful behaviors:
 
@@ -845,7 +845,7 @@ The extraction sub-spec listed `selection-hash.ts` as one of the sidebar files t
 
 2. **Both ported but something was dropped during a later refactor.** Possible if any of the renames or the rebrand from fogma→forkshop touched the wiring code.
 
-First step in the fix: check whether `packages/registry/src/components/sidebar/selection-hash.ts` (or wherever it lives) exists and exports the right helpers. If yes → just wiring is missing. If no → port it from Ravineo Fogma's `app/(tools)/fogma/sidebar/selection-hash.ts`.
+First step in the fix: check whether `packages/engine/src/components/sidebar/selection-hash.ts` (or wherever it lives) exists and exports the right helpers. If yes → just wiring is missing. If no → port it from Ravineo Fogma's `app/(tools)/fogma/sidebar/selection-hash.ts`.
 
 ### Fix
 
@@ -1085,7 +1085,7 @@ This points at something specific to the site project's combined configuration, 
 
 ## Bug I (limitation, not a bug — capturing for future) — Pages board doesn't auto-handle dynamic routes
 
-**Where:** `packages/registry/src/kits/page-tree.tsx` — and how the setup skill populates the pages list.
+**Where:** `packages/engine/src/kits/page-tree.tsx` — and how the setup skill populates the pages list.
 
 **Severity:** Functional limitation, not a blocker. Found in ravineo-playground/site (which has `/cluster/[slug]`, `/segment/[slug]`, `/creator/[username]`, `/taxonomy-v6/[slug]`, etc.).
 
@@ -1106,11 +1106,11 @@ These were surfaced earlier and have been resolved. Listed here so the next Clau
 | Bug | Where | Commit |
 |---|---|---|
 | Manifest builder didn't handle `live-editing.md` skill | `packages/cli/src/manifest-builder.ts` | `11750d2` |
-| Templates importing `@forkshop/registry` (workspace-only, doesn't exist in user projects) | `packages/registry/src/skill/setup.md` Templates 2-5 + user-claude-md template | Fixed via per-symbol imports (Option B) |
-| Template 1 `import tailwindConfig from "@/../tailwind.config"` (escaped project root) | `packages/registry/src/skill/setup.md` Template 1 | Fixed by changing to `@/tailwind.config` |
-| Raveo font fell back to body font in fresh projects (CSS var unset) | `packages/registry/tailwind/forkshop-preset.ts` + `.css` | `f0025a5` — added `Raveo` as inline fallback in `var(--font-raveo, Raveo)` |
-| Setup skill stripped synthetic-route surfacing when removing the NEW pill | `packages/registry/src/components/agent-activity-context.tsx` + `index.ts` + `sidebar/forkshop-sidebar.tsx` | `070959d` — restored data plumbing, kept pill removed |
-| Doc-sync skill was missing (third skill the strategy spec called for) | `packages/registry/src/skill/doc-sync.md` | `13315f2` |
+| Templates importing `@forkshop/engine` (workspace-only, doesn't exist in user projects) | `packages/engine/src/skill/setup.md` Templates 2-5 + user-claude-md template | Fixed via per-symbol imports (Option B) |
+| Template 1 `import tailwindConfig from "@/../tailwind.config"` (escaped project root) | `packages/engine/src/skill/setup.md` Template 1 | Fixed by changing to `@/tailwind.config` |
+| Raveo font fell back to body font in fresh projects (CSS var unset) | `packages/engine/tailwind/forkshop-preset.ts` + `.css` | `f0025a5` — added `Raveo` as inline fallback in `var(--font-raveo, Raveo)` |
+| Setup skill stripped synthetic-route surfacing when removing the NEW pill | `packages/engine/src/components/agent-activity-context.tsx` + `index.ts` + `sidebar/forkshop-sidebar.tsx` | `070959d` — restored data plumbing, kept pill removed |
+| Doc-sync skill was missing (third skill the strategy spec called for) | `packages/engine/src/skill/doc-sync.md` | `13315f2` |
 
 ---
 

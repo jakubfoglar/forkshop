@@ -10,7 +10,7 @@ Tracked from real-world testing of the setup skill against a production project 
 
 **What it was:** The Forkshop preset wires `forkshop-*` tokens (`forkshop-accent`, `forkshop-canvas`, `forkshop-fg`, etc.) into the user's Tailwind config so Forkshop's UI styles itself. The `design-system-board` kit read every color from the merged config and showed them as user-facing tokens. The whole point of the `forkshop-*` namespace was isolation.
 
-**Fix:** `buildTokenRegistry` in `packages/registry/src/lib/token-registry.ts` now filters out `forkshop-*` names by default across every category (colors, spacing, radii, etc.). Opt back in with `{ includeForkshopTokens: true }` if needed.
+**Fix:** `buildTokenRegistry` in `packages/engine/src/lib/token-registry.ts` now filters out `forkshop-*` names by default across every category (colors, spacing, radii, etc.). Opt back in with `{ includeForkshopTokens: true }` if needed.
 
 ---
 

@@ -1,7 +1,7 @@
 "use client"
 
 import { useRef, type ReactNode } from "react"
-import { ForkshopCanvas, BUILTIN_NODE_TYPES } from "@forkshop/registry"
+import { ForkshopCanvas, BUILTIN_NODE_TYPES } from "@forkshop/engine"
 import { useForkshopPositions } from "./use-forkshop-positions"
 
 export type PlaygroundBoardChildrenProps = {

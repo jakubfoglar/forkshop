@@ -21,7 +21,7 @@ import {
   type InlineReactNode,
   type IframeRouteNode,
   type IframeComponentNode,
-} from "@forkshop/registry"
+} from "@forkshop/engine"
 import { PlaygroundBoard } from "./playground-board"
 import { forkshopConfig } from "./forkshop.config"
 

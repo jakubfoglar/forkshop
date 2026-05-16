@@ -72,11 +72,11 @@ describe("buildManifest", () => {
 
   it("every @forkshop/* import in file contents resolves to a known address", () => {
     const knownAddresses = new Set(Object.keys(manifest.files))
-    // `@forkshop/registry` (and sub-paths) is the user-facing package alias used
+    // `@forkshop/engine` (and sub-paths) is the user-facing package alias used
     // in documentation and doc comments — it doesn't appear as its own entry
     // in the manifest (the barrel is omitted by design).
     const isDocsOnly = (ref: string): boolean =>
-      ref === "@forkshop/registry" || ref.startsWith("@forkshop/registry/")
+      ref === "@forkshop/engine" || ref.startsWith("@forkshop/engine/")
     const importRe = /@forkshop\/[a-zA-Z0-9/_-]+/g
     for (const [address, file] of Object.entries(manifest.files)) {
       if (file.kind !== "text") continue

@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url"
 import { buildManifest } from "forkshop/manifest-builder"
 
 const DOCS_ROOT = path.dirname(fileURLToPath(import.meta.url))
-const REGISTRY_ROOT = path.resolve(DOCS_ROOT, "../../../packages/registry")
+const REGISTRY_ROOT = path.resolve(DOCS_ROOT, "../../../packages/engine")
 
 function validateSkillPlaceholders(address: string, content: string): string[] {
   if (!address.startsWith("@forkshop/skill/")) return []
@@ -34,12 +34,12 @@ async function main() {
   for (const [address, file] of Object.entries(manifest.files)) {
     if (file.kind !== "text") continue
     errors.push(...validateSkillPlaceholders(address, file.content))
-    // Skip .md files (documentation references like @forkshop/registry are intentional)
+    // Skip .md files (documentation references like @forkshop/engine are intentional)
     if (file.ext === "md") continue
     const referenced = file.content.match(importRe) ?? []
     for (const ref of referenced) {
-      // @forkshop/registry is the user-facing package alias; not a manifest address
-      if (ref.startsWith("@forkshop/registry")) continue
+      // @forkshop/engine is the user-facing package alias; not a manifest address
+      if (ref.startsWith("@forkshop/engine")) continue
       if (!knownAddresses.has(ref)) {
         errors.push(`  ${address}\n    references missing address: ${ref}`)
       }

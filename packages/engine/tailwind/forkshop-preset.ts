@@ -11,7 +11,7 @@ import type { Config } from "tailwindcss"
  * applied to any project without disturbing the host design system.
  *
  * Usage in host tailwind.config:
- *   import { forkshopPreset } from "@forkshop/registry/tailwind/forkshop-preset"
+ *   import { forkshopPreset } from "@forkshop/engine/tailwind/forkshop-preset"
  *   export default { presets: [forkshopPreset], content: [...] }
  *
  * Utilities generated (examples):

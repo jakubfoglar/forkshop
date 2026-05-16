@@ -2,8 +2,8 @@ import path from "node:path"
 import { buildManifest } from "forkshop/manifest-builder"
 
 // During `next build` and `next dev`, cwd is apps/docs. Walk up to workspace root
-// and into packages/registry.
-const REGISTRY_ROOT = path.resolve(process.cwd(), "../../packages/registry")
+// and into packages/engine.
+const REGISTRY_ROOT = path.resolve(process.cwd(), "../../packages/engine")
 
 const REGISTRY_BASE_URL =
   process.env.FORKSHOP_REGISTRY_BASE_URL ?? "https://forkshop.dev/r/"

@@ -82,7 +82,7 @@ The sidebar rows map directly to selection values. The canvas renders exactly wh
 
 ### Primitives vs kits
 
-**Primitives** are the low-level building blocks — canvas, sidebar, draggable node, iframe hooks, responsive frame view. They live in `@forkshop/registry` and are generic: they don't know about your project's routes or design tokens.
+**Primitives** are the low-level building blocks — canvas, sidebar, draggable node, iframe hooks, responsive frame view. They live in `@forkshop/engine` and are generic: they don't know about your project's routes or design tokens.
 
 **Kits** are configurable boards built from primitives. Each kit is a full canvas view (a React component) that you wire to your project's data. Three kits ship out of the box: `DesignSystemBoard`, `IframeGallery`, and `PageTree`.
 
@@ -103,19 +103,19 @@ app/forkshop/
   page.tsx                    Server entry. Builds route list, title overrides,
                               and token registry; renders ForkshopTool.
   forkshop.config.ts             Wiring: tailwindConfig path, primitives, blocks, pages.
-  design-system-board.tsx     Mounts <DesignSystemBoard> from @forkshop/registry.
+  design-system-board.tsx     Mounts <DesignSystemBoard> from @forkshop/engine.
   components-board.tsx        Mounts <IframeGallery> for your block/component library.
   pages-board.tsx             Mounts <PageTree> for the site sitemap.
 
 app/api/forkshop/
-  edit/route.ts               Re-exports the edit handler from @forkshop/registry.
-  positions/route.ts          Re-exports the positions handler from @forkshop/registry.
+  edit/route.ts               Re-exports the edit handler from @forkshop/engine.
+  positions/route.ts          Re-exports the positions handler from @forkshop/engine.
   agent-activity/
     route.ts                  Re-exports the activity POST handler (no-op until wired).
     stream/route.ts           Re-exports the SSE stream handler (no-op until wired).
 ```
 
-The API routes are thin re-exports — the logic lives in `@forkshop/registry`. You shouldn't need to edit them unless you're customizing edit behavior.
+The API routes are thin re-exports — the logic lives in `@forkshop/engine`. You shouldn't need to edit them unless you're customizing edit behavior.
 
 ---
 
@@ -234,7 +234,7 @@ Text rendered inside any Forkshop iframe is editable in place when the surroundi
 The `/api/forkshop/edit` endpoint serves **both POST (save) and GET (read source)** in dev. Make sure your re-export at `app/api/forkshop/edit/route.ts` forwards both:
 
 ```ts
-export { POST, GET } from "@forkshop/registry/api/edit/route"
+export { POST, GET } from "@forkshop/engine/api/edit/route"
 ```
 
 If you initialized Forkshop before live text editing landed and your re-export only forwards `POST`, update it — the GET handler is what fetches `sourceFile` contents so the overlay can compute which strings are editable.

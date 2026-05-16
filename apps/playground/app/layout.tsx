@@ -1,11 +1,11 @@
 import localFont from "next/font/local"
-import { LocatorInit } from "@forkshop/registry"
+import { LocatorInit } from "@forkshop/engine"
 import "./globals.css"
 
 const raveo = localFont({
   src: [
     {
-      path: "../../../packages/registry/fonts/raveo/RaveoVF.woff2",
+      path: "../../../packages/engine/fonts/raveo/RaveoVF.woff2",
       weight: "100 900",
       style: "normal",
     },
