@@ -130,8 +130,13 @@ function deriveView(selection: ForkshopSelection): View {
 function SinglePrimitiveBoard({ primitiveId }: { primitiveId: string }) {
   const primitive = forkshopConfig.primitives.find((p) => p.id === primitiveId)
   if (!primitive) return null
+  // The single-primitive board shows one centered item; it shares the
+  // `primitive:<id>` node id with the Foundations overview, so any drag
+  // override saved there would render this view's primitive at the wrong
+  // (or off-canvas) position. The view also has no meaningful drag target
+  // — a one-item stack can't be reordered — so we skip positions entirely.
   const node: InlineReactNode = {
-    id: `primitive:${primitive.id}`,
+    id: `single-primitive:${primitive.id}`,
     kind: "inline-react",
     x: 0,
     y: 0,
@@ -147,14 +152,12 @@ function SinglePrimitiveBoard({ primitiveId }: { primitiveId: string }) {
   }
   return (
     <PlaygroundBoard stageWidth={PRIMITIVE_STAGE.width} stageHeight={PRIMITIVE_STAGE.height} fitMode="both">
-      {({ nodePositions, onPositionChange }) => (
+      {() => (
         <Gallery
           entries={[{ id: node.id, label: primitive.name, node }]}
           layout="stack"
           viewportWidth={320}
           fitContent
-          nodePositions={nodePositions}
-          onPositionChange={onPositionChange}
         />
       )}
     </PlaygroundBoard>
