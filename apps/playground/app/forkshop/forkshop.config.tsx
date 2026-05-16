@@ -17,8 +17,10 @@ export const forkshopConfig = {
     { slug: "feature-row", name: "Feature Row", iframeSrc: "/forkshop-preview/feature-row", sourcePath: "components/blocks/feature-row.tsx" },
   ],
   pages: [
-    { path: "/sample" },
-    { path: "/sample/about" },
-    { path: "/sample/dashboard" },
+    { path: "/" },
+    { path: "/about" },
+    { path: "/contact" },
+    { path: "/about/team" },
+    { path: "/about/careers" },
   ],
 } as const

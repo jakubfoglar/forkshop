@@ -24,7 +24,7 @@ import {
 import { PlaygroundBoard } from "./playground-board"
 import { forkshopConfig } from "./forkshop.config"
 
-const PAGE_ROUTES = ["/sample", "/sample/about", "/sample/dashboard"] as const
+const PAGE_ROUTES = ["/", "/about", "/contact", "/about/team", "/about/careers"] as const
 
 const DEFAULT_SELECTION: ForkshopSelection = {
   kind: "section",
@@ -130,12 +130,27 @@ function deriveView(selection: ForkshopSelection): View {
 function SinglePrimitiveBoard({ primitiveId }: { primitiveId: string }) {
   const primitive = forkshopConfig.primitives.find((p) => p.id === primitiveId)
   if (!primitive) return null
+  const node: InlineReactNode = {
+    id: `primitive:${primitive.id}`,
+    kind: "inline-react",
+    x: 0,
+    y: 0,
+    width: 720,
+    height: 480,
+    label: primitive.name,
+    filePath: primitive.sourcePath,
+    render: primitive.render,
+  }
   return (
     <PlaygroundBoard stageWidth={PRIMITIVE_STAGE.width} stageHeight={PRIMITIVE_STAGE.height} fitMode="both">
-      {() => (
-        <div className="absolute inset-0 flex items-center justify-center p-forkshop-8">
-          <div className="bg-white p-forkshop-8 shadow-md">{primitive.render()}</div>
-        </div>
+      {({ nodePositions, onPositionChange }) => (
+        <Gallery
+          entries={[{ id: node.id, label: primitive.name, node }]}
+          layout="stack"
+          viewportWidth={720}
+          nodePositions={nodePositions}
+          onPositionChange={onPositionChange}
+        />
       )}
     </PlaygroundBoard>
   )
@@ -343,7 +358,7 @@ export default function ForkshopPage() {
             <PlaygroundBoard
               stageWidth={COMPONENTS_STAGE.width}
               stageHeight={COMPONENTS_STAGE.height}
-              fitMode="width"
+              fitMode="both"
             >
               {({ nodePositions, onPositionChange }) => (
                 <Gallery
