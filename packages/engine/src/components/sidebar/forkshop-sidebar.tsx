@@ -36,7 +36,7 @@ export type SidebarEntry = {
   slug: string;
   /** Human-readable label */
   name: string;
-  /** Optional icon component (Lucide or custom) */
+  /** Optional icon component (Central Icons or custom) */
   icon?: ForkshopIconComponent;
 };
 
