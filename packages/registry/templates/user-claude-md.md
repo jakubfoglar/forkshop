@@ -207,24 +207,48 @@ Node positions are persisted to `layouts/system.json` via POST to `/api/forkshop
 
 For iframe-based nodes, use the `iframe-route` or `iframe-component` NodeType — they handle lazy-loading, body-height sync, and wheel forwarding internally.
 
+### `IframeRouteNode` and `IframeComponentNode` fields
+
+Both iframe NodeTypes accept an optional `sourceFile` (project-relative path to the TSX file that authors the page or block):
+
+- `IframeRouteNode.sourceFile` — e.g. `"app/about/page.tsx"`. The page file Forkshop should treat as editable when text inside the iframe is clicked.
+- `IframeComponentNode.sourceFile` — e.g. `"components/blocks/hero.tsx"`. Typically equals `componentPath`.
+
+When `sourceFile` is set, text rendered from that file shows a **blue editable ring** on hover; text imported from sub-components shows a **gray dashed locked ring**. Omit `sourceFile` to opt the node out of live text editing entirely.
+
 ---
 
 ## How edit, spacing, and open-in-editor work
 
-### Inline text editing
+### Live text editing
 
-Edit mode is always on in page isolation views. Hover any text element — it gets a blue outline. Click → `contenteditable`.
+Text rendered inside any Forkshop iframe is editable in place when the surrounding Node carries a `sourceFile`. Edit mode is always on in dev.
 
-Save triggers a POST to `/api/forkshop/edit`:
+- Hover text → **blue ring** if the string appears as a literal in `sourceFile` (editable from this board), **gray dashed ring** if it's hardcoded inside a sub-component imported by this file (locked — open that component's own block board to edit it).
+- Click an editable element → it becomes `contenteditable` and a Save / Discard popover appears.
+- `⌘↵` saves (writes the file; Next.js HMR picks up the new value).
+- `Esc` discards.
+- Both quoted string literals (`"…"`, `'…'`, simple `` `…` ``) and JSX text children (`<p>Hello world</p>`) are editable. Common HTML entities (`&apos;`, `&amp;`, etc.) decode automatically when matching against the source.
+- On a `ResponsiveFrameView` board (multi-viewport pages), typing in one viewport live-syncs to the other viewports as you type — no save needed for the cross-viewport preview.
+
+The `/api/forkshop/edit` endpoint serves **both POST (save) and GET (read source)** in dev. Make sure your re-export at `app/api/forkshop/edit/route.ts` forwards both:
+
+```ts
+export { POST, GET } from "@forkshop/registry/api/edit/route"
+```
+
+If you initialized Forkshop before live text editing landed and your re-export only forwards `POST`, update it — the GET handler is what fetches `sourceFile` contents so the overlay can compute which strings are editable.
+
+POST payload (unchanged):
 
 ```ts
 POST /api/forkshop/edit
 { pagePath: string, originalText: string, newText: string }
 ```
 
-The handler does a uniqueness check (rejects if `originalText` appears more than once in the file) then writes the change to `page.tsx`. Next.js HMR picks it up immediately.
+The handler does a uniqueness check (rejects if `originalText` appears more than once in the file) then writes the change. The hook that wires editing into iframes is `useIframeEditWiring` — it injects styles for the hover rings and keeps `--canvas-zoom` on `documentElement` in sync so the rings stay at a constant on-screen thickness regardless of canvas zoom.
 
-The hook that wires this into iframes is `useIframeEditWiring`. It injects `PREVIEW_EDIT_CSS` into the iframe document for outline styles, and keeps `--canvas-zoom` on `documentElement` in sync so outlines stay at a constant on-screen thickness regardless of canvas zoom.
+Live text editing is **dev-only** by construction. Production builds tree-shake the overlay wiring (the component returns `null` when `NODE_ENV === "production"`), and the API route itself returns 403 in production as a second line of defense.
 
 ### Spacing picker
 
