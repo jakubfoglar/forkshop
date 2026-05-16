@@ -39,6 +39,9 @@ export function EditPopover({
       setPosition(undefined)
       return
     }
+    let rafId: number | undefined
+    let lastLeft = NaN
+    let lastTop = NaN
     function compute() {
       if (!element) return
       const iframe = element.ownerDocument.defaultView?.frameElement as
@@ -53,15 +56,32 @@ export function EditPopover({
       const scale = iframeRect.width / offsetWidth
       const hostLeft = iframeRect.left + elementRect.right * scale
       const hostTop = iframeRect.top + elementRect.top * scale
-      setPosition({ left: hostLeft, top: hostTop })
+      // Only update state when the position actually changed — avoids
+      // re-rendering the popover on every animation frame when pan/zoom is
+      // idle.
+      if (hostLeft !== lastLeft || hostTop !== lastTop) {
+        lastLeft = hostLeft
+        lastTop = hostTop
+        setPosition({ left: hostLeft, top: hostTop })
+      }
     }
-    compute()
-    // Track in-flow size changes inside the iframe document too (typing into a
-    // contenteditable can grow/shrink the element).
+    // RAF loop while editing — the canvas's pan/zoom transform is stored in a
+    // ref (no re-renders on transform change), so we poll every frame to keep
+    // the popover glued to the element through pans, zooms, scrolls.
+    function tick() {
+      compute()
+      rafId = requestAnimationFrame(tick)
+    }
+    rafId = requestAnimationFrame(tick)
+    // Also track in-flow size changes inside the iframe document (typing into
+    // a contenteditable can grow/shrink the element).
     const observer = new ResizeObserver(compute)
     observer.observe(element)
-    return () => observer.disconnect()
-  }, [element, transformZoom, transformPanX, transformPanY])
+    return () => {
+      if (rafId !== undefined) cancelAnimationFrame(rafId)
+      observer.disconnect()
+    }
+  }, [element])
 
   if (!element || !position) return null
   return createPortal(
