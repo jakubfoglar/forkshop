@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { useIframeEditWiring } from "@forkshop/hooks/use-iframe-edit-wiring"
 import { useIframeRegistry } from "@forkshop/components/iframe-registry"
 import { computeDomPath } from "@forkshop/lib/edit-mode"
-import { extractStringLiterals } from "@forkshop/lib/extract-string-literals"
+import { extractStringLiterals, resolveJsxTextSpan } from "@forkshop/lib/extract-string-literals"
 
 export type UseIframeEditControllerArgs = {
   iframe: HTMLIFrameElement | null
@@ -64,6 +64,7 @@ export function useIframeEditController({
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | undefined>(undefined)
   const [editableSet, setEditableSet] = useState<Set<string> | undefined>(undefined)
+  const [sourceCache, setSourceCache] = useState<string>("")
   const originalTextRef = useRef<string>("")
   // Generation counter: incremented on every enter/discard/iframe-reload. Save
   // captures the value at POST start and bails on resolve if it has changed.
@@ -85,6 +86,7 @@ export function useIframeEditController({
       const body = (await res.json()) as { source?: string }
       if (typeof body.source === "string") {
         setEditableSet(buildEditableSet(body.source))
+        setSourceCache(body.source)
       }
     } catch {
       // Network error fetching source — leave editableSet as-is. The wiring
@@ -196,14 +198,30 @@ export function useIframeEditController({
       exitEdit()
       return { ok: true }
     }
+    // Resolve the originalText to its literal source representation. If the
+    // originalText is verbatim in the source (regular prop literal), use it
+    // directly. Otherwise it's likely JSX text — search the source for a JSX
+    // text span whose normalized form matches, and use that as originalText.
+    // The API does a verbatim substring search, so we have to send the raw
+    // source span (entities + indentation intact), not the decoded textContent.
+    let postOriginal = originalText
+    const postNew = newText
+    if (!sourceCache.includes(originalText)) {
+      const sourceSpan = resolveJsxTextSpan(sourceCache, originalText)
+      if (sourceSpan !== undefined) {
+        postOriginal = sourceSpan
+        // For newText, leave it as the decoded form for now (mixed encoding in
+        // the source is valid JSX). A future polish could re-encode apostrophes.
+      }
+    }
     const generationAtStart = editGenerationRef.current
     setIsSaving(true)
     setError(undefined)
     const result = await postEdit({
       editApiPath,
       pagePath: sourceFile,
-      originalText,
-      newText,
+      originalText: postOriginal,
+      newText: postNew,
     })
     // If discard/switch/another enter ran while the POST was in flight, the
     // edit we just committed was already abandoned by the user. Don't update
@@ -226,7 +244,7 @@ export function useIframeEditController({
       setError(result.error)
       return { ok: false }
     }
-  }, [editingElement, sourceFile, editApiPath, exitEdit, refetchEditableSet])
+  }, [editingElement, sourceFile, editApiPath, exitEdit, refetchEditableSet, sourceCache])
 
   // Public save narrows the internal result to Promise<void> — callers don't
   // care about success/failure beyond observing `error` and `isSaving`.

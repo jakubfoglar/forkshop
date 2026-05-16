@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { extractStringLiterals } from "@forkshop/lib/extract-string-literals"
+import { extractStringLiterals, resolveJsxTextSpan } from "@forkshop/lib/extract-string-literals"
 
 describe("extractStringLiterals", () => {
   it("extracts double-quoted literals", () => {
@@ -76,5 +76,28 @@ describe("extractStringLiterals — JSX text children", () => {
   it("does not capture whitespace-only JSX text", () => {
     const set = extractStringLiterals(`<div>\n  \n</div>`)
     expect(set.size).toBe(0)
+  })
+})
+
+describe("resolveJsxTextSpan", () => {
+  it("returns the verbatim source span for a JSX text whose normalized form matches", () => {
+    const source = `<p>\n  We&apos;re a small team\n  building tools.\n</p>`
+    const span = resolveJsxTextSpan(source, "We're a small team building tools.")
+    expect(span).toBe("\n  We&apos;re a small team\n  building tools.\n")
+  })
+
+  it("returns undefined when no JSX text span normalizes to the target", () => {
+    const source = `<h1>Welcome</h1>`
+    expect(resolveJsxTextSpan(source, "Not here")).toBeUndefined()
+  })
+
+  it("returns undefined for empty target", () => {
+    expect(resolveJsxTextSpan(`<p>foo</p>`, "")).toBeUndefined()
+  })
+
+  it("finds the span even with HTML entity differences", () => {
+    const source = `<p>Hello &amp; goodbye</p>`
+    const span = resolveJsxTextSpan(source, "Hello & goodbye")
+    expect(span).toBe("Hello &amp; goodbye")
   })
 })

@@ -21,6 +21,23 @@ function normalizeWhitespace(s: string): string {
   return s.replace(/\s+/g, " ").trim()
 }
 
+/** Resolve a decoded+normalized "user-facing" text back to the verbatim source
+ *  span it came from. Used by the edit controller before sending a JSX text edit
+ *  to the API — the API does a verbatim search, but the user's textContent is
+ *  the decoded/normalized form. Returns the literal source span (between `>` and
+ *  `<`, with entities + whitespace intact) so the API can find and replace it.
+ *  Returns undefined if no JSX text span normalizes to the target. */
+export function resolveJsxTextSpan(source: string, normalizedTarget: string): string | undefined {
+  if (normalizedTarget.length === 0) return undefined
+  const jsxTextPattern = />([^<>{}]+)</g
+  for (const match of source.matchAll(jsxTextPattern)) {
+    const raw = match[1] ?? ""
+    const normalized = normalizeWhitespace(decodeHtmlEntities(raw))
+    if (normalized === normalizedTarget) return raw
+  }
+  return undefined
+}
+
 export function extractStringLiterals(source: string): Set<string> {
   const out = new Set<string>()
   if (source.length === 0) return out
