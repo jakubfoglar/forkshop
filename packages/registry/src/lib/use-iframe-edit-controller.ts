@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useIframeEditWiring } from "@forkshop/hooks/use-iframe-edit-wiring"
+import { useIframeRegistry } from "@forkshop/components/iframe-registry"
+import { computeDomPath } from "@forkshop/lib/edit-mode"
 import { extractStringLiterals } from "@forkshop/lib/extract-string-literals"
 
 export type UseIframeEditControllerArgs = {
@@ -66,6 +68,10 @@ export function useIframeEditController({
   // Generation counter: incremented on every enter/discard/iframe-reload. Save
   // captures the value at POST start and bails on resolve if it has changed.
   const editGenerationRef = useRef(0)
+  const iframeRegistry = useIframeRegistry()
+  // Tracks the `input` listener attached to the editing element so exitEdit
+  // can detach it. Undefined when no edit is active.
+  const inputListenerRef = useRef<((event: Event) => void) | undefined>(undefined)
 
   // Refetches the source file and rebuilds the editable set. Called on mount
   // (when iframe + sourceFile are ready) and after every successful save, so
@@ -123,9 +129,42 @@ export function useIframeEditController({
     ;(element as HTMLElement).focus()
     setEditingElement(element)
     setError(undefined)
-  }, [])
+
+    // Live sync: mirror typing into sibling iframes that render the same page.
+    // The DOM path is stable through edits (the element identity doesn't move),
+    // so we compute it once here and reuse it on every input event. We match
+    // siblings by `src` — ResponsiveFrameView's 3 viewports all load the same
+    // page URL into iframes registered with the IframeRegistry.
+    const path = computeDomPath(element)
+    const ownIframe = iframe
+    const handleInput = () => {
+      if (!iframeRegistry) return
+      const newText = element.textContent ?? ""
+      for (const sibling of iframeRegistry.getAll()) {
+        if (sibling === ownIframe) continue
+        if (ownIframe && sibling.src !== ownIframe.src) continue
+        const doc = sibling.contentDocument
+        if (!doc) continue
+        try {
+          const target = doc.querySelector(path)
+          if (target && target.textContent !== newText) {
+            target.textContent = newText
+          }
+        } catch {
+          // querySelector throws on malformed selectors — ignore so a single
+          // weird path doesn't break the edit session.
+        }
+      }
+    }
+    element.addEventListener("input", handleInput)
+    inputListenerRef.current = handleInput
+  }, [iframe, iframeRegistry])
 
   const exitEdit = useCallback(() => {
+    if (editingElement && inputListenerRef.current) {
+      editingElement.removeEventListener("input", inputListenerRef.current)
+      inputListenerRef.current = undefined
+    }
     if (editingElement) {
       ;(editingElement as HTMLElement).contentEditable = "false"
       delete (editingElement as HTMLElement).dataset.editing
