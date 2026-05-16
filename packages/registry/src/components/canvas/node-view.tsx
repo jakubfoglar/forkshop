@@ -32,6 +32,7 @@ export type NodeViewProps = {
   onGuidesChange?: (guides: SnapGuide[]) => void
   onSelectChange?: (id: string, selected: boolean) => void
   onBodyHeightChange?: (height: number) => void
+  onContentWidthChange?: (width: number) => void
   className?: string
   style?: CSSProperties
 }
@@ -48,6 +49,7 @@ export function NodeView({
   onGuidesChange,
   onSelectChange,
   onBodyHeightChange,
+  onContentWidthChange,
   className,
   style,
 }: NodeViewProps): ReactNode {
@@ -68,6 +70,7 @@ export function NodeView({
     agentActive: effectiveAgentActive,
     agentFileLabel: effectiveAgentFileLabel,
     onBodyHeightChange,
+    onContentWidthChange,
   }
   return (
     <NodeFrame

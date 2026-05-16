@@ -31,6 +31,12 @@ export type GalleryProps = {
   viewportWidth?: number
   rowGap?: number
   columnGap?: number
+  /**
+   * When true, each cell sizes to its content's natural width (measured via
+   * the NodeType's onContentWidthChange callback) instead of using the fixed
+   * viewportWidth. Useful for showing tight single primitives.
+   */
+  fitContent?: boolean
   nodePositions?: NodePositions
   onPositionChange?: (id: string, x: number, y: number) => void
   selectedId?: string
@@ -48,26 +54,35 @@ type LayoutCell = {
 function buildStackLayout(
   entries: GalleryEntry[],
   measuredHeights: Readonly<Record<string, number>>,
+  measuredWidths: Readonly<Record<string, number>>,
   viewportWidth: number,
   rowGap: number,
+  fitContent: boolean,
 ): { cells: LayoutCell[]; stageWidth: number; stageHeight: number } {
   const cells: LayoutCell[] = []
   let cursorY = 0
+  let maxWidth = 0
   for (const entry of entries) {
     const height = measuredHeights[entry.id] ?? DEFAULT_INITIAL_HEIGHT
-    cells.push({ id: entry.id, layoutX: 0, layoutY: cursorY, width: viewportWidth, height })
+    const width = fitContent
+      ? (measuredWidths[entry.id] ?? viewportWidth)
+      : viewportWidth
+    cells.push({ id: entry.id, layoutX: 0, layoutY: cursorY, width, height })
+    maxWidth = Math.max(maxWidth, width)
     cursorY += height + rowGap
   }
   const stageHeight = Math.max(0, cursorY - rowGap)
-  return { cells, stageWidth: viewportWidth, stageHeight }
+  return { cells, stageWidth: maxWidth, stageHeight }
 }
 
 function buildGridLayout(
   entries: GalleryEntry[],
   measuredHeights: Readonly<Record<string, number>>,
+  measuredWidths: Readonly<Record<string, number>>,
   viewportWidth: number,
   rowGap: number,
   columnGap: number,
+  fitContent: boolean,
 ): { cells: LayoutCell[]; stageWidth: number; stageHeight: number } {
   const rowMaxHeights = new Map<number, number>()
   for (const entry of entries) {
@@ -89,11 +104,14 @@ function buildGridLayout(
     const column = entry.column ?? 0
     maxColumn = Math.max(maxColumn, column)
     const height = measuredHeights[entry.id] ?? DEFAULT_INITIAL_HEIGHT
+    const width = fitContent
+      ? (measuredWidths[entry.id] ?? viewportWidth)
+      : viewportWidth
     cells.push({
       id: entry.id,
       layoutX: column * (viewportWidth + columnGap),
       layoutY: rowY.get(row) ?? 0,
-      width: viewportWidth,
+      width,
       height,
     })
   }
@@ -117,6 +135,7 @@ function GalleryInner({
   viewportWidth: vpwProp,
   rowGap: rgProp,
   columnGap: cgProp,
+  fitContent = false,
   nodePositions = {},
   onPositionChange,
   selectedId,
@@ -134,11 +153,19 @@ function GalleryInner({
     })
   }, [])
 
+  const [measuredWidths, setMeasuredWidths] = useState<Record<string, number>>({})
+  const handleWidthChange = useCallback((entryId: string, width: number) => {
+    setMeasuredWidths((prev) => {
+      if (prev[entryId] === width) return prev
+      return { ...prev, [entryId]: width }
+    })
+  }, [])
+
   const { cells, stageWidth, stageHeight } = useMemo(() => {
     return layout === "stack"
-      ? buildStackLayout(entries, measuredHeights, viewportWidth, rowGap)
-      : buildGridLayout(entries, measuredHeights, viewportWidth, rowGap, columnGap)
-  }, [entries, layout, measuredHeights, viewportWidth, rowGap, columnGap])
+      ? buildStackLayout(entries, measuredHeights, measuredWidths, viewportWidth, rowGap, fitContent)
+      : buildGridLayout(entries, measuredHeights, measuredWidths, viewportWidth, rowGap, columnGap, fitContent)
+  }, [entries, layout, measuredHeights, measuredWidths, viewportWidth, rowGap, columnGap, fitContent])
 
   const [activeGuides, setActiveGuides] = useState<readonly SnapGuide[]>([])
   const handleGuidesChange = useCallback((guides: SnapGuide[]) => {
@@ -206,6 +233,7 @@ function GalleryInner({
             onGuidesChange={handleGuidesChange}
             onSelectChange={handleSelectChange}
             onBodyHeightChange={(h) => handleHeightChange(cell.id, h)}
+            onContentWidthChange={(w) => handleWidthChange(cell.id, w)}
           />
         )
       })}

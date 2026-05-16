@@ -140,7 +140,7 @@ function SinglePrimitiveBoard({ primitiveId }: { primitiveId: string }) {
     label: primitive.name,
     filePath: primitive.sourcePath,
     render: () => (
-      <div className="flex h-full items-center justify-center bg-white p-8 shadow-md">
+      <div className="inline-flex items-center justify-center bg-white p-8 shadow-md">
         {primitive.render()}
       </div>
     ),
@@ -152,6 +152,7 @@ function SinglePrimitiveBoard({ primitiveId }: { primitiveId: string }) {
           entries={[{ id: node.id, label: primitive.name, node }]}
           layout="stack"
           viewportWidth={320}
+          fitContent
           nodePositions={nodePositions}
           onPositionChange={onPositionChange}
         />

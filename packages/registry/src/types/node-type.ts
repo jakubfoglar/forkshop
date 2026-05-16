@@ -23,6 +23,12 @@ export type RenderProps<T extends AnyNode> = {
    * to fit content instead of using a fixed default height.
    */
   onBodyHeightChange?: (height: number) => void
+  /**
+   * Callback for NodeTypes that can measure their content's natural width
+   * (e.g., inline-react via ResizeObserver). Layouts use this to shrink
+   * cells to content instead of using a fixed viewportWidth.
+   */
+  onContentWidthChange?: (width: number) => void
 }
 
 export type NodeType<T extends AnyNode = AnyNode> = {
