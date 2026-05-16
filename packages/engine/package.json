@@ -25,8 +25,7 @@
   },
   "dependencies": {
     "@locator/runtime": "^0.5.1",
-    "clsx": "^2.1.1",
-    "lucide-react": "^1.14.0"
+    "clsx": "^2.1.1"
   },
   "devDependencies": {
     "@central-icons-react/square-outlined-radius-0-stroke-2": "^1.1.237",
