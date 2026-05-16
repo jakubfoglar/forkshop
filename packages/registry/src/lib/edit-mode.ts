@@ -41,7 +41,6 @@ export const PREVIEW_EDIT_CSS = `
 [data-editing] {
   outline: calc(2px / var(--canvas-zoom, 1)) solid #3b82f6 !important;
   outline-offset: calc(1px / var(--canvas-zoom, 1)) !important;
-  background: rgba(59, 130, 246, 0.06) !important;
 }
 [data-edit-mirror] {
   outline: calc(1px / var(--canvas-zoom, 1)) dashed #94a3b8 !important;
