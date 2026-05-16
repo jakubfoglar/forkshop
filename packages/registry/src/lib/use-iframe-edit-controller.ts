@@ -104,6 +104,25 @@ export function useIframeEditController({
     void refetchEditableSet()
   }, [iframe, sourceFile, refetchEditableSet])
 
+  // Cross-viewport refetch: when any viewport saves an edit to this sourceFile,
+  // all viewports rendering the same page need to refetch their editable sets.
+  // Next.js HMR doesn't fire a `load` event on the iframe (it updates the React
+  // tree in place), so the load-handler below isn't enough. The saving
+  // controller dispatches a `forkshop:source-changed` event on window after a
+  // successful save; every controller (including the saving one) listens here
+  // and refetches if the event's sourceFile matches its own.
+  useEffect(() => {
+    if (!sourceFile) return
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent<{ sourceFile?: string }>).detail
+      if (detail?.sourceFile === sourceFile) {
+        void refetchEditableSet()
+      }
+    }
+    window.addEventListener("forkshop:source-changed", handler)
+    return () => window.removeEventListener("forkshop:source-changed", handler)
+  }, [sourceFile, refetchEditableSet])
+
   // If the iframe document reloads mid-edit (HMR, navigation, manual refresh),
   // the editingElement reference is now detached. Clear edit state so a stray
   // Save doesn't POST against a stale snapshot.
@@ -238,17 +257,20 @@ export function useIframeEditController({
     setIsSaving(false)
     if (result.ok) {
       exitEdit()
-      // Refresh the editable set so the just-edited text — now present in the
-      // file with its new value — is recognized as editable on the next hover.
-      // Otherwise the next hover on the same element would show as gray-locked
-      // because the in-memory set still contains the OLD value.
-      void refetchEditableSet()
+      // Notify all controllers (including this one) that this sourceFile
+      // changed on disk. Every controller listening to the same sourceFile
+      // refetches its editable set. Next.js HMR updates iframe DOM in place
+      // without firing a `load` event, so we can't rely on the iframe-reload
+      // listener for sibling viewports — this event bus is the only way.
+      window.dispatchEvent(
+        new CustomEvent("forkshop:source-changed", { detail: { sourceFile } }),
+      )
       return { ok: true }
     } else {
       setError(result.error)
       return { ok: false }
     }
-  }, [editingElement, sourceFile, editApiPath, exitEdit, refetchEditableSet, sourceCache])
+  }, [editingElement, sourceFile, editApiPath, exitEdit, sourceCache])
 
   // Public save narrows the internal result to Promise<void> — callers don't
   // care about success/failure beyond observing `error` and `isSaving`.
