@@ -27,9 +27,12 @@ import type { AnyNode, InlineReactNode } from "@forkshop/types/node"
 // Constants
 // ---------------------------------------------------------------------------
 
-const DEFAULT_PRIMITIVE_WIDTH = 720
-const DEFAULT_PRIMITIVE_HEIGHT = 480
+const DEFAULT_PRIMITIVE_WIDTH = 320
+const DEFAULT_PRIMITIVE_HEIGHT = 160
 const PRIMITIVE_GAP = 40
+
+type MeasuredSize = { width?: number; height?: number }
+type MeasuredSizeMap = Readonly<Record<string, MeasuredSize>>
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -67,13 +70,17 @@ function layoutPrimitiveGroups(
   groups: PrimitiveGroup[],
   startX: number,
   startY: number,
+  measuredSizes: MeasuredSizeMap = {},
 ): PositionedPrimitiveNode[] {
   const positioned: PositionedPrimitiveNode[] = []
   let cursorY = startY
   for (const group of groups) {
     for (const node of group.primitives) {
-      const width = node.width > 0 ? node.width : DEFAULT_PRIMITIVE_WIDTH
-      const height = node.height > 0 ? node.height : DEFAULT_PRIMITIVE_HEIGHT
+      const measured = measuredSizes[node.id]
+      const width =
+        measured?.width ?? (node.width > 0 ? node.width : DEFAULT_PRIMITIVE_WIDTH)
+      const height =
+        measured?.height ?? (node.height > 0 ? node.height : DEFAULT_PRIMITIVE_HEIGHT)
       positioned.push({ node, x: startX, y: cursorY, width, height })
       cursorY += height + PRIMITIVE_GAP
     }
@@ -145,20 +152,37 @@ function DesignSystemViewInner({
   const graph = useMemo(() => buildSystemGraph(tokens), [tokens])
   const layout = useMemo(() => layoutSystem(graph, [], {}), [graph])
 
+  // Measured sizes reported by each inline-react node's ResizeObserver. Causes
+  // a single layout re-pass on initial mount (defaults → measured); harmless.
+  const [measuredSizes, setMeasuredSizes] = useState<Record<string, MeasuredSize>>({})
+  const updateSize = useCallback(
+    (id: string, dim: "width" | "height", value: number) => {
+      setMeasuredSizes((prev) => {
+        const current = prev[id]
+        if (current && current[dim] === value) return prev
+        return { ...prev, [id]: { ...current, [dim]: value } }
+      })
+    },
+    [],
+  )
+
   // Typography sits to the right of the color grid; primitives stack to the
   // right of typography. Layout flows left-to-right horizontally so the board
   // is wider/shorter than the original tall-column arrangement.
+  const measuredTypography = typography ? measuredSizes[typography.id] : undefined
   const typographyWidth =
-    typography && typography.width > 0 ? typography.width : TYPOGRAPHY_DEFAULT_WIDTH
+    measuredTypography?.width
+    ?? (typography && typography.width > 0 ? typography.width : TYPOGRAPHY_DEFAULT_WIDTH)
   const typographyHeight =
-    typography && typography.height > 0 ? typography.height : TYPOGRAPHY_DEFAULT_HEIGHT
+    measuredTypography?.height
+    ?? (typography && typography.height > 0 ? typography.height : TYPOGRAPHY_DEFAULT_HEIGHT)
   const typographyDefaultX = layout.colorsWidth + TYPOGRAPHY_SECTION_GAP
   const typographyDefaultY = 0
 
   const primitivesStartX = typographyDefaultX + typographyWidth + PRIMITIVES_SECTION_GAP
   const positionedPrimitives = useMemo(
-    () => layoutPrimitiveGroups(primitives, primitivesStartX, 0),
-    [primitives, primitivesStartX],
+    () => layoutPrimitiveGroups(primitives, primitivesStartX, 0, measuredSizes),
+    [primitives, primitivesStartX, measuredSizes],
   )
 
   const [activeGuides, setActiveGuides] = useState<readonly SnapGuide[]>([])
@@ -252,23 +276,39 @@ function DesignSystemViewInner({
       />
 
       {positionedPrimitives.map((pp) => {
-        const positionedNode: AnyNode = {
-          ...pp.node,
+        // Wrap the primitive in white card chrome (matches Gallery's
+        // SinglePrimitiveBoard look) and switch the node to inline-react so
+        // the existing ResizeObserver-driven fitContent path measures it.
+        const originalRender =
+          pp.node.kind === "inline-react"
+            ? (pp.node as InlineReactNode).render
+            : () => null
+        const wrappedNode: InlineReactNode = {
+          ...(pp.node as InlineReactNode),
+          kind: "inline-react",
           x: pp.x,
           y: pp.y,
           width: pp.width,
           height: pp.height,
+          render: () => (
+            <div className="inline-flex items-center justify-center bg-white p-6 shadow-md">
+              {originalRender()}
+            </div>
+          ),
         }
         return (
           <NodeView
             key={pp.node.id}
-            node={positionedNode}
+            node={wrappedNode}
             override={nodePositions[pp.node.id]}
             isSelected={selectedId === pp.node.id}
             onPositionChange={handlePositionChange}
             getSnapTargets={getSnapTargets}
             onGuidesChange={handleGuidesChange}
             onSelectChange={handleSelectChange}
+            fitContent
+            onContentWidthChange={(w) => updateSize(pp.node.id, "width", w)}
+            onBodyHeightChange={(h) => updateSize(pp.node.id, "height", h)}
           />
         )
       })}
@@ -290,6 +330,9 @@ function DesignSystemViewInner({
             getSnapTargets={getSnapTargets}
             onGuidesChange={handleGuidesChange}
             onSelectChange={handleSelectChange}
+            fitContent
+            onContentWidthChange={(w) => updateSize(typography.id, "width", w)}
+            onBodyHeightChange={(h) => updateSize(typography.id, "height", h)}
           />
         )
       })()}
