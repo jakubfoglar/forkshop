@@ -1,17 +1,33 @@
 {
   "name": "@forkshop/engine",
   "version": "0.0.0",
-  "private": true,
+  "private": false,
+  "license": "FSL-1.1-Apache-2.0",
+  "description": "Forkshop's canvas + sidebar engine for Next.js + Tailwind projects.",
+  "homepage": "https://forkshop.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jakubfoglar/forkshop.git",
+    "directory": "packages/engine"
+  },
+  "bugs": "https://github.com/jakubfoglar/forkshop/issues",
+  "publishConfig": { "access": "public" },
   "type": "module",
-  "main": "./src/index.ts",
+  "sideEffects": ["**/*.css"],
+  "engines": { "node": ">=18.18.0" },
+  "files": [
+    "dist",
+    "LICENSE",
+    "LICENSE-icons.md",
+    "README.md"
+  ],
   "exports": {
-    ".": "./src/index.ts",
-    "./tailwind": "./tailwind/forkshop-preset.ts",
-    "./forkshop.css": "./tailwind/forkshop.css",
-    "./api/edit/route": "./src/api/edit/route.ts",
-    "./api/positions/route": "./src/api/positions/route.ts",
-    "./api/agent-activity/route": "./src/api/agent-activity/route.ts",
-    "./api/agent-activity/stream/route": "./src/api/agent-activity/stream/route.ts"
+    ".":                                 "./dist/index.js",
+    "./forkshop.css":                    "./dist/forkshop.css",
+    "./api/edit/route":                  "./dist/api/edit/route.js",
+    "./api/positions/route":             "./dist/api/positions/route.js",
+    "./api/agent-activity/route":        "./dist/api/agent-activity/route.js",
+    "./api/agent-activity/stream/route": "./dist/api/agent-activity/stream/route.js"
   },
   "scripts": {
     "build":     "tsx scripts/build.ts",
@@ -21,28 +37,28 @@
     "test":      "vitest run"
   },
   "peerDependencies": {
-    "next": ">=14",
-    "react": ">=18",
+    "next":      ">=14",
+    "react":     ">=18",
     "react-dom": ">=18"
   },
   "dependencies": {
     "@locator/runtime": "^0.5.1",
-    "clsx": "^2.1.1"
+    "clsx":             "^2.1.1"
   },
   "devDependencies": {
     "@central-icons-react/square-outlined-radius-0-stroke-2": "^1.1.237",
-    "@types/react": "^18.3.0",
-    "@types/react-dom": "^18.3.0",
-    "esbuild": "^0.21.0",
-    "esbuild-plugin-preserve-directives": "^0.0.11",
-    "eslint-plugin-react-hooks": "^7.1.1",
-    "execa": "^9.0.0",
-    "next": "^14.2.0",
-    "react": "^18.3.0",
-    "react-dom": "^18.3.0",
-    "tailwindcss": "^3.4.0",
-    "tsup": "^8.0.0",
-    "tsx": "^4.21.0",
-    "vitest": "^2.0.0"
+    "@types/react":                                            "^18.3.0",
+    "@types/react-dom":                                        "^18.3.0",
+    "esbuild":                                                 "^0.21.0",
+    "esbuild-plugin-preserve-directives":                      "^0.0.11",
+    "eslint-plugin-react-hooks":                               "^7.1.1",
+    "execa":                                                   "^9.0.0",
+    "next":                                                    "^14.2.0",
+    "react":                                                   "^18.3.0",
+    "react-dom":                                               "^18.3.0",
+    "tailwindcss":                                             "^3.4.0",
+    "tsup":                                                    "^8.0.0",
+    "tsx":                                                     "^4.21.0",
+    "vitest":                                                  "^2.0.0"
   }
 }
