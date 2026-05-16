@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { CanvasLabel } from "@forkshop/components/canvas/canvas-label"
+import { IframeEditOverlay } from "@forkshop/components/canvas/iframe-edit-overlay"
 import { useRegisterIframe } from "@forkshop/components/iframe-registry"
 import { useAgentEditEpoch } from "@forkshop/components/agent-activity-context"
 import { useForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
@@ -84,6 +85,8 @@ export type ResponsiveFrameViewProps = {
   onBodyHeightChange?: (id: string, height: number) => void
   /** Optional agent-active flag (parent can drive glow indicator). */
   agentActive?: boolean
+  /** TSX source file authoring this page/block. Required for live text editing. */
+  sourceFile?: string
 }
 
 // Displayed at 50% of native (1200×630) so the OG preview doesn't dominate
@@ -101,6 +104,7 @@ export function ResponsiveFrameView(props: ResponsiveFrameViewProps) {
     measuredHeight,
     onBodyHeightChange,
     agentActive,
+    sourceFile,
   } = props
   const id = kind === "page" ? path : `block:${path}`
   const title = kind === "page" ? path : `${path}`
@@ -199,6 +203,7 @@ export function ResponsiveFrameView(props: ResponsiveFrameViewProps) {
             onLocalHeightChange={handleViewportHeightChange}
             onOgImageDetected={index === 0 && isPage ? setOgImageUrl : undefined}
             onIframeWheel={handleIframeWheel}
+            sourceFile={sourceFile}
           />
         ))}
         {isPage && ogImageUrl && (
@@ -249,6 +254,7 @@ function Viewport({
   onLocalHeightChange,
   onOgImageDetected,
   onIframeWheel,
+  sourceFile,
 }: {
   viewport: ViewportPosition
   source: string
@@ -260,6 +266,7 @@ function Viewport({
   onLocalHeightChange: (index: number, height: number) => void
   onOgImageDetected?: (url: string | undefined) => void
   onIframeWheel: (event: WheelEvent, iframe: HTMLIFrameElement) => void
+  sourceFile?: string
 }) {
   const [iframeElement, setIframeElement] = useState<HTMLIFrameElement>()
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
@@ -406,34 +413,37 @@ function Viewport({
   ])
 
   return (
-    <div style={{ position: "absolute", top: 0, left: viewport.x, width: viewport.width }}>
-      <div
-        style={{
-          position: "absolute",
-          bottom: "100%",
-          left: 0,
-          marginBottom: 4,
-        }}
-      >
-        <CanvasLabel style={{ pointerEvents: "none" }}>{viewport.label}</CanvasLabel>
+    <>
+      <div style={{ position: "absolute", top: 0, left: viewport.x, width: viewport.width }}>
+        <div
+          style={{
+            position: "absolute",
+            bottom: "100%",
+            left: 0,
+            marginBottom: 4,
+          }}
+        >
+          <CanvasLabel style={{ pointerEvents: "none" }}>{viewport.label}</CanvasLabel>
+        </div>
+        <iframe
+          ref={handleIframeRef}
+          src={shouldLoad ? source : undefined}
+          title={title}
+          scrolling="no"
+          style={{
+            width: viewport.width,
+            height,
+            border: 0,
+            display: "block",
+            boxShadow: agentActive
+              ? `0 0 0 calc(2px / var(--canvas-zoom, 1)) ${AGENT_COLOR_LITERAL}, 0 0 0 calc(8px / var(--canvas-zoom, 1)) color-mix(in oklch, ${AGENT_COLOR_LITERAL} 18%, transparent), 0 4px 6px -1px rgba(0,0,0,0.08)`
+              : undefined,
+            transition: "box-shadow 200ms ease-out",
+          }}
+          className={agentActive ? "bg-white" : "bg-white shadow-md"}
+        />
       </div>
-      <iframe
-        ref={handleIframeRef}
-        src={shouldLoad ? source : undefined}
-        title={title}
-        scrolling="no"
-        style={{
-          width: viewport.width,
-          height,
-          border: 0,
-          display: "block",
-          boxShadow: agentActive
-            ? `0 0 0 calc(2px / var(--canvas-zoom, 1)) ${AGENT_COLOR_LITERAL}, 0 0 0 calc(8px / var(--canvas-zoom, 1)) color-mix(in oklch, ${AGENT_COLOR_LITERAL} 18%, transparent), 0 4px 6px -1px rgba(0,0,0,0.08)`
-            : undefined,
-          transition: "box-shadow 200ms ease-out",
-        }}
-        className={agentActive ? "bg-white" : "bg-white shadow-md"}
-      />
-    </div>
+      <IframeEditOverlay iframe={iframeElement ?? null} sourceFile={sourceFile} />
+    </>
   )
 }
