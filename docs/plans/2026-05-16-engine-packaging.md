@@ -51,7 +51,7 @@
 - Root `LICENSE` — multi-license notice
 
 **Playground updates:**
-- `apps/playground/package.json` — `@forkshop/engine` → `@forkshop/engine`; drop `lucide-react`; add postinstall
+- `apps/playground/package.json` — `@forkshop/registry` → `@forkshop/engine`; drop `lucide-react`; add postinstall
 - `apps/playground/next.config.mjs` — drop `transpilePackages`, drop forkshop aliases
 - `apps/playground/tailwind.config.ts` — drop preset import + engine glob
 - `apps/playground/app/globals.css` — `@import "@forkshop/engine/forkshop.css"`
@@ -68,26 +68,26 @@
 
 ---
 
-## Task 1: `git mv packages/engine packages/engine` and minimal `package.json` updates so install resolves
+## Task 1: `git mv packages/registry packages/engine` and minimal `package.json` updates so install resolves
 
-**Why:** The workspace package symlink `node_modules/@forkshop/engine` won't resolve after the rename until the `name` field is updated. Without this fix, `pnpm install` errors. The remaining ripples are addressed in Task 2.
+**Why:** The workspace package symlink `node_modules/@forkshop/registry` won't resolve after the rename until the `name` field is updated. Without this fix, `pnpm install` errors. The remaining ripples are addressed in Task 2.
 
 **Files:**
-- Move: `packages/engine/` → `packages/engine/`
+- Move: `packages/registry/` → `packages/engine/`
 - Modify: `packages/engine/package.json` (the moved file) — `name` field
 - Modify: `apps/playground/package.json` — dependency name
 
 - [ ] **Step 1: Move the directory and update the `name` field**
 
 ```bash
-git mv packages/engine packages/engine
+git mv packages/registry packages/engine
 ```
 
 Then edit `packages/engine/package.json`:
 
 ```jsonc
 {
-  "name": "@forkshop/engine",   // was "@forkshop/engine"
+  "name": "@forkshop/engine",   // was "@forkshop/registry"
   // ...everything else unchanged for now
 }
 ```
@@ -99,7 +99,7 @@ Edit `apps/playground/package.json`:
 ```jsonc
 {
   "dependencies": {
-    "@forkshop/engine": "workspace:*",   // was "@forkshop/engine"
+    "@forkshop/engine": "workspace:*",   // was "@forkshop/registry"
     // ...other deps unchanged
   }
 }
@@ -114,10 +114,10 @@ Expected: `Done` with no resolution errors. `node_modules/@forkshop/engine` exis
 
 ```bash
 git add packages/engine apps/playground/package.json pnpm-lock.yaml
-git commit -m "chore(engine): rename packages/engine → packages/engine
+git commit -m "chore(engine): rename packages/registry → packages/engine
 
 Mechanical rename of the workspace directory and the npm package name
-from @forkshop/engine to @forkshop/engine. Subsequent commits update
+from @forkshop/registry to @forkshop/engine. Subsequent commits update
 the remaining path-string references."
 ```
 
@@ -138,11 +138,11 @@ the remaining path-string references."
 - `apps/docs/app/r/registry.json/route.ts` — `REGISTRY_ROOT` path string
 - `apps/docs/app/r/fonts/[...path]/route.ts` — `REGISTRY_FONTS_ROOT` path string
 - `apps/docs/scripts/validate-registry.ts` — alias resolver base
-- `packages/cli/src/__fixtures__/*` (any file containing `@forkshop/engine` or `packages/engine`)
-- `packages/cli/src/manifest-builder.ts` — verify no hardcoded `packages/engine/` strings (it uses `registryRoot` param, but worth checking comments)
-- `packages/engine/templates/user-claude-md.md` — `@forkshop/engine` → `@forkshop/engine` (name only — content stays)
+- `packages/cli/src/__fixtures__/*` (any file containing `@forkshop/registry` or `packages/registry`)
+- `packages/cli/src/manifest-builder.ts` — verify no hardcoded `packages/registry/` strings (it uses `registryRoot` param, but worth checking comments)
+- `packages/engine/templates/user-claude-md.md` — `@forkshop/registry` → `@forkshop/engine` (name only — content stays)
 - `packages/engine/src/skill/setup.md`, `live-editing.md`, `doc-sync.md` — same find/replace
-- `CLAUDE.md` (root maintainer guide) — every `packages/engine` → `packages/engine`; every `@forkshop/engine` → `@forkshop/engine`
+- `CLAUDE.md` (root maintainer guide) — every `packages/registry` → `packages/engine`; every `@forkshop/registry` → `@forkshop/engine`
 - `docs/known-issues.md`, `docs/live-ai-closeout-issues.md`, `docs/cli-cross-project-polish.md` — active operational docs; update where the new naming applies
 
 Historical docs that should NOT be touched (they describe the past correctly):
@@ -158,26 +158,30 @@ Historical docs that should NOT be touched (they describe the past correctly):
 Two targeted replacements, scoped to files that should change. Run from repo root:
 
 ```bash
-# String 1: @forkshop/engine → @forkshop/engine
-git grep -l '@forkshop/engine' -- \
+# String 1: @forkshop/registry → @forkshop/engine
+# (Also exclude this plan file itself: it describes the rename and the
+# historical "registry" strings inside its prose need to stay readable.)
+git grep -l '@forkshop/registry' -- \
   ':!docs/strategy' ':!docs/specs/2026-05-15*' ':!docs/specs/2026-05-16-live*' \
   ':!docs/specs/2026-05-16-engine-packaging-design.md' \
-  ':!docs/plans/2026-05-15*' ':!docs/superpowers' \
-  | xargs sed -i '' 's|@forkshop/engine|@forkshop/engine|g'
+  ':!docs/plans/2026-05-15*' ':!docs/plans/2026-05-16-engine-packaging.md' \
+  ':!docs/superpowers' \
+  | xargs sed -i '' 's|@forkshop/registry|@forkshop/engine|g'
 
-# String 2: packages/engine → packages/engine
-git grep -l 'packages/engine' -- \
+# String 2: packages/registry → packages/engine
+git grep -l 'packages/registry' -- \
   ':!docs/strategy' ':!docs/specs/2026-05-15*' ':!docs/specs/2026-05-16-live*' \
   ':!docs/specs/2026-05-16-engine-packaging-design.md' \
-  ':!docs/plans/2026-05-15*' ':!docs/superpowers' \
-  | xargs sed -i '' 's|packages/engine|packages/engine|g'
+  ':!docs/plans/2026-05-15*' ':!docs/plans/2026-05-16-engine-packaging.md' \
+  ':!docs/superpowers' \
+  | xargs sed -i '' 's|packages/registry|packages/engine|g'
 ```
 
 (On Linux, drop the `''` after `-i`.)
 
 - [ ] **Step 2: Verify no stale references remain in active files**
 
-Run: `git grep -n '@forkshop/engine\|packages/engine' -- ':!docs/strategy' ':!docs/specs/2026-05-15*' ':!docs/specs/2026-05-16-live*' ':!docs/specs/2026-05-16-engine-packaging-design.md' ':!docs/plans/2026-05-15*' ':!docs/superpowers'`
+Run: `git grep -n '@forkshop/registry\|packages/registry' -- ':!docs/strategy' ':!docs/specs/2026-05-15*' ':!docs/specs/2026-05-16-live*' ':!docs/specs/2026-05-16-engine-packaging-design.md' ':!docs/plans/2026-05-15*' ':!docs/plans/2026-05-16-engine-packaging.md' ':!docs/superpowers'`
 
 Expected: empty output.
 
@@ -209,8 +213,8 @@ Kill the dev server.
 git add -A
 git commit -m "chore(engine): update all rename ripples (path strings, imports, docs)
 
-Mechanical find-replace of @forkshop/engine → @forkshop/engine and
-packages/engine → packages/engine across the workspace. Excludes
+Mechanical find-replace of @forkshop/registry → @forkshop/engine and
+packages/registry → packages/engine across the workspace. Excludes
 historical docs/strategy and prior specs/plans that describe past state.
 
 After this commit pnpm typecheck/lint/test/dev all green."
@@ -2529,7 +2533,7 @@ If anything still needed a fix discovered in Steps 1–7, commit it. Otherwise n
 PR title: `feat(engine): publishable @forkshop/engine + compiled CSS pipeline`
 
 PR description should include:
-- One-line summary: "Renames packages/engine → packages/engine; adds tsup/Tailwind build pipeline; swaps lucide-react → Central Icons; playground consumes built dist."
+- One-line summary: "Renames packages/registry → packages/engine; adds tsup/Tailwind build pipeline; swaps lucide-react → Central Icons; playground consumes built dist."
 - Link to the spec: `docs/specs/2026-05-16-engine-packaging-design.md`
 - Smoke-install output from Step 5.
 - Confirmation: `pnpm check` green, `pnpm --filter @forkshop/engine build` green (with verify-tarball), playground renders without regression.
