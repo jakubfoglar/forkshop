@@ -35,7 +35,11 @@ async function main() {
 
   await compileCss()
   await copyAssets()
-  // verify-tarball added in subsequent tasks.
+
+  await execa("tsx", ["scripts/verify-tarball.ts"], {
+    stdio: "inherit",
+    cwd: ENGINE_ROOT,
+  })
 }
 
 main().catch((err) => {
