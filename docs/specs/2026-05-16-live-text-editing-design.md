@@ -393,3 +393,61 @@ After implementation, update `packages/registry/src/templates/user-claude-md.md`
 - The editing UX (blue ring = editable, gray dashed ring = locked sub-component text, ⌘↵ to save, Esc to discard).
 - The dev-only nature of the feature and what happens in production.
 - A note that the existing `/api/forkshop/edit` re-export now serves both POST (save) and GET (read source) — no new endpoint to scaffold.
+
+---
+
+## Implementation deviations (added 2026-05-16 after shipping)
+
+The v0 spec above describes what was designed during brainstorming. The actual implementation grew during a single same-day session, with three categories of additions discovered during manual end-to-end testing:
+
+### 1. Bugs surfaced during manual E2E (8 fixes)
+
+Each landed as its own commit on `main` between 2026-05-16 ~14:30 and ~15:30. None changed the spec's public surface; all hardened the implementation.
+
+- **`EditPopover` z-index 100 → 9999** (`f28bf26`). The popover was rendering below the canvas iframe because the iframe sits in a transformed stacking context that beat the popover's z-index.
+- **Refetch editable Set after own save** (`f28bf26`). Without it, just-edited text showed as gray-locked on the next hover because the in-memory Set was stale.
+- **RAF-driven popover position tracking** (`f0ff169`). The canvas transform is in a ref (no re-renders), so the popover's transform-dep useEffect never re-ran on pan/zoom. Replaced with a `requestAnimationFrame` poll while editing is active.
+- **`saveInternal` race conditions** (`5125b4d`). Three races: switch-on-failure stranding the old element, save-after-discard mutating UI state for an abandoned edit, iframe-reload leaving `editingElement` referencing a detached node. Closed via a generation-counter ref plus an `isConnected` belt-and-suspenders check.
+- **Drop `[data-editing]` background fill** (`0f4bec5`). The `rgba(59, 130, 246, 0.06)` background made dark-themed buttons (e.g. `bg-black text-white` CTAs) unreadable while editing. Outline alone is the visual indicator now.
+- **Refetch editable Set on iframe-load** (`29ffdb4`). For full page reloads where the iframe `load` event fires.
+- **Cross-viewport refetch via `window` event bus** (`066a2ad`). Next.js HMR doesn't fire iframe `load` events (it updates the iframe DOM in place), so the load-listener fix above doesn't reach sibling viewports. The saving controller dispatches `forkshop:source-changed`; every controller listening for the same sourceFile refetches.
+- **Playground Locator wiring** (`59c87c9`, post-feature). The playground's `next.config.mjs` had Locator rules under the Next 15+ `turbopack` key, which Next 14 doesn't recognize. Added the equivalent webpack `module.rules.push` so Option-click works on the default `next dev` runner.
+
+### 2. Post-v0 features added at user request (2 features)
+
+Both extend the spec's public surface and are user-visible. The spec didn't anticipate them but they're consistent with the safety model.
+
+- **JSX text children editing**. The v0 extractor only captured quoted literals (`"…"`, `'…'`, simple `` `…` ``). The user wanted to edit text written as JSX children (`<p>We're a small team...</p>` instead of `<p>{body}</p>`). Implementation (`49a67de`, `65d210d`):
+  - `extractStringLiterals` extended with a fourth pattern for text between JSX tags (`/>([^<>{}]+)</g`).
+  - HTML entity decoding (`&apos;` → `'`, `&amp;` → `&`, `&quot;` → `"`, `&lt;` → `<`, `&gt;` → `>`, `&nbsp;` → space). Decoded form is what enters the Set so it matches rendered DOM textContent.
+  - Whitespace normalization (`\s+` → single space, trim).
+  - New `resolveJsxTextSpan` helper that, given a normalized search target, returns the verbatim source span — used by `saveInternal` to send the literal source slice (entities + indentation intact) to the API instead of the decoded textContent.
+  - Trade-off: when saving an edit to multi-line indented JSX text, the source whitespace collapses to a single line. Cosmetic source-formatting wart; not a safety issue. Future polish could re-wrap with the original leading/trailing whitespace.
+- **Live cross-viewport sync** (`cbf6176`). On a `ResponsiveFrameView` board, typing in one viewport mirrors to the other two viewports in real time (parity with the upstream ravineo-web Fogma tool). Implementation:
+  - On `handleEnterEdit`, attach an `input` listener to the editing element.
+  - On input, compute the editing element's `computeDomPath`, walk `useIframeRegistry().getAll()` for iframes with matching `src` and different identity, run `querySelector(path)` in each sibling's contentDocument, set `textContent` to the new value.
+  - Detach the listener in `exitEdit`.
+  - The `useIframeRegistry` provider is already in the Forkshop canvas tree; controllers outside a provider get a `undefined` registry and the broadcast is a no-op (safe for standalone kits).
+
+### 3. Open follow-ups (non-blocking, noted by final reviewer)
+
+These don't ship as bugs but are worth a polish pass:
+
+- **`getCanvasZoom` closure churn in controller**. `getCanvasZoom: () => canvasZoom` allocates a new function on every render, and it's in `useIframeEditWiring`'s effect deps — every state change tears down/re-attaches all in-iframe listeners. Fix: wrap in `useCallback`, or read `editableSet` from a ref to keep it out of the effect dep array.
+- **`iframe-component` falls back from `sourceFile` to `componentPath`**. The fallback is silent and undocumented; a user setting `componentPath` purely for agent-activity mapping would get unexpected editing wiring. Either drop the fallback or document it in the type's JSDoc.
+- **`inputListenerRef` leaks across iframe reloads**. The `handleLoad` clears `editingElement` but not `inputListenerRef.current`. Subsequent `exitEdit` is guarded by `editingElement` so the bad path doesn't fire, but the ref still leaks until the next enter. Cosmetic.
+- **Cross-viewport refetch fires on the saving viewport too**. The dispatching controller's own listener catches its own event and does an extra GET, even though it already has fresh source data. One redundant request per save; harmless.
+
+### 4. Tests added beyond the planned set
+
+The plan called for unit tests on `extractStringLiterals`, `postEdit`, `buildEditableSet`, the API route, and `shouldRenderOverlay`. Tests for `resolveJsxTextSpan` (4 cases) and the JSX text patterns in `extractStringLiterals` (5 cases) were added with the post-v0 features. Final test count: 122/122 in `@forkshop/registry`.
+
+### Audit trail
+
+Final state after this work:
+- 22 commits on `main` since base `0f49951`.
+- `pnpm --filter @forkshop/registry test`: 122/122 passing.
+- `pnpm --filter @forkshop/registry typecheck`: clean.
+- `pnpm --filter docs validate-registry`: 63 files, 8 bundles, all references resolved.
+- `pnpm --filter playground build`: succeeds; production bundles do not include `useIframeEditController`, `EditPopover`, `useIframeEditWiring`, `extractStringLiterals`, or `resolveJsxTextSpan` (verified via `grep` of `.next/static/chunks/`).
+- Manual E2E in `apps/playground` confirms all flows: hover signals, edit/save round-trip, live sync, cross-viewport refetch, pan/zoom popover tracking, Option-click open-in-editor.

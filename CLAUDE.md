@@ -162,6 +162,34 @@ A kit is a React component with a typed `*Props` interface. Export both from `in
 
 ---
 
+## Live text editing
+
+Shipped 2026-05-16. Forkshop's defining feature: hover text in an iframed page → blue ring if editable, gray dashed ring if locked. Click editable text → contenteditable + Save/Discard popover. ⌘↵ saves to the TSX file (Next.js HMR picks up the change). Esc discards. Multi-viewport boards (`ResponsiveFrameView`) live-sync edits across all viewports as you type.
+
+**Architecture (internal):**
+- `packages/registry/src/lib/use-iframe-edit-controller.ts` — controller hook. Owns edit state machine (`editingElement`, `isSaving`, `error`, generation counter), composes `useIframeEditWiring`, POSTs to the edit API on save.
+- `packages/registry/src/components/canvas/iframe-edit-overlay.tsx` — thin wrapper. Composes the controller + `EditPopover`. Tree-shakes in production via `process.env.NODE_ENV === "production"` early-return.
+- `packages/registry/src/lib/extract-string-literals.ts` — pure function. Builds the per-iframe "editable Set" from a TSX source file. Captures quoted literals, simple template literals, AND JSX text children with HTML entity decoding + whitespace normalization. Also exports `resolveJsxTextSpan` for the save flow.
+- `packages/registry/src/hooks/use-iframe-edit-wiring.ts` — listener machinery inside the iframe document. Carries an optional `editableSet` parameter; without it, falls back to "all text editable" (back-compat).
+- `packages/registry/src/components/canvas/edit-popover.tsx` — floating Save/Discard widget. Tracks the edited element through canvas pan/zoom via a `requestAnimationFrame` loop.
+- `packages/registry/src/api/edit/route.ts` — dev-only POST (save) + GET (read source) handlers. Path-escape checked, 403 in production.
+- `packages/registry/src/lib/edit-mode.ts` — `PREVIEW_EDIT_CSS` (hover/editing/locked outlines), `isTextElement`, `computeDomPath`.
+
+**Safety model:** each Node carries `sourceFile?: string`. The controller GETs that file at iframe load, extracts its string literals + JSX text into a `Set<string>`, and the hover handler gates editing on `set.has(textContent.trim())`. Sub-component internals never enter the set, so you cannot accidentally edit shared components from a page board. Production builds tree-shake the entire wiring.
+
+**Cross-viewport refetch:** when one viewport saves, the controller dispatches a `forkshop:source-changed` CustomEvent on `window`. Every controller listening for the same sourceFile refetches its editable Set. This is needed because Next.js HMR updates iframe DOM in place without firing the iframe `load` event, so the load-listener alone wouldn't reach sibling viewports.
+
+**Locator.js (Option-click open-in-editor):** opt-in during `forkshop init` setup skill. The `@locator/webpack-loader` (or its turbopack equivalent in Next 15+) runs over every JSX file at compile time in dev, attaching `__source` props. `LocatorInit` mounts the runtime UI inside iframed pages whose parent path starts with `mountPath`. Option-click reads the `__source` data, constructs a `vscode://file/...:line:col` URL, and navigates the top window so the OS opens VS Code.
+
+**Spec / plan:**
+- `docs/specs/2026-05-16-live-text-editing-design.md`
+- `docs/superpowers/plans/2026-05-16-live-text-editing.md`
+- Both reflect v0 design + 13 planned tasks; the implementation grew 8 in-session bug fixes + 2 post-v0 features (JSX text editing, cross-viewport live sync). The spec carries an "Implementation deviations" addendum at the bottom.
+
+**User-facing docs** are in the registry's `templates/user-claude-md.md`, which auto-loads in user Claude Code sessions after `forkshop init`. Keep that file in sync when changing user-visible behavior.
+
+---
+
 ## Branding decoupling
 
 All Forkshop-internal styling must be decoupled from any host project's brand.
