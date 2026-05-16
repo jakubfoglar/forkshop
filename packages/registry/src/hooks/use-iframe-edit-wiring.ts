@@ -86,6 +86,7 @@ export function useIframeEditWiring({
   onSwitchEdit,
   onDiscardEdit,
   getCanvasZoom,
+  editableSet,
 }: {
   iframe: HTMLIFrameElement | null | undefined
   active: boolean
@@ -96,6 +97,7 @@ export function useIframeEditWiring({
   onSwitchEdit: (newElement: Element) => void
   onDiscardEdit: () => void
   getCanvasZoom?: () => number
+  editableSet?: Set<string>
 }) {
   useEffect(() => {
     if (!iframe) return
@@ -191,16 +193,25 @@ export function useIframeEditWiring({
         const target = event.target as HTMLElement | null
         if (lastHover && lastHover !== target) {
           delete lastHover.dataset.editHover
+          delete lastHover.dataset.editLocked
           lastHover = undefined
         }
         if (target && isTextElement(target)) {
-          target.dataset.editHover = ""
+          const text = (target.textContent ?? "").trim()
+          if (editableSet === undefined || editableSet.has(text)) {
+            target.dataset.editHover = ""
+          } else {
+            target.dataset.editLocked = ""
+          }
           lastHover = target
         }
       }
       mouseoutHandler = (event) => {
         const target = event.target as HTMLElement | null
-        if (target?.dataset) delete target.dataset.editHover
+        if (target?.dataset) {
+          delete target.dataset.editHover
+          delete target.dataset.editLocked
+        }
         if (target === lastHover) lastHover = undefined
       }
       iframeDocument.addEventListener("mouseover", mouseoverHandler)
@@ -230,10 +241,19 @@ export function useIframeEditWiring({
         }
         if (active) {
           if (target && isTextElement(target)) {
+            const text = (target.textContent ?? "").trim()
+            const isEditable = editableSet === undefined || editableSet.has(text)
+            if (isEditable) {
+              event.preventDefault()
+              event.stopImmediatePropagation()
+              delete target.dataset.editHover
+              onEnterEdit(target)
+              return
+            }
+            // Locked sub-component text — consume the click as a no-op so it doesn't
+            // navigate or trigger form submits, but don't enter edit mode.
             event.preventDefault()
             event.stopImmediatePropagation()
-            delete target.dataset.editHover
-            onEnterEdit(target)
             return
           }
           // Non-text click in edit mode: stop browser navigation (links, form
@@ -369,5 +389,6 @@ export function useIframeEditWiring({
     onSwitchEdit,
     onDiscardEdit,
     getCanvasZoom,
+    editableSet,
   ])
 }
