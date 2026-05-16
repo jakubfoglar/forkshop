@@ -2,7 +2,7 @@
   "name": "forkshop-workspace",
   "private": true,
   "version": "0.0.0",
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "pnpm@11.1.2",
   "scripts": {
     "build": "pnpm -r build",
     "dev": "pnpm --filter playground dev",
@@ -18,5 +18,8 @@
   "engines": {
     "node": ">=20",
     "pnpm": ">=9"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
   }
 }
