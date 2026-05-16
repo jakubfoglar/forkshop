@@ -4,11 +4,10 @@ import {
   useEffect,
   useMemo,
   useState,
-  type ComponentType,
-  type SVGProps,
 } from "react";
-import { ChevronDown, ChevronRight, Info, File } from "lucide-react";
 import { cn } from "@forkshop/lib/cn";
+import { ForkshopIcon, type ForkshopIconComponent } from "@forkshop/components/icon";
+import { forkshopIcons } from "@forkshop/lib/icons";
 import { buildPageTree, type PageTreeNode } from "@forkshop/components/sidebar/page-tree";
 import { HelpModal } from "@forkshop/components/sidebar/help-modal";
 import {
@@ -17,10 +16,6 @@ import {
   useAgentActiveBlocks,
   useAgentActivePrimitives,
 } from "@forkshop/components/agent-activity-context";
-
-type LucideComponent = ComponentType<
-  SVGProps<SVGSVGElement> & { strokeWidth?: number | string }
->;
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -42,7 +37,7 @@ export type SidebarEntry = {
   /** Human-readable label */
   name: string;
   /** Optional icon component (Lucide or custom) */
-  icon?: LucideComponent;
+  icon?: ForkshopIconComponent;
 };
 
 /**
@@ -61,7 +56,7 @@ export type SidebarSection = {
    */
   entries?: SidebarEntry[];
   /** Optional icon for the section row itself */
-  icon?: LucideComponent;
+  icon?: ForkshopIconComponent;
   /**
    * Selection kind emitted when an entry under this section is clicked.
    * Defaults to "block".
@@ -157,7 +152,7 @@ export function ForkshopSidebar({
           aria-label="How to use forkshop"
           title="How to use forkshop"
         >
-          <Info className="size-forkshop-4" strokeWidth={2} />
+          <ForkshopIcon icon={forkshopIcons.info} className="size-forkshop-4" />
         </button>
         <HelpModal open={helpOpen} onOpenChange={setHelpOpen} />
       </div>
@@ -301,7 +296,7 @@ function SidebarRow({
 }: {
   label: string;
   depth: number;
-  icon?: LucideComponent;
+  icon?: ForkshopIconComponent;
   active: boolean;
   hasChildren?: boolean;
   expanded?: boolean;
@@ -329,9 +324,9 @@ function SidebarRow({
             className="mr-forkshop-1 flex size-forkshop-4 items-center justify-center text-current opacity-70 hover:opacity-100"
           >
             {expanded ? (
-              <ChevronDown className="size-forkshop-4" strokeWidth={2} />
+              <ForkshopIcon icon={forkshopIcons.chevronDown} className="size-forkshop-4" />
             ) : (
-              <ChevronRight className="size-forkshop-4" strokeWidth={2} />
+              <ForkshopIcon icon={forkshopIcons.chevronRight} className="size-forkshop-4" />
             )}
           </button>
         ) : (
@@ -339,7 +334,7 @@ function SidebarRow({
         )}
         {/* icon column */}
         <span className="mr-forkshop-1.5 flex size-forkshop-3.5 shrink-0 items-center justify-center text-current opacity-60">
-          {Icon && <Icon className="size-full" strokeWidth={2} />}
+          {Icon && <Icon className="size-full" />}
         </span>
         {agentActive && (
           <span
@@ -415,7 +410,7 @@ function PageTreeRow({
       <SidebarRow
         label={node.label}
         depth={depth}
-        icon={File}
+        icon={forkshopIcons.page}
         active={active}
         hasChildren={hasChildren}
         expanded={expanded}

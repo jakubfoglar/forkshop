@@ -1,10 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Check, X } from "lucide-react"
 import { createPortal } from "react-dom"
 import { cn } from "@forkshop/lib/cn"
 import { ForkshopIcon } from "@forkshop/components/icon"
+import { forkshopIcons } from "@forkshop/lib/icons"
 
 // Inline save/discard widget that hovers right next to the currently-edited
 // element. Lives in the host document via portal — positions itself in screen
@@ -99,7 +99,7 @@ export function EditPopover({
               className="rounded-forkshop-full p-forkshop-0.5 text-forkshop-fg-muted hover:bg-forkshop-surface-2 hover:text-forkshop-fg"
               aria-label="Dismiss error"
             >
-              <ForkshopIcon icon={X} className="size-forkshop-4" />
+              <ForkshopIcon icon={forkshopIcons.close} className="size-forkshop-4" />
             </button>
           </>
         )}
@@ -116,7 +116,7 @@ export function EditPopover({
           aria-label="Discard edit"
           title="Discard (esc)"
         >
-          <ForkshopIcon icon={X} className="size-forkshop-5" />
+          <ForkshopIcon icon={forkshopIcons.close} className="size-forkshop-5" />
         </button>
         <button
           type="button"
@@ -129,7 +129,7 @@ export function EditPopover({
           aria-label="Save edit"
           title="Save (⌘↵)"
         >
-          <ForkshopIcon icon={Check} className="size-forkshop-5" />
+          <ForkshopIcon icon={forkshopIcons.check} className="size-forkshop-5" />
         </button>
       </div>
     </div>,

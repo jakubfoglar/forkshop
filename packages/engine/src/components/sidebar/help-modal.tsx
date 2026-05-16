@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react"
 import { ForkshopIcon } from "@forkshop/components/icon"
-import { X } from "lucide-react"
+import { forkshopIcons } from "@forkshop/lib/icons"
 
 export function HelpModal({
   open,
@@ -60,7 +60,7 @@ export function HelpModal({
           className="rounded-forkshop-lg p-forkshop-2 text-forkshop-fg-muted transition-colors hover:bg-forkshop-surface-2 hover:text-forkshop-fg"
           aria-label="Close"
         >
-          <ForkshopIcon icon={X} className="size-forkshop-4" />
+          <ForkshopIcon icon={forkshopIcons.close} className="size-forkshop-4" />
         </button>
       </div>
       <p className="sr-only">Quick reference for editing in forkshop.</p>

@@ -1,9 +1,7 @@
 import type { ComponentType, SVGProps } from "react"
 
-// Compatible with Lucide icons (and any icon library that follows the same shape).
-export type ForkshopIconComponent = ComponentType<
-  SVGProps<SVGSVGElement> & { strokeWidth?: number | string; size?: number | string }
->
+// Compatible with Central icons (and any icon library that accepts standard SVG props).
+export type ForkshopIconComponent = ComponentType<SVGProps<SVGSVGElement>>
 
 type ForkshopIconProps = {
   icon: ForkshopIconComponent
@@ -13,5 +11,5 @@ type ForkshopIconProps = {
 }
 
 export function ForkshopIcon({ icon: Icon, className, ...rest }: ForkshopIconProps) {
-  return <Icon strokeWidth={2} className={className} aria-hidden={rest["aria-label"] ? undefined : true} {...rest} />
+  return <Icon className={className} aria-hidden={rest["aria-label"] ? undefined : true} {...rest} />
 }
