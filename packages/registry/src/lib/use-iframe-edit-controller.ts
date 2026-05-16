@@ -67,28 +67,34 @@ export function useIframeEditController({
   // captures the value at POST start and bails on resolve if it has changed.
   const editGenerationRef = useRef(0)
 
-  // Fetch source + build editable set when iframe + sourceFile are ready.
+  // Refetches the source file and rebuilds the editable set. Called on mount
+  // (when iframe + sourceFile are ready) and after every successful save, so
+  // the just-edited text appears in the new set and shows as editable on
+  // subsequent hovers instead of becoming gray-locked.
+  const refetchEditableSet = useCallback(async () => {
+    if (!sourceFile) return
+    try {
+      const res = await fetch(`${editApiPath}?path=${encodeURIComponent(sourceFile)}`)
+      if (!res.ok) return
+      const body = (await res.json()) as { source?: string }
+      if (typeof body.source === "string") {
+        setEditableSet(buildEditableSet(body.source))
+      }
+    } catch {
+      // Network error fetching source — leave editableSet as-is. The wiring
+      // will fall back to "everything editable" if the set is undefined; the
+      // popover save will surface any 404.
+    }
+  }, [sourceFile, editApiPath])
+
+  // Initial fetch when iframe + sourceFile become available.
   useEffect(() => {
     if (!iframe || !sourceFile) {
       setEditableSet(undefined)
       return
     }
-    let cancelled = false
-    void fetch(`${editApiPath}?path=${encodeURIComponent(sourceFile)}`)
-      .then(async (res) => {
-        if (!res.ok) return
-        const body = (await res.json()) as { source?: string }
-        if (!cancelled && typeof body.source === "string") {
-          setEditableSet(buildEditableSet(body.source))
-        }
-      })
-      .catch(() => {
-        // Network error fetching source — leave editableSet undefined. The
-        // wiring will fall back to "everything editable" which is the
-        // pre-Locked behavior; the popover save will surface any 404.
-      })
-    return () => { cancelled = true }
-  }, [iframe, sourceFile, editApiPath])
+    void refetchEditableSet()
+  }, [iframe, sourceFile, refetchEditableSet])
 
   // If the iframe document reloads mid-edit (HMR, navigation, manual refresh),
   // the editingElement reference is now detached. Clear edit state so a stray
@@ -171,12 +177,17 @@ export function useIframeEditController({
     setIsSaving(false)
     if (result.ok) {
       exitEdit()
+      // Refresh the editable set so the just-edited text — now present in the
+      // file with its new value — is recognized as editable on the next hover.
+      // Otherwise the next hover on the same element would show as gray-locked
+      // because the in-memory set still contains the OLD value.
+      void refetchEditableSet()
       return { ok: true }
     } else {
       setError(result.error)
       return { ok: false }
     }
-  }, [editingElement, sourceFile, editApiPath, exitEdit])
+  }, [editingElement, sourceFile, editApiPath, exitEdit, refetchEditableSet])
 
   // Public save narrows the internal result to Promise<void> — callers don't
   // care about success/failure beyond observing `error` and `isSaving`.

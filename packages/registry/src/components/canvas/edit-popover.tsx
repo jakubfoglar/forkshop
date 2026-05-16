@@ -66,7 +66,7 @@ export function EditPopover({
   if (!element || !position) return null
   return createPortal(
     <div
-      style={{ position: "fixed", left: position.left, top: position.top, zIndex: 100 }}
+      style={{ position: "fixed", left: position.left, top: position.top, zIndex: 9999 }}
       className="-translate-y-full pl-forkshop-1"
     >
       <div className="flex items-center gap-forkshop-0.5 rounded-forkshop-full border border-forkshop-border bg-forkshop-surface py-forkshop-0.5 pl-forkshop-1 pr-forkshop-0.5 shadow-md">
