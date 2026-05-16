@@ -6,6 +6,3 @@ dist/
 .env.local
 *.tsbuildinfo
 .DS_Store
-
-# Per-developer canvas drag state, written by the dev-only positions API
-apps/playground/app/forkshop/positions.json
