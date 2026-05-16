@@ -1,1 +1,1 @@
-export { POST } from "@forkshop/registry/api/edit/route"
+export { POST, GET } from "@forkshop/registry/api/edit/route"

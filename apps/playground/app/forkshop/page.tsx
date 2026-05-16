@@ -180,6 +180,7 @@ function SingleBlockBoard({ slug }: { slug: string }) {
           kind="block"
           path={block.slug}
           source={block.iframeSrc}
+          sourceFile={block.sourceFile}
           viewports={[1440, 768, 375]}
           measuredHeight={measuredHeight}
           onBodyHeightChange={handleBodyHeightChange}
@@ -190,6 +191,7 @@ function SingleBlockBoard({ slug }: { slug: string }) {
 }
 
 function SinglePageBoard({ path }: { path: string }) {
+  const page = forkshopConfig.pages.find((p) => p.path === path)
   const [measuredHeight, setMeasuredHeight] = useState<number | undefined>(undefined)
   const handleBodyHeightChange = useCallback((_id: string, h: number) => setMeasuredHeight(h), [])
   const { width, height } = useMemo(
@@ -203,6 +205,7 @@ function SinglePageBoard({ path }: { path: string }) {
           kind="page"
           path={path}
           source={path}
+          sourceFile={page?.sourceFile}
           viewports={[1440, 768, 375]}
           measuredHeight={measuredHeight}
           onBodyHeightChange={handleBodyHeightChange}
