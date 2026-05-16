@@ -150,11 +150,11 @@ function stageSize(placed: PlacedNode[]): { width: number; height: number } {
 
 const _Tree = memo(TreeInner)
 export const Tree: typeof _Tree & {
-  icon: typeof forkshopIcons.pages
+  icon: typeof forkshopIcons.sitemap
   defaultTitle: string
 } = Object.assign(_Tree, {
-  icon: forkshopIcons.pages,
-  defaultTitle: "Pages",
+  icon: forkshopIcons.sitemap,
+  defaultTitle: "Sitemap",
 })
 
 function TreeInner({

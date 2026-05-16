@@ -28,6 +28,7 @@ export const forkshopIcons = {
   designSystem: SwatchBook,
   components: Box,
   pages: File,
+  sitemap: Network,
   navigation: Network,
   flows: Network,
 
