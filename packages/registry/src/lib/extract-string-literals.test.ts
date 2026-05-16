@@ -43,3 +43,38 @@ describe("extractStringLiterals", () => {
     expect(out.has("Welcome")).toBe(true)
   })
 })
+
+describe("extractStringLiterals — JSX text children", () => {
+  it("captures JSX text between tags", () => {
+    const set = extractStringLiterals(`<h1>Welcome to Acme</h1>`)
+    expect(set.has("Welcome to Acme")).toBe(true)
+  })
+
+  it("decodes common HTML entities", () => {
+    const set = extractStringLiterals(`<p>We&apos;re building &amp; shipping &quot;the thing&quot;</p>`)
+    expect(set.has("We're building & shipping \"the thing\"")).toBe(true)
+  })
+
+  it("normalizes multi-line indented JSX text into one whitespace-joined string", () => {
+    const source = `
+      <p>
+        We're a small team building tools
+        that help product teams ship.
+      </p>`
+    const set = extractStringLiterals(source)
+    expect(set.has("We're a small team building tools that help product teams ship.")).toBe(true)
+  })
+
+  it("does not capture JSX expressions in text content", () => {
+    const set = extractStringLiterals(`<h1>Hello {name}</h1>`)
+    // The {name} interpolation should NOT appear in the set.
+    expect(set.has("Hello {name}")).toBe(false)
+    // The static prefix "Hello" gets cut at the `{` — that's fine; it just
+    // won't match any rendered DOM text either.
+  })
+
+  it("does not capture whitespace-only JSX text", () => {
+    const set = extractStringLiterals(`<div>\n  \n</div>`)
+    expect(set.size).toBe(0)
+  })
+})
