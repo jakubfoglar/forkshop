@@ -43,7 +43,7 @@ const FILE_MAP = {
 const FOUNDATIONS_STAGE = { width: 3000, height: 2400 } as const
 const COMPONENTS_STAGE = { width: 1200, height: 2200 } as const
 const PAGES_STAGE = { width: 1264, height: 400 } as const
-const PRIMITIVE_STAGE = { width: 1200, height: 800 } as const
+const PRIMITIVE_STAGE = { width: 800, height: 400 } as const
 
 const DISPLAY_SAMPLES = [
   { className: "text-display-3xl", label: "display-3xl" },
@@ -68,7 +68,7 @@ const BODY_SAMPLE_TEXT = "The quick brown fox jumps over the lazy dog."
 
 function TypographySamples() {
   return (
-    <div className="flex flex-col gap-forkshop-4 p-forkshop-4">
+    <div className="flex flex-col gap-forkshop-4 bg-white p-forkshop-4 shadow-md">
       <section className="flex flex-col gap-forkshop-2">
         <span className="font-mono text-forkshop-xs uppercase tracking-forkshop-wider text-forkshop-fg-muted">
           Display
@@ -135,11 +135,15 @@ function SinglePrimitiveBoard({ primitiveId }: { primitiveId: string }) {
     kind: "inline-react",
     x: 0,
     y: 0,
-    width: 720,
-    height: 480,
+    width: 320,
+    height: 200,
     label: primitive.name,
     filePath: primitive.sourcePath,
-    render: primitive.render,
+    render: () => (
+      <div className="flex h-full items-center justify-center bg-white p-8 shadow-md">
+        {primitive.render()}
+      </div>
+    ),
   }
   return (
     <PlaygroundBoard stageWidth={PRIMITIVE_STAGE.width} stageHeight={PRIMITIVE_STAGE.height} fitMode="both">
@@ -147,7 +151,7 @@ function SinglePrimitiveBoard({ primitiveId }: { primitiveId: string }) {
         <Gallery
           entries={[{ id: node.id, label: primitive.name, node }]}
           layout="stack"
-          viewportWidth={720}
+          viewportWidth={320}
           nodePositions={nodePositions}
           onPositionChange={onPositionChange}
         />

@@ -9,7 +9,7 @@ export const forkshopConfig = {
   primitives: [
     { id: "button", name: "Button", sourcePath: "components/ui/button.tsx", render: () => <Button>Label</Button> },
     { id: "badge", name: "Badge", sourcePath: "components/ui/badge.tsx", render: () => <Badge>Label</Badge> },
-    { id: "input", name: "Input", sourcePath: "components/ui/input.tsx", render: () => <Input placeholder="Type here..." /> },
+    { id: "input", name: "Input", sourcePath: "components/ui/input.tsx", render: () => <div className="w-48"><Input placeholder="Type here..." /></div> },
   ],
   blocks: [
     { slug: "hero", name: "Hero", iframeSrc: "/forkshop-preview/hero", sourcePath: "components/blocks/hero.tsx" },
