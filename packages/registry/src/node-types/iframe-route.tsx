@@ -1,9 +1,10 @@
 "use client"
 
-import { useCallback, useRef } from "react"
+import { useCallback, useRef, useState } from "react"
 import type { NodeType } from "@forkshop/types/node-type"
 import type { IframeRouteNode } from "@forkshop/types/node"
 import { LazyIframe } from "@forkshop/components/canvas/lazy-iframe"
+import { IframeEditOverlay } from "@forkshop/components/canvas/iframe-edit-overlay"
 import { useForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
 import { useRegisterIframe } from "@forkshop/components/iframe-registry"
 
@@ -16,6 +17,7 @@ function IframeRouteRender({
 }) {
   const { applyWheelInput, transformRef } = useForkshopCanvas()
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
+  const [iframeEl, setIframeEl] = useState<HTMLIFrameElement | null>(null)
   useRegisterIframe(iframeRef)
 
   const handleIframeWheel = useCallback(
@@ -35,19 +37,23 @@ function IframeRouteRender({
   )
 
   return (
-    <LazyIframe
-      src={node.routePath}
-      title={node.routePath}
-      width={node.width}
-      heightCap={node.height}
-      desktopWidth={1440}
-      onIframeWheel={handleIframeWheel}
-      onBodyHeightSync={onBodyHeightChange}
-      iframeRef={(el) => {
-        iframeRef.current = el ?? null
-      }}
-      className="bg-white shadow-md"
-    />
+    <>
+      <LazyIframe
+        src={node.routePath}
+        title={node.routePath}
+        width={node.width}
+        heightCap={node.height}
+        desktopWidth={1440}
+        onIframeWheel={handleIframeWheel}
+        onBodyHeightSync={onBodyHeightChange}
+        iframeRef={(el) => {
+          iframeRef.current = el ?? null
+          setIframeEl(el ?? null)
+        }}
+        className="bg-white shadow-md"
+      />
+      <IframeEditOverlay iframe={iframeEl} sourceFile={node.sourceFile} />
+    </>
   )
 }
 
