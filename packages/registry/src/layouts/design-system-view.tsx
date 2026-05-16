@@ -82,6 +82,43 @@ function layoutPrimitiveGroups(
 }
 
 // ---------------------------------------------------------------------------
+// Stage-size helper
+// ---------------------------------------------------------------------------
+
+// Mirrors the layout math in DesignSystemViewInner so callers can size their
+// canvas to the actual content footprint — no hardcoded FOUNDATIONS_STAGE.
+export function getDesignSystemStageSize(props: {
+  tokens: TokenRegistry
+  primitives: PrimitiveGroup[]
+  typography?: Pick<AnyNode, "width" | "height">
+}): { width: number; height: number } {
+  const graph = buildSystemGraph(props.tokens)
+  const layout = layoutSystem(graph, [], {})
+
+  const typographyWidth =
+    props.typography && props.typography.width > 0
+      ? props.typography.width
+      : TYPOGRAPHY_DEFAULT_WIDTH
+  const typographyHeight =
+    props.typography && props.typography.height > 0
+      ? props.typography.height
+      : TYPOGRAPHY_DEFAULT_HEIGHT
+
+  const primitivesStartX = layout.colorsWidth + TYPOGRAPHY_SECTION_GAP + typographyWidth + PRIMITIVES_SECTION_GAP
+  const positionedPrimitives = layoutPrimitiveGroups(props.primitives, primitivesStartX, 0)
+
+  let contentWidth = primitivesStartX
+  let contentHeight = Math.max(layout.colorsHeight, typographyHeight)
+
+  for (const pp of positionedPrimitives) {
+    contentWidth = Math.max(contentWidth, pp.x + pp.width)
+    contentHeight = Math.max(contentHeight, pp.y + pp.height)
+  }
+
+  return { width: contentWidth + 80, height: contentHeight + 80 }
+}
+
+// ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
 
@@ -89,9 +126,11 @@ const _DesignSystemView = memo(DesignSystemViewInner)
 export const DesignSystemView: typeof _DesignSystemView & {
   icon: typeof forkshopIcons.designSystem
   defaultTitle: string
+  getStageSize: typeof getDesignSystemStageSize
 } = Object.assign(_DesignSystemView, {
   icon: forkshopIcons.designSystem,
   defaultTitle: "Design System",
+  getStageSize: getDesignSystemStageSize,
 })
 
 function DesignSystemViewInner({

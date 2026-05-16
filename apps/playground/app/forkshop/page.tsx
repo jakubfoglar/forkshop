@@ -6,6 +6,7 @@ import {
   AgentActivityProvider,
   AgentSelectionChip,
   DesignSystemView,
+  getDesignSystemStageSize,
   Gallery,
   Tree,
   ResponsiveFrameView,
@@ -40,7 +41,6 @@ const FILE_MAP = {
     .map((b) => ({ slug: b.slug, sourcePath: b.sourcePath })),
 }
 
-const FOUNDATIONS_STAGE = { width: 4600, height: 2400 } as const
 const COMPONENTS_STAGE = { width: 1200, height: 2200 } as const
 const PRIMITIVE_STAGE = { width: 800, height: 400 } as const
 const PAGES_STAGE_PADDING = 200
@@ -312,6 +312,11 @@ export default function ForkshopPage() {
     [],
   )
 
+  const foundationsStage = useMemo(
+    () => getDesignSystemStageSize({ tokens, primitives: primitiveGroups, typography: typographyNode }),
+    [tokens, primitiveGroups, typographyNode],
+  )
+
   return (
     <AgentActivityProvider fileMap={FILE_MAP}>
       <div className="flex h-screen overflow-hidden">
@@ -344,8 +349,8 @@ export default function ForkshopPage() {
           />
           {view.kind === "foundations-overview" && (
             <PlaygroundBoard
-              stageWidth={FOUNDATIONS_STAGE.width}
-              stageHeight={FOUNDATIONS_STAGE.height}
+              stageWidth={foundationsStage.width}
+              stageHeight={foundationsStage.height}
               fitMode="both"
             >
               {({ nodePositions, onPositionChange }) => (
