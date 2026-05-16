@@ -6,7 +6,8 @@
     "paths": {
       "@/*": ["./src/*"],
       "@forkshop/*": ["./src/*"]
-    }
+    },
+    "incremental": false
   },
   "include": ["src/**/*", "tailwind/**/*"],
   "exclude": ["node_modules", "dist"]
