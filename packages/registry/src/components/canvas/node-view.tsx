@@ -33,6 +33,7 @@ export type NodeViewProps = {
   onSelectChange?: (id: string, selected: boolean) => void
   onBodyHeightChange?: (height: number) => void
   onContentWidthChange?: (width: number) => void
+  fitContent?: boolean
   className?: string
   style?: CSSProperties
 }
@@ -50,6 +51,7 @@ export function NodeView({
   onSelectChange,
   onBodyHeightChange,
   onContentWidthChange,
+  fitContent,
   className,
   style,
 }: NodeViewProps): ReactNode {
@@ -71,6 +73,7 @@ export function NodeView({
     agentFileLabel: effectiveAgentFileLabel,
     onBodyHeightChange,
     onContentWidthChange,
+    fitContent,
   }
   return (
     <NodeFrame

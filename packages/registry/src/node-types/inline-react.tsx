@@ -6,10 +6,12 @@ import type { InlineReactNode } from "@forkshop/types/node"
 
 function InlineReactRender({
   node,
+  fitContent,
   onBodyHeightChange,
   onContentWidthChange,
 }: {
   node: InlineReactNode
+  fitContent?: boolean
   onBodyHeightChange?: (h: number) => void
   onContentWidthChange?: (w: number) => void
 }) {
@@ -38,11 +40,15 @@ function InlineReactRender({
     return () => observer.disconnect()
   }, [onBodyHeightChange, onContentWidthChange])
 
-  // inline-block so the wrapper hugs its content's natural width — otherwise
-  // a block-level wrapper would stretch to the parent and the ResizeObserver
-  // would report the parent width, not the content's intrinsic size.
+  // Default: block wrapper that fills the frame's fixed width supplied by
+  // the layout. fitContent=true switches to inline-block so the wrapper hugs
+  // its content's natural width — used by Gallery's fitContent mode where
+  // the cell width is driven by the ResizeObserver-reported content width.
+  // A block wrapper there would stretch to the parent and report the
+  // parent width instead of the content's intrinsic size.
+  const display = fitContent ? "inline-block" : "block"
   return (
-    <div ref={ref} style={{ display: "inline-block" }}>
+    <div ref={ref} style={{ display }}>
       {node.render()}
     </div>
   )
@@ -51,9 +57,10 @@ function InlineReactRender({
 export const inlineReactNodeType: NodeType<InlineReactNode> = {
   id: "inline-react",
   match: (node): node is InlineReactNode => node.kind === "inline-react",
-  render: ({ node, onBodyHeightChange, onContentWidthChange }) => (
+  render: ({ node, fitContent, onBodyHeightChange, onContentWidthChange }) => (
     <InlineReactRender
       node={node}
+      fitContent={fitContent}
       onBodyHeightChange={onBodyHeightChange}
       onContentWidthChange={onContentWidthChange}
     />

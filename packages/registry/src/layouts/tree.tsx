@@ -148,13 +148,23 @@ function stageSize(placed: PlacedNode[]): { width: number; height: number } {
 // Public component
 // ---------------------------------------------------------------------------
 
+// Compute the stage dimensions a Tree will produce for a given entries set.
+// Layouts that host a Tree (e.g., the playground) can call this to size their
+// stage to match the tidy-tree's actual content footprint — avoiding both
+// content-overflow (panning/zooming hits weird edges) and excess empty space.
+export function getTreeStageSize(entries: TreeEntry[]): { width: number; height: number } {
+  return stageSize(layoutForest(entries))
+}
+
 const _Tree = memo(TreeInner)
 export const Tree: typeof _Tree & {
   icon: typeof forkshopIcons.sitemap
   defaultTitle: string
+  getStageSize: typeof getTreeStageSize
 } = Object.assign(_Tree, {
   icon: forkshopIcons.sitemap,
   defaultTitle: "Sitemap",
+  getStageSize: getTreeStageSize,
 })
 
 function TreeInner({

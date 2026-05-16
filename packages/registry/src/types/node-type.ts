@@ -29,6 +29,16 @@ export type RenderProps<T extends AnyNode> = {
    * cells to content instead of using a fixed viewportWidth.
    */
   onContentWidthChange?: (width: number) => void
+  /**
+   * When true, the NodeType should render in a way that hugs its content's
+   * natural size (so ResizeObserver-driven measurement reports the content's
+   * intrinsic dimensions). When false/omitted, the NodeType should fill the
+   * frame supplied by the layout (the standard "fixed-dimension" mode).
+   *
+   * Only relevant for NodeTypes that distinguish between the two — currently
+   * inline-react. iframe NodeTypes ignore this.
+   */
+  fitContent?: boolean
 }
 
 export type NodeType<T extends AnyNode = AnyNode> = {

@@ -234,6 +234,7 @@ function GalleryInner({
             onSelectChange={handleSelectChange}
             onBodyHeightChange={(h) => handleHeightChange(cell.id, h)}
             onContentWidthChange={(w) => handleWidthChange(cell.id, w)}
+            fitContent={fitContent}
           />
         )
       })}

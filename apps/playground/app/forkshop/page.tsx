@@ -40,10 +40,10 @@ const FILE_MAP = {
     .map((b) => ({ slug: b.slug, sourcePath: b.sourcePath })),
 }
 
-const FOUNDATIONS_STAGE = { width: 3000, height: 2400 } as const
+const FOUNDATIONS_STAGE = { width: 4600, height: 2400 } as const
 const COMPONENTS_STAGE = { width: 1200, height: 2200 } as const
-const PAGES_STAGE = { width: 1264, height: 400 } as const
 const PRIMITIVE_STAGE = { width: 800, height: 400 } as const
+const PAGES_STAGE_PADDING = 200
 
 const DISPLAY_SAMPLES = [
   { className: "text-display-3xl", label: "display-3xl" },
@@ -375,21 +375,28 @@ export default function ForkshopPage() {
               )}
             </PlaygroundBoard>
           )}
-          {view.kind === "pages-overview" && (
-            <PlaygroundBoard
-              stageWidth={PAGES_STAGE.width}
-              stageHeight={PAGES_STAGE.height}
-              fitMode="both"
-            >
-              {({ nodePositions, onPositionChange }) => (
-                <Tree
-                  entries={pageEntries}
-                  nodePositions={nodePositions}
-                  onPositionChange={onPositionChange}
-                />
-              )}
-            </PlaygroundBoard>
-          )}
+          {view.kind === "pages-overview" && (() => {
+            // Size the stage to the Tree's actual content footprint plus a
+            // small padding so the canvas's fit-to-view centers the whole
+            // forest comfortably regardless of how many pages / nesting depth
+            // the config declares.
+            const { width: treeW, height: treeH } = Tree.getStageSize(pageEntries)
+            return (
+              <PlaygroundBoard
+                stageWidth={treeW + PAGES_STAGE_PADDING}
+                stageHeight={treeH + PAGES_STAGE_PADDING}
+                fitMode="both"
+              >
+                {({ nodePositions, onPositionChange }) => (
+                  <Tree
+                    entries={pageEntries}
+                    nodePositions={nodePositions}
+                    onPositionChange={onPositionChange}
+                  />
+                )}
+              </PlaygroundBoard>
+            )
+          })()}
           {view.kind === "single-primitive" && <SinglePrimitiveBoard primitiveId={view.id} />}
           {view.kind === "single-block" && <SingleBlockBoard slug={view.slug} />}
           {view.kind === "single-page" && <SinglePageBoard path={view.path} />}
