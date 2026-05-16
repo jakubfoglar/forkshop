@@ -11,7 +11,6 @@ import type { AnyNode } from "@forkshop/types/node"
 import { forkshopIcons } from "@forkshop/lib/icons"
 
 const DEFAULT_INITIAL_HEIGHT = 600
-const EMPTY_MEASURED_HEIGHTS: Readonly<Record<string, number>> = {}
 
 const DEFAULTS = {
   stack: { viewportWidth: 1200, rowGap: 32, columnGap: 0 },
@@ -127,11 +126,19 @@ function GalleryInner({
   const rowGap = rgProp ?? DEFAULTS[layout].rowGap
   const columnGap = cgProp ?? DEFAULTS[layout].columnGap
 
+  const [measuredHeights, setMeasuredHeights] = useState<Record<string, number>>({})
+  const handleHeightChange = useCallback((entryId: string, height: number) => {
+    setMeasuredHeights((prev) => {
+      if (prev[entryId] === height) return prev
+      return { ...prev, [entryId]: height }
+    })
+  }, [])
+
   const { cells, stageWidth, stageHeight } = useMemo(() => {
     return layout === "stack"
-      ? buildStackLayout(entries, EMPTY_MEASURED_HEIGHTS, viewportWidth, rowGap)
-      : buildGridLayout(entries, EMPTY_MEASURED_HEIGHTS, viewportWidth, rowGap, columnGap)
-  }, [entries, layout, viewportWidth, rowGap, columnGap])
+      ? buildStackLayout(entries, measuredHeights, viewportWidth, rowGap)
+      : buildGridLayout(entries, measuredHeights, viewportWidth, rowGap, columnGap)
+  }, [entries, layout, measuredHeights, viewportWidth, rowGap, columnGap])
 
   const [activeGuides, setActiveGuides] = useState<readonly SnapGuide[]>([])
   const handleGuidesChange = useCallback((guides: SnapGuide[]) => {
@@ -198,6 +205,7 @@ function GalleryInner({
             getSnapTargets={getSnapTargets}
             onGuidesChange={handleGuidesChange}
             onSelectChange={handleSelectChange}
+            onBodyHeightChange={(h) => handleHeightChange(cell.id, h)}
           />
         )
       })}

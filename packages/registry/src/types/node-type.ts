@@ -17,6 +17,12 @@ export type RenderProps<T extends AnyNode> = {
   isSelected: boolean
   agentActive: boolean
   agentFileLabel?: string
+  /**
+   * Callback for NodeTypes that can measure their content height (e.g., iframe
+   * NodeTypes via LazyIframe.onBodyHeightSync). Layouts use this to grow cells
+   * to fit content instead of using a fixed default height.
+   */
+  onBodyHeightChange?: (height: number) => void
 }
 
 export type NodeType<T extends AnyNode = AnyNode> = {

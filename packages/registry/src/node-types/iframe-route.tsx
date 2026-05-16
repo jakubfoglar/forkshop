@@ -7,7 +7,13 @@ import { LazyIframe } from "@forkshop/components/canvas/lazy-iframe"
 import { useForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
 import { useRegisterIframe } from "@forkshop/components/iframe-registry"
 
-function IframeRouteRender({ node }: { node: IframeRouteNode }) {
+function IframeRouteRender({
+  node,
+  onBodyHeightChange,
+}: {
+  node: IframeRouteNode
+  onBodyHeightChange?: (height: number) => void
+}) {
   const { applyWheelInput, transformRef } = useForkshopCanvas()
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
   useRegisterIframe(iframeRef)
@@ -36,6 +42,7 @@ function IframeRouteRender({ node }: { node: IframeRouteNode }) {
       heightCap={node.height}
       desktopWidth={1440}
       onIframeWheel={handleIframeWheel}
+      onBodyHeightSync={onBodyHeightChange}
       iframeRef={(el) => {
         iframeRef.current = el ?? null
       }}
@@ -47,7 +54,9 @@ function IframeRouteRender({ node }: { node: IframeRouteNode }) {
 export const iframeRouteNodeType: NodeType<IframeRouteNode> = {
   id: "iframe-route",
   match: (node): node is IframeRouteNode => node.kind === "iframe-route",
-  render: ({ node }) => <IframeRouteRender node={node} />,
+  render: ({ node, onBodyHeightChange }) => (
+    <IframeRouteRender node={node} onBodyHeightChange={onBodyHeightChange} />
+  ),
   agentMatch: (node, activity) => {
     const hit = activity.pages.has(node.routePath)
     return { active: hit, fileLabel: hit ? pageFileLabel(node.routePath) : undefined }

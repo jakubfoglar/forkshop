@@ -31,6 +31,7 @@ export type NodeViewProps = {
   getSnapTargets: GetSnapTargets
   onGuidesChange?: (guides: SnapGuide[]) => void
   onSelectChange?: (id: string, selected: boolean) => void
+  onBodyHeightChange?: (height: number) => void
   className?: string
   style?: CSSProperties
 }
@@ -46,6 +47,7 @@ export function NodeView({
   getSnapTargets,
   onGuidesChange,
   onSelectChange,
+  onBodyHeightChange,
   className,
   style,
 }: NodeViewProps): ReactNode {
@@ -65,6 +67,7 @@ export function NodeView({
     isSelected,
     agentActive: effectiveAgentActive,
     agentFileLabel: effectiveAgentFileLabel,
+    onBodyHeightChange,
   }
   return (
     <NodeFrame

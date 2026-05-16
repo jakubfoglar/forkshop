@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 type LazyIframeProps = {
   src: string
@@ -38,7 +38,18 @@ export function LazyIframe({
   onBodyHeightSync,
 }: LazyIframeProps) {
   const [shouldLoad, setShouldLoad] = useState(false)
+  const [measuredBodyHeight, setMeasuredBodyHeight] = useState<number | undefined>(undefined)
   const localRef = useRef<HTMLIFrameElement | null>(null)
+
+  // Always tracks internally so the iframe element can self-size to its body,
+  // and also forwards to the parent if it asked for body-height sync.
+  const handleBodySync = useCallback(
+    (h: number) => {
+      setMeasuredBodyHeight((prev) => (prev === h ? prev : h))
+      onBodyHeightSync?.(h)
+    },
+    [onBodyHeightSync],
+  )
 
   useEffect(() => {
     if (shouldLoad) return
@@ -74,7 +85,10 @@ export function LazyIframe({
       if (!document_) return
       attached = document_
       // Hide Next.js dev chrome (the floating "N" badge, toasts, etc.) so it
-      // doesn't bleed into thumbnails or preview tiles.
+      // doesn't bleed into thumbnails or preview tiles. Also decouple body
+      // height from the iframe viewport so `min-h-screen` doesn't keep body
+      // pinned to the iframe's CSS height — which would defeat the
+      // ResizeObserver-driven self-sizing below.
       styleElement = document_.createElement("style")
       styleElement.textContent = `
   nextjs-portal,
@@ -83,6 +97,11 @@ export function LazyIframe({
   #__next-build-watcher {
     display: none !important;
   }
+  html, body { min-height: 0 !important; height: auto !important; }
+  [class*="min-h-screen"],
+  [class*="min-h-dvh"],
+  [class*="min-h-svh"],
+  [class*="min-h-lvh"] { min-height: 0 !important; }
 `
       document_.head.append(styleElement)
       if (onIframeWheel) {
@@ -93,15 +112,17 @@ export function LazyIframe({
       document_.addEventListener("gesturestart", gestureHandler, { passive: false })
       document_.addEventListener("gesturechange", gestureHandler, { passive: false })
       document_.addEventListener("gestureend", gestureHandler, { passive: false })
-      if (onBodyHeightSync) {
-        const sync = () => {
-          const measured = document_.documentElement.scrollHeight
-          if (measured > 0) onBodyHeightSync(measured)
-        }
-        sync()
-        resizeObserver = new ResizeObserver(sync)
-        resizeObserver.observe(document_.documentElement)
+      const sync = () => {
+        // Body scrollHeight reflects content extent after the CSS override
+        // above frees body from `min-h-screen`. Fall back to documentElement
+        // before body is available.
+        const body = document_.body
+        const measured = body ? body.scrollHeight : document_.documentElement.scrollHeight
+        if (measured > 0) handleBodySync(measured)
       }
+      sync()
+      resizeObserver = new ResizeObserver(sync)
+      resizeObserver.observe(document_.body ?? document_.documentElement)
     }
     iframe.addEventListener("load", onLoad)
     if (iframe.contentDocument?.readyState === "complete") {
@@ -118,10 +139,17 @@ export function LazyIframe({
         attached.removeEventListener("gestureend", gestureHandler)
       }
     }
-  }, [shouldLoad, onIframeWheel, onBodyHeightSync])
+  }, [shouldLoad, onIframeWheel, handleBodySync])
 
-  const resolvedHeight =
-    height ?? (heightCap !== undefined && heightCap > 0 ? heightCap : undefined)
+  // Self-size the iframe element to its body content, capped by `heightCap`.
+  // A fixed `height` always wins. Falls back to `heightCap` until the first
+  // ResizeObserver tick reports the body's actual scrollHeight.
+  const cap = heightCap !== undefined && heightCap > 0 ? heightCap : undefined
+  const fittedHeight =
+    measuredBodyHeight !== undefined && cap !== undefined
+      ? Math.min(measuredBodyHeight, cap)
+      : (measuredBodyHeight ?? cap)
+  const resolvedHeight = height ?? fittedHeight
 
   const useScaling = desktopWidth !== undefined && desktopWidth > 0
   const scale = useScaling ? width / desktopWidth : 1
