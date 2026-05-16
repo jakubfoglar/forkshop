@@ -12,9 +12,10 @@ import { forkshopIcons } from "@forkshop/lib/icons"
 
 const TILE_WIDTH = 400
 const TILE_HEIGHT = 280
-const COLUMNS = 4
-const TILE_GAP_X = 32
-const TILE_GAP_Y = 48
+const H_GAP = 32
+const V_GAP = 80
+const CONNECTOR_COLOR = "oklch(0.85 0 0)"
+const CONNECTOR_WIDTH = 1
 
 export type TreeEntry = {
   id: string
@@ -31,32 +32,121 @@ export type TreeProps = {
   onSelectChange?: (id: string, selected: boolean) => void
 }
 
-type TileCell = {
+// ---------------------------------------------------------------------------
+// Hierarchy layout
+// ---------------------------------------------------------------------------
+
+type TreeNode = {
+  entry: TreeEntry
+  children: TreeNode[]
+}
+
+type PlacedNode = {
   id: string
-  path: string
+  entry: TreeEntry
   layoutX: number
   layoutY: number
+  subtreeWidth: number
 }
 
-function buildTileLayout(entries: TreeEntry[]): TileCell[] {
-  return entries.map((entry, index) => {
-    const col = index % COLUMNS
-    const row = Math.floor(index / COLUMNS)
-    return {
-      id: entry.id,
-      path: entry.path,
-      layoutX: col * (TILE_WIDTH + TILE_GAP_X),
-      layoutY: row * (TILE_HEIGHT + TILE_GAP_Y),
+// `/` and any single-segment path ("/about", "/contact") are roots. A path like
+// `/about/team` has `/about` as parent — but only if `/about` is in the entries
+// set. Orphans are treated as roots so they still render somewhere.
+function findParentPath(path: string, paths: Set<string>): string | null {
+  if (path === "/") return null
+  const lastSlash = path.lastIndexOf("/")
+  if (lastSlash <= 0) return null
+  const parent = path.substring(0, lastSlash)
+  return paths.has(parent) ? parent : null
+}
+
+function buildForest(entries: TreeEntry[]): TreeNode[] {
+  const paths = new Set(entries.map((e) => e.path))
+  const byPath = new Map<string, TreeNode>()
+  for (const entry of entries) byPath.set(entry.path, { entry, children: [] })
+  const roots: TreeNode[] = []
+  for (const entry of entries) {
+    const node = byPath.get(entry.path)
+    if (!node) continue
+    const parentPath = findParentPath(entry.path, paths)
+    if (parentPath === null) {
+      roots.push(node)
+    } else {
+      const parent = byPath.get(parentPath)
+      if (parent) parent.children.push(node)
+      else roots.push(node)
     }
-  })
+  }
+  return roots
 }
 
-function stageSize(cells: TileCell[]): { width: number; height: number } {
-  if (cells.length === 0) return { width: 0, height: 0 }
-  const maxX = Math.max(...cells.map((c) => c.layoutX)) + TILE_WIDTH
-  const maxY = Math.max(...cells.map((c) => c.layoutY)) + TILE_HEIGHT
+// Recursive tidy-tree layout. Each node returns its placed self plus all
+// descendants, with subtreeWidth equal to either TILE_WIDTH or the sum of
+// children's subtree widths plus inter-child gaps.
+function placeSubtree(
+  node: TreeNode,
+  startX: number,
+  startY: number,
+  accumulator: PlacedNode[],
+): PlacedNode {
+  if (node.children.length === 0) {
+    const placed: PlacedNode = {
+      id: node.entry.id,
+      entry: node.entry,
+      layoutX: startX,
+      layoutY: startY,
+      subtreeWidth: TILE_WIDTH,
+    }
+    accumulator.push(placed)
+    return placed
+  }
+  // Layout children first to know subtree widths.
+  const childY = startY + TILE_HEIGHT + V_GAP
+  let cursorX = startX
+  const placedChildren: PlacedNode[] = []
+  for (const [index, child] of node.children.entries()) {
+    if (index > 0) cursorX += H_GAP
+    const placed = placeSubtree(child, cursorX, childY, accumulator)
+    placedChildren.push(placed)
+    cursorX += placed.subtreeWidth
+  }
+  const childrenSpan = cursorX - startX
+  const subtreeWidth = Math.max(TILE_WIDTH, childrenSpan)
+  // Center parent above its children's span.
+  const parentX = startX + (subtreeWidth - TILE_WIDTH) / 2
+  const placed: PlacedNode = {
+    id: node.entry.id,
+    entry: node.entry,
+    layoutX: parentX,
+    layoutY: startY,
+    subtreeWidth,
+  }
+  accumulator.push(placed)
+  return placed
+}
+
+function layoutForest(entries: TreeEntry[]): PlacedNode[] {
+  const roots = buildForest(entries)
+  const placed: PlacedNode[] = []
+  let cursorX = 0
+  for (const [index, root] of roots.entries()) {
+    if (index > 0) cursorX += H_GAP
+    const rootPlaced = placeSubtree(root, cursorX, 0, placed)
+    cursorX += rootPlaced.subtreeWidth
+  }
+  return placed
+}
+
+function stageSize(placed: PlacedNode[]): { width: number; height: number } {
+  if (placed.length === 0) return { width: 0, height: 0 }
+  const maxX = Math.max(...placed.map((p) => p.layoutX)) + TILE_WIDTH
+  const maxY = Math.max(...placed.map((p) => p.layoutY)) + TILE_HEIGHT
   return { width: maxX, height: maxY }
 }
+
+// ---------------------------------------------------------------------------
+// Public component
+// ---------------------------------------------------------------------------
 
 const _Tree = memo(TreeInner)
 export const Tree: typeof _Tree & {
@@ -98,25 +188,59 @@ function SitemapView({
   selectedId?: string
   onSelectChange?: (id: string, selected: boolean) => void
 }) {
-  const cells = useMemo(() => buildTileLayout(entries), [entries])
-  const { width: stageWidth, height: stageHeight } = useMemo(() => stageSize(cells), [cells])
+  const placed = useMemo(() => layoutForest(entries), [entries])
+  const { width: stageWidth, height: stageHeight } = useMemo(() => stageSize(placed), [placed])
+
+  // Connector lines parent.bottom-center → child.top-center. Computed from
+  // LIVE positions so the lines follow nodes as the user drags them.
+  const livePositions = useMemo(() => {
+    const map = new Map<string, { x: number; y: number }>()
+    for (const p of placed) {
+      const override = nodePositions[p.id]
+      map.set(p.id, override ? { x: override.x, y: override.y } : { x: p.layoutX, y: p.layoutY })
+    }
+    return map
+  }, [placed, nodePositions])
+
+  const connectors = useMemo(() => {
+    const lines: { id: string; x1: number; y1: number; x2: number; y2: number }[] = []
+    const paths = new Set(entries.map((e) => e.path))
+    for (const entry of entries) {
+      const parentPath = findParentPath(entry.path, paths)
+      if (!parentPath) continue
+      const parentEntry = entries.find((e) => e.path === parentPath)
+      if (!parentEntry) continue
+      const parentPos = livePositions.get(parentEntry.id)
+      const childPos = livePositions.get(entry.id)
+      if (!parentPos || !childPos) continue
+      lines.push({
+        id: `${parentEntry.id}->${entry.id}`,
+        x1: parentPos.x + TILE_WIDTH / 2,
+        y1: parentPos.y + TILE_HEIGHT,
+        x2: childPos.x + TILE_WIDTH / 2,
+        y2: childPos.y,
+      })
+    }
+    return lines
+  }, [entries, livePositions])
+
   const [activeGuides, setActiveGuides] = useState<readonly SnapGuide[]>([])
   const handleGuidesChange = useCallback((guides: SnapGuide[]) => {
     setActiveGuides(guides)
   }, [])
 
   const allTargets = useMemo<SnapTarget[]>(() => {
-    return cells.map((cell) => {
-      const override = nodePositions[cell.id]
+    return placed.map((p) => {
+      const override = nodePositions[p.id]
       return {
-        id: cell.id,
-        x: override?.x ?? cell.layoutX,
-        y: override?.y ?? cell.layoutY,
+        id: p.id,
+        x: override?.x ?? p.layoutX,
+        y: override?.y ?? p.layoutY,
         width: TILE_WIDTH,
         height: TILE_HEIGHT,
       }
     })
-  }, [cells, nodePositions])
+  }, [placed, nodePositions])
 
   const allTargetsRef = useRef(allTargets)
   useEffect(() => {
@@ -139,23 +263,48 @@ function SitemapView({
 
   return (
     <>
-      {cells.map((cell) => {
-        const entry = entries.find((e) => e.id === cell.id)
-        if (!entry) return null
+      <svg
+        width={stageWidth}
+        height={stageHeight}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          pointerEvents: "none",
+          overflow: "visible",
+        }}
+        aria-hidden="true"
+      >
+        {connectors.map((line) => {
+          // Stepped (3-segment) path: down from parent to mid-y, across, then down to child.
+          const midY = (line.y1 + line.y2) / 2
+          const d = `M ${line.x1} ${line.y1} L ${line.x1} ${midY} L ${line.x2} ${midY} L ${line.x2} ${line.y2}`
+          return (
+            <path
+              key={line.id}
+              d={d}
+              stroke={CONNECTOR_COLOR}
+              strokeWidth={CONNECTOR_WIDTH}
+              fill="none"
+            />
+          )
+        })}
+      </svg>
+      {placed.map((p) => {
         const positionedNode: AnyNode = {
-          ...entry.node,
-          x: cell.layoutX,
-          y: cell.layoutY,
+          ...p.entry.node,
+          x: p.layoutX,
+          y: p.layoutY,
           width: TILE_WIDTH,
           height: TILE_HEIGHT,
-          label: entry.label ?? entry.node.label,
+          label: p.entry.label ?? p.entry.node.label,
         }
         return (
           <NodeView
-            key={cell.id}
+            key={p.id}
             node={positionedNode}
-            override={nodePositions[cell.id]}
-            isSelected={selectedId === cell.id}
+            override={nodePositions[p.id]}
+            isSelected={selectedId === p.id}
             onPositionChange={handlePositionChange}
             getSnapTargets={getSnapTargets}
             onGuidesChange={handleGuidesChange}

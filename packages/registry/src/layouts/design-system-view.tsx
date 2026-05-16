@@ -11,6 +11,10 @@ import {
   layoutSystem,
   COLOR_NODE_WIDTH,
   COLOR_NODE_HEIGHT,
+  TYPOGRAPHY_DEFAULT_WIDTH,
+  TYPOGRAPHY_DEFAULT_HEIGHT,
+  TYPOGRAPHY_SECTION_GAP,
+  PRIMITIVES_SECTION_GAP,
   type PositionedColorNode,
   type SystemLayout,
 } from "@forkshop/lib/system-layout"
@@ -22,10 +26,6 @@ import type { AnyNode, InlineReactNode } from "@forkshop/types/node"
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-
-const TYPOGRAPHY_WIDTH = 720
-const TYPOGRAPHY_HEIGHT = 920
-const TYPOGRAPHY_GAP = 80
 
 const DEFAULT_PRIMITIVE_WIDTH = 720
 const DEFAULT_PRIMITIVE_HEIGHT = 480
@@ -65,6 +65,7 @@ type PositionedPrimitiveNode = {
 
 function layoutPrimitiveGroups(
   groups: PrimitiveGroup[],
+  startX: number,
   startY: number,
 ): PositionedPrimitiveNode[] {
   const positioned: PositionedPrimitiveNode[] = []
@@ -73,7 +74,7 @@ function layoutPrimitiveGroups(
     for (const node of group.primitives) {
       const width = node.width > 0 ? node.width : DEFAULT_PRIMITIVE_WIDTH
       const height = node.height > 0 ? node.height : DEFAULT_PRIMITIVE_HEIGHT
-      positioned.push({ node, x: 0, y: cursorY, width, height })
+      positioned.push({ node, x: startX, y: cursorY, width, height })
       cursorY += height + PRIMITIVE_GAP
     }
   }
@@ -90,7 +91,7 @@ export const DesignSystemView: typeof _DesignSystemView & {
   defaultTitle: string
 } = Object.assign(_DesignSystemView, {
   icon: forkshopIcons.designSystem,
-  defaultTitle: "Foundations",
+  defaultTitle: "Design System",
 })
 
 function DesignSystemViewInner({
@@ -105,13 +106,21 @@ function DesignSystemViewInner({
   const graph = useMemo(() => buildSystemGraph(tokens), [tokens])
   const layout = useMemo(() => layoutSystem(graph, [], {}), [graph])
 
-  const positionedPrimitives = useMemo(
-    () => layoutPrimitiveGroups(primitives, layout.primitivesBodyY),
-    [primitives, layout.primitivesBodyY],
-  )
-
-  const typographyDefaultX = layout.width + TYPOGRAPHY_GAP
+  // Typography sits to the right of the color grid; primitives stack to the
+  // right of typography. Layout flows left-to-right horizontally so the board
+  // is wider/shorter than the original tall-column arrangement.
+  const typographyWidth =
+    typography && typography.width > 0 ? typography.width : TYPOGRAPHY_DEFAULT_WIDTH
+  const typographyHeight =
+    typography && typography.height > 0 ? typography.height : TYPOGRAPHY_DEFAULT_HEIGHT
+  const typographyDefaultX = layout.colorsWidth + TYPOGRAPHY_SECTION_GAP
   const typographyDefaultY = 0
+
+  const primitivesStartX = typographyDefaultX + typographyWidth + PRIMITIVES_SECTION_GAP
+  const positionedPrimitives = useMemo(
+    () => layoutPrimitiveGroups(primitives, primitivesStartX, 0),
+    [primitives, primitivesStartX],
+  )
 
   const [activeGuides, setActiveGuides] = useState<readonly SnapGuide[]>([])
   const handleGuidesChange = useCallback((guides: SnapGuide[]) => {
@@ -152,18 +161,25 @@ function DesignSystemViewInner({
     }
     if (typography) {
       const override = nodePositions[typography.id]
-      const w = typography.width > 0 ? typography.width : TYPOGRAPHY_WIDTH
-      const h = typography.height > 0 ? typography.height : TYPOGRAPHY_HEIGHT
       targets.push({
         id: typography.id,
         x: override?.x ?? typographyDefaultX,
         y: override?.y ?? typographyDefaultY,
-        width: w,
-        height: h,
+        width: typographyWidth,
+        height: typographyHeight,
       })
     }
     return targets
-  }, [layout, nodePositions, positionedPrimitives, typography, typographyDefaultX, typographyDefaultY])
+  }, [
+    layout,
+    nodePositions,
+    positionedPrimitives,
+    typography,
+    typographyDefaultX,
+    typographyDefaultY,
+    typographyWidth,
+    typographyHeight,
+  ])
 
   const allTargetsRef = useRef(allTargets)
   useEffect(() => {
@@ -223,8 +239,8 @@ function DesignSystemViewInner({
           ...typography,
           x: typographyDefaultX,
           y: typographyDefaultY,
-          width: typography.width > 0 ? typography.width : TYPOGRAPHY_WIDTH,
-          height: typography.height > 0 ? typography.height : TYPOGRAPHY_HEIGHT,
+          width: typographyWidth,
+          height: typographyHeight,
         }
         return (
           <NodeView

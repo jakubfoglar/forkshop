@@ -133,10 +133,13 @@ export function ForkshopCanvas({
     // - "both": fit both axes (use the smaller scale). Use for 2D boards
     //   (foundations / blocks / sitemap / flow) where the whole layout should
     //   be visible at once.
-    const zoom =
+    // Initial fit caps at 1:1 — small boards shouldn't auto-zoom past natural
+    // size (looks blurry/oversized). User can still ⌘+ to zoom in manually.
+    const rawZoom =
       fitMode === "both"
-        ? clamp(Math.min(availableW / stageWidth, availableH / stageHeight), MIN_ZOOM, MAX_ZOOM)
-        : clamp(availableW / stageWidth, MIN_ZOOM, MAX_ZOOM)
+        ? Math.min(availableW / stageWidth, availableH / stageHeight)
+        : availableW / stageWidth
+    const zoom = clamp(Math.min(rawZoom, 1), MIN_ZOOM, MAX_ZOOM)
     const scaledW = stageWidth * zoom
     const scaledH = stageHeight * zoom
     const panX = (rect.width - scaledW) / 2

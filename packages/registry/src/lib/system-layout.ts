@@ -20,6 +20,13 @@ export const COLOR_NODE_WIDTH = 168
 export const COLOR_ROW_PITCH = 32
 export const COLOR_FAMILY_GAP = 20
 export const COLOR_COLUMN_GAP = 360
+export const COLOR_GRID_H_GAP = 12
+export const COLOR_GRID_V_GAP = 6
+
+export const TYPOGRAPHY_DEFAULT_WIDTH = 720
+export const TYPOGRAPHY_DEFAULT_HEIGHT = 920
+export const TYPOGRAPHY_SECTION_GAP = 80
+export const PRIMITIVES_SECTION_GAP = 80
 
 export const SECTION_GAP = 160
 export const SECTION_HEADER_HEIGHT = 56
@@ -96,6 +103,7 @@ export type SystemLayout = {
   rawColorNodes: PositionedColorNode[]
   semanticColorNodes: PositionedColorNode[]
   colorEdgePaths: ColorEdgePath[]
+  colorsWidth: number
   colorsHeight: number
   primitivesBodyY: number
   primitivesBodyHeight: number
@@ -197,32 +205,48 @@ function groupByFamily(nodes: ColorNode[]): Map<string, ColorNode[]> {
   return groups
 }
 
-type ColumnLayout = {
+type GridLayout = {
   positioned: PositionedColorNode[]
+  width: number
   height: number
 }
 
-function layoutColumn(nodes: ColorNode[], startX: number): ColumnLayout {
+function sortByFamilyOrder(nodes: ColorNode[]): ColorNode[] {
   const groups = groupByFamily(nodes)
   const familyOrder = [...groups.keys()].sort((a, b) => a.localeCompare(b))
-  const positioned: PositionedColorNode[] = []
-  let cursorY = 0
-  for (const [familyIndex, family] of familyOrder.entries()) {
+  const ordered: ColorNode[] = []
+  for (const family of familyOrder) {
     const items = groups.get(family) ?? []
-    for (const item of items) {
-      positioned.push({
-        id: item.id,
-        node: item,
-        x: startX,
-        y: cursorY,
-        width: COLOR_NODE_WIDTH,
-        height: COLOR_NODE_HEIGHT,
-      })
-      cursorY += COLOR_ROW_PITCH
-    }
-    if (familyIndex < familyOrder.length - 1) cursorY += COLOR_FAMILY_GAP
+    for (const item of items) ordered.push(item)
   }
-  return { positioned, height: cursorY }
+  return ordered
+}
+
+// Place a set of color nodes in a near-square row-major grid. Family clustering
+// is preserved by sorting (sortByFamilyOrder) before slotting — adjacent grid
+// cells stay within the same family until a family boundary is hit.
+function layoutGrid(nodes: ColorNode[], startX: number, startY: number): GridLayout {
+  if (nodes.length === 0) return { positioned: [], width: 0, height: 0 }
+  const ordered = sortByFamilyOrder(nodes)
+  const columns = Math.max(1, Math.ceil(Math.sqrt(ordered.length)))
+  const stepX = COLOR_NODE_WIDTH + COLOR_GRID_H_GAP
+  const stepY = COLOR_NODE_HEIGHT + COLOR_GRID_V_GAP
+  const positioned: PositionedColorNode[] = ordered.map((node, index) => {
+    const col = index % columns
+    const row = Math.floor(index / columns)
+    return {
+      id: node.id,
+      node,
+      x: startX + col * stepX,
+      y: startY + row * stepY,
+      width: COLOR_NODE_WIDTH,
+      height: COLOR_NODE_HEIGHT,
+    }
+  })
+  const rowsUsed = Math.ceil(ordered.length / columns)
+  const width = columns * COLOR_NODE_WIDTH + (columns - 1) * COLOR_GRID_H_GAP
+  const height = rowsUsed * COLOR_NODE_HEIGHT + (rowsUsed - 1) * COLOR_GRID_V_GAP
+  return { positioned, width, height }
 }
 
 function layoutBlockRows(
@@ -281,12 +305,16 @@ export function layoutSystem(
   blockEntries: readonly BlockEntry[],
   blockBodyHeights: Readonly<Record<string, number>>,
 ): SystemLayout {
-  const left = layoutColumn(graph.rawColors, 0)
-  const right = layoutColumn(graph.semanticColors, COLOR_NODE_WIDTH + COLOR_COLUMN_GAP)
+  // Combine raw + semantic into a single near-square grid (~sqrt(N) columns).
+  // Family clustering is preserved within each group; raw and semantic stay
+  // separate sub-grids to keep edge routing legible.
+  const rawGrid = layoutGrid(graph.rawColors, 0, 0)
+  const semanticStartX = rawGrid.width + COLOR_GRID_H_GAP * 2
+  const semanticGrid = layoutGrid(graph.semanticColors, semanticStartX, 0)
 
   const idIndex = new Map<string, PositionedColorNode>()
-  for (const node of left.positioned) idIndex.set(node.id, node)
-  for (const node of right.positioned) idIndex.set(node.id, node)
+  for (const node of rawGrid.positioned) idIndex.set(node.id, node)
+  for (const node of semanticGrid.positioned) idIndex.set(node.id, node)
 
   const colorEdgePaths: ColorEdgePath[] = []
   for (const edge of graph.colorEdges) {
@@ -302,27 +330,40 @@ export function layoutSystem(
     colorEdgePaths.push({ id: edge.id, fromId: edge.fromId, toId: edge.toId, d })
   }
 
-  const colorsWidth = COLOR_NODE_WIDTH * 2 + COLOR_COLUMN_GAP
-  const colorsHeight = Math.max(left.height, right.height)
+  const colorsWidth = semanticStartX + semanticGrid.width
+  const colorsHeight = Math.max(rawGrid.height, semanticGrid.height)
 
-  const stageWidth = Math.max(colorsWidth, VIEWPORT_DESKTOP)
+  // Typography sits to the right of the colors block.
+  const typographyX = colorsWidth + TYPOGRAPHY_SECTION_GAP
+  const typographyWidth = TYPOGRAPHY_DEFAULT_WIDTH
+  const typographyHeight = TYPOGRAPHY_DEFAULT_HEIGHT
 
-  const primitivesBodyY = colorsHeight + SECTION_GAP
-  const primitiveGroups: PositionedPrimitiveGroup[] = PRIMITIVE_GROUP_DEFAULTS.map((spec) => ({
-    id: spec.id,
-    name: spec.name,
-    x: spec.relativeX,
-    y: primitivesBodyY + spec.relativeY,
-    width: spec.width,
-    height: spec.height,
-  }))
-  let primitivesBodyHeight = PRIMITIVES_BODY_HEIGHT
-  for (const group of primitiveGroups) {
-    const groupBottomRelative = group.y + group.height - primitivesBodyY
-    if (groupBottomRelative > primitivesBodyHeight) primitivesBodyHeight = groupBottomRelative
-  }
-  const blocksContentStart = primitivesBodyY + primitivesBodyHeight + SECTION_GAP
+  // Primitive groups stack vertically to the right of typography.
+  const primitivesStartX = typographyX + typographyWidth + PRIMITIVES_SECTION_GAP
+  let primitivesStackHeight = 0
+  const primitiveGroups: PositionedPrimitiveGroup[] = PRIMITIVE_GROUP_DEFAULTS.map((spec) => {
+    const y = primitivesStackHeight
+    primitivesStackHeight += spec.height + 40
+    return {
+      id: spec.id,
+      name: spec.name,
+      x: primitivesStartX,
+      y,
+      width: spec.width,
+      height: spec.height,
+    }
+  })
+  const primitivesBodyY = 0
+  const primitivesBodyHeight = Math.max(primitivesStackHeight - 40, PRIMITIVES_BODY_HEIGHT)
+  const stageContentHeight = Math.max(colorsHeight, typographyHeight, primitivesBodyHeight)
 
+  const primitivesRightEdge =
+    primitiveGroups.length === 0
+      ? primitivesStartX
+      : Math.max(...primitiveGroups.map((g) => g.x + g.width))
+  const stageWidth = Math.max(primitivesRightEdge, VIEWPORT_DESKTOP)
+
+  const blocksContentStart = stageContentHeight + SECTION_GAP
   const { rows, endY } = layoutBlockRows(
     blockEntries,
     blockBodyHeights,
@@ -332,10 +373,11 @@ export function layoutSystem(
 
   return {
     width: stageWidth,
-    height: endY,
-    rawColorNodes: left.positioned,
-    semanticColorNodes: right.positioned,
+    height: endY || stageContentHeight,
+    rawColorNodes: rawGrid.positioned,
+    semanticColorNodes: semanticGrid.positioned,
     colorEdgePaths,
+    colorsWidth,
     colorsHeight,
     primitivesBodyY,
     primitivesBodyHeight,
