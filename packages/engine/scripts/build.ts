@@ -4,6 +4,7 @@ import { ENGINE_ROOT } from "./_utils.js"
 import { injectDirectives } from "./inject-directives.js"
 import { runDirectiveChecks } from "./verify-directives.js"
 import { compileCss } from "./compile-css.js"
+import { copyAssets } from "./copy-assets.js"
 
 const isWatch = process.argv.includes("--watch")
 
@@ -33,7 +34,8 @@ async function main() {
   console.log("✓ directives verified")
 
   await compileCss()
-  // copy-assets → verify-tarball added in subsequent tasks.
+  await copyAssets()
+  // verify-tarball added in subsequent tasks.
 }
 
 main().catch((err) => {
