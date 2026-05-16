@@ -18,6 +18,12 @@ export default defineConfig({
   treeshake: true,
   clean: true,
   metafile: true,
+  // Use React's automatic JSX runtime so engine source doesn't need `import React`
+  // anywhere. Without this, esbuild's default transform produces React.createElement
+  // calls that crash with "React is not defined" in consumers' SSR/prerender.
+  esbuildOptions(options) {
+    options.jsx = "automatic"
+  },
   // Empty env: prevents esbuild from substituting process.env.NODE_ENV at
   // engine-build time. The consumer's bundler does that substitution at their
   // build time, which is how production-mode degradation is meant to work.
