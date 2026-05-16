@@ -45,17 +45,8 @@ export const forkshopPreset: Partial<Config> = {
       // Font family
       // -----------------------------------------------------------------------
       fontFamily: {
-        // First slot: `var(--font-raveo, Raveo)`. The `, Raveo` is the var()
-        // fallback — critical for the OSS install path where --font-raveo is
-        // never set. Without it, `var(--font-raveo)` evaluates to an invalid
-        // token, which makes the entire `font-family` declaration invalid and
-        // CSS falls back to the inherited body font (Geist on a default
-        // create-next-app). With the in-var() fallback, the declaration is
-        // always valid and resolves to either the host-wired font (playground
-        // via next/font/local) or the "Raveo" family declared via @font-face
-        // in forkshop.css (which loads the woff2 the CLI dropped into
-        // public/fonts/forkshop/).
-        "forkshop-sans": ["var(--font-raveo, Raveo)", "Inter", "system-ui", "sans-serif"],
+        // "Raveo" resolves via the @font-face declared in forkshop.css.
+        "forkshop-sans": ["Raveo", "Inter", "system-ui", "sans-serif"],
       },
 
       // -----------------------------------------------------------------------
