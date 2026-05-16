@@ -20,6 +20,9 @@
     "pnpm": ">=9"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild"]
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "@central-icons-react/square-outlined-radius-0-stroke-2"
+    ]
   }
 }

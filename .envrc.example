@@ -1,0 +1,9 @@
+# Forkshop maintainer environment variables.
+# Copy to .envrc (gitignored) and fill in real values, then `direnv allow .`.
+
+# License key for @central-icons-react/* packages (iconists.co Central Icon Set).
+# Required for engine rebuilds; without it the preinstall license check
+# fails and `pnpm install` aborts.
+# Verified against node_modules/@central-icons-react/square-outlined-radius-0-stroke-2/license-check.js:
+# the script reads process.env.CENTRAL_LICENSE_KEY.
+export CENTRAL_LICENSE_KEY=

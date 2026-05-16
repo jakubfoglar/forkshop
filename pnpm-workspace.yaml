@@ -2,4 +2,5 @@ packages:
   - "packages/*"
   - "apps/*"
 allowBuilds:
-  esbuild: false
+  '@central-icons-react/square-outlined-radius-0-stroke-2': true
+  esbuild: true

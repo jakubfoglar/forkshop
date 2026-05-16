@@ -135,6 +135,9 @@ importers:
         specifier: ^1.14.0
         version: 1.14.0(react@18.3.1)
     devDependencies:
+      '@central-icons-react/square-outlined-radius-0-stroke-2':
+        specifier: ^1.1.237
+        version: 1.1.237(react@18.3.1)
       '@types/react':
         specifier: ^18.3.0
         version: 18.3.28
@@ -719,6 +722,11 @@ packages:
   '@babel/types@7.29.0':
     resolution: {integrity: sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A==}
     engines: {node: '>=6.9.0'}
+
+  '@central-icons-react/square-outlined-radius-0-stroke-2@1.1.237':
+    resolution: {integrity: sha512-b2GJMsoslOKhB160sWYdR/LPsUvQ5ujvOod6yKIG8Bh9RZIc/GX/0Jul9NBgTpdA+vWTTJHO2c4Wjwi6mbOIyg==}
+    peerDependencies:
+      react: '>=14.0.0 <= 19'
 
   '@esbuild/aix-ppc64@0.21.5':
     resolution: {integrity: sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==}
@@ -3483,6 +3491,10 @@ snapshots:
     dependencies:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
+
+  '@central-icons-react/square-outlined-radius-0-stroke-2@1.1.237(react@18.3.1)':
+    dependencies:
+      react: 18.3.1
 
   '@esbuild/aix-ppc64@0.21.5':
     optional: true
