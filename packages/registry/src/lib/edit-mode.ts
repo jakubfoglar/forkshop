@@ -47,6 +47,11 @@ export const PREVIEW_EDIT_CSS = `
   outline: calc(1px / var(--canvas-zoom, 1)) dashed #94a3b8 !important;
   outline-offset: calc(1px / var(--canvas-zoom, 1)) !important;
 }
+[data-edit-locked] {
+  outline: calc(1px / var(--canvas-zoom, 1)) dashed #94a3b8 !important;
+  outline-offset: calc(1px / var(--canvas-zoom, 1)) !important;
+  cursor: not-allowed !important;
+}
 `
 
 // CSS for the Live-AI agent decorations. Injected alongside PREVIEW_EDIT_CSS;
