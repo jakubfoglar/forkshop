@@ -1,0 +1,7 @@
+/*
+ * Engine CSS entry. Tailwind CLI consumes this file in the build pipeline
+ * and emits dist/forkshop.css. Only utilities are emitted — host's own
+ * Tailwind handles base/components.
+ */
+@import "../../tailwind/forkshop.css";   /* :root vars + @font-face */
+@tailwind utilities;

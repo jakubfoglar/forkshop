@@ -3,6 +3,7 @@ import path from "node:path"
 import { ENGINE_ROOT } from "./_utils.js"
 import { injectDirectives } from "./inject-directives.js"
 import { runDirectiveChecks } from "./verify-directives.js"
+import { compileCss } from "./compile-css.js"
 
 const isWatch = process.argv.includes("--watch")
 
@@ -31,7 +32,8 @@ async function main() {
   }
   console.log("✓ directives verified")
 
-  // compile-css → copy-assets → verify-tarball added in subsequent tasks.
+  await compileCss()
+  // copy-assets → verify-tarball added in subsequent tasks.
 }
 
 main().catch((err) => {

@@ -33,6 +33,7 @@
     "@central-icons-react/square-outlined-radius-0-stroke-2": "^1.1.237",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
+    "esbuild": "^0.21.0",
     "esbuild-plugin-preserve-directives": "^0.0.11",
     "eslint-plugin-react-hooks": "^7.1.1",
     "execa": "^9.0.0",

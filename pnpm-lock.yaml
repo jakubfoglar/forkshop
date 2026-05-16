@@ -138,9 +138,12 @@ importers:
       '@types/react-dom':
         specifier: ^18.3.0
         version: 18.3.7(@types/react@18.3.28)
+      esbuild:
+        specifier: ^0.21.0
+        version: 0.21.5
       esbuild-plugin-preserve-directives:
         specifier: ^0.0.11
-        version: 0.0.11(esbuild@0.27.7)
+        version: 0.0.11(esbuild@0.21.5)
       eslint-plugin-react-hooks:
         specifier: ^7.1.1
         version: 7.1.1(eslint@10.3.0(jiti@1.21.7))
@@ -4564,9 +4567,9 @@ snapshots:
 
   es-module-lexer@2.1.0: {}
 
-  esbuild-plugin-preserve-directives@0.0.11(esbuild@0.27.7):
+  esbuild-plugin-preserve-directives@0.0.11(esbuild@0.21.5):
     dependencies:
-      esbuild: 0.27.7
+      esbuild: 0.21.5
 
   esbuild@0.21.5:
     optionalDependencies:
