@@ -1,6 +1,6 @@
 import { promises as fs } from "node:fs"
 import path from "node:path"
-import { REGISTRY_ROOT, SRC_ROOT, walkTsFiles } from "./_utils.js"
+import { ENGINE_ROOT, SRC_ROOT, walkTsFiles } from "./_utils.js"
 
 const RELATIVE_PARENT_RE =
   /^(\s*(?:import|export)\b[^"'\n]*?\bfrom\s+|^\s*import\s*\(\s*)(["'])(\.\.\/[^"']+)\2/gm
@@ -13,7 +13,7 @@ async function main() {
     let match: RegExpExecArray | null
     while ((match = RELATIVE_PARENT_RE.exec(content)) !== null) {
       violations.push({
-        file: path.relative(REGISTRY_ROOT, abs),
+        file: path.relative(ENGINE_ROOT, abs),
         match: match[0],
       })
     }

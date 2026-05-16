@@ -1,6 +1,6 @@
 import { promises as fs } from "node:fs"
 import path from "node:path"
-import { REGISTRY_ROOT, SRC_ROOT, walkTsFiles } from "./_utils.js"
+import { ENGINE_ROOT, SRC_ROOT, walkTsFiles } from "./_utils.js"
 
 /**
  * Rewrites one import source string. Pure function — no I/O.
@@ -42,7 +42,7 @@ async function main() {
   const files = await walkTsFiles(SRC_ROOT)
   let changedCount = 0
   for (const abs of files) {
-    const rel = path.relative(REGISTRY_ROOT, abs).split(path.sep).join("/")
+    const rel = path.relative(ENGINE_ROOT, abs).split(path.sep).join("/")
     const original = await fs.readFile(abs, "utf8")
     const next = normalizeFileContent(rel, original)
     if (next !== original) {

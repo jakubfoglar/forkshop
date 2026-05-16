@@ -2,11 +2,11 @@ import { promises as fs } from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 
-export const REGISTRY_ROOT = path.resolve(
+export const ENGINE_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   ".."
 )
-export const SRC_ROOT = path.join(REGISTRY_ROOT, "src")
+export const SRC_ROOT = path.join(ENGINE_ROOT, "src")
 
 /**
  * Recursively collects all .ts and .tsx file paths under `dir`.
