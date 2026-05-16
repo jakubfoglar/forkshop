@@ -19,6 +19,9 @@ export type InlineReactNode = BaseNode & {
 export type IframeRouteNode = BaseNode & {
   kind: "iframe-route"
   routePath: string
+  /** Path (from project root) of the TSX file authoring this page.
+   *  Required for live text editing — omit to opt out. */
+  sourceFile?: string
 }
 
 export type IframeComponentNode = BaseNode & {
@@ -26,6 +29,9 @@ export type IframeComponentNode = BaseNode & {
   slug: string
   previewSrc: string
   componentPath?: string
+  /** Path of the TSX file authoring this block. Typically equals
+   *  componentPath. Required for live text editing — omit to opt out. */
+  sourceFile?: string
 }
 
 export type AnyNode = InlineReactNode | IframeRouteNode | IframeComponentNode
