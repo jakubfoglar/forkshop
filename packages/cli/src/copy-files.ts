@@ -1,14 +1,14 @@
 import { promises as fs } from "node:fs"
 import path from "node:path"
-import type { ForkshopJson, Manifest } from "./manifest-schema.js"
+import type { Manifest, ResolvedAliases } from "./manifest-schema.js"
 import { resolveDestination } from "./resolve-destination.js"
-import { rewriteImports } from "./rewrite.js"
+import { applyTemplatePlaceholders } from "./rewrite.js"
 import { sha256Hex } from "./sha.js"
 
 export interface CopyOptions {
   projectRoot: string
   manifest: Manifest
-  aliases: ForkshopJson["aliases"]
+  aliases: ResolvedAliases
   fileAddresses: string[]
 }
 
@@ -20,44 +20,32 @@ export interface CopyPlanEntry {
 
 export type CopyPlan = CopyPlanEntry[]
 
-function aliasMapForRewrite(aliases: ForkshopJson["aliases"]): Record<string, string> {
-  return {
-    "@forkshop/components": aliases.components,
-    "@forkshop/kits": aliases.kits,
-    "@forkshop/hooks": aliases.hooks,
-    "@forkshop/lib": aliases.lib,
-    "@forkshop/api": aliases.api,
-    "@forkshop/tailwind": aliases.tailwind,
-  }
-}
-
+/**
+ * Copies the requested manifest files into the user's project, applying
+ * template-placeholder substitution to text files. Binary files (the font)
+ * are handled by the init flow via the dedicated font-fetch utility — NOT
+ * routed through this function — because their delivery has a fallback
+ * (unpkg) and a `binary` ManifestFile is just a pointer (no content inline).
+ */
 export async function copyManifestFiles(options: CopyOptions): Promise<CopyPlan> {
   const { projectRoot, manifest, aliases, fileAddresses } = options
-  const aliasMap = aliasMapForRewrite(aliases)
   const plan: CopyPlan = []
 
   for (const address of fileAddresses) {
     const file = manifest.files[address]
     if (!file) throw new Error(`Address ${address} missing from manifest files`)
+    if (file.kind === "binary") {
+      // Skipped here — see comment above. Caller handles binaries directly.
+      continue
+    }
 
     const dest = resolveDestination(address, file, aliases)
     const absDest = path.join(projectRoot, dest)
     await fs.mkdir(path.dirname(absDest), { recursive: true })
 
-    if (file.kind === "binary") {
-      const url = new URL(file.url, manifest.registryBaseUrl).toString()
-      const response = await fetch(url)
-      if (!response.ok) {
-        throw new Error(`Could not fetch binary ${address} from ${url}: HTTP ${response.status}`)
-      }
-      const buffer = Buffer.from(await response.arrayBuffer())
-      await fs.writeFile(absDest, buffer)
-      plan.push({ address, dest, sha: sha256Hex(buffer.toString("hex")) })
-    } else {
-      const rewritten = rewriteImports(file.content, aliasMap)
-      await fs.writeFile(absDest, rewritten, "utf8")
-      plan.push({ address, dest, sha: sha256Hex(rewritten) })
-    }
+    const rewritten = applyTemplatePlaceholders(file.content, aliases)
+    await fs.writeFile(absDest, rewritten, "utf8")
+    plan.push({ address, dest, sha: sha256Hex(rewritten) })
   }
 
   return plan

@@ -25,7 +25,11 @@ function applyDestPlaceholders(template: string, aliases: ResolvedAliases): stri
 
 function workspaceRelative(value: string, aliases: ResolvedAliases): string {
   // Strip leading "@/" (the user-facing alias) and prepend srcPrefix so the
-  // result is a workspace-relative on-disk path.
-  const stripped = value.replace(/^@\//, "")
-  return aliases.srcPrefix + stripped
+  // result is a workspace-relative on-disk path. srcPrefix is only applied to
+  // user code (app/lib paths); config/static files (., public/, etc.) are unaffected.
+  if (value.startsWith("@/")) {
+    const stripped = value.replace(/^@\//, "")
+    return aliases.srcPrefix + stripped
+  }
+  return value
 }
