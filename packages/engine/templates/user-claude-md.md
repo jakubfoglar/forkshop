@@ -16,16 +16,15 @@ Forkshop is a drop-in install. Every file Forkshop creates lives under a `forksh
 - `.claude/skills/forkshop-*.md` — skill files
 - `forkshop.json` — lock file
 
-Modifications to your existing files are limited to four additive items:
+Modifications to your existing files are limited to three additive items:
 
 1. One import line in `app/globals.css`
-2. A `@locator/webpack-loader` rule in `next.config.*` (for Option-click)
-3. `@forkshop/engine` + `@locator/webpack-loader` in `package.json`
-4. (Opt-in) A `<!-- forkshop:cadence-note start -->`…`end` block in root `CLAUDE.md`
+2. (Opt-in) A `@locator/webpack-loader` rule in `next.config.*` — only if you said yes to Option-click → editor during setup
+3. `@forkshop/engine` (always) + `@locator/webpack-loader` (if Locator opt-in accepted) in `package.json`
 
 Nothing else. No injection into `components/`, `lib/`, or route groups.
 
-To remove Forkshop cleanly: delete the namespaced directories, revert the four mutations, uninstall the deps. Done.
+To remove Forkshop cleanly: delete the namespaced directories, revert the three mutations, uninstall the deps. Done.
 
 ---
 
@@ -144,7 +143,7 @@ The API routes are thin re-exports — the logic lives in `@forkshop/engine`. Yo
 
 ## Per-primitive variant authoring
 
-UI Components is the one place where Forkshop scaffolds per-file Boards in your repo. Each primitive (Button, Badge, etc.) gets its own `ui-components/<slug>.tsx` file containing a variant grid — different prop combinations of the real primitive component.
+By default, each discovered primitive renders with default props as a single tile on the UI Components Board. If you want a richer variant grid for a specific primitive (Button: all variants × sizes × states laid out in a grid), drop a file at `ui-components/<slug>.tsx`. If no override file exists, the primitive renders as a single tile on the parent.
 
 The grid lives in a `<Gallery>` from `@forkshop/engine`. Each entry is a Node that imports your primitive and renders an instance with specific props:
 
@@ -172,6 +171,21 @@ export default function ButtonBoardView() {
 If your primitive uses `class-variance-authority` (cva), the setup skill scaffolds these entries by enumerating the cva variants. Otherwise it scaffolds three default instances and you fill in the variants manually.
 
 These files render your *real* primitive component — they're not duplicates. Edit `components/ui/button.tsx` and the grid re-renders with the new visuals via HMR.
+
+---
+
+## Adding components
+
+Forkshop auto-discovers primitives and blocks via barrel modules. Adding a new primitive is two steps:
+
+1. Create the file: `components/ui/select.tsx` with a named PascalCase export
+2. Add an export to the barrel: open `components/ui/index.ts` and add `export { Select } from "./select"`
+
+That's it. Reload `/forkshop` and the new primitive appears on the UI Components Board.
+
+Same pattern for blocks (`components/blocks/index.ts`).
+
+**Why the barrel?** It's how Forkshop discovers components without a build-time codegen step. The `forkshop-live-editing` skill teaches Claude Code to maintain the barrel automatically when you ask to add a primitive — so in practice, you just say "add a Card primitive" and both files get updated.
 
 ---
 
