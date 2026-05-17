@@ -113,3 +113,8 @@ export {
   discoverPrimitives,
   type DiscoveredPrimitive,
 } from "@forkshop/lib/use-discovered-primitives"
+export {
+  useDiscoveredBlocks,
+  discoverBlocks,
+  type DiscoveredBlock,
+} from "@forkshop/lib/use-discovered-blocks"
