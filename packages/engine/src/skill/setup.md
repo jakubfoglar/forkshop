@@ -1,13 +1,13 @@
 ---
 name: forkshop-setup
-description: Wires Forkshop into a Next.js + Tailwind project after `npx forkshop init`. Detects project type, scans components and routes, proposes a Board layout, asks before mutating next.config.ts / .claude/settings.json / root CLAUDE.md, writes per-board files, populates forkshop.config.ts. This skill scaffolds a minimal stub Forkshop installation; kit-aware audience scaffolding arrives in a later release. Activates on "set up Forkshop", "finish Forkshop setup", "configure Forkshop", "wire up Forkshop", "initialize Forkshop".
+description: Wires Forkshop into a Next.js + Tailwind project after `npx forkshop init`. Detects project type, scans components and routes, proposes a Board layout, asks before mutating next.config.ts / .claude/settings.json / root CLAUDE.md, writes per-board files, populates forkshop.config.tsx. This skill scaffolds an audience-aware Forkshop installation tailored to the project type. Activates on "set up Forkshop", "finish Forkshop setup", "configure Forkshop", "wire up Forkshop", "initialize Forkshop".
 ---
 
 # Forkshop — first-run setup
 
-You are setting up Forkshop in the user's project. The CLI (`npx forkshop init`) has already dropped Forkshop's source files (components, hooks, lib utilities, fonts, API routes, an empty `forkshop.config.ts` stub, and a CLAUDE.md). Your job is to scaffold the user-side `{{mount}}/` files — what their Forkshop's Board contains and how Nodes are wired — then populate `forkshop.config.ts`.
+You are setting up Forkshop in the user's project. The CLI (`npx forkshop init`) has already dropped Forkshop's source files (components, hooks, lib utilities, fonts, API routes, an empty `forkshop.config.tsx` stub, and a CLAUDE.md). Your job is to scaffold the user-side `{{mount}}/` files — what their Forkshop's Board contains and how Nodes are wired — then populate `forkshop.config.tsx`.
 
-Forkshop's mental model is **Node / NodeType / Layout / Board / Kit**. This skill leaves the engine alone — it just scaffolds the user-side `{{mount}}/` files. The engine itself lives at `@forkshop/engine` on npm and was installed during `forkshop init`. When describing the project or the proposed scaffold, use this vocabulary: a **Board** is what renders in the sidebar; it contains **Nodes**, each of which has a **NodeType** (`inline-react`, `iframe-component`, or `iframe-route`); **Layout** controls how Nodes are arranged spatially; a **Kit** is a pre-wired Board that ships with the engine.
+Forkshop's mental model is **Node / NodeType / Layout / Board** (four concepts). This skill leaves the engine alone — it just scaffolds the user-side `{{mount}}/` files. The engine itself lives at `@forkshop/engine` on npm and was installed during `forkshop init`. When describing the project or the proposed scaffold, use this vocabulary: a **Board** is what renders in the sidebar; it contains **Nodes**, each of which has a **NodeType** (`inline-react`, `iframe-component`, or `iframe-route`); **Layout** controls how Nodes are arranged spatially.
 
 You run **once** per project. After this, your work is mostly historical: the user reads `app/forkshop/CLAUDE.md` for ongoing customization, the sibling `forkshop-live-editing` skill auto-applies when Claude edits Forkshop-watched files, and the user-invoked `forkshop-doc-sync` skill refreshes documentation if it drifts.
 
@@ -741,7 +741,7 @@ export default function BlocksBoardView() {
       x: 0, y: 0, width: viewport, height: 600,
       label: b.name,
       slug: b.slug,
-      src: `/forkshop/block/${b.slug}`,
+      previewSrc: `/forkshop/block/${b.slug}`,
     },
   }))
   return (
