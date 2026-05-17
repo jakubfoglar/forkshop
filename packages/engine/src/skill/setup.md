@@ -306,56 +306,42 @@ After rendering the Phase 3 proposal, wait for the user's reply. Loop:
 
 ## Phase 5 — Consent for config mutations
 
-Run *after* the user picks "Accept all" in Phase 3, but *before* any writes. **Use the `AskUserQuestion` tool** — never inline `y / n` prompts.
+The setup skill writes only to Forkshop-namespaced locations by default. Two mutations to existing user files require explicit consent — both gated through `AskUserQuestion`:
 
-The single opt-in is the CLAUDE.md cadence note. Check for the marker in root `CLAUDE.md` first — if it's already present, skip Phase 5 entirely and note it in the Phase 7 summary.
+1. **`app/globals.css` import line** — always confirmed (added by `forkshop init` when possible; the skill verifies idempotently).
+2. **Locator opt-in** — adds `@locator/webpack-loader` to `package.json` devDependencies and merges a webpack/turbopack rule into `next.config.*`. Powers Option-click → editor.
 
-Before the `AskUserQuestion` call, render this preamble:
+The Locator opt-in is the only `AskUserQuestion` call in Phase 5. Glue text:
 
-```
-One opt-in to confirm. I'll only touch the noted file if you say yes.
+````
+Two things need your call before I write anything that touches your existing files:
 
-  [1] Cadence note — teaches Claude to use many small Edits instead of one
-        big Write on Forkshop-watched files, so you watch the page take shape
-        live instead of a single flash. Appends ~20 bracketed lines to your
-        root CLAUDE.md.
+  [1] Option-click → editor — add @locator/webpack-loader devDep + a webpack/turbopack rule in next.config.*
 
-Say yes to append, no to skip — or "Show me" to see the exact snippet first.
-```
+Glance at the diff first with "Show me", or pick yes/no.
+````
 
-Then call `AskUserQuestion`:
+Then `AskUserQuestion`:
 
-```ts
+````ts
 {
-  questions: [
-    {
-      question: "Append the cadence note?",
-      header: "Cadence note",
-      options: [
-        { label: "Yes, append",         description: "Adds ~20 lines to root CLAUDE.md" },
-        { label: "No, skip",            description: "Don't touch root CLAUDE.md" },
-        { label: "Show me the snippet", description: "Render the snippet first, then re-ask" },
-      ],
-    },
-  ],
+  questions: [{
+    question: "Enable Option-click → editor (recommended)?",
+    header: "Option-click",
+    options: [
+      { label: "Yes, install", description: "Adds @locator/webpack-loader devDep + a webpack/turbopack rule in next.config.*" },
+      { label: "No, skip",     description: "Skip Locator wiring — you can install manually later if you change your mind" },
+      { label: "Show me",      description: "Print the exact dep + next.config diff first, then re-ask" },
+    ],
+  }],
 }
-```
+````
 
-### Handling "Show me…"
+If the answer is `Show me`, render the planned dep + next.config diff inline, then re-call `AskUserQuestion` with only `Yes, install` and `No, skip`.
 
-If the answer is `Show me the snippet`, render the full `<!-- forkshop:cadence-note start ... -->` block (Template 4 below) inline in a fenced code block. Then re-call `AskUserQuestion` for **just this question** with only `Yes, append` and `No, skip` (no third "Show me" — the user has already seen it).
+If the project's `next.config.*` has a shape too unusual for clean automated merging (e.g., functional config that imports from elsewhere), surface that during Phase 6 — for now, take the user's consent at face value.
 
-### Edge cases
-
-- **If root `CLAUDE.md` doesn't exist:** note in the preamble: *"No root CLAUDE.md found — I'll create it with the cadence note as a starter."*
-- **If root `CLAUDE.md` already contains a `<!-- forkshop:cadence-note start -->` marker:** skip Phase 5 entirely. Mention in the Phase 7 summary that the note is already in place.
-
-### Rules for the consent panel
-
-- **One short benefit line in the preamble** — honest, not a sales pitch. The user is opting into a config mutation, not a product feature.
-- **Use `AskUserQuestion`** — never inline `y / n`.
-- **"Show me…" renders the snippet, then re-asks with `Yes` / `No` only.**
-- **The user can hand-edit the file and say "I did it myself, skip this"** — accept and move on.
+The cadence-note opt-in that previous setup skill versions had is **removed**. Cadence guidance now ships exclusively via the auto-loading `forkshop-live-editing` skill (in `.claude/skills/`) and the `app/forkshop/CLAUDE.md` dir-loaded note. Both are properly scoped — they don't influence agent behavior outside Forkshop's surface.
 
 ## Phase 6 — Write the artifacts
 
@@ -406,10 +392,6 @@ Check whether `@import "@forkshop/engine/forkshop.css"` is present. If not, prep
 ### Step 11 — `next.config.*` (automatic, always-on)
 
 Apply Template 10 (Next 14 webpack-only) or Template 11 (Next 15/16 turbopack + webpack) based on the project's Next major. Merge into existing config rather than replace.
-
-### Step 12 — Root `CLAUDE.md` cadence note (conditional on Phase 5 consent)
-
-Append Template 12 verbatim. Create the file if absent.
 
 ### Failure handling
 
@@ -936,23 +918,3 @@ webpack(config) {
 ```
 
 If `turbopack.rules` already exists, merge the new glob keys into the existing object. If a `webpack` function already exists, append the `config.module.rules.push(...)` call inside it.
-
-### Template 12 — Root `CLAUDE.md` cadence note
-
-```markdown
-<!-- forkshop:cadence-note start - managed; do not edit body, only delete the block -->
-## Forkshop — editing cadence
-
-When editing files under any `**/forkshop/**` directory (covers both flat and `src/`
-layouts: `components/forkshop/`, `lib/forkshop/`, `app/forkshop/`, plus the
-`src/`-prefixed variants), or any block referenced in `forkshop.config.tsx`,
-prefer many small Edits over one Write.
-Forkshop's live preview emits a notification per file write, so:
-
-- Use `MultiEdit` when one change spans multiple regions (single disk write,
-  multiple visual events).
-- Start with a valid skeleton, then replace section-by-section.
-- Avoid leaving the file in a broken intermediate state — Forkshop's iframe
-  will show Next.js's error overlay until the next save fixes it.
-<!-- forkshop:cadence-note end -->
-```
