@@ -23,5 +23,7 @@ the run for inspection.
 
 ## When does CI run it
 
-On every PR that touches `packages/cli/` or `packages/engine/`. Skipped on
-docs-only PRs.
+CI wiring is deferred until a `.github/workflows/ci.yml` exists for the
+repo. When that lands, add a `smoke` job that runs on PRs touching
+`packages/cli/` or `packages/engine/`. Until then, run the smoke locally
+before cutting a release.
