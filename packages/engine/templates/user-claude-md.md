@@ -130,7 +130,7 @@ After `forkshop init`, your installation lives at:
     badge.tsx
     …                               one file per primitive
   blocks.tsx                        Blocks parent (Gallery overview)
-  sitemap.tsx                       Sitemap parent (Tree)
+  sitemap-board.tsx                 Sitemap parent (Tree) — named -board to avoid Next.js reserved sitemap route
   reference.tsx                     Reference parent (Tree) — MDX projects only
   block/[slug]/page.tsx             auto-managed block preview route
   node-types/                       (optional) custom NodeType definitions — see spec for shape

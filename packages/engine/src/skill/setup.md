@@ -387,9 +387,9 @@ Render from Template 5 — Gallery over `forkshopConfig.blocks` with one iframe-
 
 Render from Template 6 — dynamic preview route. Reads `forkshopConfig.blocks`, matches by slug, renders the block inside a minimal wrapper. `notFound()` gate when `process.env.NODE_ENV === "production"`. File carries a `// forkshop:auto-managed` header comment.
 
-### Step 7 — `{{mount}}/sitemap.tsx` parent
+### Step 7 — `{{mount}}/sitemap-board.tsx` parent
 
-Render from Template 7 — Tree visualization over routes from `forkshopConfig.sitemap`.
+Render from Template 7 — Tree visualization over routes from `forkshopConfig.sitemap`. File is named `sitemap-board.tsx` (not `sitemap.tsx`) to avoid Next.js's reserved sitemap route convention — any `sitemap.{ts,tsx}` in `app/` is treated by Next.js as a sitemap.xml generator.
 
 ### Step 8 — `{{mount}}/reference.tsx` parent (if Reference recipe fired)
 
@@ -787,7 +787,7 @@ export default async function ForkshopBlockPreviewPage({
 
 The block's component renders with its own default props. If the user wants explicit fixture props for preview, they add them in `forkshop.config.tsx`'s `blocks` entry (e.g., as a `fixtureProps` field), then read them here.
 
-### Template 7 — `{{mount}}/sitemap.tsx`
+### Template 7 — `{{mount}}/sitemap-board.tsx`
 
 ````tsx
 "use client"
