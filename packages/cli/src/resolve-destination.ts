@@ -1,59 +1,31 @@
-import type { ForkshopJson, ManifestFile } from "./manifest-schema.js"
+import type { ManifestFile, ResolvedAliases } from "./manifest-schema.js"
 
-function workspaceRelative(value: string, aliases: ForkshopJson["aliases"]): string {
-  const srcPrefix = aliases.srcPrefix ?? ""
-  let stripped: string
-  if (value.startsWith(aliases.base)) {
-    stripped = value.slice(aliases.base.length)
-  } else {
-    stripped = value.replace(/^@\//, "")
-  }
-  return srcPrefix + stripped
-}
-
-function applyOverride(template: string, aliases: ForkshopJson["aliases"]): string {
-  const substituted = template.replace(/\{aliases\.([a-zA-Z]+)\}/g, (_match, key: string) => {
-    const value = (aliases as Record<string, string>)[key]
-    if (value === undefined) {
-      throw new Error(`destOverride template references unknown alias key: ${key}`)
-    }
-    return value
-  })
-  return workspaceRelative(substituted, aliases)
-}
-
+/**
+ * In v2 every file in the manifest carries an explicit destOverride.
+ * The resolver applies the {aliases.mount} placeholder and the srcPrefix
+ * convention. No more longest-prefix-match across 6 aliases.
+ */
 export function resolveDestination(
-  address: string,
+  _address: string,
   file: ManifestFile,
-  aliases: ForkshopJson["aliases"]
+  aliases: ResolvedAliases
 ): string {
-  if (file.kind === "binary") {
-    if (!file.destOverride) {
-      throw new Error(`Binary file ${address} has no destOverride`)
-    }
-    return applyOverride(file.destOverride, aliases)
+  const template = file.destOverride
+  if (!template) {
+    throw new Error(`v2 manifest file is missing destOverride (kind=${file.kind})`)
   }
-  if (file.destOverride) {
-    return applyOverride(file.destOverride, aliases)
-  }
+  return applyDestPlaceholders(template, aliases)
+}
 
-  const namespaceMap: Record<string, string> = {
-    "@forkshop/components": aliases.components,
-    "@forkshop/kits": aliases.kits,
-    "@forkshop/hooks": aliases.hooks,
-    "@forkshop/lib": aliases.lib,
-    "@forkshop/api": aliases.api,
-    "@forkshop/tailwind": aliases.tailwind,
-  }
-  const sortedPrefixes = Object.keys(namespaceMap).sort((a, b) => b.length - a.length)
-  for (const prefix of sortedPrefixes) {
-    if (address === prefix || address.startsWith(`${prefix}/`)) {
-      const suffix = address.slice(prefix.length)
-      const replacement = namespaceMap[prefix]
-      if (replacement === undefined) continue
-      const target = `${replacement}${suffix}.${file.ext}`
-      return workspaceRelative(target, aliases)
-    }
-  }
-  throw new Error(`Cannot resolve destination for ${address} (no matching alias prefix)`)
+function applyDestPlaceholders(template: string, aliases: ResolvedAliases): string {
+  let next = template.replace(/\{aliases\.mount\}/g, aliases.mount)
+  next = workspaceRelative(next, aliases)
+  return next
+}
+
+function workspaceRelative(value: string, aliases: ResolvedAliases): string {
+  // Strip leading "@/" (the user-facing alias) and prepend srcPrefix so the
+  // result is a workspace-relative on-disk path.
+  const stripped = value.replace(/^@\//, "")
+  return aliases.srcPrefix + stripped
 }

@@ -1,74 +1,83 @@
 import { describe, expect, it } from "vitest"
 import { resolveDestination } from "./resolve-destination.js"
-import type { ForkshopJson, ManifestFile } from "./manifest-schema.js"
+import type { ManifestFile, ResolvedAliases } from "./manifest-schema.js"
 
-const aliases: ForkshopJson["aliases"] = {
-  base: "@/",
-  components: "@/components/forkshop",
-  kits: "@/components/forkshop/kits",
-  hooks: "@/lib/forkshop/hooks",
-  lib: "@/lib/forkshop",
-  api: "@/app/api/forkshop",
-  tailwind: "@/lib/forkshop/tailwind",
+const defaultAliases: ResolvedAliases = {
   mount: "@/app/forkshop",
+  srcPrefix: "",
 }
 
 describe("resolveDestination", () => {
-  it("maps a components file to components/forkshop/", () => {
-    const file: ManifestFile = { kind: "text", ext: "tsx", content: "" }
-    const dest = resolveDestination("@forkshop/components/canvas/canvas-node", file, aliases)
-    expect(dest).toBe("components/forkshop/canvas/canvas-node.tsx")
-  })
-
-  it("maps a hooks file to lib/forkshop/hooks/", () => {
-    const file: ManifestFile = { kind: "text", ext: "ts", content: "" }
-    const dest = resolveDestination("@forkshop/hooks/use-draggable-node", file, aliases)
-    expect(dest).toBe("lib/forkshop/hooks/use-draggable-node.ts")
-  })
-
-  it("maps an api file to app/api/forkshop/", () => {
-    const file: ManifestFile = { kind: "text", ext: "ts", content: "" }
-    const dest = resolveDestination("@forkshop/api/edit/route", file, aliases)
-    expect(dest).toBe("app/api/forkshop/edit/route.ts")
-  })
-
-  it("honors destOverride templates with {aliases.X} placeholders", () => {
+  it("resolves a skill file to .claude/skills/forkshop-<name>.md", () => {
     const file: ManifestFile = {
       kind: "text",
       ext: "md",
-      content: "",
-      destOverride: "{aliases.mount}/CLAUDE.md",
+      content: "...",
+      destOverride: ".claude/skills/forkshop-setup.md",
     }
-    const dest = resolveDestination("@forkshop/templates/claude-md", file, aliases)
-    expect(dest).toBe("app/forkshop/CLAUDE.md")
+    expect(resolveDestination("@forkshop/skill/setup", file, defaultAliases)).toBe(
+      ".claude/skills/forkshop-setup.md"
+    )
   })
 
-  it("uses destOverride for binary files", () => {
+  it("resolves CLAUDE.md to {aliases.mount}/CLAUDE.md", () => {
+    const file: ManifestFile = {
+      kind: "text",
+      ext: "md",
+      content: "...",
+      destOverride: "{aliases.mount}/CLAUDE.md",
+    }
+    expect(resolveDestination("@forkshop/templates/claude-md", file, defaultAliases)).toBe(
+      "app/forkshop/CLAUDE.md"
+    )
+  })
+
+  it("respects srcPrefix for mount-based destinations", () => {
+    const file: ManifestFile = {
+      kind: "text",
+      ext: "md",
+      content: "...",
+      destOverride: "{aliases.mount}/CLAUDE.md",
+    }
+    expect(
+      resolveDestination("@forkshop/templates/claude-md", file, {
+        mount: "@/app/forkshop",
+        srcPrefix: "src/",
+      })
+    ).toBe("src/app/forkshop/CLAUDE.md")
+  })
+
+  it("resolves binary fonts to public/fonts/forkshop/<basename>", () => {
     const file: ManifestFile = {
       kind: "binary",
-      url: "fonts/raveo-regular.woff2",
-      destOverride: "app/fonts/raveo/raveo-regular.woff2",
+      url: "fonts/raveo/RaveoVF.woff2",
+      destOverride: "public/fonts/forkshop/RaveoVF.woff2",
     }
-    const dest = resolveDestination("@forkshop/fonts/raveo-regular", file, aliases)
-    expect(dest).toBe("app/fonts/raveo/raveo-regular.woff2")
+    expect(resolveDestination("@forkshop/fonts/raveo/RaveoVF", file, defaultAliases)).toBe(
+      "public/fonts/forkshop/RaveoVF.woff2"
+    )
   })
 
-  it("prepends srcPrefix to text-file destinations for src/ projects", () => {
-    const srcAliases = { ...aliases, srcPrefix: "src/" }
-    const file: ManifestFile = { kind: "text", ext: "tsx", content: "" }
-    const dest = resolveDestination("@forkshop/components/canvas/canvas-node", file, srcAliases)
-    expect(dest).toBe("src/components/forkshop/canvas/canvas-node.tsx")
+  it("resolves route stubs to app/api/forkshop/<name>/route.ts", () => {
+    const file: ManifestFile = {
+      kind: "text",
+      ext: "ts",
+      content: 'export { POST, GET } from "@forkshop/engine/api/edit/route"\n',
+      destOverride: "app/api/forkshop/edit/route.ts",
+    }
+    expect(resolveDestination("@forkshop/route-stubs/edit", file, defaultAliases)).toBe(
+      "app/api/forkshop/edit/route.ts"
+    )
   })
 
-  it("prepends srcPrefix to destOverride templates for src/ projects", () => {
-    const srcAliases = { ...aliases, srcPrefix: "src/" }
+  it("throws when a text file has no destOverride", () => {
     const file: ManifestFile = {
       kind: "text",
       ext: "md",
-      content: "",
-      destOverride: "{aliases.mount}/CLAUDE.md",
+      content: "...",
     }
-    const dest = resolveDestination("@forkshop/templates/claude-md", file, srcAliases)
-    expect(dest).toBe("src/app/forkshop/CLAUDE.md")
+    expect(() => resolveDestination("@forkshop/whatever", file, defaultAliases)).toThrow(
+      /destOverride/
+    )
   })
 })
