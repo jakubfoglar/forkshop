@@ -65,7 +65,7 @@ function TypographySamples() {
   )
 }
 
-export function FoundationsBoard({
+export function DesignSystemBoard({
   nodePositions,
   onPositionChange,
 }: {
