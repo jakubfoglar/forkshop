@@ -369,9 +369,9 @@ For each primitive in Phase 2 Scan A:
 
 Render from Template 5 — Gallery over `forkshopConfig.blocks` with one iframe-component instance per block at a representative viewport (1440 px or 375 px if mobile profile).
 
-### Step 6 — `{{mount}}/block/[slug]/page.tsx` (auto-managed; if Blocks recipe fired)
+### Step 6 — `{{mount}}/block/[slug]/page.tsx` (auto-managed; always written)
 
-Render from Template 6 — dynamic preview route. Reads `forkshopConfig.blocks`, matches by slug, renders the block inside a minimal wrapper. `notFound()` gate when `process.env.NODE_ENV === "production"`. File carries a `// forkshop:auto-managed` header comment.
+Render from Template 6 — dynamic preview route. Always written, regardless of whether blocks were discovered at install time. Allows users adding their first block later to see it work without re-running setup. Reads `forkshopConfig.blocks` (the barrel module) via `discoverBlocks` from `@forkshop/engine`. `notFound()` gate when `process.env.NODE_ENV === "production"`. File carries a `// forkshop:auto-managed` header comment.
 
 ### Step 7 — `{{mount}}/sitemap-board.tsx` parent
 
@@ -389,9 +389,17 @@ Render from Template 9 — mounts `ForkshopCanvas` + `ForkshopSidebar`. The side
 
 Check whether `@import "@forkshop/engine/forkshop.css"` is present. If not, prepend it above any existing `@tailwind` directives. For src-dir projects, the file is `src/app/globals.css`.
 
-### Step 11 — `next.config.*` (automatic, always-on)
+### Step 11 — `next.config.*` Locator rule (conditional on Phase 5 Locator opt-in)
 
-Apply Template 10 (Next 14 webpack-only) or Template 11 (Next 15/16 turbopack + webpack) based on the project's Next major. Merge into existing config rather than replace.
+If the user accepted the Locator opt-in in Phase 5:
+
+1. Merge `@locator/webpack-loader` into `package.json` devDependencies (idempotent — skip if already present). Print `✓ Added @locator/webpack-loader to devDependencies`.
+2. Apply Template 10 (Next 14 webpack-only) or Template 11 (Next 15/16 turbopack + webpack) based on the project's Next major. Merge into existing config rather than replace. Print `✓ Merged Locator rule into next.config.<ext>`.
+3. Tell the user once at the end of Phase 6: `"Run pnpm install before pnpm dev — Locator dep was just added."`
+
+If the user declined: skip this step entirely. Phase 7 will surface a one-line note: `Option-click: skipped (re-run setup to enable).`
+
+If the next.config.* shape can't be merged cleanly (rare — functional config importing from elsewhere, etc.), fall back to printing the snippet for manual paste with a `!` warning in Phase 6 output.
 
 ### Failure handling
 
