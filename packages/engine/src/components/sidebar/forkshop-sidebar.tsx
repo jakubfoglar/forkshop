@@ -70,6 +70,8 @@ export type SidebarSection = {
 
 /**
  * Build the ForkshopSelection produced when an entry in a section is clicked.
+ * Note: each entryKind maps to a different selection property ("block" → slug,
+ * "primitive" → id, "page" → path).
  */
 export function deriveEntrySelection(
   entryKind: NonNullable<SidebarSection["entryKind"]>,
@@ -82,6 +84,8 @@ export function deriveEntrySelection(
 
 /**
  * Returns true when the given selection matches an entry in a section.
+ * Note: each entryKind reads a different selection property ("block" →
+ * selection.slug, "primitive" → selection.id, "page" → selection.path).
  */
 export function isEntryActive(
   entryKind: NonNullable<SidebarSection["entryKind"]>,
@@ -95,6 +99,7 @@ export function isEntryActive(
 
 /**
  * Returns true when the current selection should cause a section to auto-expand.
+ * Mirrors isEntryActive — same property asymmetry by entryKind.
  */
 export function sectionAutoExpandMatch(
   entryKind: NonNullable<SidebarSection["entryKind"]>,
