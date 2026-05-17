@@ -1,6 +1,7 @@
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { buildManifest } from "forkshop/manifest-builder"
+import type { Manifest } from "forkshop/manifest-schema"
 
 const DOCS_ROOT = path.dirname(fileURLToPath(import.meta.url))
 const REGISTRY_ROOT = path.resolve(DOCS_ROOT, "../../../packages/engine")
@@ -23,6 +24,48 @@ function validateSkillPlaceholders(address: string, content: string): string[] {
     (match) =>
       `  ${address}\n    leaked placeholder '${match}' outside the Scaffolding templates section`,
   )
+}
+
+function validateInitDestinations(manifest: Manifest): string[] {
+  const errors: string[] = []
+  const initBundle = manifest.bundles["init"]
+  if (!initBundle) return ["No `init` bundle in manifest"]
+  if (initBundle.kind !== "composite") {
+    return ["Init bundle must be composite"]
+  }
+  const seen = new Set<string>()
+  const visit = (name: string) => {
+    if (seen.has(name)) return
+    seen.add(name)
+    const b = manifest.bundles[name]
+    if (!b) return
+    if (b.kind === "composite") {
+      for (const inc of b.includes) visit(inc)
+    } else {
+      for (const item of b.items) {
+        const file = manifest.files[item]
+        if (!file) continue
+        const dest = file.destOverride
+        if (!dest) {
+          errors.push(`${item}: missing destOverride`)
+          continue
+        }
+        const allowed =
+          dest.startsWith(".claude/") ||
+          dest.startsWith("app/api/forkshop/") ||
+          dest.startsWith("{aliases.mount}/") ||
+          dest.startsWith("public/fonts/forkshop/")
+        if (!allowed) {
+          errors.push(
+            `${item}: destOverride "${dest}" is outside the four allowed init prefixes ` +
+              `(.claude/, app/api/forkshop/, {aliases.mount}/, public/fonts/forkshop/)`,
+          )
+        }
+      }
+    }
+  }
+  for (const inc of initBundle.includes) visit(inc)
+  return errors
 }
 
 async function main() {
@@ -61,6 +104,8 @@ async function main() {
       }
     }
   }
+
+  errors.push(...validateInitDestinations(manifest).map((e) => `  ${e}`))
 
   if (errors.length > 0) {
     console.error("Registry validation failed:\n")
