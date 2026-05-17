@@ -359,89 +359,93 @@ If the answer is `Show me the snippet`, render the full `<!-- forkshop:cadence-n
 
 ## Phase 6 — Write the artifacts
 
-Sequential. Failures stop the sequence — no transactional rollback. Order minimizes half-broken states.
-
-For each step, print a single `✓ <action> <path>` line on success. After all steps, print a blank line and move to Phase 7.
+Sequential. Failures stop the sequence — no transactional rollback. Each step prints `✓ <action> <path>` on success.
 
 ### Step 1 — `{{mount}}/forkshop.config.tsx`
 
-Render from Template 1. Substitute placeholders with the `iframe-component` Nodes discovered in Phase 2 Scan B. The file is always `.tsx` — Nodes use JSX render functions.
+Render from Template 1 (see Scaffolding templates). Populate `primitives` from Phase 2 Scan A, `blocks` from Scan B, `sitemap.excludeGroups` from the auth-filter modifier, `reference.contentPaths` from Scan E.
 
-### Step 2 — `{{mount}}/components-board.tsx`
+### Step 2 — `{{mount}}/design-system.tsx` (if Design System recipe fired)
 
-Render from Template 2. A single Board using `Gallery` Layout, populated from `forkshop.config.tsx`'s `nodes` array.
+Render from Template 2 — single-leaf Board over `DesignSystemView`.
 
-The board name defaults to `Components`. If the user renamed it during Phase 4 iteration, use that name (kebab-cased for the file, PascalCase for the export).
+### Step 3 — `{{mount}}/ui-components.tsx` parent (if UI Components recipe fired)
 
-### Step 3 — `{{mount}}/page.tsx`
+Render from Template 3 — Gallery over `forkshopConfig.primitives` with one representative instance per primitive.
 
-Render from Template 3. Mounts `ForkshopCanvas` + `ForkshopSidebar` wired to the one Board written in Step 2.
+### Step 4 — `{{mount}}/ui-components/{{slug}}.tsx` (one per primitive)
 
-### Step 4 — `app/globals.css` (idempotent)
+For each primitive in Phase 2 Scan A:
+- If `hasCva` is true, expand `cvaVariants` into a grid of `<Primitive variant="..." size="..." />` instances using Template 4a.
+- If `hasCva` is false, render a stub grid using Template 4b (~3 default instances; user fills in real variants).
 
-Check whether `@import "@forkshop/engine/forkshop.css"` is already present. If yes, skip and print `✓ globals.css — import already present`. If no, prepend the import line at the top of the file (above any existing `@tailwind` directives if present).
+### Step 5 — `{{mount}}/blocks.tsx` parent (if Blocks recipe fired)
 
-For src-dir projects, the file lives at `src/app/globals.css`. Detect by checking if `src/app/` exists.
+Render from Template 5 — Gallery over `forkshopConfig.blocks` with one iframe-component instance per block at a representative viewport (1440 px or 375 px if mobile profile).
 
-### Step 5 — `next.config.*` (automatic, always-on)
+### Step 6 — `{{mount}}/block/[slug]/page.tsx` (auto-managed; if Blocks recipe fired)
 
-Option-click open-in-editor is a defining dev feature — the `@locator/webpack-loader` rule is always wired. Apply Template 5 (Next 14 webpack-only) or Template 6 (Next 15/16 turbopack + webpack) based on the project's Next version.
+Render from Template 6 — dynamic preview route. Reads `forkshopConfig.blocks`, matches by slug, renders the block inside a minimal wrapper. `notFound()` gate when `process.env.NODE_ENV === "production"`. File carries a `// forkshop:auto-managed` header comment.
 
-Read `package.json` `dependencies.next` or `devDependencies.next` for the major version number. Use:
-- **Next 14.x** → Template 5 (webpack `config.module.rules` approach).
-- **Next 15.x or 16.x+** → Template 6 (top-level `turbopack.rules` + webpack).
+### Step 7 — `{{mount}}/sitemap.tsx` parent
 
-If the chosen config block already exists, merge the new loader rule — do not replace the existing block. If the file's syntax is unusual and a clean edit isn't safe, print a warning with the manual snippet and continue to Phase 7.
+Render from Template 7 — Tree visualization over routes from `forkshopConfig.sitemap`.
 
-### Step 6 — Root `CLAUDE.md` cadence note (conditional — only if Phase 5 consent was given)
+### Step 8 — `{{mount}}/reference.tsx` parent (if Reference recipe fired)
 
-Append Template 4 verbatim to root `CLAUDE.md`. Create the file if absent. The template includes start/end comment markers so `forkshop-doc-sync` can refresh it later.
+Render from Template 8 — Tree over MDX paths from `forkshopConfig.reference.contentPaths`.
+
+### Step 9 — `{{mount}}/page.tsx`
+
+Render from Template 9 — mounts `ForkshopCanvas` + `ForkshopSidebar`. The sidebar `sections` array is built from the selected recipes; each section's `entryKind` matches its child shape (`primitive` for UI Components, `block` for Blocks, `page` for Sitemap and Reference).
+
+### Step 10 — `app/globals.css` (idempotent)
+
+Check whether `@import "@forkshop/engine/forkshop.css"` is present. If not, prepend it above any existing `@tailwind` directives. For src-dir projects, the file is `src/app/globals.css`.
+
+### Step 11 — `next.config.*` (automatic, always-on)
+
+Apply Template 10 (Next 14 webpack-only) or Template 11 (Next 15/16 turbopack + webpack) based on the project's Next major. Merge into existing config rather than replace.
+
+### Step 12 — Root `CLAUDE.md` cadence note (conditional on Phase 5 consent)
+
+Append Template 12 verbatim. Create the file if absent.
 
 ### Failure handling
 
-If any step throws (file write error, parse error on existing config, etc.):
-
-1. Print: `✗ <step name> — <one-line reason>`
-2. Stop the sequence (do not attempt later steps).
-3. Tell the user: *"I stopped at <step>. Earlier steps succeeded and are on disk. After fixing the issue (or asking me what to fix), say 'continue setup' and I'll resume from the failed step."*
-4. On a "continue setup" reply, jump back to the failed step.
-
-Steps are idempotent enough that re-running a single step after the user manually fixes the input is safe.
+If any step throws, print `✗ <step> — <reason>`, stop, tell the user how to resume.
 
 ## Phase 7 — Final summary
 
 After Phase 6 completes (or partially completes with failures), render:
 
-```
+````
 Forkshop is set up. Here's what you have:
 
-  Mount:   <aliases.mount, abbreviated>  →  http://localhost:3000/forkshop
-  Config:  <aliases.mount>/forkshop.config.tsx
-  Board:   Components (<N> iframe-component Nodes)
-  Opt-in:  <✓ Cadence note | ✗ Cadence note (skipped) | ✓ Cadence note (already present)>
+  Mount:       <aliases.mount, abbreviated>  →  http://localhost:3000/forkshop
+  Boards:      <comma-separated list of selected Boards with counts>
+  Modifiers:   <auth-filter, mobile, etc., or "none">
+  Opt-in:      <✓ Cadence note | ✗ Cadence note (skipped) | ✓ Cadence note (already present)>
 
 Try this first:
   1. pnpm dev   (or your package manager's dev command)
   2. Open /forkshop in your browser
-  3. Option-click any element → opens the file at the right line
-  4. Click any text on a block → edit in place → save
+  3. Click any primitive in the sidebar — see all variants on one canvas
+  4. Click any route under Sitemap — see it at 1440/768/375
+  5. Option-click any element → opens the file at the right line
+  6. Click any text on a block → edit in place → save
 
 Customize:
-  • Add or remove Nodes  → edit the entries in forkshop.config.tsx
-  • Rename the board     → rename the section title in page.tsx
-  • Change Layout        → swap Gallery for Stack or Grid in components-board.tsx
+  • Add or remove primitives  → edit forkshop.config.tsx primitives list
+  • Edit Button variants      → edit ui-components/button.tsx
+  • Add a new block           → add an entry in forkshop.config.tsx blocks
+  • Filter Sitemap routes     → edit forkshop.config.tsx sitemap.excludeGroups
   Everything Forkshop generated is in your repo. You own all of it.
 
-Note: kit-aware scaffolding ships in spec #4. Until then, edit
-forkshop.config.tsx to add primitives + blocks + routes to your stub Board.
-
 Sibling skills:
-  • forkshop-live-editing  — cadence guidance auto-applies on Forkshop file edits
-  • forkshop-doc-sync      — invoke when <aliases.mount>/CLAUDE.md drifts:
-                          "sync Forkshop docs" or "/forkshop-doc-sync"
-
-  <if any Phase 6 step failed:> • <list outstanding manual steps>
-```
+  • forkshop-live-editing  — cadence guidance auto-applies on edits
+  • forkshop-doc-sync      — invoke when <aliases.mount>/CLAUDE.md drifts
+````
 
 ### Rules
 
@@ -547,99 +551,335 @@ This skill never:
 
 ## Scaffolding templates
 
-Templates use `{{snake_case}}` placeholder substitution. Multi-line placeholders (e.g., `{{node_entries}}`) expand to comma-separated, indented blocks. Replace every `{{…}}` before writing; if a placeholder has no value, drop the surrounding line.
+Templates use `{{snake_case}}` placeholder substitution. Multi-line placeholders (e.g., `{{primitive_entries}}`) expand to comma-separated, indented blocks. Replace every `{{…}}` before writing; if a placeholder has no value, drop the surrounding line.
 
 ### Substitution rules
 
-- **`{{board_name}}`** — PascalCase from the accepted board name (default `Components`; user may rename during Phase 4). The rendered component name is `{{board_name}}BoardView`.
-- **`{{board_slug}}`** — kebab-case from the board name (`components`, `blocks`, etc.). The board file lives at `{{mount}}/{{board_slug}}-board.tsx`.
-- **`{{node_imports}}`** — one named import per line for each block component. Prefer a barrel import if `components/blocks/index.ts` exists; otherwise per-file imports.
-- **`{{node_entries}}`** — comma-terminated, 4-space indented, one entry per line. Each entry is `{ slug: "kebab-slug", name: "Name", sourcePath: "components/blocks/name.tsx", iframeSrc: "/" }`. `iframeSrc` is the route where the block is first used (from Phase 2 Scan B); `"/"` is the default. The `slug` is kebab-case from `name`.
-- **`{{first_node_slug}}`** — slug of the first discovered block, or `"components"` if no blocks were found.
-- **`{{mount}}`** — resolved from `forkshop.json`'s `aliases.mount`; defaults to `app/forkshop` if absent.
+Templates use `{{snake_case}}` placeholder substitution. Multi-line placeholders (e.g., `{{primitive_entries}}`) expand to comma-separated, indented blocks. Replace every `{{…}}` before writing; if a placeholder has no value, drop the surrounding line.
+
+Key placeholders:
+- `{{mount}}` — resolved from `forkshop.json`'s `aliases.mount`; defaults to `app/forkshop`.
+- `{{slug}}` — kebab-case primitive identifier.
+- `{{primitive_name}}` — PascalCase primitive component name.
+- `{{primitive_imports}}` — named imports, one per line.
+- `{{primitive_entries}}` — comma-terminated, 4-space indented config rows.
+- `{{block_entries}}` — same pattern for blocks.
+- `{{exclude_groups}}` — quoted comma-separated route-group names.
+- `{{content_paths}}` — quoted comma-separated MDX glob paths.
+- `{{viewport_profile}}` — `"responsive"` (default) or `"mobile"`.
+- `{{variant_entries}}` — comma-terminated, 4-space indented Gallery entries.
+- `{{board_imports}}` — Board component imports for `page.tsx`.
+- `{{default_section}}` — id of the first selected recipe.
+- `{{section_entries}}` — `SidebarSection` objects, comma-separated.
+- `{{board_switch}}` — selection-to-Board mapping (inline JSX).
 
 ### Template 1 — `{{mount}}/forkshop.config.tsx`
 
-```tsx
-{{node_imports}}
+````tsx
+{{primitive_imports}}
 
 export const forkshopConfig = {
-  nodes: [
-{{node_entries}}
+  primitives: [
+{{primitive_entries}}
   ],
+  blocks: [
+{{block_entries}}
+  ],
+  sitemap: {
+    excludeGroups: [{{exclude_groups}}],
+    autoDiscover: true,
+  },
+  reference: {
+    contentPaths: [{{content_paths}}],
+  },
+  viewportProfile: "{{viewport_profile}}",
 } as const
-```
 
-`node_entries` example expansion:
+export type ForkshopConfig = typeof forkshopConfig
 
-```tsx
-    { slug: "hero", name: "Hero", sourcePath: "components/blocks/hero.tsx", iframeSrc: "/" },
-    { slug: "cta-band", name: "CTA Band", sourcePath: "components/blocks/cta-band.tsx", iframeSrc: "/" },
-    { slug: "feature-row", name: "Feature Row", sourcePath: "components/blocks/feature-row.tsx", iframeSrc: "/" },
-```
+export function getBlockBySlug(slug: string) {
+  return forkshopConfig.blocks.find((b) => b.slug === slug)
+}
+````
 
-### Template 2 — `{{mount}}/{{board_slug}}-board.tsx`
+Substitution notes:
+- `{{primitive_imports}}` — one named import per primitive: `import { Button } from "@/components/ui/button"`. Omit if no primitives.
+- `{{primitive_entries}}` — `{ slug, name, component, exampleProps }` per entry, 4-space indented, comma-terminated.
+- `{{block_entries}}` — `{ slug, name, src, component }` per entry. `component` imports lazily via the preview route; for the overview tile, `src` is the iframe URL.
+- `{{exclude_groups}}` — quoted comma-separated group names from the auth-filter modifier, or empty.
+- `{{content_paths}}` — quoted comma-separated glob paths from Scan E, or empty.
+- `{{viewport_profile}}` — `"responsive"` (default) or `"mobile"` (mobile flag set).
 
-```tsx
+### Template 2 — `{{mount}}/design-system.tsx`
+
+````tsx
+"use client"
+
+import { ForkshopCanvas, DesignSystemView } from "@forkshop/engine"
+
+export default function DesignSystemBoardView() {
+  return (
+    <ForkshopCanvas>
+      <DesignSystemView />
+    </ForkshopCanvas>
+  )
+}
+````
+
+### Template 3 — `{{mount}}/ui-components.tsx`
+
+````tsx
 "use client"
 
 import { ForkshopCanvas, Gallery } from "@forkshop/engine"
 import { forkshopConfig } from "./forkshop.config"
 
-export default function {{board_name}}BoardView() {
+export default function UIComponentsBoardView() {
+  const entries = forkshopConfig.primitives.map((p) => {
+    const Component = p.component
+    return {
+      id: p.slug,
+      label: p.name,
+      node: {
+        id: `primitive:${p.slug}`,
+        kind: "inline-react" as const,
+        x: 0, y: 0, width: 320, height: 200,
+        label: p.name,
+        render: () => <Component {...p.exampleProps} />,
+      },
+    }
+  })
   return (
     <ForkshopCanvas>
-      <Gallery nodes={forkshopConfig.nodes} />
+      <Gallery entries={entries} layout="grid" viewportWidth={320} />
     </ForkshopCanvas>
   )
 }
-```
+````
 
-### Template 3 — `{{mount}}/page.tsx`
+### Template 4a — `{{mount}}/ui-components/{{slug}}.tsx` (cva variants enumerated)
 
-```tsx
+````tsx
 "use client"
 
-import { ForkshopSidebar } from "@forkshop/engine"
-import {{board_name}}BoardView from "./{{board_slug}}-board"
+import { {{primitive_name}} } from "@/components/ui/{{slug}}"
+import { ForkshopCanvas, Gallery } from "@forkshop/engine"
 
-export default function ForkshopPage() {
+export default function {{primitive_name}}BoardView() {
+  const entries = [
+{{variant_entries}}
+  ]
   return (
-    <div className="flex h-screen overflow-hidden">
-      <ForkshopSidebar
-        sections={[
-          { id: "{{board_slug}}", title: "{{board_name}}" },
-        ]}
-      />
-      <div className="relative flex flex-1 overflow-hidden">
-        <{{board_name}}BoardView />
-      </div>
+    <ForkshopCanvas>
+      <Gallery entries={entries} layout="grid" viewportWidth={240} />
+    </ForkshopCanvas>
+  )
+}
+````
+
+`{{variant_entries}}` — one entry per cva variant combination. Each entry is:
+
+````tsx
+    {
+      id: "{{primitive_slug}}-{{variant_key}}",
+      label: "{{variant_label}}",
+      node: {
+        id: "primitive:{{primitive_slug}}-{{variant_key}}",
+        kind: "inline-react" as const,
+        x: 0, y: 0, width: 240, height: 80,
+        render: () => <{{primitive_name}} {{variant_props}}>Click me</{{primitive_name}}>,
+      },
+    },
+````
+
+E.g., a Button with variant × size cva (3 × 3 = 9 entries) generates 9 such blocks.
+
+### Template 4b — `{{mount}}/ui-components/{{slug}}.tsx` (fallback stub)
+
+````tsx
+"use client"
+
+import { {{primitive_name}} } from "@/components/ui/{{slug}}"
+import { ForkshopCanvas, Gallery } from "@forkshop/engine"
+
+// TODO: add variants. This file scaffolds three default instances —
+// expand the entries array with the variant combinations you care about.
+export default function {{primitive_name}}BoardView() {
+  const entries = [
+    { id: "default-1", label: "Default", node: { id: "primitive:{{slug}}-default-1", kind: "inline-react" as const, x: 0, y: 0, width: 240, height: 80, render: () => <{{primitive_name}}>Default</{{primitive_name}}> } },
+    { id: "default-2", label: "Default", node: { id: "primitive:{{slug}}-default-2", kind: "inline-react" as const, x: 0, y: 0, width: 240, height: 80, render: () => <{{primitive_name}}>Default</{{primitive_name}}> } },
+    { id: "default-3", label: "Default", node: { id: "primitive:{{slug}}-default-3", kind: "inline-react" as const, x: 0, y: 0, width: 240, height: 80, render: () => <{{primitive_name}}>Default</{{primitive_name}}> } },
+  ]
+  return (
+    <ForkshopCanvas>
+      <Gallery entries={entries} layout="grid" viewportWidth={240} />
+    </ForkshopCanvas>
+  )
+}
+````
+
+### Template 5 — `{{mount}}/blocks.tsx`
+
+````tsx
+"use client"
+
+import { ForkshopCanvas, Gallery } from "@forkshop/engine"
+import { forkshopConfig } from "./forkshop.config"
+
+export default function BlocksBoardView() {
+  const viewport = forkshopConfig.viewportProfile === "mobile" ? 375 : 1440
+  const entries = forkshopConfig.blocks.map((b) => ({
+    id: b.slug,
+    label: b.name,
+    node: {
+      id: `block:${b.slug}`,
+      kind: "iframe-component" as const,
+      x: 0, y: 0, width: viewport, height: 600,
+      label: b.name,
+      slug: b.slug,
+      src: `/forkshop/block/${b.slug}`,
+    },
+  }))
+  return (
+    <ForkshopCanvas>
+      <Gallery entries={entries} layout="grid" viewportWidth={viewport} />
+    </ForkshopCanvas>
+  )
+}
+````
+
+### Template 6 — `{{mount}}/block/[slug]/page.tsx`
+
+````tsx
+// forkshop:auto-managed — block preview route for iframe leaves.
+// Safe to delete this entire `block/` subtree if you don't have blocks.
+// Auto-recreated by re-running the Forkshop setup skill.
+
+import { notFound } from "next/navigation"
+import { getBlockBySlug } from "../../forkshop.config"
+
+export function generateStaticParams() {
+  if (process.env.NODE_ENV === "production") return []
+  return []
+}
+
+export default async function ForkshopBlockPreviewPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}) {
+  if (process.env.NODE_ENV === "production") notFound()
+  const { slug } = await params
+  const entry = getBlockBySlug(slug)
+  if (!entry) notFound()
+  const Component = entry.component
+  return (
+    <div className="bg-white">
+      <Component />
     </div>
   )
 }
-```
+````
 
-### Template 4 — Root `CLAUDE.md` cadence note
+The block's component renders with its own default props. If the user wants explicit fixture props for preview, they add them in `forkshop.config.tsx`'s `blocks` entry (e.g., as a `fixtureProps` field), then read them here.
 
-```markdown
-<!-- forkshop:cadence-note start - managed; do not edit body, only delete the block -->
-## Forkshop — editing cadence
+### Template 7 — `{{mount}}/sitemap.tsx`
 
-When editing files under any `**/forkshop/**` directory (covers both flat and `src/`
-layouts: `components/forkshop/`, `lib/forkshop/`, `app/forkshop/`, plus the
-`src/`-prefixed variants), or any block referenced in `forkshop.config.tsx`,
-prefer many small Edits over one Write.
-Forkshop's live preview emits a notification per file write, so:
+````tsx
+"use client"
 
-- Use `MultiEdit` when one change spans multiple regions (single disk write,
-  multiple visual events).
-- Start with a valid skeleton, then replace section-by-section.
-- Avoid leaving the file in a broken intermediate state — Forkshop's iframe
-  will show Next.js's error overlay until the next save fixes it.
-<!-- forkshop:cadence-note end -->
-```
+import { ForkshopCanvas, Tree } from "@forkshop/engine"
+import { forkshopConfig } from "./forkshop.config"
 
-### Template 5 — `next.config.*` webpack-only rule (Next 14)
+export default function SitemapBoardView() {
+  return (
+    <ForkshopCanvas>
+      <Tree
+        excludeGroups={forkshopConfig.sitemap.excludeGroups}
+        autoDiscover={forkshopConfig.sitemap.autoDiscover}
+      />
+    </ForkshopCanvas>
+  )
+}
+````
+
+### Template 8 — `{{mount}}/reference.tsx`
+
+````tsx
+"use client"
+
+import { ForkshopCanvas, Tree } from "@forkshop/engine"
+import { forkshopConfig } from "./forkshop.config"
+
+export default function ReferenceBoardView() {
+  return (
+    <ForkshopCanvas>
+      <Tree contentPaths={forkshopConfig.reference.contentPaths} />
+    </ForkshopCanvas>
+  )
+}
+````
+
+### Template 9 — `{{mount}}/page.tsx`
+
+````tsx
+"use client"
+
+import { useState, useEffect } from "react"
+import {
+  ForkshopSidebar,
+  AgentActivityProvider,
+  parseSelection,
+  serializeSelection,
+  type ForkshopSelection,
+} from "@forkshop/engine"
+import { forkshopConfig } from "./forkshop.config"
+{{board_imports}}
+
+const DEFAULT_SELECTION: ForkshopSelection = { kind: "section", sectionId: "{{default_section}}" }
+
+export default function ForkshopPage() {
+  const [selection, setSelection] = useState<ForkshopSelection>(DEFAULT_SELECTION)
+  const [hasHydrated, setHasHydrated] = useState(false)
+
+  useEffect(() => {
+    const fromHash = parseSelection(window.location.hash)
+    if (fromHash) setSelection(fromHash)
+    setHasHydrated(true)
+  }, [])
+
+  useEffect(() => {
+    if (!hasHydrated) return
+    window.history.replaceState({}, "", serializeSelection(selection))
+  }, [selection, hasHydrated])
+
+  return (
+    <AgentActivityProvider fileMap={{}}>
+      <div className="flex h-screen overflow-hidden">
+        <ForkshopSidebar
+          selection={selection}
+          onSelect={setSelection}
+          sections={[
+{{section_entries}}
+          ]}
+          routes={[]}
+        />
+        <div className="relative flex flex-1 overflow-hidden">
+{{board_switch}}
+        </div>
+      </div>
+    </AgentActivityProvider>
+  )
+}
+````
+
+Substitution notes:
+- `{{board_imports}}` — `import DesignSystemBoardView from "./design-system"` etc., one line per selected recipe.
+- `{{default_section}}` — id of the first selected recipe (`design-system`, `ui-components`, etc.).
+- `{{section_entries}}` — one `SidebarSection` object per selected recipe. Sitemap and Reference use `entryKind: "page"`; UI Components uses `entryKind: "primitive"`; Blocks uses `entryKind: "block"`.
+- `{{board_switch}}` — selection → board mapping (`selection.kind === "section" && selection.sectionId === "design-system" && <DesignSystemBoardView />`, etc., one per recipe + per-leaf cases).
+
+### Template 10 — `next.config.*` webpack-only rule (Next 14)
 
 ```js
 // next.config.js / next.config.mjs / next.config.ts
@@ -661,7 +901,7 @@ webpack(config) {
 
 If a `webpack` function already exists, append the `config.module.rules.push(...)` call inside it rather than adding a second `webpack` key.
 
-### Template 6 — `next.config.*` Next 15/16 (turbopack + webpack)
+### Template 11 — `next.config.*` Next 15/16 (turbopack + webpack)
 
 ```ts
 // next.config.ts — Next 15.x or 16.x+
@@ -691,3 +931,23 @@ webpack(config) {
 ```
 
 If `turbopack.rules` already exists, merge the new glob keys into the existing object. If a `webpack` function already exists, append the `config.module.rules.push(...)` call inside it.
+
+### Template 12 — Root `CLAUDE.md` cadence note
+
+```markdown
+<!-- forkshop:cadence-note start - managed; do not edit body, only delete the block -->
+## Forkshop — editing cadence
+
+When editing files under any `**/forkshop/**` directory (covers both flat and `src/`
+layouts: `components/forkshop/`, `lib/forkshop/`, `app/forkshop/`, plus the
+`src/`-prefixed variants), or any block referenced in `forkshop.config.tsx`,
+prefer many small Edits over one Write.
+Forkshop's live preview emits a notification per file write, so:
+
+- Use `MultiEdit` when one change spans multiple regions (single disk write,
+  multiple visual events).
+- Start with a valid skeleton, then replace section-by-section.
+- Avoid leaving the file in a broken intermediate state — Forkshop's iframe
+  will show Next.js's error overlay until the next save fixes it.
+<!-- forkshop:cadence-note end -->
+```
