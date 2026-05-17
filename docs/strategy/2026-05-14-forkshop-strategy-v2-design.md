@@ -13,10 +13,10 @@ This v2 supersedes the 2026-05-13 strategy after a thorough product/architecture
 | 1 | Commercial path | None | Free engine + optional Pro Kits (1.x+) |
 | 2 | Distribution | Pure shadcn-style (no engine package) | Hybrid: engine as `@forkshop/engine` npm package; surface as files |
 | 3 | License | MIT | FSL-1.1-Apache-2.0 for engine; MIT for user-surface files |
-| 4 | Concepts | kits + primitives + blocks + pages + sections + entries (~8) | Node / NodeType / Layout / Board / Kit (5) |
+| 4 | Concepts | kits + primitives + blocks + pages + sections + entries (~8) | Node / NodeType / Layout / Board (4) — _Kit removed; see refinement #14_ |
 | 5 | Plugin architecture | None | NodeType plugin contract (formal, user-extensible) |
 | 6 | Drill-in | Hardcoded to ResponsiveFrameView | Removed for 1.0; each sidebar leaf is its own board (see "Strategy refinements" at the bottom) |
-| 7 | Kits at 1.0 | 3 named board layouts | 3 audience-specific starters: `marketing`, `saas`, `default` |
+| 7 | Kits at 1.0 | 3 named board layouts | No OSS kits at 1.0 — setup skill v2 composes Boards from recipes (refinement #14) |
 | 8 | Live AI | Ravineo-flavored, single producer | Vendor-neutral protocol; Claude Code pack ships at 1.0 |
 | 9 | Styling | User installs Tailwind preset | Engine ships compiled CSS; no theme overrides at 1.0 |
 | 10 | Sidebar customization | Fixed shape | Fixed shape (intentionally no public customization API) |
@@ -40,7 +40,7 @@ Four blended motivations, in priority order:
 3. **A small income from Pro Kits** — paid kits arrive in 1.x once the OSS engine has stabilized. No cloud infrastructure, no hosted features, no team SaaS. Pro Kits ship as paid npm packages.
 4. **Portfolio artifact** — demos the "always show the real thing, edit in place" philosophy.
 
-The v1 strategy's *"No commercial path. The shipped artifact is the message"* is revised to: *"No commercial path at 1.0. Pro Kits arrive in 1.x once the engine is stable; the OSS engine and the three free starter kits stay free forever."*
+The v1 strategy's *"No commercial path. The shipped artifact is the message"* is revised to: *"No commercial path at 1.0. Pro Kits arrive in 1.x once the engine is stable; the OSS engine stays free forever."* (Refinement #14: the original "three free starter kits" prescription was dropped during spec #4 — the setup skill composes Boards from recipes instead.)
 
 ## Audience & positioning
 
@@ -53,7 +53,7 @@ Forkshop is **a canvas + sidebar tool for visualizing structured sets of React t
 
 ## Conceptual model
 
-Five concepts replace the previous ~8 (kits, primitives, blocks, pages, sections, entries, canvas nodes, sidebar rows). From atomic to composite:
+Four concepts replace the previous ~8 (kits, primitives, blocks, pages, sections, entries, canvas nodes, sidebar rows). From atomic to composite. (Originally five — `Kit` was dropped in refinement #14 once the setup skill took over project-aware scaffolding.)
 
 ### Node
 
@@ -109,7 +109,9 @@ Layouts are strict (typed prop interfaces), not user-extensible at 1.0. Custom r
 
 A configured tab in the user's sidebar (e.g., "Components", "Pages", "Foundations"). One Board = one Layout + its data. The user sees Boards in their sidebar; the user's `forkshop init`-chosen kit decides which Boards exist and what they're called.
 
-### Kit
+### Kit (superseded — see refinement #14)
+
+> **Status:** removed at 1.0. The setup skill v2 composes Boards from a recipe set (Design System, UI Components, Blocks, Sitemap, Reference) based on detected project signals. The Kit concept may return in a later release if a real plugin contract emerges. The original Kit definition is preserved below for historical context only.
 
 A project-type starter pack. One kit per project type (`marketing`, `saas`, `default`). A kit ships three things into the user's repo:
 
@@ -186,7 +188,9 @@ License: proprietary / commercial. Not OSS.
 - Surface fixes (skills, route stubs, kit scaffolds, CLAUDE.md): manual via `npx forkshop update` (bulk) or `npx forkshop diff <file>` (single).
 - Pro Kit updates: automatic via npm semver per pro package.
 
-## Kits at 1.0
+## Kits at 1.0 (superseded — see refinement #14)
+
+> **Status:** the audience-specific kits described in this section did **not** ship at 1.0. The setup skill v2 (`docs/specs/2026-05-17-setup-skill-v2-design.md`) replaced them with a recipe-driven multi-Board scaffold. The section below is preserved for historical context.
 
 Three audience-specific starters + Default fallback. Setup skill uses project-type heuristics (lockfiles, route group patterns, auth library, MDX dirs, viewport meta) to recommend a kit; user picks.
 
@@ -355,11 +359,12 @@ The hard rule: **refactor before public release.** 1.0 ships on the new architec
 - Reactive feedback line in the hook (catches full-file rewrites)
 - `.claude/skills/forkshop-live-editing.md`
 
-**Kits at launch:**
+**Setup skill v2 — recipe-driven multi-Board scaffolds at launch** _(replaces the originally planned "Kits at launch" — refinement #14):_
 
-- `marketing`, `saas`, `default`
-- MDX detection + Reference Board injection
+- Recipes: Design System, UI Components, Blocks, Sitemap, Reference
+- MDX detection + Reference Board signal
 - Mobile detection + single-viewport flag
+- Auth library detection + Sitemap public-only filter
 
 **CLI:**
 
@@ -429,7 +434,7 @@ Proposed internal build order:
 1. **NodeType + Layout extraction** (~2 weeks) — define contracts, port existing canvas/sidebar/iframe primitives into NodeType + Layout shapes.
 2. **Engine packaging** (~1 week) — tsup build, compiled CSS, icon set, drop `motion`.
 3. **CLI rework** (~1 week) — new init flow (installs engine, scaffolds thin surface). New `update` command.
-4. **Kits rewrite** (~1 week) — 3 new kits replacing the current 3.
+4. **Setup skill v2** (~1 week) — recipe-driven multi-Board scaffolding (shipped; the kits rewrite was reframed in refinement #14).
 5. **Multi-agent protocol + Claude Code pack** (~1 week) — SSE producer side, `@forkshop/agent-claude-code`.
 6. **Docs site + playground refresh** (~1 week) — kit reference, NodeType API docs, install guide.
 
@@ -507,7 +512,7 @@ This blends real protection (against commercial competing use) with strong adopt
 
 **Three CLAUDE.md files at 1.0, distinct audiences:**
 
-1. **User-project `app/forkshop/CLAUDE.md`** — dropped by `forkshop init`. Documents Forkshop's mental model: the 5 concepts (Node / NodeType / Layout / Board / Kit), how to add a Board, how live AI works, the NodeType API reference, common kit-config edits. Auto-loaded by Claude Code when working in that directory. **Highest-leverage adoption item** — means "Claude can help me extend my Forkshop" works on day one without external docs.
+1. **User-project `app/forkshop/CLAUDE.md`** — dropped by `forkshop init`. Documents Forkshop's mental model: the 4 concepts (Node / NodeType / Layout / Board), how to add a Board, how live AI works, the NodeType API reference, common config edits. Auto-loaded by Claude Code when working in that directory. **Highest-leverage adoption item** — means "Claude can help me extend my Forkshop" works on day one without external docs.
 2. **Maintainer `CLAUDE.md` at OSS repo root** — documents the monorepo: how to add a Layout, NodeType, kit, producer pack, registry build, conventions, release cadence, what NOT to put in the OSS.
 3. **Forkshop-scoped agent skills in `.claude/skills/forkshop-*`** — setup, live-editing cadence, doc-sync.
 
@@ -535,7 +540,7 @@ This strategy answers cross-cutting questions. Implementation is broken into sep
 1. **NodeType + Layout extraction** — extract the engine surface from the existing registry, define the NodeType plugin contract, refactor `canvas-node.tsx` into a type-dispatcher, port existing primitives into NodeType + Layout shapes, define `RenderProps` TypeScript shapes.
 2. **Engine packaging + compiled CSS pipeline** — tsup build, Tailwind compile step, SVG icon set, `"use client"` preservation, sourcemaps, dependency cleanup, exact `package.json` exports map for `@forkshop/engine`.
 3. **CLI rework** — new `init` flow (installs engine, scaffolds thin surface, drops kit-specific files), `update` command, updated manifest schema (thin scaffolds only).
-4. **Kits rewrite** — three new kits (marketing, saas, default), kit config shape, scaffolding logic, project-type heuristics, MDX-detection logic.
+4. **Setup skill v2** — recipe-driven multi-Board scaffolding (Design System, UI Components, Blocks, Sitemap, Reference), signal-detection logic, project-type narrative. Shipped — see `docs/specs/2026-05-17-setup-skill-v2-design.md`.
 5. **Live AI protocol + Claude Code pack** — vendor-neutral producer protocol, SSE wiring, `@forkshop/agent-claude-code` package, reactive feedback hook.
 6. **Docs site refresh** — kit reference, NodeType API docs, install guide, examples; updated manifest endpoint.
 
