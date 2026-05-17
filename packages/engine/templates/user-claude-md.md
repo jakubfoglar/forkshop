@@ -1,220 +1,230 @@
 # Forkshop
 
-Forkshop is a Figma-style canvas + sidebar tool installed into your Next.js + Tailwind project. It always shows the real thing — your actual components and pages rendered in live iframes. Edit in place. Drag to arrange. Set up by Claude Code to match your project.
+Forkshop is a Figma-style canvas + sidebar tool installed into your Next.js + Tailwind project. It shows the real thing — your actual components and pages rendered in live iframes. Edit in place. Drag to arrange.
 
-Everything in `app/forkshop/` is yours to customize. This file documents how the pieces connect.
-
----
-
-## Adding a new board
-
-**The default shape of a Forkshop board is a canvas — not a flat page layout.**
-
-When you (or your Claude) want a new section in the Forkshop sidebar with its own content area, the board file should:
-
-1. Wrap content in `<ForkshopCanvas>` so users get pan + zoom + viewport controls automatically.
-2. Place each interactive item in a `<CanvasNode id="...">` so users can drag to rearrange and positions persist.
-3. Persist positions via `/api/forkshop/positions` — give each `CanvasNode` a stable `id` (e.g. `"product:hero"`, `"section:colors"`) and the kit hooks already shipped will handle save/restore.
-
-### When to deviate (rare)
-
-Flat HTML layouts are appropriate ONLY for genuinely non-spatial content:
-
-- A tabular settings page where rows have no spatial relationship
-- A documentation-style reading page
-- A single-form input
-
-For ANY board that displays multiple visual items (cards, previews, diagrams, pipelines, lists with images), use canvas primitives. **If you're tempted to write `<div className="grid">`, stop and use `<ForkshopCanvas>` + `<CanvasNode>` instead.**
-
-### Sketch
-
-```tsx
-"use client"
-import { ForkshopCanvas } from "@/components/forkshop/canvas/forkshop-canvas"
-import { CanvasNode } from "@/components/forkshop/canvas/canvas-node"
-
-export default function MyCustomBoard() {
-  // Position state — load initial values from /api/forkshop/positions
-  // (the same endpoint the page-tree and design-system kits use); call
-  // onPositionChange to persist drag moves. See page-tree.tsx for a
-  // complete reference of the controlled-position wiring.
-  return (
-    <ForkshopCanvas fitMode="both">
-      <CanvasNode id="item-1" layoutX={0} layoutY={0} width={400} height={300} {...positionProps}>
-        <MyCard />
-      </CanvasNode>
-      <CanvasNode id="item-2" layoutX={420} layoutY={0} width={400} height={300} {...positionProps}>
-        <MyOtherCard />
-      </CanvasNode>
-    </ForkshopCanvas>
-  )
-}
-```
-
-For the full controlled-position pattern (override + onPositionChange + snap targets), copy the wiring from the `PageTree` kit's source — it's the cleanest reference for rolling a custom board.
-
-### Wiring a new board
-
-After writing the board file, register it in three places:
-
-- `app/forkshop/<board-name>-board.tsx` — the board itself (the file above)
-- `app/forkshop/forkshop.config.tsx` — add your board to the sidebar nav
-- `app/forkshop/page.tsx` — route to it from the canvas selection switch
+This file is auto-loaded by Claude Code when working in `{{srcPrefix}}app/forkshop/`. Everything in that directory is yours to customize.
 
 ---
 
 ## Mental model
 
-### Selection state
+Five concepts compose the whole system.
 
-One piece of state drives everything:
+### Node
+
+A **Node** is a positioned instance on the canvas. It has `(x, y)`, a `kind` discriminator, and content. The `kind` selects rendering shape:
+
+- `inline-react` — a small React render (button, color swatch, typography sample)
+- `iframe-route` — a full Next.js page inside an iframe
+- `iframe-component` — a component-preview iframe
 
 ```ts
-type ForkshopSelection =
-  | { kind: "section"; sectionId: string }
-  | { kind: "page"; path: string }
-  | { kind: "block"; slug: string }
+import type { AnyNode, InlineReactNode, IframeRouteNode, IframeComponentNode } from "@forkshop/engine"
+
+const buttonNode: InlineReactNode = {
+  id: "primitive:button",
+  kind: "inline-react",
+  x: 0, y: 0, width: 0, height: 0,
+  render: () => <Button>Label</Button>,
+}
+
+const aboutNode: IframeRouteNode = {
+  id: "page:/about",
+  kind: "iframe-route",
+  x: 0, y: 0, width: 1200, height: 800,
+  path: "/about",
+  sourceFile: "app/about/page.tsx",
+}
 ```
 
-The sidebar rows map directly to selection values. The canvas renders exactly what the selection says. There's no hidden state — if you want to change what the canvas shows, change the selection.
+### NodeType
 
-`useForkshopCanvas` owns the selection and passes it down. The sidebar calls `setSelection(next)`. Canvas boards read `selection` and render accordingly.
+A **NodeType** is a plugin that defines a *kind* of Node: how it matches, renders, and ties into agent-activity. Three built-in NodeTypes ship at 1.0 (`inlineReactNodeType`, `iframeRouteNodeType`, `iframeComponentNodeType`). Users can add custom ones in `{{srcPrefix}}app/forkshop/node-types/`.
 
-### Primitives vs kits
+```ts
+import type { NodeType, AnyNode, RenderProps, AgentActivitySnapshot, AgentMatchResult } from "@forkshop/engine"
 
-**Primitives** are the low-level building blocks — canvas, sidebar, draggable node, iframe hooks, responsive frame view. They live in `@forkshop/engine` and are generic: they don't know about your project's routes or design tokens.
+interface NodeType<T extends AnyNode> {
+  id: string
+  match: (node: AnyNode) => node is T
+  render: (props: RenderProps<T>) => ReactNode
+  agentMatch?: (node: T, activity: AgentActivitySnapshot) => AgentMatchResult
+}
+```
 
-**Kits** are configurable boards built from primitives. Each kit is a full canvas view (a React component) that you wire to your project's data. Three kits ship out of the box: `DesignSystemBoard`, `IframeGallery`, and `PageTree`.
+### Layout
 
-Rule of thumb: if you're assembling a new view from scratch, reach for primitives. If you're mounting one of the three standard boards with your data, use the kit.
+A **Layout** is an engine-shipped React component that arranges multiple Nodes on a Board. Four Layouts ship at 1.0: `Gallery`, `Tree`, `DesignSystemView`, `ResponsiveFrameView`. Layouts are rare to add — that's an engine contribution (see below).
 
-### How canvas and sidebar collaborate
+```tsx
+import { Gallery, type GalleryProps, type GalleryEntry } from "@forkshop/engine"
 
-The sidebar is a controlled component — it receives `selection` and `onSelect`. The canvas receives the same `selection` and renders the matching board. Your `page.tsx` (or `forkshop-tool.tsx`) is the single owner of `selection` state. The boards themselves don't hold selection state.
+// Gallery arranges entries in a stack or grid:
+<Gallery
+  entries={entries}
+  layout="stack"
+  nodePositions={nodePositions}
+  onPositionChange={handlePositionChange}
+/>
+```
+
+### Board
+
+A **Board** is a configured tab in the sidebar: one Layout + its data + a sidebar entry. Adding a new section to Forkshop means adding a Board. Boards live in `{{srcPrefix}}app/forkshop/` as React components.
+
+```tsx
+"use client"
+import { ForkshopCanvas, Gallery, type GalleryEntry } from "@forkshop/engine"
+
+export function ComponentsBoard({ entries, nodePositions, onPositionChange }) {
+  return (
+    <ForkshopCanvas fitMode="both">
+      <Gallery
+        entries={entries}
+        layout="grid"
+        nodePositions={nodePositions}
+        onPositionChange={onPositionChange}
+      />
+    </ForkshopCanvas>
+  )
+}
+```
+
+### Kit
+
+A **Kit** is a project-type starter pack. It ships a kit config file, a scaffolded `forkshop.config.tsx`, and a scaffolded `page.tsx` — wired to that project type's data. Kits are the rarest extension point (deferred to spec #4; not yet built).
+
+```ts
+// Kit installs via: forkshop add <kit-name>
+// Kit is a bundle that scaffolds:
+//   {{srcPrefix}}app/forkshop/forkshop.config.tsx
+//   {{srcPrefix}}app/forkshop/page.tsx
+//   {{srcPrefix}}app/forkshop/<board-name>-board.tsx
+```
 
 ---
 
 ## File layout
 
-After init, your Forkshop installation lives here:
+After `forkshop init`, your installation lives at:
 
 ```
-app/forkshop/
-  page.tsx                    Server entry. Builds route list, title overrides,
-                              and token registry; renders ForkshopTool.
-  forkshop.config.ts             Wiring: tailwindConfig path, primitives, blocks, pages.
-  design-system-board.tsx     Mounts <DesignSystemBoard> from @forkshop/engine.
-  components-board.tsx        Mounts <IframeGallery> for your block/component library.
-  pages-board.tsx             Mounts <PageTree> for the site sitemap.
+{{srcPrefix}}app/forkshop/
+  page.tsx                    Server entry. Builds route list, token registry;
+                              renders ForkshopSidebar + canvas.
+  forkshop.config.tsx         Wiring: sidebar sections, node entries.
+  components-board.tsx        Mounts Gallery for your component library.
+  pages-board.tsx             Mounts Tree for the site sitemap.
+  design-system-board.tsx     Mounts DesignSystemView for tokens + primitives.
+  node-types/                 User-side custom NodeTypes (optional).
 
-app/api/forkshop/
+{{srcPrefix}}app/api/forkshop/
   edit/route.ts               Re-exports the edit handler from @forkshop/engine.
   positions/route.ts          Re-exports the positions handler from @forkshop/engine.
   agent-activity/
-    route.ts                  Re-exports the activity POST handler (no-op until wired).
-    stream/route.ts           Re-exports the SSE stream handler (no-op until wired).
+    route.ts                  Re-exports the activity POST handler.
+    stream/route.ts           Re-exports the SSE stream handler.
 ```
 
 The API routes are thin re-exports — the logic lives in `@forkshop/engine`. You shouldn't need to edit them unless you're customizing edit behavior.
 
 ---
 
-## How to add a new kit
+## Adding a new Board (Layout + data)
 
-Kit-worthy criteria: at least two production projects would use the same board shape with different data. A kit is justified when the layout math, node wiring, and iframe hooks would be identical across projects — only the data feed differs.
+A Board is the unit of extension for Forkshop. When you want a new sidebar section:
 
-**Do add a kit if:** you're building a navigation matrix, a flow-graph board, or any other multi-node view that other Forkshop users would want.
-
-**Don't add a kit if:** you can write the board in ~30 lines using `<ForkshopCanvas>`, `<CanvasNode>`, and `<LazyIframe>`. Just write it in `app/forkshop/` as a local board component.
-
-To use an existing kit:
+1. Write a board component in `{{srcPrefix}}app/forkshop/<name>-board.tsx`. Choose a Layout from the four built-ins and pass your data as Nodes.
+2. Register it in `{{srcPrefix}}app/forkshop/forkshop.config.tsx` — add a sidebar section entry.
+3. Wire the route in `{{srcPrefix}}app/forkshop/page.tsx` — render the board when that section is selected.
 
 ```tsx
-import { DesignSystemBoard } from "@/components/forkshop/kits/design-system-board"
+"use client"
+// {{srcPrefix}}app/forkshop/docs-board.tsx
+import { ForkshopCanvas, Gallery, type GalleryEntry } from "@forkshop/engine"
 
-export function MyDesignBoard({ tailwindConfig, tokenRegistry }) {
+const nodes: GalleryEntry[] = [
+  {
+    id: "doc:getting-started",
+    label: "Getting started",
+    node: {
+      id: "doc:getting-started",
+      kind: "iframe-route",
+      x: 0, y: 0, width: 1200, height: 800,
+      path: "/docs/getting-started",
+      sourceFile: "app/docs/getting-started/page.tsx",
+    },
+  },
+]
+
+export function DocsBoard({ nodePositions, onPositionChange }) {
   return (
-    <DesignSystemBoard
-      tailwindConfig={tailwindConfig}
-      tokenRegistry={tokenRegistry}
-    />
+    <ForkshopCanvas fitMode="both">
+      <Gallery
+        entries={nodes}
+        layout="stack"
+        nodePositions={nodePositions}
+        onPositionChange={onPositionChange}
+      />
+    </ForkshopCanvas>
   )
 }
 ```
 
-Each kit accepts typed props — see the `*Props` types exported alongside each kit.
-
-### Kit icon + title defaults
-
-Every kit ships with a  and  static property so you get sensible zero-config sidebar wiring:
-
-```tsx
-import { DesignSystemBoard } from "@/components/forkshop/kits/design-system-board"
-import { IframeGallery } from "@/components/forkshop/kits/iframe-gallery"
-import { PageTree } from "@/components/forkshop/kits/page-tree"
-
-// In your ForkshopSidebar sections array:
-sections={[
-  { id: "design-system", title: DesignSystemBoard.defaultTitle, icon: DesignSystemBoard.icon },
-  { id: "components",   title: IframeGallery.defaultTitle,    icon: IframeGallery.icon },
-  { id: "pages",        title: PageTree.defaultTitle,         icon: PageTree.icon },
-]}
-```
-
-Override either prop freely —  is just a string and  is a Lucide icon component.
-
-### forkshopIcons catalog
-
- is a preselected set of Lucide icons for Forkshop's known concepts. Use it instead of importing from  directly to keep the visual identity consistent:
-
-```tsx
-import { ForkshopIcon } from "@/components/forkshop/icon"
-import { forkshopIcons } from "@/lib/forkshop/icons"
-
-// Render an icon:
-<ForkshopIcon icon={forkshopIcons.designSystem} className="size-4" />
-
-// Pass to a sidebar section directly:
-{ id: "navigation", title: "Navigation", icon: forkshopIcons.navigation }
-```
-
-Available keys: , , , , , , , , , , , , , , , , .
+**When to add a Board vs a Layout vs a Kit:**
+- Board = always (it's just configuration — new section, new data).
+- Layout = rarely (requires an engine contribution; only if the spatial math doesn't fit Gallery/Tree/DesignSystemView/ResponsiveFrameView).
+- Kit = deferred (spec #4). Build Boards directly until then.
 
 ---
 
-## How to add a new node type
+## Adding a custom NodeType
 
-A node is a `<CanvasNode>` with custom children. The node handles drag, label, and outline; you control what renders inside.
+Custom NodeTypes live in `{{srcPrefix}}app/forkshop/node-types/` and are registered in `forkshop.config.tsx`. Use them when none of the three built-in kinds (`inline-react`, `iframe-route`, `iframe-component`) fits your content.
 
 ```tsx
-import { CanvasNode } from "@/components/forkshop/canvas/canvas-node"
+// {{srcPrefix}}app/forkshop/node-types/storybook-story-node-type.tsx
+"use client"
+import type { NodeType, AnyNode, RenderProps } from "@forkshop/engine"
 
-// Inside your board component:
-<CanvasNode
-  id="my-node:unique-id"
-  x={position.x}
-  y={position.y}
-  width={400}
-  height={300}
-  label="My Custom Node"
-  onPositionChange={(id, x, y) => savePosition(id, x, y)}
->
-  {/* your content here — iframe, rendered component, chart, etc. */}
-</CanvasNode>
+type StorybookStoryNode = AnyNode & {
+  kind: "storybook-story"
+  storyId: string
+}
+
+export const storybookStoryNodeType: NodeType<StorybookStoryNode> = {
+  id: "storybook-story",
+
+  match(node): node is StorybookStoryNode {
+    return node.kind === "storybook-story"
+  },
+
+  render({ node, isSelected }: RenderProps<StorybookStoryNode>) {
+    const src = `http://localhost:6006/?path=/story/${node.storyId}`
+    return (
+      <iframe
+        src={src}
+        title={node.id}
+        style={{ width: "100%", height: "100%", border: 0 }}
+      />
+    )
+  },
+
+  agentMatch(node, activity) {
+    // Optional — return { active: true } when Claude is editing this node's file.
+    return { active: false }
+  },
+}
 ```
 
-Node positions are persisted to `layouts/system.json` via POST to `/api/forkshop/positions`. Assign stable `id` values (e.g. `"section:colors"`, `"page:/about"`) so positions survive page reloads and HMR.
+Register the NodeType in `forkshop.config.tsx`:
 
-For iframe-based nodes, use the `iframe-route` or `iframe-component` NodeType — they handle lazy-loading, body-height sync, and wheel forwarding internally.
+```ts
+import { storybookStoryNodeType } from "./node-types/storybook-story-node-type"
+import { BUILTIN_NODE_TYPES } from "@forkshop/engine"
 
-### `IframeRouteNode` and `IframeComponentNode` fields
-
-Both iframe NodeTypes accept an optional `sourceFile` (project-relative path to the TSX file that authors the page or block):
-
-- `IframeRouteNode.sourceFile` — e.g. `"app/about/page.tsx"`. The page file Forkshop should treat as editable when text inside the iframe is clicked.
-- `IframeComponentNode.sourceFile` — e.g. `"components/blocks/hero.tsx"`. Typically equals `componentPath`.
-
-When `sourceFile` is set, text rendered from that file shows a **blue editable ring** on hover; text imported from sub-components shows a **gray dashed locked ring**. Omit `sourceFile` to opt the node out of live text editing entirely.
+export const nodeTypes = [...BUILTIN_NODE_TYPES, storybookStoryNodeType]
+```
 
 ---
 
@@ -224,89 +234,126 @@ When `sourceFile` is set, text rendered from that file shows a **blue editable r
 
 Text rendered inside any Forkshop iframe is editable in place when the surrounding Node carries a `sourceFile`. Edit mode is always on in dev.
 
-- Hover text → **blue ring** if the string appears as a literal in `sourceFile` (editable from this board), **gray dashed ring** if it's hardcoded inside a sub-component imported by this file (locked — open that component's own block board to edit it).
+- Hover text → **blue ring** if the string appears as a literal in `sourceFile` (editable from this board), **gray dashed ring** if it's hardcoded inside a sub-component imported by this file (locked).
 - Click an editable element → it becomes `contenteditable` and a Save / Discard popover appears.
 - `⌘↵` saves (writes the file; Next.js HMR picks up the new value).
 - `Esc` discards.
-- Both quoted string literals (`"…"`, `'…'`, simple `` `…` ``) and JSX text children (`<p>Hello world</p>`) are editable. Common HTML entities (`&apos;`, `&amp;`, etc.) decode automatically when matching against the source.
-- On a `ResponsiveFrameView` board (multi-viewport pages), typing in one viewport live-syncs to the other viewports as you type — no save needed for the cross-viewport preview.
+- Both quoted string literals (`"…"`, `'…'`, `` `…` ``) and JSX text children (`<p>Hello world</p>`) are editable.
+- On a `ResponsiveFrameView` board (multi-viewport pages), typing in one viewport live-syncs to all others as you type.
 
-The `/api/forkshop/edit` endpoint serves **both POST (save) and GET (read source)** in dev. Make sure your re-export at `app/api/forkshop/edit/route.ts` forwards both:
+The `/api/forkshop/edit` route handles both POST (save) and GET (read source). Make sure your re-export forwards both:
 
 ```ts
+// {{srcPrefix}}app/api/forkshop/edit/route.ts
 export { POST, GET } from "@forkshop/engine/api/edit/route"
 ```
 
-If you initialized Forkshop before live text editing landed and your re-export only forwards `POST`, update it — the GET handler is what fetches `sourceFile` contents so the overlay can compute which strings are editable.
-
-POST payload (unchanged):
-
-```ts
-POST /api/forkshop/edit
-{ pagePath: string, originalText: string, newText: string }
-```
-
-The handler does a uniqueness check (rejects if `originalText` appears more than once in the file) then writes the change. The hook that wires editing into iframes is `useIframeEditWiring` — it injects styles for the hover rings and keeps `--canvas-zoom` on `documentElement` in sync so the rings stay at a constant on-screen thickness regardless of canvas zoom.
-
-Live text editing is **dev-only** by construction. Production builds tree-shake the overlay wiring (the component returns `null` when `NODE_ENV === "production"`), and the API route itself returns 403 in production as a second line of defense.
+Live text editing is dev-only by construction. Production builds tree-shake the overlay wiring and the API route returns 403 in production.
 
 ### Spacing picker
 
 Click any spacing overlay (padding/margin ring) → a picker appears. Choosing a new value POSTs to `/api/forkshop/edit` with the className replacement as `originalText`/`newText`. Powered by `useIframeSpacingWiring` + `SpacingPicker`.
 
-### Open in editor (Locator.js)
+### Open in editor
 
-Option-click any element inside an iframe → Locator.js fires `/__nextjs_launch-editor` with the source file and line number. This opens the file in VS Code or Cursor.
+Option-click any element inside an iframe → `EditorLink` fires `vscode://file/...` with the source file and line number, opening VS Code or Cursor.
 
-Locator injects source-location attributes at build time (`data-source-file`, `data-source-line`). It's initialized by `<LocatorInit />` which you mount once in your layout. Works in dev mode only.
+`EditorLink` is built into `@forkshop/engine` — no mount step needed in your layout. The setup skill wires `@locator/webpack-loader` into your `next.config` during init, which injects `data-locatorjs` attributes at compile time. Works in dev mode only.
 
 ---
 
-## The three kits
+## The four Layouts at 1.0
 
-### DesignSystemBoard
+### Gallery
 
-```tsx
-import { DesignSystemBoard, type DesignSystemBoardProps } from "@/components/forkshop/kits/design-system-board"
-```
-
-Renders the full design-system canvas: color graph (raw tokens → semantic aliases as edges), primitive component frames (buttons, badges, inputs), and a typography showcase. Accepts `tailwindConfig` + `tokenRegistry` (built with `buildTokenRegistry`).
-
-Use this for your **Design** board.
-
-### IframeGallery
+Stacks or grids a list of Nodes on the canvas. Handles lazy loading, auto-height sizing, snap-to-grid, and selection.
 
 ```tsx
-import { IframeGallery, type IframeGalleryProps, type IframeGalleryEntry } from "@/components/forkshop/kits/iframe-gallery"
+import { Gallery, type GalleryProps, type GalleryEntry } from "@forkshop/engine"
+
+// GalleryProps:
+// entries: GalleryEntry[]          — nodes to render
+// layout: "stack" | "grid"         — stack = single column, grid = rows + columns
+// viewportWidth?: number           — column width (default: 1200 stack / 400 grid)
+// rowGap?: number                  — vertical gap between rows
+// columnGap?: number               — horizontal gap between columns
+// fitContent?: boolean             — shrink cells to content's natural width
+// nodePositions?: NodePositions    — persisted drag overrides
+// onPositionChange?                — called on drag commit
+// selectedId?: string              — currently selected node
+// onSelectChange?                  — called on selection change
 ```
 
-Stacks or grids a list of iframe entries on the canvas. Each entry has a `slug`, `url`, `label`, and optional `width`. Handles lazy loading, auto-height sizing, click-to-select, and double-click-to-isolate.
+### Tree
 
-Use this for your **Blocks** or **Components** board.
-
-### PageTree
+Renders a sitemap tree of Nodes with stepped connector lines. Parent–child relationships derive from URL paths (e.g. `/about/team` is a child of `/about`).
 
 ```tsx
-import { PageTree, type PageTreeProps, type PageTreeEntry } from "@/components/forkshop/kits/page-tree"
+import { Tree, type TreeProps, type TreeEntry } from "@forkshop/engine"
+
+// TreeProps:
+// entries: TreeEntry[]             — each entry has { id, label, path, node }
+// nodePositions?: NodePositions
+// onPositionChange?
+// selectedId?: string
+// onSelectChange?
+//
+// Tree.getStageSize(entries)       — utility to size the canvas to the tree's footprint
 ```
 
-Renders your site sitemap as a tree of iframe tiles. Each entry is a route. Handles layout, click-to-select, and drill-in to 3-viewport isolation.
+### DesignSystemView
 
-Use this for your **Pages** board.
+Renders the full design-system canvas: color graph (raw tokens → semantic aliases as edges), typography showcase, and primitive component frames.
+
+```tsx
+import { DesignSystemView, type DesignSystemViewProps, type PrimitiveGroup } from "@forkshop/engine"
+
+// DesignSystemViewProps:
+// tokens: TokenRegistry            — built with buildTokenRegistry()
+// primitives: PrimitiveGroup[]     — { id, label, primitives: AnyNode[] }
+// typography?: AnyNode             — optional typography showcase node
+// nodePositions?: NodePositions
+// onPositionChange?
+// selectedId?: string
+// onSelectChange?
+//
+// DesignSystemView.getStageSize(props)  — utility to size the canvas to the content footprint
+```
+
+### ResponsiveFrameView
+
+Renders a single route or component at multiple viewport widths side-by-side (default: 1440 / 768 / 375). Used for the selected-page isolation view.
+
+```tsx
+import { ResponsiveFrameView, type ResponsiveFrameViewProps } from "@forkshop/engine"
+
+// ResponsiveFrameViewProps:
+// path: string                     — route path or block slug (for agent-activity matching)
+// source: string                   — iframe URL
+// viewports?: number[]             — viewport widths; default [1440, 768, 375]
+// kind?: "page" | "block"          — drives labels and OG image rendering; default "page"
+// measuredHeight?: number          — measured body height (for canvas fit)
+// onBodyHeightChange?              — fires when iframes report body height
+// agentActive?: boolean            — drives indigo glow ring
+// sourceFile?: string              — TSX source file; required for live text editing
+```
 
 ---
 
 ## How positions are persisted
 
-Any `<CanvasNode>` with an `id` participates in drag-position persistence automatically. Positions are stored in-memory and synced to `layouts/system.json` via POST to `/api/forkshop/positions` on every drag commit.
+Node positions are stored in-memory and synced to `{{srcPrefix}}layouts/system.json` via POST to `/api/forkshop/positions` on every drag commit.
 
-If you want to set initial positions for new nodes, add entries to `layouts/system.json` keyed by the node id:
+Positions are keyed by Node `id`. To set initial positions for new nodes, add entries to `layouts/system.json`:
 
 ```json
 {
-  "my-node:unique-id": { "x": 100, "y": 200 }
+  "page:/about": { "x": 0, "y": 0 },
+  "page:/contact": { "x": 464, "y": 0 }
 }
 ```
+
+The `id` values must match exactly what the Nodes declare in your Board's entries array. Use stable, predictable IDs (e.g. `"page:/about"`, `"primitive:button"`) so positions survive page reloads and HMR.
 
 ---
 
@@ -314,59 +361,74 @@ If you want to set initial positions for new nodes, add entries to `layouts/syst
 
 When Claude Code edits a file in this project, Forkshop visually shows where:
 
-- **Sidebar leaf pulse** — the entry that maps to the edited file pulses (block, primitive, or page).
-- **Frame glow** — when the affected entry is the currently-selected node, its `CanvasNode` glows with an indigo ring and shows a `Claude · <filename>` chip.
-- **Iframe outline** — inside any page iframe that composes the edited block, the block instance gets an outlined glow.
+- **Sidebar leaf pulse** — the entry that maps to the edited file pulses.
+- **Frame glow** — when the affected entry is the currently-selected Node, its frame glows with an indigo ring and shows a `Claude · <filename>` chip.
+- **Iframe outline** — inside any page iframe that composes the edited `iframe-component` Node, the instance gets an outlined glow.
 - **Text pulse** — the specific text Claude changed (via `Edit`/`MultiEdit`) flashes inside the iframe.
 
-The loop is `.claude/hooks/post-tool-use.sh` → POST `/api/forkshop/agent-activity` → in-memory state → SSE → React provider → visual decorations. All wiring is dev-only — production builds return 403 from the API routes and the client provider never opens its EventSource.
+The loop is `.claude/hooks/post-tool-use.sh` → POST `/api/forkshop/agent-activity` → in-memory state → SSE → React provider → visual decorations. All wiring is dev-only.
 
 ### Configuring file mapping
 
-The provider needs to know which on-disk file maps to which sidebar entry. Edit `forkshop.config.ts` and add `sourcePath` (project-relative) to each primitive and block:
+The provider needs to know which on-disk file maps to which sidebar entry. Add `sourcePath` (project-relative) to each `inline-react` Node and `iframe-component` Node in your board entries:
 
 ```ts
-primitives: [
-  { id: "button", name: "Button", sourcePath: "components/ui/button.tsx", render: () => <Button /> },
-],
-blocks: [
-  { slug: "hero", name: "Hero", iframeSrc: "/", sourcePath: "components/marketing/hero.tsx" },
-],
+// inline-react Node for agent activity:
+{
+  id: "primitive:button",
+  kind: "inline-react",
+  x: 0, y: 0, width: 0, height: 0,
+  render: () => <Button />,
+  sourcePath: "components/ui/button.tsx",   // drives agent pulse
+}
+
+// iframe-component Node for agent activity:
+{
+  id: "block:hero",
+  kind: "iframe-component",
+  x: 0, y: 0, width: 1200, height: 800,
+  path: "/",
+  sourceFile: "components/marketing/hero.tsx",
+  sourcePath: "components/marketing/hero.tsx",
+}
 ```
 
-The mount page derives a `FileMap` from these entries and hands it to `AgentActivityProvider`. Pages are filesystem-routed — no `sourcePath` needed for them. Files without a configured mapping fall back to a "site-wide" indicator in the sidebar header.
+Pages (`iframe-route` Nodes) are filesystem-routed — no `sourcePath` needed. Files without a configured mapping fall back to a "site-wide" indicator in the sidebar header.
 
 ### Consumer hooks
 
-- `useAgentActivePages()` — pages currently being edited.
-- `useAgentActiveBlocks()` — blocks currently being edited (includes blocks identified by `<ComponentName>` mentions in page edits).
-- `useAgentActivePrimitives()` — primitives currently being edited.
-- `usePageActiveFallback(path)` — true when a page edit can't be attributed to a specific block (drives the soft all-blocks pulse).
-- `useSiteWideActivity()` — `{ active, recentBasename }` for unmapped file edits.
-- `useAgentSubstringsForPage(path)` / `useAgentSubstringsForBlock(slug)` — substring lists scoped to a single page or block, for targeted text-pulse decoration.
-- `useAllAgentSubstrings()` — array of `{ oldString?, newString? }` records, one per active edit. The iframe relay broadcasts the list unfiltered; each iframe walks its own DOM to decide whether to flash. Used by `AgentIframeRelay`.
-- `useAgentSeenPagePaths()` — sticky set of every page path the agent has touched this session (used by the sidebar to extend its tree; see below).
+```ts
+import {
+  useAgentActivePages,       // pages currently being edited
+  useAgentActiveBlocks,      // blocks (iframe-component Nodes) being edited
+  useAgentActivePrimitives,  // inline-react Nodes being edited
+  usePageActiveFallback,     // true when edit can't be attributed to a specific block
+  useSiteWideActivity,       // { active, recentBasename } for unmapped file edits
+  useAgentSubstringsForPage, // substring list scoped to a page path
+  useAgentSubstringsForBlock,// substring list scoped to a block slug
+  useAllAgentSubstrings,     // all active { oldString?, newString? } records
+  useAgentSeenPagePaths,     // sticky set of every page touched this session
+} from "@forkshop/engine"
+```
+
+The Claude Code producer pack (the `post-tool-use.sh` hook and the activity POST protocol) ships in spec #5. The consumer hooks above are live; the producer side is a no-op shell until spec #5 wires it.
 
 ### Silent synthetic routes
 
-When the agent edits a page file whose route isn't in the sidebar's `routes` prop, the sidebar adds that path to the tree **silently** — no badge, no pill, no visual distinction from configured routes. The new row is clickable like any other.
-
-These synthetic entries come from `useAgentSeenPagePaths()`, which the sidebar unions with the declared `routes` to produce its rendered tree. The set is sticky for the React-component lifetime and clears on browser reload.
-
-If you're looking at the sidebar and see a leaf you didn't put in your `routes` prop, that's not a bug — it's a recently-edited page Forkshop is surfacing for convenience. Add it to `routes` (or stop editing it) if you want the sidebar to be fully declarative.
+When the agent edits a page whose route isn't in the sidebar's `routes` prop, the sidebar adds that path to the tree silently — no badge, just a clickable row. These come from `useAgentSeenPagePaths()`, unioned with declared routes. The set is sticky for the React-component lifetime and clears on browser reload.
 
 ### Production behavior
 
-`/api/forkshop/agent-activity` (POST) and `/stream` (GET) both return 403 when `NODE_ENV === "production"`. The `AgentActivityProvider`'s `EventSource` never opens in production. The `.claude/hooks/post-tool-use.sh` script's `curl --max-time 1` fails silently if no dev server is running. None of this code path is reachable from a production deploy.
+`/api/forkshop/agent-activity` (POST) and `/stream` (GET) both return 403 when `NODE_ENV === "production"`. The `AgentActivityProvider`'s `EventSource` never opens in production. The `.claude/hooks/post-tool-use.sh` script's `curl --max-time 1` fails silently if no dev server is running.
 
 ---
 
 ## Update this file when you customize Forkshop
 
 Every time you:
-- Add a new board or selection kind
-- Change what a kit receives as props
+- Add a new Board or change what a Board receives as props
+- Add or remove a custom NodeType
 - Add a new API route or extend an existing one
 - Change the file layout
 
-...update this CLAUDE.md to reflect it. Future Claude Code sessions in `app/forkshop/` load this file and will work from stale information if it drifts.
+...update this `{{srcPrefix}}app/forkshop/CLAUDE.md` to reflect it. Future Claude Code sessions in `{{srcPrefix}}app/forkshop/` load this file and will work from stale information if it drifts.
