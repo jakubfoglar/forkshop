@@ -407,41 +407,71 @@ If any step throws, print `✗ <step> — <reason>`, stop, tell the user how to 
 
 ## Phase 7 — Final summary
 
-After Phase 6 completes (or partially completes with failures), render:
+After Phase 6 completes (or partially completes with failures), render this summary verbatim — drop sections that don't apply, keep the order.
 
-````
-Forkshop is set up. Here's what you have:
+### Default (clean install)
 
-  Mount:       <aliases.mount, abbreviated>  →  http://localhost:3000/forkshop
-  Boards:      <comma-separated list of selected Boards with counts>
-  Modifiers:   <auth-filter, mobile, etc., or "none">
-  Opt-in:      <✓ Cadence note | ✗ Cadence note (skipped) | ✓ Cadence note (already present)>
+```
+✓ Forkshop is set up.
 
-Try this first:
-  1. pnpm dev   (or your package manager's dev command)
-  2. Open /forkshop in your browser
-  3. Click any primitive in the sidebar — see all variants on one canvas
-  4. Click any route under Sitemap — see it at 1440/768/375
-  5. Option-click any element → opens the file at the right line
-  6. Click any text on a block → edit in place → save
+  /forkshop          → http://localhost:3000/forkshop
+  Boards             → <comma-separated board names with counts>
+  Live-mirroring     → Add a primitive to components/ui/ and it'll show up
 
-Customize:
-  • Add or remove primitives  → edit forkshop.config.tsx primitives list
-  • Edit Button variants      → edit ui-components/button.tsx
-  • Add a new block           → add an entry in forkshop.config.tsx blocks
-  • Filter Sitemap routes     → edit forkshop.config.tsx sitemap.excludeGroups
-  Everything Forkshop generated is in your repo. You own all of it.
+Try it:
+  pnpm dev
+  → open /forkshop
+  → click a route under Sitemap
 
 Sibling skills:
-  • forkshop-live-editing  — cadence guidance auto-applies on edits
-  • forkshop-doc-sync      — invoke when <aliases.mount>/CLAUDE.md drifts
-````
+  forkshop-live-editing   auto-applies on Forkshop file edits
+  forkshop-doc-sync       invoke when app/forkshop/CLAUDE.md drifts
+```
+
+The `Boards` line lists what was actually wired (e.g., `Sitemap (3 routes) · UI Components (4 primitives) · Blocks (2 blocks)`).
+
+### With Locator skipped
+
+If the user declined the Phase 5 Locator opt-in, add one line above `Try it:`:
+
+```
+Option-click: skipped (re-run setup to enable)
+```
+
+### With Phase 6 failure or manual-paste fallback
+
+If a Phase 6 step couldn't complete cleanly (e.g., next.config.* required manual paste), render the failure variant:
+
+```
+✓ Forkshop is set up. One thing needs your attention:
+
+  ! next.config.* — Locator rule needs manual paste. Snippet below.
+
+  <inline snippet>
+
+  /forkshop          → http://localhost:3000/forkshop
+  Boards             → <comma-separated board names with counts>
+  Live-mirroring     → Add a primitive to components/ui/ and it'll show up
+
+Try it:
+  pnpm install         (Locator dep was just added)
+  pnpm dev
+  → open /forkshop
+  → click a route under Sitemap
+
+Sibling skills:
+  forkshop-live-editing   auto-applies on Forkshop file edits
+  forkshop-doc-sync       invoke when app/forkshop/CLAUDE.md drifts
+```
 
 ### Rules
 
-- **"You own all of it" is mandatory.** That line lands the share-and-forget posture.
-- **Skipped opt-in is surfaced as `✗ Name (skipped)`** so the user knows they can opt in later.
-- **The Phase 6 failure list only appears when relevant.** Drop the line if no failures.
+- **Lead with `✓ Forkshop is set up.`** — single line, immediately readable.
+- **`Boards →` line is honest** — lists what's actually wired with counts.
+- **`Live-mirroring →` line** is a single observation; no enumerated "Customize" list.
+- **No `Mount:` / `Modifiers:` / `Opt-in:` / `Files written:` / `Skipped:`** default sections — they're debug info. If we want them later, add a `--verbose` flag.
+- **No ANSI escape codes** — unicode (`✓`, `→`, `!`) renders everywhere.
+- **The `!` line is the only urgent attention-grabber.** Use it sparingly; never for non-actionable info.
 
 ## Adjust mode (re-runs)
 
