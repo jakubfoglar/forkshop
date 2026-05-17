@@ -28,6 +28,10 @@ export default defineConfig({
   // engine-build time. The consumer's bundler does that substitution at their
   // build time, which is how production-mode degradation is meant to work.
   env: {},
+  // Post-build steps run after every successful tsup build (one-shot AND watch).
+  // The directive injection + CSS compile + font copy must regenerate every
+  // rebuild because clean:true wipes dist/ at the start of each build.
+  onSuccess: "tsx scripts/post-build.ts",
   external: [
     "react", "react-dom",
     "next", "next/headers", "next/server", "next/navigation",
