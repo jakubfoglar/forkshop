@@ -192,15 +192,40 @@ Do not render this to the user. It is the input to Phase 3.
 
 ## Phase 3 — Build the consolidated proposal
 
-<!-- kit picker arrives in kits rewrite spec (#4) -->
+Run the recipe-selection algorithm against Phase 2 output. Each recipe fires when its signal threshold is met. Compose them into a multi-Board sidebar proposal.
 
-Stub-only mode: propose a single Board using `Gallery` Layout over the `iframe-component` Nodes (blocks) discovered in Phase 2. Kit-aware audience scaffolding (design-system board, page-tree board) arrives in spec #4.
+### Recipe selection
 
-Render the proposal in the exact format below. Use box-drawing characters (`┌ ├ └ │ •`) for the sidebar tree. Do **not** improvise a different layout.
+```
+recipes = []
+
+if themeTokens.hasCustomization:
+  recipes.push("design-system")
+
+if primitives.length >= 3:
+  recipes.push("ui-components")
+
+if blocks.length >= 1:
+  recipes.push("blocks")
+
+# Sitemap always fires — every Next.js app has routes.
+recipes.push("sitemap")
+
+if mdxContent.detected and mdxContent.routePattern:
+  recipes.push("reference")
+```
+
+Cross-cutting modifiers:
+
+- If `projectFlags.authLibrary` is set, mark Sitemap as `authFilter: true` (filters out `(authenticated|dashboard|app|protected|private)` route groups in the default scaffold).
+- If `projectFlags.mobileProfile` is true, mark all Galleries + Blocks for single-viewport (375px).
+- Tailwind v3 vs v4 affects only the Design System Board's token-scan path (handled in Phase 6 templates).
 
 ### Proposal template
 
-```
+Render the proposal using this exact format. Use box-drawing characters (`└ ├ │ • ─`) for the sidebar tree. Use the actual counts from Phase 2; substitute the recipe-driven Board names.
+
+````
 I've read your project. Here's what I see:
 
 <narrative paragraph from Phase 1, 2-3 sentences>
@@ -208,51 +233,53 @@ I've read your project. Here's what I see:
 Here's the Forkshop I'd build for you:
 
 /forkshop sidebar
-└─ Components          (Gallery Layout, iframe-component Nodes)
-    • <N> iframe-component Nodes: <sample block names>
-    <if no blocks found: > • No blocks found — board scaffolded empty; add
-                            entries to forkshop.config.tsx after install.
+<for each selected recipe, render its line + optional children>
+├─ Design System            (DesignSystemView — <N> color tokens, <M> typography styles)
+├─ UI Components            (<K> primitives discovered)
+│   ├ Button (8 variants via cva)
+│   ├ Badge (3 variants)
+│   └ …
+├─ Blocks                   (<L> blocks discovered)
+│   ├ Hero (used on /)
+│   ├ CTA  (used on /pricing)
+│   └ …
+├─ Sitemap                  (<R> routes — public only; <auth-lib> detected)
+│   ├ /
+│   ├ /about
+│   └ …
+└─ Reference                (<A> articles)
+    ├ <article 1>
+    └ …
 
-Mount path:    <aliases.mount, abbreviated to project-relative>
+Mount path:    <aliases.mount, abbreviated>
                (or app/(tools)/forkshop/ — say "use tools group" to switch)
 
 Also touching automatically:
   • app/globals.css — @import "@forkshop/engine/forkshop.css"
   • next.config.*   — @locator/webpack-loader rule (Option-click → editor)
+  • app/forkshop/block/[slug]/page.tsx — per-block preview route (auto-managed; one file)
 
 One opt-in (I'll confirm after you accept):
   [1] Cadence note — teaches Claude to use small Edits on Forkshop-watched files
-```
+````
+
+When a recipe was not selected, omit its line entirely from the sidebar tree. Truncate child lists to 3 entries plus `└ …` when there are more.
 
 ### How to ask the user what's next
 
-After rendering the proposal template above, use the **`AskUserQuestion` tool** (not an inline text prompt) to collect the next action:
+Same as before: call `AskUserQuestion` with `Accept all / Adjust / Pause`. See the existing Phase 4 for free-form adjustment handling.
 
-```ts
-{
-  questions: [{
-    question: "Look right?",
-    header: "Proposal",
-    options: [
-      { label: "Accept all", description: "Proceed to consent prompt" },
-      { label: "Adjust",     description: "Rename board, change mount path, or change blocks" },
-      { label: "Pause",      description: "Stop, write nothing" },
-    ],
-  }],
-}
-```
+### Thin-Board handling
 
-If "Adjust" → switch to free-form chat (Phase 4). Claude interprets natural language ("rename to Blocks", "use the tools route group", "this is actually a SaaS — skip the marketing blocks") without requiring exact phrasings.
+If a recipe fires but the Phase 2 data is thin (1-2 entries), include the Board anyway but render its child count honestly. In the proposal narrative, surface: *"Reference has only 2 articles right now — Board will be lightly populated. You can grow it as you add more content."* Users can decline thin Boards in Phase 4.
 
-If the user types a free-form change at any time instead of using the menu, interpret it and re-render. The `AskUserQuestion` is a convenience, not a gate.
+### Always-the-real-thing reminder
 
-### Empty-block handling
-
-If Phase 2 Scan B found no blocks folder, scaffold an empty `nodes` array in `forkshop.config.tsx` and note in the narrative: *"I didn't find a blocks folder — the board will be empty until you add entries to `forkshop.config.tsx`."*
+Every Board scaffolds against the user's existing components — no duplicated content, no placeholder fixtures unless the user's code can't supply them. Block preview routes import the real block component. UI Components variant grids import the real primitive. Sitemap leaves iframe the user's actual `/about` URL. The skill never copies user code; it only references it.
 
 ### After rendering
 
-Wait for user input. Do not proceed to Phase 4 until you receive a reply. If the user is silent, do not write anything.
+Wait for user input. Do not proceed to Phase 4 until you receive a reply.
 
 ## Phase 4 — Iterate
 
