@@ -12,6 +12,8 @@ import {
   responsiveFrameStageDimensions,
   parseSelection,
   serializeSelection,
+  discoverPrimitives,
+  discoverBlocks,
   type ForkshopSelection,
 } from "@forkshop/engine"
 import { PlaygroundBoard } from "./playground-board"
@@ -39,19 +41,22 @@ const PRIMITIVE_BOARDS: Record<string, React.ComponentType> = {
   input: InputBoard,
 }
 
+const DISCOVERED_PRIMITIVES = discoverPrimitives(forkshopConfig.ui)
+const DISCOVERED_BLOCKS = discoverBlocks(forkshopConfig.blocks)
+
 const FILE_MAP = {
-  primitives: forkshopConfig.primitives.map((p) => ({
+  primitives: DISCOVERED_PRIMITIVES.map((p) => ({
     id: p.slug,
     sourcePath: `components/ui/${p.slug}.tsx`,
   })),
-  blocks: forkshopConfig.blocks.map((b) => ({
+  blocks: DISCOVERED_BLOCKS.map((b) => ({
     slug: b.slug,
     sourcePath: `components/blocks/${b.slug}.tsx`,
   })),
 }
 
 function SingleBlockBoard({ slug }: { slug: string }) {
-  const block = forkshopConfig.blocks.find((b) => b.slug === slug)
+  const block = DISCOVERED_BLOCKS.find((b) => b.slug === slug)
   const [measuredHeight, setMeasuredHeight] = useState<number | undefined>(undefined)
   const handleBodyHeightChange = useCallback((_id: string, h: number) => setMeasuredHeight(h), [])
   const { width, height } = useMemo(
@@ -65,7 +70,7 @@ function SingleBlockBoard({ slug }: { slug: string }) {
         <ResponsiveFrameView
           kind="block"
           path={block.slug}
-          source={block.src}
+          source={block.previewSrc}
           viewports={[1440, 768, 375]}
           measuredHeight={measuredHeight}
           onBodyHeightChange={handleBodyHeightChange}
@@ -143,14 +148,14 @@ export default function ForkshopPage() {
               title: Gallery.defaultTitle,
               icon: Gallery.icon,
               entryKind: "primitive",
-              entries: forkshopConfig.primitives.map((p) => ({ slug: p.slug, name: p.name })),
+              entries: DISCOVERED_PRIMITIVES.map((p) => ({ slug: p.slug, name: p.name })),
             },
             {
               id: "blocks",
               title: "Blocks",
               icon: Gallery.icon,
               entryKind: "block",
-              entries: forkshopConfig.blocks.map((b) => ({ slug: b.slug, name: b.name })),
+              entries: DISCOVERED_BLOCKS.map((b) => ({ slug: b.slug, name: b.name })),
             },
             {
               id: "sitemap",

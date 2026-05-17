@@ -1,11 +1,11 @@
 "use client"
 
 import { useMemo } from "react"
-import type React from "react"
 import {
   DesignSystemView,
   getDesignSystemStageSize,
   buildTokenRegistry,
+  discoverPrimitives,
   type InlineReactNode,
   type PrimitiveGroup,
 } from "@forkshop/engine"
@@ -81,19 +81,16 @@ export function DesignSystemBoard({
       {
         id: "ui",
         label: "UI Primitives",
-        primitives: forkshopConfig.primitives.map<InlineReactNode>((p) => {
-          const Component = p.component as React.ComponentType<typeof p.exampleProps>
-          return {
-            id: `primitive:${p.slug}`,
-            kind: "inline-react",
-            x: 0,
-            y: 0,
-            width: 320,
-            height: 160,
-            label: p.name,
-            render: () => <Component {...p.exampleProps} />,
-          }
-        }),
+        primitives: discoverPrimitives(forkshopConfig.ui).map<InlineReactNode>((p) => ({
+          id: `primitive:${p.slug}`,
+          kind: "inline-react",
+          x: 0,
+          y: 0,
+          width: 320,
+          height: 160,
+          label: p.name,
+          render: () => <p.Component />,
+        })),
       },
     ],
     [],
