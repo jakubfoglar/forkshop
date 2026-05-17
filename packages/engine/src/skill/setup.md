@@ -23,25 +23,25 @@ Read `forkshop.json` from the working directory. If missing, exit:
 
 > *"Forkshop's source files aren't installed yet. Run `npx forkshop init` first."*
 
-`forkshop.json` is the source of truth for the `aliases.mount` path (where Forkshop's mount route lives) and the alias map needed to resolve all other paths. Without it, every subsequent step would be guessing.
+`forkshop.json` is the source of truth for the `mount` path (where Forkshop's mount route lives) and the alias map needed to resolve all other paths. Without it, every subsequent step would be guessing.
 
 If `forkshop.json` exists but has `schemaVersion` set to anything other than `"2.0.0"` (or lacks `schemaVersion` entirely, indicating a v1 installation), exit:
 
-> *"This looks like a v1 Forkshop installation. Back up `<aliases.mount>/` (your `app/forkshop/` directory), then run `npx forkshop init` to re-initialize against the v2 schema. Your custom board files are safe to restore after init completes."*
+> *"This looks like a v1 Forkshop installation. Back up `<mount>/` (your `app/forkshop/` directory), then run `npx forkshop init` to re-initialize against the v2 schema. Your custom board files are safe to restore after init completes."*
 
 ### Check 2 — Read `{{mount}}/CLAUDE.md`
 
-Resolve the mount path from `forkshop.json`'s `aliases.mount` field (defaults to `app/forkshop` if absent). Read the file at `<aliases.mount>/CLAUDE.md`.
+Resolve the mount path from `forkshop.json`'s `mount` field (defaults to `app/forkshop` if absent). Read the file at `<mount>/CLAUDE.md`.
 
 If missing, exit:
 
-> *"Forkshop's installation seems incomplete — `<aliases.mount>/CLAUDE.md` is missing. Re-run `npx forkshop init --force` or restore the file manually."*
+> *"Forkshop's installation seems incomplete — `<mount>/CLAUDE.md` is missing. Re-run `npx forkshop init --force` or restore the file manually."*
 
 That CLAUDE.md documents the Board and Node API, the selection model, and the conventions you'll write code against. You will rely on it instead of duplicating its content here.
 
 ### Check 3 — App Router only
 
-Confirm `app/` exists at the repo root (or under the workspace specified by `aliases.mount` in monorepos). If only `pages/` exists, exit:
+Confirm `app/` exists at the repo root (or under the workspace specified by `mount` in monorepos). If only `pages/` exists, exit:
 
 > *"Forkshop v1 only supports Next.js App Router. Pages Router support is on the roadmap but not shipped."*
 
@@ -59,7 +59,7 @@ If neither `app/` nor `pages/` exists and no framework config is found, exit:
 
 ### Check 4 — Re-run detection
 
-If `forkshop.config.ts` (or `.tsx`) at `<aliases.mount>/` contains a non-empty `config` export — that is, more than the stub the CLI dropped — switch to **Adjust mode** (see the section near the bottom of this file) and skip Phases 1–7.
+If `forkshop.config.ts` (or `.tsx`) at `<mount>/` contains a non-empty `config` export — that is, more than the stub the CLI dropped — switch to **Adjust mode** (see the section near the bottom of this file) and skip Phases 1–7.
 
 A "non-empty" config means: any of `designSystem.primitives`, `components.entries`, or `pages.autoDiscover` has been populated past the stub's defaults. The CLI's stub has empty arrays.
 
@@ -251,7 +251,7 @@ Here's the Forkshop I'd build for you:
     ├ <article 1>
     └ …
 
-Mount path:    <aliases.mount, abbreviated>
+Mount path:    <mount, abbreviated>
                (or app/(tools)/forkshop/ — say "use tools group" to switch)
 
 Also touching automatically:
@@ -349,7 +349,15 @@ Sequential. Failures stop the sequence — no transactional rollback. Each step 
 
 ### Step 1 — `{{mount}}/forkshop.config.tsx`
 
-Render from Template 1 (see Scaffolding templates). Populate `ui` + `blocks` barrels (write `components/{ui,blocks}/index.ts` files re-exporting each discovered primitive/block), `sitemap.routes` from Phase 2 Scan C (filter out auth-flagged route groups when the modifier fires), and `reference.contentPaths` from Scan E.
+Render from Template 1 (see Scaffolding templates). **Gate config keys + imports on which recipes fired in Phase 3:**
+
+- **UI Components recipe fired:** write `components/{srcPrefix}ui/index.ts` barrel (one `export { Name } from "./slug"` per discovered primitive), emit `import * as UIPrimitives from "@/components/ui"` + `ui: UIPrimitives,` in the config.
+- **Blocks recipe fired:** write `components/{srcPrefix}blocks/index.ts` barrel, emit `import * as Blocks from "@/components/blocks"` + `blocks: Blocks,`.
+- **Design System recipe fired:** emit `import tailwindConfig from "../../tailwind.config"` + `tailwindConfig,` in the config. (Tailwind v3 only at 1.0 — v4 path deferred.)
+- **Sitemap always fires:** emit `sitemap: { routes: [...] }` populated from Phase 2 Scan C, filtering out auth-flagged route groups when the modifier fires.
+- **Reference recipe fired:** emit `reference: { contentPaths: [...] }` from Scan E. Otherwise omit the key.
+
+If neither UI Components nor Blocks fired (e.g., a project with only routes), `forkshop.config.tsx` is just the `sitemap.routes` array plus `viewportProfile`. No broken imports from non-existent `components/ui/` or `components/blocks/` directories.
 
 ### Step 2 — `{{mount}}/design-system.tsx` (if Design System recipe fired)
 
@@ -480,7 +488,7 @@ If Phase 0's Check 4 detected a non-empty `forkshop.config.tsx`, you are in adju
 ```
 Looks like Forkshop is already set up. Here's your current config:
 
-  Mount:   <aliases.mount>
+  Mount:   <mount>
   Board:   <board name from current forkshop.config.tsx>
   Opt-in:  <state observed: ✓/✗ for cadence note (presence of the marker in root CLAUDE.md)>
 
@@ -543,15 +551,15 @@ Proceed with everything else. The `globals.css` import (Step 4) still applies. S
 
 ### Monorepo (no repo-root `app/`, but `pnpm-workspace.yaml` or `turbo.json`)
 
-In Phase 0 / 1, ask the user: *"This looks like a monorepo. Which workspace should I scan and mount in?"* Wait for the answer. Adjust every path lookup (Phase 1 docs, Phase 2 scans, `aliases.mount`) to that workspace. If the user already has `aliases.mount` pointing into a workspace in `forkshop.json`, skip the question.
+In Phase 0 / 1, ask the user: *"This looks like a monorepo. Which workspace should I scan and mount in?"* Wait for the answer. Adjust every path lookup (Phase 1 docs, Phase 2 scans, `mount`) to that workspace. If the user already has `mount` pointing into a workspace in `forkshop.json`, skip the question.
 
-### `<aliases.mount>/` already populated with non-stub content
+### `<mount>/` already populated with non-stub content
 
-If Phase 0's re-run check found a populated config, this is the adjust-mode path. But if `<aliases.mount>/` has user-written files that don't match Forkshop's expected layout (e.g., the user repurposed the folder), refuse and exit:
+If Phase 0's re-run check found a populated config, this is the adjust-mode path. But if `<mount>/` has user-written files that don't match Forkshop's expected layout (e.g., the user repurposed the folder), refuse and exit:
 
-> *"`<aliases.mount>/` already contains files that aren't from Forkshop. Move them aside or set `aliases.mount` in `forkshop.json` to a different path, then re-run."*
+> *"`<mount>/` already contains files that aren't from Forkshop. Move them aside or set `mount` in `forkshop.json` to a different path, then re-run."*
 
-### `forkshop.json` present but no `<aliases.mount>/CLAUDE.md`
+### `forkshop.json` present but no `<mount>/CLAUDE.md`
 
 Exit (Phase 0 Check 2). Already handled. Re-state here for completeness.
 
@@ -578,7 +586,7 @@ Templates use `{{snake_case}}` placeholder substitution. Multi-line placeholders
 Templates use `{{snake_case}}` placeholder substitution. Multi-line placeholders (e.g., `{{primitive_entries}}`) expand to comma-separated, indented blocks. Replace every `{{…}}` before writing; if a placeholder has no value, drop the surrounding line.
 
 Key placeholders:
-- `{{mount}}` — resolved from `forkshop.json`'s `aliases.mount`; defaults to `app/forkshop`.
+- `{{mount}}` — resolved from `forkshop.json`'s `mount`; defaults to `app/forkshop`.
 - `{{slug}}` — kebab-case primitive identifier.
 - `{{primitive_name}}` — PascalCase primitive component name.
 - `{{primitive_imports}}` — named imports, one per line.
@@ -598,6 +606,8 @@ Key placeholders:
 - `{{board_switch}}` — selection-to-Board mapping (inline JSX).
 
 ### Template 1 — `{{mount}}/forkshop.config.tsx`
+
+The skill emits imports and config keys conditionally — only when the matching recipe fired in Phase 3. The full shape below is for a hybrid project (all five recipes fire). For a thin project (just Sitemap), omit `ui`, `blocks`, and `tailwindConfig` lines + their imports. For a Tailwind v3 project but no Design System recipe, omit `tailwindConfig`. The user can re-run setup later to grow the config when they add directories.
 
 ````tsx
 import * as UIPrimitives from "@/components/ui"
