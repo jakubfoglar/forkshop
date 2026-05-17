@@ -5,23 +5,23 @@
  * in the editor (VS Code, Cursor — anything registered for the vscode:// scheme).
  *
  * Hold the Option (Alt) key to preview: every element you mouse over gets a
- * subtle outline + filename:line caption. Release Option to dismiss.
+ * subtle outline + a small filename:line caption. Release Option to dismiss.
  *
  * Mount once at the root of an iframed page (typically inside the host's
  * `app/layout.tsx`). Does nothing in production, does nothing when the page
  * isn't loaded inside Forkshop's iframe.
  *
- * Implementation notes:
- * - Reads React's `_debugSource` fiber field, which the dev-mode JSX runtime
- *   (`jsxDEV`) attaches automatically. Same mechanism React DevTools uses.
- * - No external dependencies. No compile-time loader required — React's own
- *   dev tooling provides the source attribution we need.
+ * Source attribution comes from `@locator/webpack-loader` (build-time only):
+ * it stamps every JSX element with `data-locatorjs="<file>:<line>:<col>"` so
+ * the runtime here only needs to read a DOM attribute — no React internals,
+ * no SWC quirks, works in any framework that runs the loader.
  *
- * Inspired by Locator.js (https://github.com/infi-pc/locatorjs, MIT).
- * Independent implementation; no code shared.
+ * Inspired by Locator.js (https://github.com/infi-pc/locatorjs, MIT). The
+ * runtime here is an independent Forkshop implementation; no code shared.
+ * The compile-time loader is `@locator/webpack-loader` (still upstream).
  */
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 
 interface SourceLocation {
@@ -35,16 +35,14 @@ interface HoverState {
   source: SourceLocation
 }
 
-const FIBER_PREFIX = "__reactFiber$"
+const LOCATOR_ATTR = "data-locatorjs"
 const Z_TOP = 2147483647
 
 export function EditorLink({ mountPath = "/forkshop" }: { mountPath?: string } = {}) {
   const [active, setActive] = useState(false)
   const [hover, setHover] = useState<HoverState | null>(null)
-  const hoverRef = useRef<HoverState | null>(null)
-  hoverRef.current = hover
 
-  // Decide whether to activate at all.
+  // Activation: dev only, inside an iframe, parent path matches mountPath.
   useEffect(() => {
     if (process.env.NODE_ENV !== "development") return
     try {
@@ -52,13 +50,12 @@ export function EditorLink({ mountPath = "/forkshop" }: { mountPath?: string } =
       const parentPath = globalThis.window.parent.location.pathname
       if (!parentPath.startsWith(mountPath)) return
     } catch {
-      // Cross-origin parent or otherwise inaccessible — skip silently.
       return
     }
     setActive(true)
   }, [mountPath])
 
-  // Wire up listeners while active.
+  // Wire DOM listeners while active.
   useEffect(() => {
     if (!active) return
 
@@ -66,14 +63,9 @@ export function EditorLink({ mountPath = "/forkshop" }: { mountPath?: string } =
       if (!event.altKey) return
       const el = event.target
       if (!(el instanceof HTMLElement)) return
-      const source = findSourceForElement(el)
-      if (!source) return
-      setHover({ rect: el.getBoundingClientRect(), source })
-    }
-
-    function onMouseOut() {
-      // Don't clear here — mouseover on the next element will replace state.
-      // Clearing on out would flicker across child boundaries.
+      const result = findElementWithSource(el)
+      if (!result) return
+      setHover({ rect: result.el.getBoundingClientRect(), source: result.source })
     }
 
     function onKeyUp(event: KeyboardEvent) {
@@ -88,23 +80,21 @@ export function EditorLink({ mountPath = "/forkshop" }: { mountPath?: string } =
       if (!event.altKey) return
       const el = event.target
       if (!(el instanceof HTMLElement)) return
-      const source = findSourceForElement(el)
-      if (!source) return
+      const result = findElementWithSource(el)
+      if (!result) return
       event.preventDefault()
       event.stopPropagation()
-      navigateToSource(source)
+      navigateToSource(result.source)
       setHover(null)
     }
 
     document.addEventListener("mouseover", onMouseOver)
-    document.addEventListener("mouseout", onMouseOut)
     document.addEventListener("keyup", onKeyUp)
     document.addEventListener("click", onClick, /* capture */ true)
     globalThis.window.addEventListener("blur", onBlur)
 
     return () => {
       document.removeEventListener("mouseover", onMouseOver)
-      document.removeEventListener("mouseout", onMouseOut)
       document.removeEventListener("keyup", onKeyUp)
       document.removeEventListener("click", onClick, true)
       globalThis.window.removeEventListener("blur", onBlur)
@@ -156,33 +146,47 @@ export function EditorLink({ mountPath = "/forkshop" }: { mountPath?: string } =
 }
 
 /**
- * Walk the React fiber attached to `el` upward until we find one with
- * `_debugSource`. Returns null if no fiber carries source attribution
- * (e.g., if the page wasn't built with the dev JSX runtime).
+ * Walk up from `el` looking for the nearest ancestor with a parseable
+ * `data-locatorjs` attribute. Returns the element + parsed source, or null.
  */
-function findSourceForElement(el: HTMLElement): SourceLocation | null {
-  const fiberKey = Object.keys(el).find((k) => k.startsWith(FIBER_PREFIX))
-  if (!fiberKey) return null
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let fiber: any = (el as any)[fiberKey]
-  while (fiber) {
-    const source = fiber._debugSource
-    if (source && typeof source.fileName === "string") {
-      return {
-        fileName: source.fileName,
-        lineNumber: source.lineNumber ?? 1,
-        columnNumber: source.columnNumber ?? 1,
-      }
+function findElementWithSource(
+  el: HTMLElement,
+): { el: HTMLElement; source: SourceLocation } | null {
+  let cur: HTMLElement | null = el
+  while (cur && cur !== document.body) {
+    const raw = cur.getAttribute(LOCATOR_ATTR)
+    if (raw) {
+      const source = parseLocatorValue(raw)
+      if (source) return { el: cur, source }
     }
-    fiber = fiber.return
+    cur = cur.parentElement
   }
   return null
 }
 
 /**
- * Display a short relative-looking path. Show up to the last 3 segments
- * so the label stays readable on small canvases.
+ * Locator's webpack loader emits values shaped like:
+ *   "/abs/path/to/file.tsx:14:5"
+ * The file path itself can contain colons on weird systems, so split from the
+ * right: the last two `:N` segments are line and column; everything before is
+ * the filename.
  */
+function parseLocatorValue(raw: string): SourceLocation | null {
+  const parts = raw.split(":")
+  if (parts.length < 3) return null
+  const columnStr = parts.pop()!
+  const lineStr = parts.pop()!
+  const fileName = parts.join(":")
+  const lineNumber = Number.parseInt(lineStr, 10)
+  const columnNumber = Number.parseInt(columnStr, 10)
+  if (!fileName || Number.isNaN(lineNumber)) return null
+  return {
+    fileName,
+    lineNumber: lineNumber || 1,
+    columnNumber: Number.isNaN(columnNumber) ? 1 : columnNumber,
+  }
+}
+
 function formatPath(absPath: string): string {
   const parts = absPath.split("/")
   return parts.slice(-3).join("/")
