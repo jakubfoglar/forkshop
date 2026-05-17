@@ -3,9 +3,16 @@
 import { useMemo } from "react"
 import { Tree, type TreeEntry, type IframeRouteNode } from "@forkshop/engine"
 import { PlaygroundBoard } from "./playground-board"
-import { forkshopConfig } from "./forkshop.config"
 
-const PAGES_STAGE_PADDING = 200
+const SITEMAP_STAGE_PADDING = 200
+
+// Playground routes declared inline — the playground is a hand-maintained dev
+// surface. Users would derive these from the filesystem via the sitemap config.
+const PLAYGROUND_ROUTES: { path: string; sourceFile: string }[] = [
+  { path: "/", sourceFile: "app/page.tsx" },
+  { path: "/about", sourceFile: "app/about/page.tsx" },
+  { path: "/pricing", sourceFile: "app/pricing/page.tsx" },
+]
 
 function humanizePagePath(path: string): string {
   if (path === "/") return "Home"
@@ -16,7 +23,7 @@ function humanizePagePath(path: string): string {
     .join(" / ")
 }
 
-export function PagesBoard({
+export function SitemapBoard({
   nodePositions,
   onPositionChange,
 }: {
@@ -25,18 +32,18 @@ export function PagesBoard({
 }) {
   const entries = useMemo<TreeEntry[]>(
     () =>
-      forkshopConfig.pages.map((p): TreeEntry => {
+      PLAYGROUND_ROUTES.map((r): TreeEntry => {
         const node: IframeRouteNode = {
-          id: `page:${p.path}`,
+          id: `page:${r.path}`,
           kind: "iframe-route",
           x: 0,
           y: 0,
           width: 400,
           height: 280,
-          routePath: p.path,
-          sourceFile: p.sourceFile,
+          routePath: r.path,
+          sourceFile: r.sourceFile,
         }
-        return { id: node.id, label: humanizePagePath(p.path), path: p.path, node }
+        return { id: node.id, label: humanizePagePath(r.path), path: r.path, node }
       }),
     [],
   )
@@ -45,8 +52,8 @@ export function PagesBoard({
 
   return (
     <PlaygroundBoard
-      stageWidth={treeW + PAGES_STAGE_PADDING}
-      stageHeight={treeH + PAGES_STAGE_PADDING}
+      stageWidth={treeW + SITEMAP_STAGE_PADDING}
+      stageHeight={treeH + SITEMAP_STAGE_PADDING}
       fitMode="both"
     >
       {({ nodePositions: pos, onPositionChange: onPosChange }) => (
