@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useState } from "react"
 import {
   ForkshopSidebar,
   AgentActivityProvider,
@@ -13,85 +13,41 @@ import {
   parseSelection,
   serializeSelection,
   type ForkshopSelection,
-  type GalleryEntry,
-  type InlineReactNode,
-  type IframeRouteNode,
 } from "@forkshop/engine"
 import { PlaygroundBoard } from "./playground-board"
-import { FoundationsBoard } from "./foundations-board"
-import { ComponentsBoard } from "./components-board"
-import { BlocksBoard } from "./blocks-board"
-import { PagesBoard } from "./pages-board"
+import { DesignSystemBoard } from "./design-system"
+import { UIComponentsBoard } from "./ui-components"
+import BlocksBoardView from "./blocks"
+import { SitemapBoard } from "./sitemap-board"
+import { ButtonBoard } from "./ui-components/button"
+import { BadgeBoard } from "./ui-components/badge"
+import { InputBoard } from "./ui-components/input"
 import { forkshopConfig } from "./forkshop.config"
 import { useForkshopPositions } from "./use-forkshop-positions"
 
-const DEFAULT_SELECTION: ForkshopSelection = {
-  kind: "section",
-  sectionId: "foundations",
+const DEFAULT_SELECTION: ForkshopSelection = { kind: "section", sectionId: "design-system" }
+
+const SITEMAP_ENTRIES = [
+  { slug: "/", name: "/" },
+  { slug: "/about", name: "/about" },
+  { slug: "/pricing", name: "/pricing" },
+]
+
+const PRIMITIVE_BOARDS: Record<string, React.ComponentType> = {
+  button: ButtonBoard,
+  badge: BadgeBoard,
+  input: InputBoard,
 }
 
 const FILE_MAP = {
-  primitives: forkshopConfig.primitives
-    .filter((p): p is typeof p & { sourcePath: string } => "sourcePath" in p && p.sourcePath !== undefined)
-    .map((p) => ({ id: p.id, sourcePath: p.sourcePath })),
-  blocks: forkshopConfig.blocks
-    .filter((b): b is typeof b & { sourcePath: string } => "sourcePath" in b && b.sourcePath !== undefined)
-    .map((b) => ({ slug: b.slug, sourcePath: b.sourcePath })),
-}
-
-const PRIMITIVE_STAGE = { width: 800, height: 400 } as const
-
-type View =
-  | { kind: "foundations-overview" }
-  | { kind: "components-overview" }
-  | { kind: "blocks-overview" }
-  | { kind: "pages-overview" }
-  | { kind: "single-primitive"; id: string }
-  | { kind: "single-block"; slug: string }
-  | { kind: "single-page"; path: string }
-
-function deriveView(selection: ForkshopSelection): View {
-  if (selection.kind === "primitive") return { kind: "single-primitive", id: selection.id }
-  if (selection.kind === "block") return { kind: "single-block", slug: selection.slug }
-  if (selection.kind === "page") return { kind: "single-page", path: selection.path }
-  if (selection.kind === "section") {
-    if (selection.sectionId === "components") return { kind: "components-overview" }
-    if (selection.sectionId === "blocks") return { kind: "blocks-overview" }
-    if (selection.sectionId === "pages") return { kind: "pages-overview" }
-  }
-  return { kind: "foundations-overview" }
-}
-
-function SinglePrimitiveBoard({ primitiveId }: { primitiveId: string }) {
-  const primitive = forkshopConfig.primitives.find((p) => p.id === primitiveId)
-  if (!primitive) return null
-  const node: InlineReactNode = {
-    id: `single-primitive:${primitive.id}`,
-    kind: "inline-react",
-    x: 0,
-    y: 0,
-    width: 320,
-    height: 200,
-    label: primitive.name,
-    filePath: primitive.sourcePath,
-    render: () => (
-      <div className="inline-flex items-center justify-center bg-white p-8 shadow-md">
-        {primitive.render()}
-      </div>
-    ),
-  }
-  return (
-    <PlaygroundBoard stageWidth={PRIMITIVE_STAGE.width} stageHeight={PRIMITIVE_STAGE.height} fitMode="both">
-      {() => (
-        <Gallery
-          entries={[{ id: node.id, label: primitive.name, node }]}
-          layout="stack"
-          viewportWidth={320}
-          fitContent
-        />
-      )}
-    </PlaygroundBoard>
-  )
+  primitives: forkshopConfig.primitives.map((p) => ({
+    id: p.slug,
+    sourcePath: `components/ui/${p.slug}.tsx`,
+  })),
+  blocks: forkshopConfig.blocks.map((b) => ({
+    slug: b.slug,
+    sourcePath: `components/blocks/${b.slug}.tsx`,
+  })),
 }
 
 function SingleBlockBoard({ slug }: { slug: string }) {
@@ -109,8 +65,7 @@ function SingleBlockBoard({ slug }: { slug: string }) {
         <ResponsiveFrameView
           kind="block"
           path={block.slug}
-          source={block.iframeSrc}
-          sourceFile={block.sourceFile}
+          source={block.src}
           viewports={[1440, 768, 375]}
           measuredHeight={measuredHeight}
           onBodyHeightChange={handleBodyHeightChange}
@@ -121,7 +76,6 @@ function SingleBlockBoard({ slug }: { slug: string }) {
 }
 
 function SinglePageBoard({ path }: { path: string }) {
-  const page = forkshopConfig.pages.find((p) => p.path === path)
   const [measuredHeight, setMeasuredHeight] = useState<number | undefined>(undefined)
   const handleBodyHeightChange = useCallback((_id: string, h: number) => setMeasuredHeight(h), [])
   const { width, height } = useMemo(
@@ -135,7 +89,6 @@ function SinglePageBoard({ path }: { path: string }) {
           kind="page"
           path={path}
           source={path}
-          sourceFile={page?.sourceFile}
           viewports={[1440, 768, 375]}
           measuredHeight={measuredHeight}
           onBodyHeightChange={handleBodyHeightChange}
@@ -173,8 +126,6 @@ export default function ForkshopPage() {
     return () => window.removeEventListener("popstate", onPopState)
   }, [])
 
-  const view = deriveView(selection)
-
   return (
     <AgentActivityProvider fileMap={FILE_MAP}>
       <div className="flex h-screen overflow-hidden">
@@ -183,30 +134,33 @@ export default function ForkshopPage() {
           onSelect={setSelection}
           sections={[
             {
-              id: "foundations",
+              id: "design-system",
               title: DesignSystemView.defaultTitle,
               icon: DesignSystemView.icon,
             },
             {
-              id: "components",
+              id: "ui-components",
               title: Gallery.defaultTitle,
               icon: Gallery.icon,
               entryKind: "primitive",
-              entries: forkshopConfig.primitives.map((p) => ({ slug: p.id, name: p.name })),
+              entries: forkshopConfig.primitives.map((p) => ({ slug: p.slug, name: p.name })),
             },
             {
               id: "blocks",
               title: "Blocks",
               icon: Gallery.icon,
+              entryKind: "block",
               entries: forkshopConfig.blocks.map((b) => ({ slug: b.slug, name: b.name })),
             },
             {
-              id: "pages",
+              id: "sitemap",
               title: Tree.defaultTitle,
               icon: Tree.icon,
+              entryKind: "page",
+              entries: [...SITEMAP_ENTRIES],
             },
           ]}
-          routes={forkshopConfig.pages.map((p) => p.path)}
+          routes={[]}
         />
         <div className="relative flex flex-1 overflow-hidden">
           <AgentSelectionChip
@@ -214,33 +168,34 @@ export default function ForkshopPage() {
             blockSelectionSlug={selection.kind === "block" ? selection.slug : undefined}
             primitiveSelectionId={selection.kind === "primitive" ? selection.id : undefined}
           />
-          {view.kind === "foundations-overview" && (
-            <FoundationsBoard
+          {selection.kind === "section" && selection.sectionId === "design-system" && (
+            <DesignSystemBoard
               nodePositions={positions.nodePositions}
               onPositionChange={positions.onPositionChange}
             />
           )}
-          {view.kind === "components-overview" && (
-            <ComponentsBoard
+          {selection.kind === "section" && selection.sectionId === "ui-components" && (
+            <UIComponentsBoard />
+          )}
+          {selection.kind === "section" && selection.sectionId === "blocks" && (
+            <BlocksBoardView
               nodePositions={positions.nodePositions}
               onPositionChange={positions.onPositionChange}
             />
           )}
-          {view.kind === "blocks-overview" && (
-            <BlocksBoard
+          {selection.kind === "section" && selection.sectionId === "sitemap" && (
+            <SitemapBoard
               nodePositions={positions.nodePositions}
               onPositionChange={positions.onPositionChange}
             />
           )}
-          {view.kind === "pages-overview" && (
-            <PagesBoard
-              nodePositions={positions.nodePositions}
-              onPositionChange={positions.onPositionChange}
-            />
-          )}
-          {view.kind === "single-primitive" && <SinglePrimitiveBoard primitiveId={view.id} />}
-          {view.kind === "single-block" && <SingleBlockBoard slug={view.slug} />}
-          {view.kind === "single-page" && <SinglePageBoard path={view.path} />}
+          {selection.kind === "primitive" &&
+            (() => {
+              const Board = PRIMITIVE_BOARDS[selection.id]
+              return Board ? <Board /> : null
+            })()}
+          {selection.kind === "block" && <SingleBlockBoard slug={selection.slug} />}
+          {selection.kind === "page" && <SinglePageBoard path={selection.path} />}
         </div>
       </div>
     </AgentActivityProvider>
