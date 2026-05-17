@@ -1,0 +1,17 @@
+{
+  "$schema": "https://forkshop.dev/schema/forkshop.json",
+  "schemaVersion": "2.0.0",
+  "installedAt": "2026-05-17T00:00:00Z",
+  "registryUrl": "https://forkshop.dev/r/",
+  "engineVersion": "0.3.0",
+  "mount": "@/app/forkshop",
+  "srcPrefix": "",
+  "installedBundles": ["route-stubs", "font"],
+  "files": {
+    "@forkshop/route-stubs/edit": { "dest": "app/api/forkshop/edit/route.ts", "sha": "1238ac97579053b70bbabc3973598ff005a82722554297db1b6de90faf593095" },
+    "@forkshop/route-stubs/positions": { "dest": "app/api/forkshop/positions/route.ts", "sha": "0f6f6b9eba7ca2a1291d95f7566736081c85773c332544a19116c0a5bdd25fd9" },
+    "@forkshop/route-stubs/agent-activity": { "dest": "app/api/forkshop/agent-activity/route.ts", "sha": "c1a54ef725342318a54d5c79b499536b303da1d2f95ff169d1927d7067757936" },
+    "@forkshop/route-stubs/agent-activity-stream": { "dest": "app/api/forkshop/agent-activity/stream/route.ts", "sha": "47fe6400f0ee4cef72abe627486c106f7105e1f5cf28b2267afd8c440fdac7ff" },
+    "@forkshop/fonts/raveo/RaveoVF": { "dest": "public/fonts/forkshop/RaveoVF.woff2", "sha": "3833af66a1d631a029a61eb4d7c9d1ffc902effa8a18bc44d70a1f16f84bcffb" }
+  }
+}
