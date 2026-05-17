@@ -2,14 +2,12 @@ import type { Manifest } from "./manifest-schema.js"
 
 export interface ResolvedBundles {
   fileAddresses: string[]
-  deps: string[]
   bundleNames: string[]
 }
 
 export function resolveBundles(manifest: Manifest, names: string[]): ResolvedBundles {
   const visited = new Set<string>()
   const fileSet = new Set<string>()
-  const depSet = new Set<string>()
 
   function visit(name: string) {
     if (visited.has(name)) return
@@ -24,7 +22,6 @@ export function resolveBundles(manifest: Manifest, names: string[]): ResolvedBun
       for (const inc of bundle.includes) visit(inc)
     } else {
       for (const item of bundle.items) fileSet.add(item)
-      for (const dep of bundle.deps ?? []) depSet.add(dep)
     }
   }
 
@@ -32,7 +29,6 @@ export function resolveBundles(manifest: Manifest, names: string[]): ResolvedBun
 
   return {
     fileAddresses: [...fileSet],
-    deps: [...depSet],
     bundleNames: [...visited].filter((n) => {
       const bundle = manifest.bundles[n]
       return bundle && bundle.kind !== "composite"

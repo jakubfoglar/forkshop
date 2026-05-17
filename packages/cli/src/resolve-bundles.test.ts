@@ -2,44 +2,69 @@ import { describe, expect, it } from "vitest"
 import { resolveBundles } from "./resolve-bundles.js"
 import type { Manifest } from "./manifest-schema.js"
 
-function fakeManifest(): Manifest {
+function mkManifest(): Manifest {
   return {
-    version: "1.0.0",
-    generatedAt: "2026-05-13T10:00:00Z",
-    registryBaseUrl: "https://forkshop.dev/r/",
+    version: "2.0.0",
+    generatedAt: "2026-05-17T00:00:00Z",
+    registryBaseUrl: "https://example.test/r/",
+    engineVersion: "0.3.0",
     bundles: {
-      a: { kind: "primitive", items: ["@forkshop/lib/foo"], deps: ["clsx@^2"] },
-      b: { kind: "kit", items: ["@forkshop/kits/bar"], deps: [] },
-      c: { kind: "kit", items: ["@forkshop/kits/bar", "@forkshop/kits/baz"] },
-      all: { kind: "composite", includes: ["a", "b"] },
+      "route-stubs": { kind: "scaffold", items: ["@forkshop/route-stubs/edit"] },
+      skill: { kind: "scaffold", items: ["@forkshop/skill/setup"] },
+      "claude-md": { kind: "scaffold", items: ["@forkshop/templates/claude-md"] },
+      font: { kind: "asset", items: ["@forkshop/fonts/raveo/RaveoVF"] },
+      init: {
+        kind: "composite",
+        includes: ["route-stubs", "skill", "claude-md", "font"],
+      },
     },
     files: {
-      "@forkshop/lib/foo": { kind: "text", ext: "ts", content: "" },
-      "@forkshop/kits/bar": { kind: "text", ext: "tsx", content: "" },
-      "@forkshop/kits/baz": { kind: "text", ext: "tsx", content: "" },
+      "@forkshop/route-stubs/edit": {
+        kind: "text",
+        ext: "ts",
+        content: "// ...",
+        destOverride: "app/api/forkshop/edit/route.ts",
+      },
+      "@forkshop/skill/setup": {
+        kind: "text",
+        ext: "md",
+        content: "# setup",
+        destOverride: ".claude/skills/forkshop-setup.md",
+      },
+      "@forkshop/templates/claude-md": {
+        kind: "text",
+        ext: "md",
+        content: "# claude md",
+        destOverride: "{aliases.mount}/CLAUDE.md",
+      },
+      "@forkshop/fonts/raveo/RaveoVF": {
+        kind: "binary",
+        url: "fonts/raveo/RaveoVF.woff2",
+        destOverride: "public/fonts/forkshop/RaveoVF.woff2",
+      },
     },
   }
 }
 
 describe("resolveBundles", () => {
-  it("resolves a single primitive bundle", () => {
-    const result = resolveBundles(fakeManifest(), ["a"])
-    expect(result.fileAddresses).toEqual(["@forkshop/lib/foo"])
-    expect(result.deps).toEqual(["clsx@^2"])
+  it("expands the init composite to all file addresses", () => {
+    const resolved = resolveBundles(mkManifest(), ["init"])
+    expect(resolved.fileAddresses).toEqual([
+      "@forkshop/route-stubs/edit",
+      "@forkshop/skill/setup",
+      "@forkshop/templates/claude-md",
+      "@forkshop/fonts/raveo/RaveoVF",
+    ])
+    expect(resolved.bundleNames).toEqual(["route-stubs", "skill", "claude-md", "font"])
   })
 
-  it("dedupes overlapping items across bundles", () => {
-    const result = resolveBundles(fakeManifest(), ["b", "c"])
-    expect(result.fileAddresses.sort()).toEqual(["@forkshop/kits/bar", "@forkshop/kits/baz"])
+  it("resolves a single leaf bundle", () => {
+    const resolved = resolveBundles(mkManifest(), ["skill"])
+    expect(resolved.fileAddresses).toEqual(["@forkshop/skill/setup"])
+    expect(resolved.bundleNames).toEqual(["skill"])
   })
 
-  it("flattens a composite bundle", () => {
-    const result = resolveBundles(fakeManifest(), ["all"])
-    expect(result.fileAddresses.sort()).toEqual(["@forkshop/kits/bar", "@forkshop/lib/foo"])
-    expect(result.deps).toEqual(["clsx@^2"])
-  })
-
-  it("throws for an unknown bundle", () => {
-    expect(() => resolveBundles(fakeManifest(), ["nope"])).toThrow(/unknown bundle/i)
+  it("throws on unknown bundle name", () => {
+    expect(() => resolveBundles(mkManifest(), ["nope"])).toThrow(/Unknown bundle/)
   })
 })
