@@ -1,12 +1,16 @@
-import { EditorLink } from "@forkshop/engine"
 import "./globals.css"
+import { Header } from "@/components/layout/header"
+import { Footer } from "@/components/layout/footer"
+
+export const metadata = { title: "Playground" }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="font-forkshop-sans bg-forkshop-surface text-forkshop-fg">
-        <EditorLink mountPath="/forkshop" />
+    <html lang="en">
+      <body className="bg-white text-gray-900 antialiased">
+        <Header />
         {children}
+        <Footer />
       </body>
     </html>
   )
