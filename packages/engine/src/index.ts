@@ -48,7 +48,7 @@ export { NodeView, type NodeViewProps } from "@forkshop/components/canvas/node-v
 
 // Standalone UI (top-level mount points)
 export { ForkshopIcon, type ForkshopIconComponent } from "@forkshop/components/icon"
-export { LocatorInit } from "@forkshop/components/locator-init"
+export { EditorLink } from "@forkshop/components/editor-link"
 export { InspectPanel } from "@forkshop/components/inspect-panel"
 export { forkshopIcons, type ForkshopIconName } from "@forkshop/lib/icons"
 

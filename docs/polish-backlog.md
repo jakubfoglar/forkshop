@@ -4,26 +4,6 @@ Small, deferrable improvements not blocking 1.0. Filed as they're discovered. Pu
 
 ---
 
-## Replace `@locator/runtime` + `@locator/webpack-loader` with a homegrown Option-click handler
-
-**Why:** `@locator/runtime@^0.5.1` imports `setStyleProperty` from `solid-js/web`, but solid-js 1.9+ removed that export. The result is a non-fatal `Attempted import error: 'setStyleProperty' is not exported from 'solid-js/web'` warning floods opt-in Locator users' dev terminals on every HMR cycle. No newer upstream release fixes this; pinning solid-js requires lockfile surgery.
-
-**The replacement:** React's dev-mode JSX transform already attaches `__source` (file, line, column) to every JSX element — that's the entire compile-time half of what `@locator/webpack-loader` does. Locator.js's actual value-add is just the runtime click handler. A homegrown `LocatorInit` would:
-
-1. Listen for `mousedown` (or `click`) with `event.altKey === true`
-2. Walk up `event.target.parentElement` to find an element with the React internal `__source` (or `_debugSource` in newer React) attached
-3. Construct `vscode://file/${absolutePath}:${lineNumber}:${columnNumber}`
-4. Navigate the top window to it (`window.top.location.href = ...`)
-5. Mount only when `process.env.NODE_ENV === "development"` AND the page is loaded inside Forkshop's iframe (parent path startsWith mountPath) — same conditional `LocatorInit` already uses today
-
-Roughly 50 lines of TSX. Replaces the entire `@locator/*` dep tree. Removes the solid-js peer-dep landmine forever.
-
-**Sequencing:** Land in a 1.x cycle once 1.0 ships. Not a blocker — the warning is cosmetic.
-
-**Until then:** documented as a known cosmetic issue. Opt-in Locator users see the warning; functionality works.
-
----
-
 ## Dedupe `/api/forkshop/edit?path=...` fetches across multi-viewport boards
 
 **Why:** Each iframe mount triggers one `GET /api/forkshop/edit?path=<source>` to load the source file for the editable-set. Multi-viewport boards (e.g., `ResponsiveFrameView` rendering the same page at 1440/768/375 widths) trigger N identical fetches — once per viewport. Same response, different timestamps. Costs nothing in correctness but spams dev logs and burns redundant CPU.

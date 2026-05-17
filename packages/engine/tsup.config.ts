@@ -35,7 +35,6 @@ export default defineConfig({
   external: [
     "react", "react-dom",
     "next", "next/headers", "next/server", "next/navigation",
-    "@locator/runtime",
     // @central-icons-react/... is deliberately NOT listed — tsup bundles
     // each imported icon's SVG into dist, so the published artifact has no
     // runtime icon dependency.
