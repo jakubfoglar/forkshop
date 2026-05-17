@@ -349,7 +349,7 @@ Sequential. Failures stop the sequence — no transactional rollback. Each step 
 
 ### Step 1 — `{{mount}}/forkshop.config.tsx`
 
-Render from Template 1 (see Scaffolding templates). Populate `primitives` from Phase 2 Scan A, `blocks` from Scan B, `sitemap.excludeGroups` from the auth-filter modifier, `reference.contentPaths` from Scan E.
+Render from Template 1 (see Scaffolding templates). Populate `ui` + `blocks` barrels (write `components/{ui,blocks}/index.ts` files re-exporting each discovered primitive/block), `sitemap.routes` from Phase 2 Scan C (filter out auth-flagged route groups when the modifier fires), and `reference.contentPaths` from Scan E.
 
 ### Step 2 — `{{mount}}/design-system.tsx` (if Design System recipe fired)
 
@@ -612,8 +612,9 @@ export const forkshopConfig = {
     blocks: ["components/blocks"],
   },
   sitemap: {
-    excludeGroups: [{{exclude_groups}}],
-    autoDiscover: true,
+    routes: [
+{{sitemap_routes}}
+    ],
   },
   reference: {
     contentPaths: [{{content_paths}}],
@@ -626,7 +627,7 @@ export type ForkshopConfig = typeof forkshopConfig
 ````
 
 Substitution notes:
-- `{{exclude_groups}}` — quoted comma-separated route-group names from the auth-filter modifier, or empty.
+- `{{sitemap_routes}}` — one `{ path: "/about", sourceFile: "app/about/page.tsx" },` line per route discovered in Phase 2 Scan C, 4-space indented, comma-terminated. Skill filters out routes whose group matches the auth-filter modifier before emitting. If no routes were discovered (only `app/page.tsx`), emit a single `{ path: "/", sourceFile: "app/page.tsx" },` line. The engine's `Tree` Layout doesn't have built-in auto-discovery (deferred — see polish-backlog), so the routes list lives in config and the user edits it to add/remove entries.
 - `{{content_paths}}` — quoted comma-separated MDX glob paths from Scan E, or empty.
 - `{{viewport_profile}}` — `"responsive"` (default) or `"mobile"` (mobile flag set).
 
@@ -820,20 +821,34 @@ The block's component renders with its own default props. If the user wants expl
 ````tsx
 "use client"
 
-import { ForkshopCanvas, Tree } from "@forkshop/engine"
+import {
+  ForkshopCanvas,
+  Tree,
+  type TreeEntry,
+  type IframeRouteNode,
+} from "@forkshop/engine"
 import { forkshopConfig } from "./forkshop.config"
 
 export default function SitemapBoardView() {
+  const entries: TreeEntry[] = forkshopConfig.sitemap.routes.map((r) => {
+    const node: IframeRouteNode = {
+      id: `page:${r.path}`,
+      kind: "iframe-route",
+      x: 0, y: 0, width: 1200, height: 800,
+      routePath: r.path,
+      sourceFile: r.sourceFile,
+    }
+    return { id: `page:${r.path}`, label: r.path, path: r.path, node }
+  })
   return (
     <ForkshopCanvas>
-      <Tree
-        excludeGroups={forkshopConfig.sitemap.excludeGroups}
-        autoDiscover={forkshopConfig.sitemap.autoDiscover}
-      />
+      <Tree entries={entries} />
     </ForkshopCanvas>
   )
 }
 ````
+
+The engine's `Tree` Layout doesn't auto-discover routes (deferred — see polish-backlog). The routes list lives in `forkshopConfig.sitemap.routes`; the user edits it to add or remove entries. The `forkshop-live-editing` skill teaches Claude to update the list when the user asks to add a route.
 
 ### Template 8 — `{{mount}}/reference.tsx`
 
