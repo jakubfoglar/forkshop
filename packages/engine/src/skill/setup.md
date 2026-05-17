@@ -858,7 +858,7 @@ export default function ForkshopPage() {
   }, [selection, hasHydrated])
 
   return (
-    <AgentActivityProvider fileMap={{}}>
+    <AgentActivityProvider fileMap={{ primitives: [], blocks: [] }}>
       <div className="flex h-screen overflow-hidden">
         <ForkshopSidebar
           selection={selection}
