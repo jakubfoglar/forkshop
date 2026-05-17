@@ -133,6 +133,7 @@ After `forkshop init`, your installation lives at:
   sitemap.tsx                       Sitemap parent (Tree)
   reference.tsx                     Reference parent (Tree) — MDX projects only
   block/[slug]/page.tsx             auto-managed block preview route
+  node-types/                       (optional) custom NodeType definitions — see spec for shape
   CLAUDE.md                         this file
 {{srcPrefix}}app/api/forkshop/      route stubs (re-exports from @forkshop/engine)
 ```
