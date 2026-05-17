@@ -8,58 +8,11 @@ import {
 } from "./manifest-schema.js"
 
 export interface BuildManifestOptions {
-  registryRoot: string
+  registryRoot: string                // path to packages/engine/
   registryBaseUrl?: string
 }
 
 const DEFAULT_BASE_URL = "https://forkshop.dev/r/"
-
-/**
- * Maps an absolute file path inside packages/engine to a canonical @forkshop/* address.
- * Files under src/ get the address derived from their path-from-src.
- * Files under tailwind/ get @forkshop/tailwind/<name> or @forkshop/css/<name> for .css.
- * Files under templates/ get @forkshop/templates/<name>.
- */
-function pathToAddress(registryRoot: string, absolutePath: string): string | undefined {
-  const rel = path.relative(registryRoot, absolutePath).split(path.sep).join("/")
-  if (rel.startsWith("src/")) {
-    const noExt = rel.slice("src/".length).replace(/\.(ts|tsx|md|css)$/, "")
-    return `@forkshop/${noExt}`
-  }
-  if (rel.startsWith("tailwind/")) {
-    const noExt = rel.slice("tailwind/".length).replace(/\.(ts|css)$/, "")
-    // forkshop-preset.ts → @forkshop/tailwind/forkshop-preset
-    // forkshop.css → @forkshop/css/forkshop
-    if (noExt === "forkshop" && rel.endsWith(".css")) return "@forkshop/css/forkshop"
-    return `@forkshop/tailwind/${noExt}`
-  }
-  if (rel.startsWith("templates/")) {
-    const noExt = rel.slice("templates/".length).replace(/\.(md|tsx|ts)$/, "")
-    if (noExt === "user-claude-md") return "@forkshop/templates/claude-md"
-    return `@forkshop/templates/${noExt}`
-  }
-  return undefined
-}
-
-function extOf(absolutePath: string): "ts" | "tsx" | "md" | "css" | "json" | "sh" {
-  const dotIndex = absolutePath.lastIndexOf(".")
-  const ext = absolutePath.slice(dotIndex + 1)
-  if (ext === "ts" || ext === "tsx" || ext === "md" || ext === "css" || ext === "json" || ext === "sh") {
-    return ext
-  }
-  throw new Error(`Unknown extension for ${absolutePath}`)
-}
-
-// Binary font files live under packages/engine/fonts/<family>/<file>.woff2.
-// We address them as `@forkshop/fonts/<family>/<file>` and drop them into the
-// user's public/fonts/forkshop/<file> so the CSS `@font-face` declaration
-// (relative URL `/fonts/forkshop/<file>`) resolves at runtime.
-function fontAddress(registryRoot: string, absolutePath: string): string | undefined {
-  const rel = path.relative(registryRoot, absolutePath).split(path.sep).join("/")
-  if (!rel.startsWith("fonts/")) return undefined
-  const noExt = rel.slice("fonts/".length).replace(/\.woff2?$/, "")
-  return `@forkshop/fonts/${noExt}`
-}
 
 async function walk(dir: string, out: string[] = []): Promise<string[]> {
   let entries: import("node:fs").Dirent[]
@@ -77,157 +30,133 @@ async function walk(dir: string, out: string[] = []): Promise<string[]> {
   return out
 }
 
+function extOf(absolutePath: string): "ts" | "tsx" | "md" | "css" {
+  const m = absolutePath.match(/\.(ts|tsx|md|css)(?:\.template)?$/)
+  if (!m) throw new Error(`Unknown extension for ${absolutePath}`)
+  return m[1] as "ts" | "tsx" | "md" | "css"
+}
+
+function skillAddress(rel: string): string {
+  const noExt = rel.replace(/^src\/skill\//, "").replace(/\.md$/, "")
+  return `@forkshop/skill/${noExt}`
+}
+
+function claudeMdAddress(rel: string): string | undefined {
+  if (rel === "templates/user-claude-md.md") return "@forkshop/templates/claude-md"
+  return undefined
+}
+
+function routeStubAddress(rel: string): { address: string; dest: string } | undefined {
+  // templates/api-stubs/<name>-route.ts.template
+  const m = rel.match(/^templates\/api-stubs\/(.+?)-route\.ts\.template$/)
+  if (!m) return undefined
+  const name = m[1]!
+  // Special case: agent-activity-stream maps to agent-activity/stream/
+  const destSubpath = name === "agent-activity-stream" ? "agent-activity/stream" : name
+  return {
+    address: `@forkshop/route-stubs/${name}`,
+    dest: `app/api/forkshop/${destSubpath}/route.ts`,
+  }
+}
+
+function fontAddress(rel: string): { address: string; basename: string } | undefined {
+  const m = rel.match(/^fonts\/(.+)\.woff2?$/)
+  if (!m) return undefined
+  return { address: `@forkshop/fonts/${m[1]!}`, basename: path.basename(rel) }
+}
+
 export async function buildManifest(options: BuildManifestOptions): Promise<Manifest> {
   const { registryRoot, registryBaseUrl = DEFAULT_BASE_URL } = options
 
-  const srcFiles = await walk(path.join(registryRoot, "src"))
-  const tailwindFiles = await walk(path.join(registryRoot, "tailwind"))
+  const skillFiles = await walk(path.join(registryRoot, "src/skill"))
   const templateFiles = await walk(path.join(registryRoot, "templates"))
   const fontFiles = await walk(path.join(registryRoot, "fonts"))
 
-  // The registry's own top-level barrel — not consumed by users, so skip it.
-  // Only the exact `packages/engine/src/index.ts` is dropped; nested
-  // `components/foo/index.ts` files (if introduced later) are still included.
-  const topLevelBarrel = path.join(registryRoot, "src", "index.ts")
-
   const files: Record<string, ManifestFile> = {}
+  const skillItems: string[] = []
+  const routeStubItems: string[] = []
 
-  for (const absPath of [...srcFiles, ...tailwindFiles, ...templateFiles]) {
-    // Skip test files
-    if (/\.test\.(ts|tsx)$/.test(absPath)) continue
-    // Skip only the registry's own top-level barrel.
-    if (absPath === topLevelBarrel) continue
-    const address = pathToAddress(registryRoot, absPath)
-    if (!address) continue
-    const content = await fs.readFile(absPath, "utf8")
+  for (const abs of skillFiles) {
+    const rel = path.relative(registryRoot, abs).split(path.sep).join("/")
+    if (!rel.endsWith(".md")) continue
+    const address = skillAddress(rel)
+    const content = await fs.readFile(abs, "utf8")
+    const name = rel.replace(/^src\/skill\//, "").replace(/\.md$/, "")
     files[address] = {
       kind: "text",
-      ext: extOf(absPath),
+      ext: "md",
       content,
+      destOverride: `.claude/skills/forkshop-${name}.md`,
+    }
+    skillItems.push(address)
+  }
+
+  for (const abs of templateFiles) {
+    const rel = path.relative(registryRoot, abs).split(path.sep).join("/")
+    const claudeAddr = claudeMdAddress(rel)
+    if (claudeAddr) {
+      const content = await fs.readFile(abs, "utf8")
+      files[claudeAddr] = {
+        kind: "text",
+        ext: "md",
+        content,
+        destOverride: "{aliases.mount}/CLAUDE.md",
+      }
+      continue
+    }
+    const stub = routeStubAddress(rel)
+    if (stub) {
+      const content = await fs.readFile(abs, "utf8")
+      files[stub.address] = {
+        kind: "text",
+        ext: extOf(abs),
+        content,
+        destOverride: stub.dest,
+      }
+      routeStubItems.push(stub.address)
+      continue
     }
   }
 
-  // Font binaries — referenced by URL relative to registryBaseUrl. Dropped at
-  // public/fonts/forkshop/<basename> so the @font-face URL `/fonts/forkshop/...`
-  // resolves at runtime.
-  for (const absPath of fontFiles) {
-    const address = fontAddress(registryRoot, absPath)
-    if (!address) continue
-    const rel = path.relative(registryRoot, absPath).split(path.sep).join("/")
-    const basename = path.basename(absPath)
-    files[address] = {
+  for (const abs of fontFiles) {
+    const rel = path.relative(registryRoot, abs).split(path.sep).join("/")
+    const fa = fontAddress(rel)
+    if (!fa) continue
+    files[fa.address] = {
       kind: "binary",
-      url: rel, // registryBaseUrl + url = the binary's serving URL
-      destOverride: `public/fonts/forkshop/${basename}`,
+      url: rel,
+      destOverride: `public/fonts/forkshop/${fa.basename}`,
     }
   }
 
-  // destOverrides for fixed-location files.
-  const overrides: Record<string, string> = {
-    "@forkshop/templates/claude-md": "{aliases.mount}/CLAUDE.md",
-    "@forkshop/css/forkshop": "{aliases.mount}/forkshop.css",
-    "@forkshop/tailwind/forkshop-preset": "{aliases.tailwind}/forkshop-preset.ts",
-  }
-  for (const [address, dest] of Object.entries(overrides)) {
-    const existing = files[address]
-    if (existing && existing.kind === "text") {
-      files[address] = { ...existing, destOverride: dest }
-    }
-  }
+  const fontItems = Object.keys(files).filter((a) => a.startsWith("@forkshop/fonts/")).sort()
 
-  // Skill files all land in .claude/skills/forkshop-<name>.md. Pattern-based
-  // so new skill files (doc-sync, etc.) install correctly without a manifest
-  // edit.
-  for (const address of Object.keys(files)) {
-    if (!address.startsWith("@forkshop/skill/")) continue
-    const name = address.slice("@forkshop/skill/".length)
-    const existing = files[address]
-    if (existing && existing.kind === "text") {
-      files[address] = { ...existing, destOverride: `.claude/skills/forkshop-${name}.md` }
-    }
-  }
-
-  // Construct bundles. Items computed by inspecting the files map.
-  const isPrimitiveAddress = (addr: string): boolean =>
-    addr.startsWith("@forkshop/components/") ||
-    addr.startsWith("@forkshop/hooks/") ||
-    addr.startsWith("@forkshop/lib/") ||
-    addr.startsWith("@forkshop/api/") ||
-    addr.startsWith("@forkshop/types/") ||
-    addr.startsWith("@forkshop/node-types/")
-
-  const primitiveItems = Object.keys(files).filter(isPrimitiveAddress).sort()
-
-  const skillItems = Object.keys(files).filter((addr) => addr.startsWith("@forkshop/skill/")).sort()
-
-  // Bundle authoring note:
-  // - `fonts` is intentionally empty in v1; it will be populated when Raveo
-  //   woff2 files land in packages/engine/fonts/. The bundle exists so `init`
-  //   already includes it — adding the assets later won't require manifest
-  //   schema changes.
-  // - `skill` is populated dynamically from any `@forkshop/skill/*` addresses
-  //   present in the registry's `src/skill/` directory.
-  // - `primitives.deps` mirrors packages/engine/package.json `dependencies`.
-  //   Keep the pins in sync when bumping the registry.
-  // - Layout bundles replaced the old `kits/*` bundles after the Node/NodeType
-  //   refactor. Each Layout is a single file (gallery, tree, design-system-view).
   const bundles: Record<string, Bundle> = {
-    primitives: {
-      kind: "primitive",
-      items: primitiveItems,
-      deps: [
-        "clsx@^2.1.1",
-        "motion@^11.0.0",
-        "lucide-react@^1.14.0",
-        "@locator/runtime@^0.5.1",
-      ],
-    },
-    "layouts/gallery": {
-      kind: "kit",
-      items: ["@forkshop/layouts/gallery"],
-    },
-    "layouts/tree": {
-      kind: "kit",
-      items: ["@forkshop/layouts/tree"],
-    },
-    "layouts/design-system-view": {
-      kind: "kit",
-      items: ["@forkshop/layouts/design-system-view"],
-    },
-    fonts: {
-      kind: "asset",
-      items: Object.keys(files).filter((addr) => addr.startsWith("@forkshop/fonts/")).sort(),
-    },
-    "css-and-config": {
-      kind: "asset",
-      items: [
-        "@forkshop/css/forkshop",
-        "@forkshop/tailwind/forkshop-preset",
-        "@forkshop/templates/claude-md",
-      ].filter((address) => address in files),
-    },
-    skill: {
-      kind: "asset",
-      items: skillItems,
-    },
+    "route-stubs": { kind: "scaffold", items: routeStubItems.sort() },
+    skill: { kind: "scaffold", items: skillItems.sort() },
+    "claude-md": { kind: "scaffold", items: ["@forkshop/templates/claude-md"] },
+    font: { kind: "asset", items: fontItems },
     init: {
       kind: "composite",
-      includes: [
-        "primitives",
-        "layouts/gallery",
-        "layouts/tree",
-        "layouts/design-system-view",
-        "fonts",
-        "skill",
-        "css-and-config",
-      ],
+      includes: ["route-stubs", "skill", "claude-md", "font"],
     },
+  }
+
+  // Read engine version from package.json
+  let engineVersion = "0.0.0"
+  try {
+    const pkgText = await fs.readFile(path.join(registryRoot, "package.json"), "utf8")
+    const pkg = JSON.parse(pkgText) as { version?: string }
+    engineVersion = pkg.version ?? "0.0.0"
+  } catch {
+    // OK in test fixtures
   }
 
   return {
     version: MANIFEST_SCHEMA_VERSION,
     generatedAt: new Date().toISOString(),
     registryBaseUrl,
+    engineVersion,
     bundles,
     files,
   }
