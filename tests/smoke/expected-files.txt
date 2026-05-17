@@ -1,0 +1,10 @@
+.claude/skills/forkshop-setup.md
+.claude/skills/forkshop-live-editing.md
+.claude/skills/forkshop-doc-sync.md
+app/forkshop/CLAUDE.md
+app/api/forkshop/edit/route.ts
+app/api/forkshop/positions/route.ts
+app/api/forkshop/agent-activity/route.ts
+app/api/forkshop/agent-activity/stream/route.ts
+public/fonts/forkshop/RaveoVF.woff2
+forkshop.json
