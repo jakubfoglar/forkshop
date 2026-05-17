@@ -568,6 +568,10 @@ Key placeholders:
 - `{{content_paths}}` — quoted comma-separated MDX glob paths.
 - `{{viewport_profile}}` — `"responsive"` (default) or `"mobile"`.
 - `{{variant_entries}}` — comma-terminated, 4-space indented Gallery entries.
+- `{{primitive_slug}}` — kebab-case slug used inside variant entries (matches `{{slug}}`).
+- `{{variant_key}}` — kebab-case identifier for a specific variant combination (e.g., `primary-md`).
+- `{{variant_label}}` — human-readable variant label (e.g., `"Primary / MD"`).
+- `{{variant_props}}` — JSX attribute string for the variant (e.g., `variant="primary" size="md"`).
 - `{{board_imports}}` — Board component imports for `page.tsx`.
 - `{{default_section}}` — id of the first selected recipe.
 - `{{section_entries}}` — `SidebarSection` objects, comma-separated.
@@ -759,7 +763,7 @@ import { notFound } from "next/navigation"
 import { getBlockBySlug } from "../../forkshop.config"
 
 export function generateStaticParams() {
-  if (process.env.NODE_ENV === "production") return []
+  // No pre-generated routes — the page is dev-only and resolved dynamically.
   return []
 }
 
@@ -878,6 +882,7 @@ Substitution notes:
 - `{{default_section}}` — id of the first selected recipe (`design-system`, `ui-components`, etc.).
 - `{{section_entries}}` — one `SidebarSection` object per selected recipe. Sitemap and Reference use `entryKind: "page"`; UI Components uses `entryKind: "primitive"`; Blocks uses `entryKind: "block"`.
 - `{{board_switch}}` — selection → board mapping (`selection.kind === "section" && selection.sectionId === "design-system" && <DesignSystemBoardView />`, etc., one per recipe + per-leaf cases).
+- Note: each Board component in `{{board_switch}}` wraps its own `<ForkshopCanvas>` (see Templates 2-8). `page.tsx` itself does not render `<ForkshopCanvas>` — it just mounts the sidebar and the selected Board.
 
 ### Template 10 — `next.config.*` webpack-only rule (Next 14)
 
