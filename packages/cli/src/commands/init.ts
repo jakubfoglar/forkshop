@@ -1,10 +1,19 @@
+import path from "node:path"
+import { promises as fs } from "node:fs"
 import pc from "picocolors"
 import { detectPackageManager } from "../detect-pm.js"
-import { copyManifestFiles, findCollisions } from "../copy-files.js"
 import { detectSrcPrefix } from "../detect-src-dir.js"
-import { writeForkshopJson } from "../forkshop-json.js"
 import { fetchManifest } from "../fetch-manifest.js"
-import { type ForkshopJson, type Manifest } from "../manifest-schema.js"
+import { copyManifestFiles, findCollisions } from "../copy-files.js"
+import { writeForkshopJson } from "../forkshop-json.js"
+import { appendForkshopCssImport } from "../globals-css-append.js"
+import { fetchFontTo } from "../font-fetch.js"
+import {
+  DEFAULT_ALIASES,
+  type ForkshopJson,
+  type Manifest,
+  type ResolvedAliases,
+} from "../manifest-schema.js"
 import { preflightInit } from "../preflight.js"
 import { resolveBundles } from "../resolve-bundles.js"
 import { resolveDestination } from "../resolve-destination.js"
@@ -12,70 +21,64 @@ import { mergeDepsIntoPackageJson } from "../write-deps.js"
 
 export interface InitOptions {
   projectRoot: string
-  manifest?: Manifest // for tests; production uses fetchManifest
+  manifest?: Manifest                 // injected by tests; production uses fetchManifest
   registryUrl?: string
   force?: boolean
-  noInstall?: boolean
-  warnDirtyGit?: boolean
 }
 
 export type InitResult = { ok: true } | { ok: false; reason: string }
 
 const DEFAULT_REGISTRY_URL = "https://forkshop.dev/r/"
 
-const DEFAULT_FORKSHOP_ALIASES: ForkshopJson["aliases"] = {
-  base: "@/",
-  components: "@/components/forkshop",
-  kits: "@/components/forkshop/kits",
-  hooks: "@/lib/forkshop/hooks",
-  lib: "@/lib/forkshop",
-  api: "@/app/api/forkshop",
-  tailwind: "@/lib/forkshop/tailwind",
-  mount: "@/app/forkshop",
-}
-
 export async function runInit(options: InitOptions): Promise<InitResult> {
-  const { projectRoot, force = false, noInstall = false } = options
+  const { projectRoot, force = false } = options
   const registryUrl = options.registryUrl ?? DEFAULT_REGISTRY_URL
 
-  // 1. Preflight.
-  const preflight = await preflightInit(projectRoot, {})
-  if (!preflight.ok) return preflight
+  // 1. Preflight
+  const pre = await preflightInit(projectRoot, {})
+  if (!pre.ok) return pre
 
-  // 2. Refuse re-install.
-  const { promises: fs } = await import("node:fs")
-  const path = await import("node:path")
+  // 2. Refuse re-install
   try {
     await fs.access(path.join(projectRoot, "forkshop.json"))
     return {
       ok: false,
-      reason: "Forkshop is already installed. Use `forkshop diff <file>` or `forkshop add <kit>`.",
+      reason:
+        "Forkshop is already installed. Use `forkshop diff <file>` or `forkshop update`.",
     }
   } catch {
-    // OK — forkshop.json doesn't exist
+    /* OK */
   }
 
-  // 3. Fetch manifest (or use injected one for tests).
+  // 3. Fetch manifest
   const manifest = options.manifest ?? (await fetchManifest(registryUrl))
 
-  // 3b. Detect src/ convention so file destinations land where `@/*` resolves.
-  const srcPrefix = await detectSrcPrefix(projectRoot)
-  const aliases: ForkshopJson["aliases"] = {
-    ...DEFAULT_FORKSHOP_ALIASES,
+  // 3a. Schema gate
+  if (manifest.version !== "2.0.0") {
+    return {
+      ok: false,
+      reason: `Registry returned manifest schema ${manifest.version}; this CLI expects 2.0.0. Update your CLI or registry.`,
+    }
+  }
+
+  // 4. Detect src/
+  const srcPrefix = (await detectSrcPrefix(projectRoot)) as "" | "src/"
+
+  // 5. Build aliases
+  const aliases: ResolvedAliases = {
+    mount: DEFAULT_ALIASES.mount,
     srcPrefix,
   }
   if (srcPrefix) {
     console.log(
-      pc.dim(
-        `\nDetected \`src/\` convention from tsconfig.json — installing under src/.`,
-      ),
+      pc.dim(`\nDetected \`src/\` convention from tsconfig.json — installing under src/.`)
     )
   }
 
-  // 4. Resolve init bundle.
+  // 6. Resolve init bundle
   const resolved = resolveBundles(manifest, ["init"])
 
-  // 5. Collision check.
+  // 7. Collision check (text files + font)
   const destinations = resolved.fileAddresses.map((address) => {
     const file = manifest.files[address]
     if (!file) throw new Error(`Missing file in manifest: ${address}`)
@@ -92,63 +95,81 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
     }
   }
 
-  // 6. Copy + rewrite.
-  const plan = await copyManifestFiles({
+  // 8. Copy text files
+  const textPlan = await copyManifestFiles({
     projectRoot,
     manifest,
     aliases,
     fileAddresses: resolved.fileAddresses,
   })
 
-  // 7. Merge runtime deps into package.json (don't invoke any package
-  // manager — too fragile across host pnpm/corepack/Node versions).
-  let addedDeps: string[] = []
-  if (!noInstall && resolved.deps.length > 0) {
-    try {
-      addedDeps = await mergeDepsIntoPackageJson(projectRoot, resolved.deps)
-    } catch (error) {
-      console.error(
-        pc.yellow(
-          `\nCouldn't merge deps into package.json: ${(error as Error).message}\n` +
-            `Add these manually:\n  ${resolved.deps.join("\n  ")}`,
-        ),
-      )
+  // 9. Fetch + write font (binary not handled by copyManifestFiles)
+  const fontAddress = "@forkshop/fonts/raveo/RaveoVF"
+  const fontFile = manifest.files[fontAddress]
+  let fontPlanEntry: { address: string; dest: string; sha: string } | undefined
+  if (fontFile && fontFile.kind === "binary") {
+    const dest = resolveDestination(fontAddress, fontFile, aliases)
+    const absDest = path.join(projectRoot, dest)
+    const primaryUrl = new URL(fontFile.url, manifest.registryBaseUrl).toString()
+    const fallbackUrl = `https://unpkg.com/@forkshop/engine@${manifest.engineVersion}/dist/fonts/RaveoVF.woff2`
+    const result = await fetchFontTo({
+      primaryUrl,
+      fallbackUrl,
+      destAbsolute: absDest,
+    })
+    if (result.source === "fallback") {
+      console.log(pc.yellow(`\nFont fetched from unpkg fallback (registry binary unreachable).`))
     }
+    const bytes = await fs.readFile(absDest)
+    const { sha256Hex } = await import("../sha.js")
+    fontPlanEntry = { address: fontAddress, dest, sha: sha256Hex(bytes.toString("hex")) }
   }
 
-  // 8. Write forkshop.json.
-  const forkshopJson: ForkshopJson = {
+  // 10. Append CSS import
+  const cssResult = await appendForkshopCssImport(projectRoot, srcPrefix)
+  if (cssResult.action === "skipped") {
+    console.log(pc.dim(`\n${cssResult.target} already imports forkshop.css — skipped.`))
+  }
+
+  // 11. Merge engine into package.json
+  const addedDeps = await mergeDepsIntoPackageJson(projectRoot, [
+    `@forkshop/engine@^${manifest.engineVersion}`,
+  ])
+
+  // 12. Write forkshop.json
+  const allPlan = [...textPlan, ...(fontPlanEntry ? [fontPlanEntry] : [])]
+  const lock: ForkshopJson = {
     $schema: "https://forkshop.dev/schema/forkshop.json",
-    registryVersion: manifest.version,
+    schemaVersion: "2.0.0",
     installedAt: new Date().toISOString(),
     registryUrl,
-    aliases,
+    engineVersion: manifest.engineVersion,
+    mount: aliases.mount,
+    srcPrefix: aliases.srcPrefix,
     installedBundles: resolved.bundleNames,
-    files: Object.fromEntries(
-      plan.map((entry) => [entry.address, { dest: entry.dest, sha: entry.sha }])
-    ),
+    files: Object.fromEntries(allPlan.map((e) => [e.address, { dest: e.dest, sha: e.sha }])),
   }
-  await writeForkshopJson(projectRoot, forkshopJson)
+  await writeForkshopJson(projectRoot, lock)
 
-  // 9. Print summary.
-  console.log(pc.green(`\nInstalled ${plan.length} files into your project.`))
+  // 13. Summary
+  console.log(pc.green(`\nInstalled ${allPlan.length} files into your project.`))
   if (addedDeps.length > 0) {
     const pm = await detectPackageManager(projectRoot)
     const installCmd =
-      pm === "pnpm" ? "pnpm install"
-      : pm === "yarn" ? "yarn"
-      : pm === "bun" ? "bun install"
-      : "npm install"
+      pm === "pnpm"
+        ? "pnpm install"
+        : pm === "yarn"
+          ? "yarn"
+          : pm === "bun"
+            ? "bun install"
+            : "npm install"
     console.log(
-      pc.dim(
-        `\nAdded ${addedDeps.length} dep${addedDeps.length === 1 ? "" : "s"} to package.json: ${addedDeps.join(", ")}`,
-      ),
+      pc.dim(`\nAdded \`@forkshop/engine\` to package.json. Run \`${installCmd}\` to fetch it.`)
     )
-    console.log(pc.dim(`Run \`${installCmd}\` to fetch them.`))
   }
   console.log("\nNext steps:")
   console.log("  1. Open Claude Code in this project and type 'set up Forkshop' to finish wiring.")
-  console.log("  2. Or run your dev server and open /forkshop to see the default layout.")
+  console.log("  2. Or read `app/forkshop/CLAUDE.md` to extend Forkshop by hand.")
 
   return { ok: true }
 }

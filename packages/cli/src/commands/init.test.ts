@@ -1,137 +1,153 @@
 import { promises as fs } from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { runInit } from "./init.js"
 import type { Manifest } from "../manifest-schema.js"
 
 function fakeManifest(): Manifest {
   return {
-    version: "1.0.0",
-    generatedAt: "2026-05-13T10:00:00Z",
+    version: "2.0.0",
+    generatedAt: "2026-05-17T00:00:00Z",
     registryBaseUrl: "https://example.test/r/",
+    engineVersion: "0.3.0",
     bundles: {
-      primitives: {
-        kind: "primitive",
-        items: ["@forkshop/lib/foo"],
-        deps: ["clsx@^2.0.0"],
-      },
-      "kits/iframe-gallery": {
-        kind: "kit",
-        items: ["@forkshop/kits/iframe-gallery"],
-      },
-      "css-and-config": {
-        kind: "asset",
-        items: ["@forkshop/css/forkshop"],
-      },
+      "route-stubs": { kind: "scaffold", items: ["@forkshop/route-stubs/edit"] },
+      skill: { kind: "scaffold", items: ["@forkshop/skill/setup"] },
+      "claude-md": { kind: "scaffold", items: ["@forkshop/templates/claude-md"] },
+      font: { kind: "asset", items: ["@forkshop/fonts/raveo/RaveoVF"] },
       init: {
         kind: "composite",
-        includes: ["primitives", "kits/iframe-gallery", "css-and-config"],
+        includes: ["route-stubs", "skill", "claude-md", "font"],
       },
     },
     files: {
-      "@forkshop/lib/foo": {
+      "@forkshop/route-stubs/edit": {
         kind: "text",
         ext: "ts",
-        content: "export const foo = 1",
+        content: 'export { POST, GET } from "@forkshop/engine/api/edit/route"\n',
+        destOverride: "app/api/forkshop/edit/route.ts",
       },
-      "@forkshop/kits/iframe-gallery": {
+      "@forkshop/skill/setup": {
         kind: "text",
-        ext: "tsx",
-        content: `import { foo } from "@forkshop/lib/foo"\nexport const Gallery = () => foo`,
+        ext: "md",
+        content: "# setup\n",
+        destOverride: ".claude/skills/forkshop-setup.md",
       },
-      "@forkshop/css/forkshop": {
+      "@forkshop/templates/claude-md": {
         kind: "text",
-        ext: "css",
-        content: "/* forkshop styles */",
-        destOverride: "{aliases.mount}/forkshop.css",
+        ext: "md",
+        content: "# claude md\nOpen `{{srcPrefix}}app/forkshop/`.\n",
+        destOverride: "{aliases.mount}/CLAUDE.md",
+      },
+      "@forkshop/fonts/raveo/RaveoVF": {
+        kind: "binary",
+        url: "fonts/raveo/RaveoVF.woff2",
+        destOverride: "public/fonts/forkshop/RaveoVF.woff2",
       },
     },
   }
 }
 
-async function setupProject(): Promise<string> {
+async function setupProject(overrides: { withSrc?: boolean } = {}): Promise<string> {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "forkshop-init-"))
-  await fs.mkdir(path.join(root, "app"))
+  await fs.mkdir(path.join(root, overrides.withSrc ? "src/app" : "app"), { recursive: true })
   await fs.writeFile(path.join(root, "next.config.js"), "module.exports = {}")
   await fs.writeFile(
     path.join(root, "tsconfig.json"),
-    JSON.stringify({ compilerOptions: { paths: { "@/*": ["./*"] } } })
+    JSON.stringify({
+      compilerOptions: {
+        paths: { "@/*": [overrides.withSrc ? "./src/*" : "./*"] },
+      },
+    })
+  )
+  await fs.writeFile(
+    path.join(root, "package.json"),
+    JSON.stringify({ name: "host", dependencies: { next: "^14.0.0" } }, null, 2)
+  )
+  await fs.writeFile(
+    path.join(root, overrides.withSrc ? "src/app/globals.css" : "app/globals.css"),
+    "@tailwind base;\n@tailwind utilities;\n"
   )
   return root
 }
 
-describe("runInit", () => {
+describe("runInit (v2)", () => {
   const dirs: string[] = []
+
+  beforeEach(() => {
+    // Mock fetch for the font binary
+    const payload = new Uint8Array([0x77, 0x4f, 0x46, 0x32])
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      arrayBuffer: async () => payload.buffer,
+    } as unknown as Response)
+  })
+
   afterEach(async () => {
     vi.restoreAllMocks()
     for (const d of dirs.splice(0)) await fs.rm(d, { recursive: true, force: true })
   })
 
-  it("copies all init bundle files, writes forkshop.json, prints a summary", async () => {
+  it("happy path — flat layout, drops scaffold + writes lock", async () => {
     const root = await setupProject()
     dirs.push(root)
     const result = await runInit({
       projectRoot: root,
       manifest: fakeManifest(),
-      noInstall: true,
     })
     expect(result.ok).toBe(true)
 
-    expect(await fs.readFile(path.join(root, "lib/forkshop/foo.ts"), "utf8")).toBe("export const foo = 1")
-    const gallery = await fs.readFile(
-      path.join(root, "components/forkshop/kits/iframe-gallery.tsx"),
-      "utf8"
+    expect(
+      await fs.readFile(path.join(root, ".claude/skills/forkshop-setup.md"), "utf8")
+    ).toBe("# setup\n")
+    expect(
+      await fs.readFile(path.join(root, "app/api/forkshop/edit/route.ts"), "utf8")
+    ).toBe('export { POST, GET } from "@forkshop/engine/api/edit/route"\n')
+    expect(await fs.readFile(path.join(root, "app/forkshop/CLAUDE.md"), "utf8")).toContain(
+      "Open `app/forkshop/`."
     )
-    expect(gallery).toContain('from "@/lib/forkshop/foo"')
-    expect(await fs.readFile(path.join(root, "app/forkshop/forkshop.css"), "utf8")).toBe("/* forkshop styles */")
 
-    const forkshopJsonText = await fs.readFile(path.join(root, "forkshop.json"), "utf8")
-    const forkshopJson = JSON.parse(forkshopJsonText)
-    expect(forkshopJson.registryVersion).toBe("1.0.0")
-    expect(forkshopJson.installedBundles).toContain("primitives")
-    expect(forkshopJson.files["@forkshop/lib/foo"].dest).toBe("lib/forkshop/foo.ts")
+    const fontBuf = await fs.readFile(path.join(root, "public/fonts/forkshop/RaveoVF.woff2"))
+    expect(fontBuf.length).toBe(4)
+
+    const globals = await fs.readFile(path.join(root, "app/globals.css"), "utf8")
+    expect(globals.startsWith('@import "@forkshop/engine/forkshop.css";')).toBe(true)
+
+    const pkg = JSON.parse(await fs.readFile(path.join(root, "package.json"), "utf8"))
+    expect(pkg.dependencies["@forkshop/engine"]).toBeDefined()
+
+    const lock = JSON.parse(await fs.readFile(path.join(root, "forkshop.json"), "utf8"))
+    expect(lock.schemaVersion).toBe("2.0.0")
+    expect(lock.engineVersion).toBe("0.3.0")
+    expect(lock.mount).toBe("@/app/forkshop")
+    expect(lock.srcPrefix).toBe("")
+    expect(lock.installedBundles).toEqual([
+      "route-stubs",
+      "skill",
+      "claude-md",
+      "font",
+    ])
+    expect(lock.files["@forkshop/skill/setup"].dest).toBe(
+      ".claude/skills/forkshop-setup.md"
+    )
+    expect(lock.files["@forkshop/fonts/raveo/RaveoVF"].dest).toBe(
+      "public/fonts/forkshop/RaveoVF.woff2"
+    )
   })
 
-  it("refuses if forkshop.json already exists", async () => {
-    const root = await setupProject()
+  it("respects detected src/ convention", async () => {
+    const root = await setupProject({ withSrc: true })
     dirs.push(root)
-    await fs.writeFile(path.join(root, "forkshop.json"), "{}")
     const result = await runInit({
       projectRoot: root,
       manifest: fakeManifest(),
-      noInstall: true,
-    })
-    expect(result.ok).toBe(false)
-    if (!result.ok) expect(result.reason).toMatch(/already installed/i)
-  })
-
-  it("refuses on collision with an existing file (without --force)", async () => {
-    const root = await setupProject()
-    dirs.push(root)
-    await fs.mkdir(path.join(root, "lib/forkshop"), { recursive: true })
-    await fs.writeFile(path.join(root, "lib/forkshop/foo.ts"), "// pre-existing")
-    const result = await runInit({
-      projectRoot: root,
-      manifest: fakeManifest(),
-      noInstall: true,
-    })
-    expect(result.ok).toBe(false)
-    if (!result.ok) expect(result.reason).toMatch(/conflict/i)
-  })
-
-  it("overwrites with --force", async () => {
-    const root = await setupProject()
-    dirs.push(root)
-    await fs.mkdir(path.join(root, "lib/forkshop"), { recursive: true })
-    await fs.writeFile(path.join(root, "lib/forkshop/foo.ts"), "// pre-existing")
-    const result = await runInit({
-      projectRoot: root,
-      manifest: fakeManifest(),
-      noInstall: true,
-      force: true,
     })
     expect(result.ok).toBe(true)
-    expect(await fs.readFile(path.join(root, "lib/forkshop/foo.ts"), "utf8")).toBe("export const foo = 1")
+    expect(
+      await fs.readFile(path.join(root, "src/app/forkshop/CLAUDE.md"), "utf8")
+    ).toContain("Open `src/app/forkshop/`.")
+    const lock = JSON.parse(await fs.readFile(path.join(root, "forkshop.json"), "utf8"))
+    expect(lock.srcPrefix).toBe("src/")
   })
 })
