@@ -1,25 +1,35 @@
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import tailwindConfig from "@/tailwind.config"
-import type { Config } from "tailwindcss"
+import { Hero } from "@/components/blocks/hero"
+import { FeatureGrid } from "@/components/blocks/feature-grid"
+import { CTA } from "@/components/blocks/cta"
+import { Pricing } from "@/components/blocks/pricing"
 
 export const forkshopConfig = {
-  tailwindConfig: tailwindConfig as Config,
   primitives: [
-    { id: "button", name: "Button", sourcePath: "components/ui/button.tsx", render: () => <Button>Label</Button> },
-    { id: "badge", name: "Badge", sourcePath: "components/ui/badge.tsx", render: () => <Badge>Label</Badge> },
-    { id: "input", name: "Input", sourcePath: "components/ui/input.tsx", render: () => <Input placeholder="Type here..." /> },
+    { slug: "button", name: "Button", component: Button, exampleProps: { children: "Click me" } },
+    { slug: "badge", name: "Badge", component: Badge, exampleProps: { children: "New" } },
+    { slug: "input", name: "Input", component: Input, exampleProps: { placeholder: "Type here…" } },
   ],
   blocks: [
-    { slug: "hero", name: "Hero", iframeSrc: "/forkshop-preview/hero", sourcePath: "components/blocks/hero.tsx", sourceFile: "components/blocks/hero.tsx" },
-    { slug: "feature-grid", name: "Feature Grid", iframeSrc: "/forkshop-preview/feature-grid", sourcePath: "components/blocks/feature-grid.tsx", sourceFile: "components/blocks/feature-grid.tsx" },
-    { slug: "cta", name: "CTA", iframeSrc: "/forkshop-preview/cta", sourcePath: "components/blocks/cta.tsx", sourceFile: "components/blocks/cta.tsx" },
-    { slug: "pricing", name: "Pricing", iframeSrc: "/forkshop-preview/pricing", sourcePath: "components/blocks/pricing.tsx", sourceFile: "components/blocks/pricing.tsx" },
+    { slug: "hero", name: "Hero", component: Hero, src: "/forkshop/block/hero" },
+    { slug: "feature-grid", name: "Feature Grid", component: FeatureGrid, src: "/forkshop/block/feature-grid" },
+    { slug: "cta", name: "CTA", component: CTA, src: "/forkshop/block/cta" },
+    { slug: "pricing", name: "Pricing", component: Pricing, src: "/forkshop/block/pricing" },
   ],
-  pages: [
-    { path: "/", sourceFile: "app/page.tsx" },
-    { path: "/about", sourceFile: "app/about/page.tsx" },
-    { path: "/pricing", sourceFile: "app/pricing/page.tsx" },
-  ],
+  sitemap: {
+    excludeGroups: [] as string[],
+    autoDiscover: true,
+  },
+  reference: {
+    contentPaths: [] as string[],
+  },
+  viewportProfile: "responsive" as const,
 } as const
+
+export type ForkshopConfig = typeof forkshopConfig
+
+export function getBlockBySlug(slug: string) {
+  return forkshopConfig.blocks.find((b) => b.slug === slug)
+}
