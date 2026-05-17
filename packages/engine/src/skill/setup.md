@@ -786,7 +786,8 @@ export default function BlocksBoardView() {
 // Auto-recreated by re-running the Forkshop setup skill.
 
 import { notFound } from "next/navigation"
-import { getBlockBySlug } from "../../forkshop.config"
+import { discoverBlocks } from "@forkshop/engine"
+import { forkshopConfig } from "../../forkshop.config"
 
 export function generateStaticParams() {
   // No pre-generated routes — the page is dev-only and resolved dynamically.
@@ -800,9 +801,10 @@ export default async function ForkshopBlockPreviewPage({
 }) {
   if (process.env.NODE_ENV === "production") notFound()
   const { slug } = await params
-  const entry = getBlockBySlug(slug)
+  const blocks = discoverBlocks(forkshopConfig.blocks)
+  const entry = blocks.find((b) => b.slug === slug)
   if (!entry) notFound()
-  const Component = entry.component
+  const Component = entry.Component
   return (
     <div className="bg-white">
       <Component />
