@@ -588,6 +588,34 @@ The following decisions emerged while implementing the engine packaging spec (`d
 
 **13. Directive injection is post-build, not via the esbuild plugin.** `esbuild-plugin-preserve-directives@^0.0.11` has a known bug where the plugin mutates `file.contents` (Buffer) but tsup writes `file.text` (getter that returns original bytes) — the plugin's mutations are silently discarded. Engine packaging implemented Approach C: a custom `inject-directives.ts` that walks tsup's metafile, identifies dist chunks descended from `"use client"` source files, and prepends the directive at the top of those chunks. This is what makes the published engine actually work as a React Server Components-compatible package.
 
+### Refinements from live-mirror + cadence-scope polish + smoke test (2026-05-17, late)
+
+**15. Polish pass + smoke test.** After spec #4 merged, a manual install smoke against a fresh `create-next-app` surfaced gaps the design hadn't anticipated. The polish spec (`docs/specs/2026-05-17-live-mirror-and-cadence-scope-design.md`) bundled seven changes:
+
+- **Live-mirror discovery** for UI Components and Blocks via barrel-import reflection (`useDiscoveredPrimitives` / `useDiscoveredBlocks` hooks). User's `components/{ui,blocks}/index.ts` barrels are the truth; adding a primitive is a 2-step (file + barrel line) operation the `forkshop-live-editing` skill teaches Claude to handle.
+- **Cadence note scope** — Phase 5 no longer appends to root `CLAUDE.md` (it violated the "zero edits to user's project CLAUDE.md" promise). Cadence guidance ships only via the auto-loading `.claude/skills/forkshop-live-editing.md` skill and the dir-loaded `app/forkshop/CLAUDE.md` note.
+- **Locator opt-in restored** — spec #4's "always-on automatic" Locator install was wrong (silent package.json + next.config edits cross industry norms). Phase 5 now asks Yes/No/Show-me; Phase 6 installs only on accept.
+- **`fileMap={{}}` runtime crash fixed** — Template 9 passed an empty object that crashed agent-activity hooks. Hot-fixed; live-mirror config derives the right shape from `forkshopConfig`.
+- **Block preview route always written** — no longer gated on "Blocks recipe fired"; supports users adding their first block later.
+- **Phase 7 summary refresh** — terse mockup (`✓ Forkshop is set up.` lead, `Boards →`/`Live-mirroring →` lines), no `Mount/Modifiers/Files written/Skipped` debug sections, no ANSI escape codes, `!` reserved for the one urgent attention-grabber.
+- **Setup skill wording pass** — softens alarmist phrasing across Phases 3/4/6.
+
+**16. Smoke caught seven remaining bugs.** Running the polish-branch install against a fresh `create-next-app` then ezometr (a real project) revealed the polish-merge was too optimistic — the templates promised engine APIs the engine didn't actually have:
+
+1. `Tree.autoDiscover` / `Tree.excludeGroups` props don't exist.
+2. `DesignSystemView` requires explicit `tokens` + `primitives` (no parameterless variant).
+3. Template 6 still imported the dropped `getBlockBySlug` helper.
+4. Tailwind v4 has no `tailwind.config.*` file — `buildTokenRegistry` only accepts v3 shape.
+5. Templates 1/3/5 fail compile when `components/ui/` or `components/blocks/` doesn't exist.
+6. Phase 0 reads stale `aliases.mount` instead of v2 schema's `mount` + `srcPrefix`.
+7. `ForkshopCanvas` crashes when context providers are missing in a leaf board.
+
+Plus two installer ergonomics fixes during the smoke:
+- CLI's `dist/.gitignore` was excluding `dist/index.js` from `pnpm pack` (commit `e9e6b03`).
+- CLI bailed when `globals.css` wasn't at one of 4 standard paths; now warns and continues (commit `23b3e59`). Some projects (ezometr-style) use scoped CSS files imported directly from `layout.tsx` with no globals.css at all.
+
+Bugs 1, 2, 3, 5, 6 are template-level fixes (in flight). Bugs 4 and 7 are engine-level work deferred to a follow-up spec.
+
 ### Refinements from setup skill v2 (2026-05-17)
 
 **14. Kits removed for 1.0; setup skill v2 takes over project-aware scaffolding.** Strategy v2 prescribed three audience-specific kits (`marketing`, `saas`, `default`) with detection heuristics. During the spec #4 brainstorm we found the marketing/saas Board lineups were ~80% the same (different names for the same Boards), the setup skill already does the project-aware work kits would duplicate, and three permanent kit identities is a maintenance commitment misaligned with the side-project posture. The 5-concept model collapses to **Node / NodeType / Layout / Board** (4 concepts). The setup skill becomes the project-aware layer; it composes 1-5 Boards from a fixed recipe set (Design System, UI Components, Blocks, Sitemap, Reference) based on detected signals. Pro Kits remain plugins (NodeTypes + hooks) and don't require a Kit concept in OSS. Full design: `docs/specs/2026-05-17-setup-skill-v2-design.md`.

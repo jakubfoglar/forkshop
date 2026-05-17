@@ -65,7 +65,9 @@ The published `forkshop` npm CLI. Commands:
   stubs) with a single confirm-all consent prompt. Soft-offers an `@forkshop/engine` pin
   bump. Supports `--check` (dry-run diff) and `--force` (skip consent).
 - `forkshop add <bundle>` — 1.0 placeholder. Returns "not yet available" and links to the
-  roadmap. Real bundle support is reactivated by the kits rewrite spec (#4).
+  roadmap. Kits were dropped as a first-class concept (refinement #14 in strategy v2; setup
+  skill v2 took over project-aware scaffolding). `forkshop add` stays as a stub for future
+  community-contributed bundle support; no near-term spec.
 - `forkshop diff <path>` — shows a unified diff of a scaffold file vs the upstream
   version, using the v2 lock schema.
 
@@ -206,13 +208,16 @@ Note the `.js` extension in the import path — required for ESM compatibility w
 
 ## How to add a new Layout or NodeType
 
-**Vocabulary (v2 model):**
+**Vocabulary (v2 model — 4 concepts after refinement #14):**
 - **Node** — a single iframe-backed tile on the canvas. Has a `nodeType` key and a `sourceFile`.
 - **NodeType** — a named configuration (viewport size, label style, aspect ratio) for a Node.
 - **Layout** — an engine-shipped React component that arranges one or more NodeTypes into
   a named board shape (e.g., `ResponsiveFrameView`, `Gallery`, `Tree`, `DesignSystemView`).
 - **Board** — user's mounted canvas; composed from NodeTypes + Layouts.
-- **Kit** — a future first-class install unit (re-activated by the kits rewrite spec #4).
+
+`Kit` was the 5th concept in the original strategy v2; dropped at 1.0 (refinement #14) when
+the setup skill became the project-aware layer. The setup skill scaffolds 1-5 Boards from a
+fixed recipe set (Design System, UI Components, Blocks, Sitemap, Reference) — no kit picker.
 
 **Engine-shipped Layouts** live in `packages/engine/src/layouts/`. Each is a named React
 component + typed `*Props` interface exported from `packages/engine/src/index.ts`.
@@ -222,8 +227,16 @@ component + typed `*Props` interface exported from `packages/engine/src/index.ts
 **User-side custom NodeTypes** live in `app/forkshop/node-types/` in the user's project
 (scaffolded by `forkshop init`). Users compose Boards directly — no `forkshop add` needed.
 
-See `docs/specs/2026-05-17-cli-rework-design.md` and the strategy v2 doc
-(`docs/strategy/2026-05-14-forkshop-strategy-v2-design.md`) for the full 5-concept model.
+**Live-mirror discovery (since polish spec 2026-05-17):** UI Components and Blocks Boards
+auto-discover via barrel imports. The user's `components/{ui,blocks}/index.ts` barrels
+re-export each primitive/block; the engine's `useDiscoveredPrimitives` /
+`useDiscoveredBlocks` hooks reflect over the imported namespace. Adding a primitive is two
+steps: create the file + add a line to the barrel. The `forkshop-live-editing` skill teaches
+Claude to maintain the barrel automatically.
+
+See `docs/specs/2026-05-17-cli-rework-design.md`, `docs/specs/2026-05-17-setup-skill-v2-design.md`,
+`docs/specs/2026-05-17-live-mirror-and-cadence-scope-design.md`, and the strategy v2 doc
+(`docs/strategy/2026-05-14-forkshop-strategy-v2-design.md`) for the full model.
 
 ---
 
@@ -351,24 +364,24 @@ The setup skill is one of three markdown skills shipped via the registry (`setup
 - YAML frontmatter — `name`, `description`. The description's natural-language triggers must not overlap with the sibling skills.
 - 8 phases (Phase 0 through Phase 7) — fixed order, each a numbered `## Phase N` subsection.
 - Adjust mode, Edge cases, "What this skill never does" — guardrails after the phases.
-- `## Scaffolding templates` — the bottom section, contains 9 templates with `{{snake_case}}` placeholders.
+- `## Scaffolding templates` — the bottom section, contains 11 templates (Templates 1-9 + 4a/4b + 10/11) with `{{snake_case}}` placeholders. Template 12 (root CLAUDE.md cadence note) was removed in the polish spec — cadence guidance now ships only via the auto-loading `forkshop-live-editing.md` skill and the `app/forkshop/CLAUDE.md` dir-loaded note.
 
 ### Phase 5 uses the `AskUserQuestion` tool
 
-Consent for the three opt-ins (Locator.js / live-AI hook / cadence note) is collected via a **single `AskUserQuestion` call with three questions**, not inline `y / n` prompts. Each question has three options: Yes / No / Show me. "Show me" renders the full code diff inline and re-asks just that question with Yes / No.
+Phase 5 has exactly **one** opt-in after the polish spec: Locator (Option-click → editor — adds `@locator/webpack-loader` to devDeps and merges a webpack/turbopack rule into `next.config.*`). The cadence-note opt-in that previous versions had is gone — appending to root `CLAUDE.md` violated strategy v2's "zero edits to user's project CLAUDE.md" promise. The Locator opt-in uses the `Yes / No / Show me` panel (Show me prints the planned diff, then re-asks Yes/No only).
 
 If you edit Phase 5, preserve this contract — the skill's UX depends on the single-panel consent flow.
 
 ### Updating
 
 - **Activation triggers** — in the `description:` field of the frontmatter. Test by invoking with each trigger phrase against `apps/playground` (or against any fresh Next.js fixture).
-- **Phase content** — the phases are read top-to-bottom by Claude at invocation time. Treat the file as a prompt: terse, imperative, no fluff. Refer the reader to `app/forkshop/CLAUDE.md` in the user's repo for kit API details rather than duplicating them.
+- **Phase content** — the phases are read top-to-bottom by Claude at invocation time. Treat the file as a prompt: terse, imperative, no fluff. Refer the reader to `app/forkshop/CLAUDE.md` in the user's repo for Board / NodeType / Layout API details rather than duplicating them.
 - **Templates** — every template MUST be inside a fenced code block in the `## Scaffolding templates` section. The `validateSkillPlaceholders` check in `apps/docs/scripts/validate-registry.ts` enforces this.
 - **Placeholders** — use `{{snake_case}}` only. Lowercase, underscores. Document any new placeholder in the substitution-rules block at the top of the templates section.
 
 ### What NOT to add
 
-- Long explanations or rationale — those live in the spec at `docs/specs/2026-05-13-forkshop-setup-skill-design.md`. The skill file is for runtime instruction, not background.
+- Long explanations or rationale — those live in the specs at `docs/specs/2026-05-17-setup-skill-v2-design.md` and `docs/specs/2026-05-17-live-mirror-and-cadence-scope-design.md`. The skill file is for runtime instruction, not background.
 - Ravineo-specific examples or paths. Examples should use generic placeholder names ("Foundations", "Hero") that any project would recognize.
 - Direct skill-to-skill cross-talk. The setup skill mentions sibling skills by name but doesn't invoke them. Each skill stays self-contained.
 
@@ -388,7 +401,7 @@ MIT. See `LICENSE` at the repo root.
 
 Drive-by PRs welcome. No review SLA. If you're fixing a bug or adding a clearly useful primitive, open the PR — it'll get reviewed.
 
-For substantial new kits or API changes: open an issue first to align on scope.
+For substantial recipe additions or engine API changes: open an issue first to align on scope.
 
 ---
 
@@ -398,10 +411,13 @@ These are **not** in v0 and should not be built until there's a dedicated spec:
 
 | Deferred item             | Notes |
 |---------------------------|-------|
-| Live AI awareness         | SSE endpoint + Claude Code hook script. The `AgentActivityProvider` shell is wired but the stream is a no-op. |
+| Live AI awareness         | SSE endpoint + Claude Code hook script. The `AgentActivityProvider` shell is wired but the stream is a no-op. Spec #5 home for "alive-feeling" alternatives (streamed edits, block-level HMR pulse, sidebar activity feed) per the polish spec's Change G forward-pointer. |
 | Compose mode              | Page composer (drag-to-reorder sections). Deferred from v0. |
-| Flow-graph kit            | Node-and-edge flow diagrams. Deferred from v0. |
-| Docs site content         | `apps/docs/` serves the registry but has no marketing content yet. |
+| Flow-graph                | Node-and-edge flow diagrams. Deferred from v0. (Originally "flow-graph kit"; renamed since Kit is no longer a concept — refinement #14.) |
+| Docs site content         | `apps/docs/` serves the registry but has no marketing content yet. Spec #6 in strategy v2's roadmap. |
 | GitHub Actions publish    | npm publish workflow. |
+| Tailwind v4 token support | `buildTokenRegistry` only accepts v3 Config shape. v4 projects use `@theme` in CSS instead of a config file. Needs `buildTokenRegistryFromCss` or similar. Caught during the polish smoke test against a fresh `create-next-app` (Tailwind v4). |
+| Engine `Tree.autoDiscover` | Polish spec referenced this as if shipped — it isn't. Tree currently requires explicit `entries: TreeEntry[]`. Templates work around by hand-rolling routes. Real auto-discovery is a server-component fs read + manifest build step. |
+| `DesignSystemView` parameterless variant | Polish spec promised `<DesignSystemView />` with no props would auto-discover tokens/primitives. Engine still requires explicit `tokens` + `primitives`. Templates work around by building them inline from `forkshopConfig.ui` + `tailwindConfig`. |
 
 Do not start work on deferred items without a dedicated spec.
