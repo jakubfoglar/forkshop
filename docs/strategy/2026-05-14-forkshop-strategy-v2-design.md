@@ -583,6 +583,10 @@ The following decisions emerged while implementing the engine packaging spec (`d
 
 **13. Directive injection is post-build, not via the esbuild plugin.** `esbuild-plugin-preserve-directives@^0.0.11` has a known bug where the plugin mutates `file.contents` (Buffer) but tsup writes `file.text` (getter that returns original bytes) — the plugin's mutations are silently discarded. Engine packaging implemented Approach C: a custom `inject-directives.ts` that walks tsup's metafile, identifies dist chunks descended from `"use client"` source files, and prepends the directive at the top of those chunks. This is what makes the published engine actually work as a React Server Components-compatible package.
 
+### Refinements from setup skill v2 (2026-05-17)
+
+**14. Kits removed for 1.0; setup skill v2 takes over project-aware scaffolding.** Strategy v2 prescribed three audience-specific kits (`marketing`, `saas`, `default`) with detection heuristics. During the spec #4 brainstorm we found the marketing/saas Board lineups were ~80% the same (different names for the same Boards), the setup skill already does the project-aware work kits would duplicate, and three permanent kit identities is a maintenance commitment misaligned with the side-project posture. The 5-concept model collapses to **Node / NodeType / Layout / Board** (4 concepts). The setup skill becomes the project-aware layer; it composes 1-5 Boards from a fixed recipe set (Design System, UI Components, Blocks, Sitemap, Reference) based on detected signals. Pro Kits remain plugins (NodeTypes + hooks) and don't require a Kit concept in OSS. Full design: `docs/specs/2026-05-17-setup-skill-v2-design.md`.
+
 ## Supersedes
 
 This document supersedes and consolidates:
