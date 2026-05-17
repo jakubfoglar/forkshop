@@ -3,7 +3,7 @@ import "./globals.css"
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className="font-forkshop-sans bg-forkshop-surface text-forkshop-fg">
         <EditorLink mountPath="/forkshop" />
         {children}

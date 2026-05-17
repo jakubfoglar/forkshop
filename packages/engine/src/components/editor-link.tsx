@@ -50,6 +50,7 @@ export function EditorLink({ mountPath = "/forkshop" }: { mountPath?: string } =
       const parentPath = globalThis.window.parent.location.pathname
       if (!parentPath.startsWith(mountPath)) return
     } catch {
+      // Cross-origin parent or otherwise inaccessible — skip silently.
       return
     }
     setActive(true)
