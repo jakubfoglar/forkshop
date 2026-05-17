@@ -69,7 +69,7 @@ Once all four checks pass, continue to Phase 1.
 
 You will gather context *first*, then reason. Produce a narrative description of what kind of project this is — never a category lookup. Two sentences of "this is the marketing site for X" beats any dependency-graph inference.
 
-Use the 5-concept vocabulary throughout: **Board**, **Node**, **NodeType**, **Layout**, **Kit**. When you describe what will appear in the sidebar, say "a Board with N Nodes" — not "a kit section with N items" or "a section with N blocks".
+Use the 4-concept vocabulary throughout: **Board**, **Node**, **NodeType**, **Layout**. When you describe what will appear in the sidebar, say "a Board with N Nodes" — not "a kit section with N items" or "a section with N blocks".
 
 ### Step 1 — Read the project's own words
 
@@ -302,7 +302,7 @@ After rendering the Phase 3 proposal, wait for the user's reply. Loop:
 - **No writes during iteration.** All changes live in-memory until full acceptance.
 - **Narrative pushback restarts Phase 1.** A correction to *what kind of project this is* invalidates downstream choices. Re-derive, don't patch.
 - **After every re-render, re-invoke `AskUserQuestion`** with the same `Accept all / Adjust / Pause` options.
-- **Soft cap at 5 iterations.** If you've re-rendered 5 times without acceptance, ask: *"We've gone back and forth a few times. Want to pause and come back, or keep refining?"* This is a check-in, not a hard stop.
+- **Soft cap at 5 iterations.** If you've re-rendered 5 times without acceptance, ask: *"A few back-and-forths in — keep going, or pause for now?"* This is a check-in, not a hard stop.
 
 ## Phase 5 — Consent for config mutations
 
