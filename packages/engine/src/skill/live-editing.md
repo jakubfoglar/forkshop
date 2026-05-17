@@ -1,11 +1,11 @@
 ---
 name: forkshop-live-editing
-description: Auto-applies to any Claude session editing files under `**/forkshop/**` (matches both flat `components/forkshop/`, `lib/forkshop/`, `app/forkshop/` and the src-dir variants `src/components/forkshop/`, `src/lib/forkshop/`, `src/app/forkshop/`), `**/components/ui/**`, `**/components/blocks/**`, or any block file referenced in `forkshop.config.ts`. Instructs Claude to chunk large rewrites into many small `Edit`s, prefer `MultiEdit` for multi-region changes, and avoid `Write` when an `Edit` would suffice. Activates implicitly when editing those paths — no invocation phrase needed.
+description: Auto-applies to any Claude session editing files under `**/forkshop/**` (matches both flat `components/forkshop/`, `lib/forkshop/`, `app/forkshop/` and the src-dir variants `src/components/forkshop/`, `src/lib/forkshop/`, `src/app/forkshop/`), `**/components/ui/**`, or any Node file referenced in `forkshop.config.ts`. Instructs Claude to chunk large rewrites into many small `Edit`s, prefer `MultiEdit` for multi-region changes, and avoid `Write` when an `Edit` would suffice. Activates implicitly when editing those paths — no invocation phrase needed.
 ---
 
 # Forkshop — live-editing cadence
 
-When you're editing files Forkshop watches (per the activation paths above), every file save produces a visible event in the user's open Forkshop tab — a sidebar dot, a frame glow, and a text pulse if your `oldString` / `newString` substring appears in the rendered DOM. The user is *watching*. Lean into it.
+When you're editing files Forkshop watches (per the activation paths above), every file save produces a visible event in the user's open Forkshop tab — a sidebar dot, a Node glow, and a text pulse if your `oldString` / `newString` substring appears in the rendered DOM. The user is *watching*. Lean into it.
 
 ## Two rules
 
@@ -16,9 +16,9 @@ When you're editing files Forkshop watches (per the activation paths above), eve
 ## How to chunk
 
 - **Single-line text change** → one `Edit` (this is already optimal).
-- **One paragraph or one block of JSX** → one `Edit` with the whole paragraph.
+- **One paragraph or one Node/JSX section** → one `Edit` with the whole paragraph.
 - **Multi-region change to the same file** (e.g., add a new prop and pass it in two places) → one `MultiEdit` with all regions; single disk write, multiple visual events on the user's side because the hook splits MultiEdit into per-region POSTs.
-- **Replacing a 50-line section** → if it's one contiguous block, one `Edit` is fine. The visual flash represents the new block. If the old and new are *structurally similar* (renaming a few names, swapping some JSX), prefer many small `Edit`s — each leaf change pulses individually and the user sees what you're doing.
+- **Replacing a 50-line Node** → if it's one contiguous block, one `Edit` is fine. The visual flash represents the new Node. If the old and new are *structurally similar* (renaming a few names, swapping some JSX), prefer many small `Edit`s — each leaf change pulses individually and the user sees what you're doing.
 - **Whole-file rewrite (the only case where `Write` is the right call)** → only when the new file is structurally unrelated to the old. The user sees one flash; that's the right signal.
 
 ## Watch for

@@ -51,7 +51,7 @@ A practical signal for "user-authored": the paragraph references project-specifi
 
 Read in parallel:
 
-- `<aliases.mount>/forkshop.config.{ts,tsx}` — the source of truth for primitives, blocks, pages, sourcePath wiring.
+- `<aliases.mount>/forkshop.config.{ts,tsx}` — the source of truth for Nodes, pages, sourcePath wiring.
 - `<aliases.mount>/page.tsx` — the mount page, which lists the sidebar sections and routes.
 - The board files in `<aliases.mount>/*-board.tsx` — which kits are wired and how.
 - `forkshop.json` — installed bundles, alias map, where files actually live.
@@ -81,11 +81,11 @@ Build an internal list of proposed changes, each tagged with section + class abo
 
 These are the highest-yield drift candidates in any Forkshop installation. Walk each:
 
-1. **Sidebar layout** — does the "File layout" section's tree match the actual files in `<aliases.mount>/`? Boards renamed, added, removed.
-2. **Kit list** — "The three kits" section. If the user dropped one or added a custom board, the heading is wrong.
+1. **Sidebar layout** — does the "File layout" section's tree match the actual files in `<aliases.mount>/`? Nodes/boards renamed, added, removed.
+2. **Kit list** — "Kits" section. If the user dropped one or added a custom board, the heading is wrong.
 3. **Consumer hooks** — every name in the "Consumer hooks" list must still be exported from `@forkshop/engine`. Cross-check against `<aliases.base>/components/forkshop/agent-activity-context.tsx` exports.
 4. **API routes** — request/response shapes documented in the file should match `<aliases.api>/edit/route.ts`, `<aliases.api>/positions/route.ts`, `<aliases.api>/agent-activity/route.ts`.
-5. **`forkshop.config.ts` example block** — should reflect the user's actual primitive/block/page entries, not the original placeholder names.
+5. **`forkshop.config.ts` example** — should reflect the user's actual Node/page entries, not the original placeholder names.
 6. **Opt-ins** — Locator.js / live-AI hook / cadence note sections should match whether each is actually installed.
 
 ## Phase 3 — Render the proposal
