@@ -6,9 +6,32 @@ This file is auto-loaded by Claude Code when working in `{{srcPrefix}}app/forksh
 
 ---
 
+## Self-containment posture
+
+Forkshop is a drop-in install. Every file Forkshop creates lives under a `forkshop` namespace:
+
+- `{{srcPrefix}}app/forkshop/` — Board scaffolds + the mount + the auto-managed block preview route
+- `{{srcPrefix}}app/api/forkshop/` — API route stubs
+- `{{srcPrefix}}public/fonts/forkshop/` — font binary
+- `.claude/skills/forkshop-*.md` — skill files
+- `forkshop.json` — lock file
+
+Modifications to your existing files are limited to four additive items:
+
+1. One import line in `app/globals.css`
+2. A `@locator/webpack-loader` rule in `next.config.*` (for Option-click)
+3. `@forkshop/engine` + `@locator/webpack-loader` in `package.json`
+4. (Opt-in) A `<!-- forkshop:cadence-note start -->`…`end` block in root `CLAUDE.md`
+
+Nothing else. No injection into `components/`, `lib/`, or route groups.
+
+To remove Forkshop cleanly: delete the namespaced directories, revert the four mutations, uninstall the deps. Done.
+
+---
+
 ## Mental model
 
-Five concepts compose the whole system.
+Four concepts compose the whole system.
 
 ### Node
 
@@ -90,18 +113,6 @@ export function ComponentsBoard({ entries, nodePositions, onPositionChange }) {
 }
 ```
 
-### Kit
-
-A **Kit** is a project-type starter pack. It ships a kit config file, a scaffolded `forkshop.config.tsx`, and a scaffolded `page.tsx` — wired to that project type's data. Kits are the rarest extension point (deferred to spec #4; not yet built).
-
-```ts
-// Kit installs via: forkshop add <kit-name>
-// Kit is a bundle that scaffolds:
-//   {{srcPrefix}}app/forkshop/forkshop.config.tsx
-//   {{srcPrefix}}app/forkshop/page.tsx
-//   {{srcPrefix}}app/forkshop/<board-name>-board.tsx
-```
-
 ---
 
 ## File layout
@@ -110,23 +121,56 @@ After `forkshop init`, your installation lives at:
 
 ```
 {{srcPrefix}}app/forkshop/
-  page.tsx                    Server entry. Builds route list, token registry;
-                              renders ForkshopSidebar + canvas.
-  forkshop.config.tsx         Wiring: sidebar sections, node entries.
-  components-board.tsx        Mounts Gallery for your component library.
-  pages-board.tsx             Mounts Tree for the site sitemap.
-  design-system-board.tsx     Mounts DesignSystemView for tokens + primitives.
-  node-types/                 User-side custom NodeTypes (optional).
-
-{{srcPrefix}}app/api/forkshop/
-  edit/route.ts               Re-exports the edit handler from @forkshop/engine.
-  positions/route.ts          Re-exports the positions handler from @forkshop/engine.
-  agent-activity/
-    route.ts                  Re-exports the activity POST handler.
-    stream/route.ts           Re-exports the SSE stream handler.
+  page.tsx                          mounts ForkshopCanvas + ForkshopSidebar
+  forkshop.config.tsx               data: primitives, blocks, sitemap, reference
+  design-system.tsx                 Design System Board (single leaf)
+  ui-components.tsx                 UI Components parent (Gallery overview)
+  ui-components/
+    button.tsx                      variant grid — authored
+    badge.tsx
+    …                               one file per primitive
+  blocks.tsx                        Blocks parent (Gallery overview)
+  sitemap.tsx                       Sitemap parent (Tree)
+  reference.tsx                     Reference parent (Tree) — MDX projects only
+  block/[slug]/page.tsx             auto-managed block preview route
+  CLAUDE.md                         this file
+{{srcPrefix}}app/api/forkshop/      route stubs (re-exports from @forkshop/engine)
 ```
 
 The API routes are thin re-exports — the logic lives in `@forkshop/engine`. You shouldn't need to edit them unless you're customizing edit behavior.
+
+---
+
+## Per-primitive variant authoring
+
+UI Components is the one place where Forkshop scaffolds per-file Boards in your repo. Each primitive (Button, Badge, etc.) gets its own `ui-components/<slug>.tsx` file containing a variant grid — different prop combinations of the real primitive component.
+
+The grid lives in a `<Gallery>` from `@forkshop/engine`. Each entry is a Node that imports your primitive and renders an instance with specific props:
+
+```tsx
+// ui-components/button.tsx
+"use client"
+
+import { Button } from "@/components/ui/button"
+import { ForkshopCanvas, Gallery } from "@forkshop/engine"
+
+export default function ButtonBoardView() {
+  const entries = [
+    { id: "primary-sm", label: "Primary / SM", node: { id: "primitive:button-primary-sm", kind: "inline-react" as const, x: 0, y: 0, width: 240, height: 80, render: () => <Button variant="primary" size="sm">Click me</Button> } },
+    { id: "primary-md", label: "Primary / MD", node: { id: "primitive:button-primary-md", kind: "inline-react" as const, x: 0, y: 0, width: 240, height: 80, render: () => <Button variant="primary" size="md">Click me</Button> } },
+    // … etc., one entry per variant × size × state combination
+  ]
+  return (
+    <ForkshopCanvas>
+      <Gallery entries={entries} layout="grid" viewportWidth={240} />
+    </ForkshopCanvas>
+  )
+}
+```
+
+If your primitive uses `class-variance-authority` (cva), the setup skill scaffolds these entries by enumerating the cva variants. Otherwise it scaffolds three default instances and you fill in the variants manually.
+
+These files render your *real* primitive component — they're not duplicates. Edit `components/ui/button.tsx` and the grid re-renders with the new visuals via HMR.
 
 ---
 
@@ -134,13 +178,13 @@ The API routes are thin re-exports — the logic lives in `@forkshop/engine`. Yo
 
 A Board is the unit of extension for Forkshop. When you want a new sidebar section:
 
-1. Write a board component in `{{srcPrefix}}app/forkshop/<name>-board.tsx`. Choose a Layout from the four built-ins and pass your data as Nodes.
+1. Write a board component in `{{srcPrefix}}app/forkshop/<name>.tsx`. Choose a Layout from the four built-ins and pass your data as Nodes.
 2. Register it in `{{srcPrefix}}app/forkshop/forkshop.config.tsx` — add a sidebar section entry.
 3. Wire the route in `{{srcPrefix}}app/forkshop/page.tsx` — render the board when that section is selected.
 
 ```tsx
 "use client"
-// {{srcPrefix}}app/forkshop/docs-board.tsx
+// {{srcPrefix}}app/forkshop/docs.tsx
 import { ForkshopCanvas, Gallery, type GalleryEntry } from "@forkshop/engine"
 
 const nodes: GalleryEntry[] = [
@@ -171,10 +215,9 @@ export function DocsBoard({ nodePositions, onPositionChange }) {
 }
 ```
 
-**When to add a Board vs a Layout vs a Kit:**
+**When to add a Board vs a Layout:**
 - Board = always (it's just configuration — new section, new data).
-- Layout = rarely (requires an engine contribution; only if the spatial math doesn't fit Gallery/Tree/DesignSystemView/ResponsiveFrameView).
-- Kit = deferred (spec #4). Build Boards directly until then.
+- Layout = rarely (requires an engine contribution; only if the spatial math doesn't fit Gallery/Tree/DesignSystemView/ResponsiveFrameView). Custom Layout / NodeType extension is a contribution path; see maintainer docs.
 
 ---
 
