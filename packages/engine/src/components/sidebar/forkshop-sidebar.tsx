@@ -137,7 +137,7 @@ export function ForkshopSidebar({
   }, [selection, sections]);
 
   return (
-    <aside className="flex h-full w-[240px] shrink-0 flex-col border-r border-forkshop-border bg-forkshop-surface">
+    <aside className="flex h-full w-[240px] shrink-0 flex-col border-r border-forkshop-border bg-forkshop-surface font-forkshop-sans">
       {/* Header */}
       <div className="flex shrink-0 items-center justify-between gap-forkshop-1.5 border-b border-forkshop-border bg-forkshop-surface px-forkshop-3 pb-forkshop-2 pt-forkshop-2.5">
         <div className="flex items-center gap-forkshop-1.5">

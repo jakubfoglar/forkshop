@@ -443,7 +443,7 @@ export function ForkshopCanvas({
         <AgentIframeRelay />
         <div
           ref={containerRef as React.RefObject<HTMLDivElement>}
-          className="relative flex-1 select-none overflow-hidden overscroll-contain bg-forkshop-canvas"
+          className="relative flex-1 select-none overflow-hidden overscroll-contain bg-forkshop-canvas font-forkshop-sans"
           style={{ cursor: containerCursor, touchAction: "none" }}
           onClick={onContainerClick}
         >
