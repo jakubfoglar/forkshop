@@ -14,7 +14,7 @@ Close seven spec gaps surfaced during the manual smoke test of the just-merged s
 3. **Locator warning wording** — fix the alarmist "rule would crash dev" phrasing in Phase 7. The dev server runs fine without the loader; what breaks is Option-click → editor.
 4. **Block preview route always written** — even when no blocks exist at install time, so a user adding their first block later doesn't have to re-run setup just to get the route file.
 5. **fileMap crash fix** — Template 9 emitted `<AgentActivityProvider fileMap={{}}>` which crashes at runtime. Already shipped as hot-fix in `4a08963`; recorded here for completeness.
-6. **Locator must actually auto-install** — spec #4 said Option-click is "always-on automatic." The implementation merely *detects* the missing dep and reports it as skipped in Phase 7. The skill should add the devDep + modify next.config during Phase 6.
+6. **Locator becomes a Phase 5 opt-in** — spec #4's "always-on automatic" was the wrong call (silently modifying `package.json` + `next.config` crosses industry norms). Restore the Phase 5 consent prompt; install only on accept.
 7. **Phase 7 summary refresh** — current summary is too long, has stale items (skipped block preview / "no source material" entries become irrelevant once auto-discovery lands), and uses alarmist phrasing. Simplify and refresh wording; light use of color/checkmarks where the terminal renders them.
 
 All seven are small individually; bundling them into one pre-release pass keeps the change history focused.
@@ -42,9 +42,9 @@ The strategy promise needs to hold before public release.
 **What changes:**
 
 - The engine grows an `autoDiscover` mechanism for primitives and blocks, mirroring how `Tree` already supports `autoDiscover: true` for routes.
-- `UI Components` Board parent enumerates primitives by scanning a configurable path (default `components/ui/`). Adding `select.tsx` to that dir → new primitive tile appears on next render.
-- `Blocks` Board parent enumerates blocks similarly (default scan paths: `components/blocks/`, `components/sections/`, `components/marketing/`, `components/site/`).
-- Per-primitive variant-grid files (`ui-components/<slug>.tsx`) become **optional overrides**, not required. If a primitive has no override file, the engine renders it on the parent board with default props (single instance). If the user wants the variant grid, they author a slug-named file.
+- **Recipes have stable identities; Board display names are decoupled.** The `primitives` recipe scans a configurable path (default `components/ui/`). Adding `select.tsx` to that dir → new primitive tile appears on next render — regardless of whether the user named the Board "UI Components" or "Primitives" or "Component Library." The scan path is a setting on the recipe; the Board's title is a user-controlled display label.
+- The `blocks` recipe scans similarly (default scan paths: `components/blocks/`, `components/sections/`, `components/marketing/`, `components/site/`). Same decoupling — the Board can be called "Blocks" or "Sections" or whatever the user prefers.
+- Per-primitive variant-grid files (under the user's mount, e.g., `ui-components/<slug>.tsx`) become **optional overrides**, not required. If a primitive has no override file, the engine renders it on the parent board with default props (single instance). If the user wants the variant grid, they author a slug-named file. The directory name matches the user's Board slug, whatever they chose.
 - Tokens (Design System Board) already auto-update via `buildTokenRegistry(tailwindConfig)`. No change needed there.
 - Routes (Sitemap Board) already auto-discover via `Tree.autoDiscover`. No change needed.
 - Reference Board auto-discovers MDX content via glob (already shipped per spec #4). No change needed.
@@ -112,9 +112,9 @@ Decision deferred to implementation. Approach #1 is simplest if Turbopack suppor
 
 **What changes:**
 
-- **Phase 5 of the setup skill loses its only opt-in.** The "Append the cadence note to root CLAUDE.md?" prompt is removed.
-- The Phase 5 section becomes informational only: a one-line note that cadence guidance ships via the auto-loading skill + dir-CLAUDE.md, and the user can verify by reading them.
-- Phase 7 summary's `Opt-in:` line is removed (no opt-ins remain).
+- **The "Append the cadence note to root CLAUDE.md?" prompt is removed from Phase 5.** (Phase 5 still has the Locator opt-in from Change F — see below.)
+- The cadence-note Phase 6 step (Step 12 in current Template numbering) and Template 12 itself are dropped from the skill entirely.
+- Phase 7 summary's `Opt-in:` line — when written — only reflects the Locator opt-in outcome. No "✓ Cadence note (appended to root CLAUDE.md)" entry.
 
 **Cadence guidance still ships — just in the right places:**
 
@@ -156,23 +156,45 @@ Phase 7 summary template in `packages/engine/src/skill/setup.md` (the conditiona
 
 **Follow-up in this spec:** when the live-mirror config shape (Change A) lands, the fileMap should be derived from `forkshopConfig.primitives` and `forkshopConfig.blocks` so agent-activity routing works for real components. Template 9 will use `useForkshopFileMap()` helper or equivalent that maps discovered primitives → their source file paths.
 
-### Change F — Locator must actually auto-install
+### Change F — Locator becomes a Phase 5 opt-in (revised from "always-on automatic")
 
-**Spec #4 said:** Option-click is always-on automatic. The setup skill's Phase 6 should add `@locator/webpack-loader` as a devDependency and modify `next.config.*` to wire the loader rule. No opt-in question.
+**Spec #4 said:** Option-click is always-on automatic. The setup skill's Phase 6 should add `@locator/webpack-loader` as a devDependency and modify `next.config.*` without asking. That decision is **revised here.**
 
-**What ships today:** Phase 6 does neither. Phase 7 instead reports the missing dep as a skipped item with the alarmist note "Without it the rule would crash dev" — making the install feel half-broken and asking the user to do manual work after the skill claims to be done.
+**Why revised:** auto-installing a devDep + modifying the host's `next.config.*` without explicit consent crosses into territory developers find invasive. Industry norms (shadcn-cli, VS Code extensions, Cursor plugins) ask before non-trivial modifications to `package.json` or framework configs. Even if the user "invited" Forkshop by running `forkshop init`, the deeper modifications deserve explicit consent. The spec #4 "always-on" framing was the wrong call.
 
-**Required Phase 6 behavior:**
+**What ships now:** Phase 6 does neither. Phase 7 reports the missing dep as a skipped item with alarmist phrasing. Worst of both worlds — no consent, no install, just a regret message.
 
-1. Detect whether `@locator/webpack-loader` is in the host's `package.json` devDependencies.
-2. If absent, merge it in (same mechanism as the engine merge). Print `✓ Added @locator/webpack-loader to package.json devDependencies`.
-3. Detect which `next.config.*` shape exists (`.ts` / `.js` / `.mjs` / `.cjs`).
-4. Read it, identify the right place to add the webpack/turbopack rule, write the merged config. Print `✓ Added Locator rule to next.config.<ext>`.
-5. Tell the user once at the end of Phase 6 (not in skipped): `"Run pnpm install before pnpm dev — Locator was just added."`
+**New design — Phase 5 opt-in (restored from setup-skill v1):**
 
-If the next.config shape is too unusual for a clean automated edit (very rare), fall back gracefully: print `! Couldn't merge Locator rule into <file> automatically — here's the snippet to paste in manually:` followed by the rule. This is the only legitimate "skipped" path, and it should be loud (not buried in a "skipped" list).
+Phase 5 (which becomes the *only* opt-in in the post-polish skill since the cadence note is dropped) asks one question:
 
-The Phase 7 summary stops carrying any Locator-related skipped entries unless the manual-paste fallback fired.
+```ts
+{
+  questions: [{
+    question: "Enable Option-click → editor (recommended)?",
+    header: "Option-click",
+    options: [
+      { label: "Yes, install", description: "Adds @locator/webpack-loader devDep + a webpack/turbopack rule in next.config.*" },
+      { label: "No, skip",     description: "Skip Locator wiring — you can install manually later if you change your mind" },
+      { label: "Show me",      description: "Print the exact dep + next.config diff first, then re-ask" },
+    ],
+  }],
+}
+```
+
+Phase 6 then installs only if the user accepts:
+
+1. Merge `@locator/webpack-loader` into `package.json` devDependencies. Print `✓ Added @locator/webpack-loader to devDeps`.
+2. Read `next.config.*`, identify the right place to add the webpack/turbopack rule, write the merged config. Print `✓ Wrote Locator rule into next.config.<ext>`.
+3. Tell user once at the end of Phase 6: `"Run pnpm install before pnpm dev — Locator dep was just added."`
+
+If the user picked "Show me" → render the dep line + next.config diff inline, then re-ask with `Yes` / `No` only (no third option).
+
+If the user picked "No, skip" → Phase 6 doesn't touch package.json or next.config. Phase 7 includes a one-line note: `Option-click: skipped (run forkshop setup again to enable).`
+
+If next.config has an unusual shape that won't merge cleanly even after consent → fall back to printing the snippet for manual paste, with the user warned in Phase 6 output.
+
+**Phase 5 + Phase 7 net effect:** one consent question that the user expects from any dev tool; clear visible diff on demand; clean install or clean skip — no half-broken state.
 
 ### Change G — Phase 7 summary refresh
 
@@ -195,8 +217,6 @@ Try it:
 Sibling skills:
   forkshop-live-editing   auto-applies on Forkshop file edits
   forkshop-doc-sync       invoke when app/forkshop/CLAUDE.md drifts
-
-Everything's in your repo. You own all of it.
 ```
 
 Specific simplifications:
@@ -228,13 +248,24 @@ Try it:
 Sibling skills:
   forkshop-live-editing   auto-applies on Forkshop file edits
   forkshop-doc-sync       invoke when app/forkshop/CLAUDE.md drifts
-
-Everything's in your repo. You own all of it.
 ```
 
 The single `!` line is the only urgent attention-grabber. Everything else flows the same.
 
 **Same refresh applies to Phase 3 proposal output, Phase 4 iteration messages, Phase 6 per-step `✓` lines, and the post-success Phase 7 summary.** The whole skill gets a wording pass for tighter, less alarmist phrasing. No new templates needed — just rewording inside existing scaffold lines.
+
+**Aside — making Forkshop feel "alive" without shaping agent cadence (forward-pointer to live AI spec #5):**
+
+The cadence note's purpose was partly to make Forkshop's iframe "build up under the user's hands" — multiple file writes = multiple HMR events = visible incremental progress. Dropping the root-CLAUDE.md note (Change B) removes that mechanism for non-Forkshop-watched files.
+
+The alive feeling can be re-created in better-scoped ways, all of which belong in the live AI editing spec (#5 in the strategy roadmap) rather than here:
+
+- **Streamed edit visualization** — render the agent's in-progress edit in the iframe live (typing-style animation), independent of how many tool calls happened
+- **Block-level pulse on HMR** — when an edit lands and the iframe re-renders, brief pulse/glow on the affected board node
+- **Sidebar agent-activity feed** — live stream of what the agent is doing, anchored to the affected blocks/primitives (partially designed in the existing `agent-activity-context`)
+- **Auto-scroll iframe to the changed region** — when an edit happens, scroll to where the change landed
+
+All four put the "alive" feeling in the **engine's response to events**, not in cadence-shaping agent behavior. Out of scope for this polish spec; called out for the live AI spec author.
 
 ### Change D — Block preview route always written
 
@@ -380,16 +411,16 @@ Lightly reworded — the proposal narrative emphasizes that Forkshop will *live-
 
 - Engine exports `useAutoDiscoveredPrimitives` and `useAutoDiscoveredBlocks` (or equivalent named API).
 - Playground's UI Components and Blocks boards use the new hooks; adding a primitive to `apps/playground/components/ui/` shows up on next dev reload without code changes elsewhere.
-- Setup skill v2's Phase 5 is informational-only (no opt-ins).
+- Setup skill v2's Phase 5 has the Locator opt-in only (no root-CLAUDE.md opt-in).
 - Setup skill v2's Phase 6 always writes `block/[slug]/page.tsx`.
-- Setup skill v2's Phase 6 actually installs `@locator/webpack-loader` and merges the next.config rule (Change F).
+- Setup skill v2's Phase 6 installs `@locator/webpack-loader` and merges the next.config rule ONLY when the Phase 5 opt-in was accepted (Change F).
 - Setup skill v2's Template 5 uses `previewSrc:` (not `src:`).
 - Template 12 (root CLAUDE.md cadence note) is removed from the skill.
 - Template 9 derives a non-empty `fileMap` shape from `forkshopConfig` (Change E follow-up; the hot-fix shipped the literal `{ primitives: [], blocks: [] }`, but live-mirror lets us derive the real shape).
 - Phase 7 summary uses the simplified wording (Change G). No "Skipped" section by default. Sibling-skill mentions are 1-line each. `Mount/Modifiers/Opt-in/Files written` lines are gone from the default output.
 - Phase 3 / Phase 4 / Phase 6 wording-pass — terse, no alarmist phrasing.
 - `forkshop.config.tsx` shape (Template 1 + user-claude-md template) reflects the new slim form.
-- A manual smoke test against a fresh `create-next-app` confirms: (a) install runs, (b) `/forkshop` renders without crash on first load, (c) adding `components/ui/button.tsx` shows up on UI Components without re-running the skill, (d) no root-CLAUDE.md modification occurs, (e) `@locator/webpack-loader` was installed and next.config was modified automatically.
+- A manual smoke test against a fresh `create-next-app` confirms: (a) install runs, (b) `/forkshop` renders without crash on first load, (c) adding `components/ui/button.tsx` shows up on UI Components without re-running the skill, (d) no root-CLAUDE.md modification occurs, (e) declining the Locator opt-in leaves `package.json` and `next.config.*` untouched, (f) accepting the Locator opt-in adds the devDep and merges the next.config rule.
 
 ## Supersedes
 
@@ -400,7 +431,7 @@ This spec amends `docs/specs/2026-05-17-setup-skill-v2-design.md` (the just-merg
 - **Change C:** rewords Phase 7's Locator-skip line. (Mostly subsumed by Change F — once Locator auto-installs, no skip line is needed in the common case.)
 - **Change D:** removes the conditional gate on Step 6 (preview route always written).
 - **Change E:** fixes the `fileMap={{}}` runtime crash in Template 9. Hot-fix `4a08963` shipped on main; this spec records the fix and adds a `forkshopConfig`-derived fileMap as part of the live-mirror change.
-- **Change F:** Phase 6 actually installs `@locator/webpack-loader` and merges the next.config rule. Restores spec #4's "always-on automatic Option-click" intent.
+- **Change F:** Locator becomes a Phase 5 opt-in (revised from spec #4's "always-on automatic" — that decision was the wrong call). User picks; skill installs the devDep and merges next.config only on accept.
 - **Change G:** Phase 7 summary refresh — shorter, no stale skipped items, less alarmist phrasing. Same wording pass applied to Phase 3 / 4 / 6 messages.
 - **Plus:** fixes Template 5 typo (`src:` → `previewSrc:`).
 - **Plus:** removes Template 12 (cadence-note template) entirely.
