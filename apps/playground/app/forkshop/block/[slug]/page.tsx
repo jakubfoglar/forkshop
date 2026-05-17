@@ -2,7 +2,8 @@
 // Safe to delete this entire `block/` subtree if you don't have blocks.
 
 import { notFound } from "next/navigation"
-import { getBlockBySlug } from "../../forkshop.config"
+import { discoverBlocks } from "@forkshop/engine"
+import { forkshopConfig } from "../../forkshop.config"
 
 export default async function PlaygroundBlockPreviewPage({
   params,
@@ -11,9 +12,10 @@ export default async function PlaygroundBlockPreviewPage({
 }) {
   if (process.env.NODE_ENV === "production") notFound()
   const { slug } = await params
-  const entry = getBlockBySlug(slug)
+  const blocks = discoverBlocks(forkshopConfig.blocks)
+  const entry = blocks.find((b) => b.slug === slug)
   if (!entry) notFound()
-  const Component = entry.component as React.ComponentType
+  const Component = entry.Component
   return (
     <div className="bg-white">
       <Component />
