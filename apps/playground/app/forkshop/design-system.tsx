@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo } from "react"
+import type React from "react"
 import {
   DesignSystemView,
   getDesignSystemStageSize,
@@ -10,6 +11,7 @@ import {
 } from "@forkshop/engine"
 import { PlaygroundBoard } from "./playground-board"
 import { forkshopConfig } from "./forkshop.config"
+import tailwindConfig from "../../tailwind.config"
 
 const DISPLAY_SAMPLES = [
   { className: "text-display-3xl", label: "display-3xl" },
@@ -72,24 +74,26 @@ export function DesignSystemBoard({
   nodePositions: Record<string, { x: number; y: number }>
   onPositionChange: (id: string, x: number, y: number) => void
 }) {
-  const tokens = useMemo(() => buildTokenRegistry(forkshopConfig.tailwindConfig), [])
+  const tokens = useMemo(() => buildTokenRegistry(tailwindConfig), [])
 
   const primitiveGroups = useMemo<PrimitiveGroup[]>(
     () => [
       {
         id: "ui",
         label: "UI Primitives",
-        primitives: forkshopConfig.primitives.map<InlineReactNode>((p) => ({
-          id: `primitive:${p.id}`,
-          kind: "inline-react",
-          x: 0,
-          y: 0,
-          width: 320,
-          height: 160,
-          label: p.name,
-          filePath: p.sourcePath,
-          render: p.render,
-        })),
+        primitives: forkshopConfig.primitives.map<InlineReactNode>((p) => {
+          const Component = p.component as React.ComponentType<typeof p.exampleProps>
+          return {
+            id: `primitive:${p.slug}`,
+            kind: "inline-react",
+            x: 0,
+            y: 0,
+            width: 320,
+            height: 160,
+            label: p.name,
+            render: () => <Component {...p.exampleProps} />,
+          }
+        }),
       },
     ],
     [],
