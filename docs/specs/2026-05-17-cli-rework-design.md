@@ -1,7 +1,7 @@
 # CLI rework — implementation spec
 
 Date: 2026-05-17
-Status: Approved (brainstorming) — ready for plan
+Status: Implemented
 Downstream of: `docs/strategy/2026-05-14-forkshop-strategy-v2-design.md` (spec #3)
 Prerequisites:
 - `docs/specs/2026-05-15-nodetype-layout-extraction-design.md` (shipped)

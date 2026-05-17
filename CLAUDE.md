@@ -11,30 +11,43 @@ Forkshop is an OSS Figma-style canvas + sidebar tool for Next.js + Tailwind proj
 ```
 packages/
   cli/          The published `forkshop` npm CLI. Commands: `forkshop init`,
-                `forkshop add`, `forkshop diff`. See "packages/cli" section below.
+                `forkshop update`, `forkshop add`, `forkshop diff`.
+                See "packages/cli" section below.
 
-  registry/     The source. All components, hooks, lib utilities, API routes,
-                and kits live here. Published as @forkshop/engine.
+  engine/       The source. All components, hooks, lib utilities, API routes,
+                and layouts live here. Published as @forkshop/engine.
     src/
       components/   Primitives — canvas, sidebar, icon, etc.
       hooks/        iframe hooks, draggable-node hook
       lib/          Utilities — token-registry, system-graph, system-layout,
                     system-snap, node-positions, sitemap-tree, file-to-selection,
                     edit-mode, inspect-element, spacing-classes, agent-activity-state
-      kits/         Configurable boards: design-system-board, iframe-gallery, page-tree
+      layouts/      Engine-shipped Layout components (DesignSystemView, Gallery,
+                    ResponsiveFrameView, Tree)
+      node-types/   Engine-shipped NodeType definitions
       api/          Next.js route handlers (re-exported by user's app/api/forkshop/)
         edit/
         positions/
         agent-activity/
           stream/
-      templates/    user-claude-md.md — auto-loaded by Claude Code in user's app/forkshop/
+      skill/        Skill markdown files shipped via the registry
+    templates/      Scaffold templates dropped during `forkshop init`
+      api-stubs/    Route stub templates (edit, positions, agent-activity, stream)
+      user-claude-md.md — auto-loaded by Claude Code in user's app/forkshop/
+    fonts/
+      raveo/        RaveoVF.woff2 — binary shipped to user's project on init
 
 apps/
   playground/   Minimal Next.js demo that mounts a Forkshop installation.
-                The canonical "does it work?" check. Mount all three kits here.
+                Hand-maintained dev surface with 4 boards (Foundations, Components,
+                Blocks, Pages). The canonical "does it work?" check.
 
   docs/         Serves the static registry at `/r/registry.json`. See
                 "apps/docs" section below. Marketing content TBD.
+
+tests/
+  smoke/        Real-install fixture exercising the CLI against a fresh Next.js
+                skeleton. Validates init output matches expected-files.txt.
 ```
 
 ---
@@ -43,21 +56,39 @@ apps/
 
 The published `forkshop` npm CLI. Commands:
 
-- `forkshop init` — copies the `init` bundle's files into the user's project, rewrites
-  `@forkshop/*` imports to the user's project aliases, installs runtime deps via the
-  user's detected package manager, writes `forkshop.json` recording what was installed
-  and where.
-- `forkshop add <bundle>` — installs an additional kit (one of `kits/iframe-gallery`,
-  `kits/page-tree`, `kits/design-system-board`) or feature bundle.
-- `forkshop diff <path>` — shows a unified diff of the user's local copy vs the
-  upstream version, with path rewriting applied so alias-only churn doesn't appear.
+- `forkshop init` — detects the user's package manager, runs `<pm> add @forkshop/engine`,
+  drops a thin scaffold layer (~8 files + 1 binary: skill files, route stubs, font,
+  CLAUDE.md) into the user's project, appends the CSS import to `globals.css`, and writes
+  a slim `forkshop.json` lock recording the engine version and scaffold file checksums.
+  Does not copy engine source — engine ships from npm.
+- `forkshop update` — bulk-refreshes the scaffold layer (skill files, CLAUDE.md, route
+  stubs) with a single confirm-all consent prompt. Soft-offers an `@forkshop/engine` pin
+  bump. Supports `--check` (dry-run diff) and `--force` (skip consent).
+- `forkshop add <bundle>` — 1.0 placeholder. Returns "not yet available" and links to the
+  roadmap. Real bundle support is reactivated by the kits rewrite spec (#4).
+- `forkshop diff <path>` — shows a unified diff of a scaffold file vs the upstream
+  version, using the v2 lock schema.
 
 Bundled with esbuild into a single ESM file at `dist/index.js`. Tests in
-`packages/cli/src/**/*.test.ts` (and `tests/e2e.test.ts` — `.skip`'d, needs docs
-dev server). The path-rewriter (`src/rewrite.ts`) is the heart of the install flow:
-it does a longest-prefix-match swap from `@forkshop/*` to the user's `forkshop.json` aliases.
+`packages/cli/src/**/*.test.ts`. The placeholder substituter (`src/rewrite.ts`) replaces
+`{{snake_case}}` tokens in scaffold templates with project-specific values at init time.
 
 Build: `pnpm --filter forkshop build`. Test: `pnpm --filter forkshop test`.
+
+---
+
+## Scaffold templates location
+
+Files dropped by `forkshop init` / `forkshop update` are stored in the engine package
+under `packages/engine/` and served via the manifest:
+
+- **Skill files:** `packages/engine/src/skill/{setup,live-editing,doc-sync}.md`
+- **User CLAUDE.md template:** `packages/engine/templates/user-claude-md.md`
+- **Route stub templates:** `packages/engine/templates/api-stubs/{edit,positions,agent-activity,agent-activity-stream}-route.ts.template`
+- **Font binary:** `packages/engine/fonts/raveo/RaveoVF.woff2`
+
+When editing any of these files, remember to run `pnpm --filter docs validate-registry`
+to catch template placeholder leaks.
 
 ---
 
@@ -79,14 +110,18 @@ It also confirms every bundle's items exist in the files map. Run via
 
 Every cross-file import inside `packages/engine/src/**` must use the `@forkshop/*`
 alias (e.g., `import { foo } from "@forkshop/lib/edit-mode"`), never a relative path.
-The CLI's path-rewriter assumes this. A lint check at
-`packages/engine/scripts/check-canonical-imports.ts` enforces it as part of
-`pnpm --filter @forkshop/engine lint`.
+A lint check at `packages/engine/scripts/check-canonical-imports.ts` enforces it as
+part of `pnpm --filter @forkshop/engine lint`.
 
-The registry's own `tsconfig.json` maps `@forkshop/*` → `./src/*` so local typecheck
+The engine's own `tsconfig.json` maps `@forkshop/*` → `./src/*` so local typecheck
 and Vitest resolve correctly. The playground (`apps/playground`) needs additional
 per-subdir webpack/turbopack alias entries in `next.config.mjs` to resolve those
 imports across the workspace boundary.
+
+Note: engine-internal aliases are `@forkshop/*` (subpath of the source tree). User
+projects import from the npm package using `@forkshop/engine` or
+`@forkshop/engine/<subpath>` — these are distinct from the internal aliases and do
+not require path-rewriting at init time.
 
 ---
 
@@ -143,7 +178,7 @@ Naming:
 - Export: named export matching PascalCase (`export function ForkshopCanvas`)
 - Client-only components: add `"use client"` at the top
 
-After adding a primitive, export it from `packages/engine/src/index.ts`. Keep exports grouped logically — canvas primitives together, hooks together, lib together, kits last.
+After adding a primitive, export it from `packages/engine/src/index.ts`. Keep exports grouped logically — canvas primitives together, hooks together, lib together, layouts and node-types last.
 
 Example:
 
@@ -169,20 +204,26 @@ Note the `.js` extension in the import path — required for ESM compatibility w
 
 ---
 
-## How to add a new kit
+## How to add a new Layout or NodeType
 
-Kits live in `packages/engine/src/kits/`.
+**Vocabulary (v2 model):**
+- **Node** — a single iframe-backed tile on the canvas. Has a `nodeType` key and a `sourceFile`.
+- **NodeType** — a named configuration (viewport size, label style, aspect ratio) for a Node.
+- **Layout** — an engine-shipped React component that arranges one or more NodeTypes into
+  a named board shape (e.g., `ResponsiveFrameView`, `Gallery`, `Tree`, `DesignSystemView`).
+- **Board** — user's mounted canvas; composed from NodeTypes + Layouts.
+- **Kit** — a future first-class install unit (re-activated by the kits rewrite spec #4).
 
-**Kit-worthy criteria:** at least two production projects would use the same board shape with different data. If the layout math, node wiring, and iframe hooks would be identical across projects — only the data feed differs — it's a kit.
+**Engine-shipped Layouts** live in `packages/engine/src/layouts/`. Each is a named React
+component + typed `*Props` interface exported from `packages/engine/src/index.ts`.
 
-**Do not add a kit** if a user could write the board in ~30 lines with primitives. Ship the primitives and let the user compose.
+**Engine-shipped NodeTypes** live in `packages/engine/src/node-types/`.
 
-Existing kits:
-- `DesignSystemBoard` — color graph + primitive frames + typography
-- `IframeGallery` — stack or grid of labeled iframe tiles
-- `PageTree` — sitemap tree with 3-viewport isolation
+**User-side custom NodeTypes** live in `app/forkshop/node-types/` in the user's project
+(scaffolded by `forkshop init`). Users compose Boards directly — no `forkshop add` needed.
 
-A kit is a React component with a typed `*Props` interface. Export both from `index.ts`.
+See `docs/specs/2026-05-17-cli-rework-design.md` and the strategy v2 doc
+(`docs/strategy/2026-05-14-forkshop-strategy-v2-design.md`) for the full 5-concept model.
 
 ---
 
@@ -245,7 +286,7 @@ Do not port:
 What IS safe to port (already done):
 - All primitives: canvas, sidebar, hooks, utilities
 - API routes (generalized, Ravineo-specific logic stripped)
-- Kits (generalized, data feeds are props, not hardcoded)
+- Layouts and NodeTypes (generalized, data feeds are props, not hardcoded)
 - The agent-activity plumbing (no-op shell)
 - Locator.js wiring
 
@@ -294,7 +335,7 @@ This file is the CLAUDE.md that gets auto-loaded into a user's Claude Code sessi
 
 Changes that require a doc sync:
 - New primitive exported from `index.ts`
-- New kit exported from `index.ts`
+- New Layout or NodeType exported from `index.ts`
 - Changed API route contract (request/response shape)
 - Changed file layout after init
 - Changed behavior of edit, spacing, or locator wiring
@@ -363,4 +404,4 @@ These are **not** in v0 and should not be built until there's a dedicated spec:
 | Docs site content         | `apps/docs/` serves the registry but has no marketing content yet. |
 | GitHub Actions publish    | npm publish workflow. |
 
-Do not start work on deferred items during Tasks 25-27 (docs + release tag pass).
+Do not start work on deferred items without a dedicated spec.
