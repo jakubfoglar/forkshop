@@ -61,8 +61,52 @@ export type SidebarSection = {
    * Selection kind emitted when an entry under this section is clicked.
    * Defaults to "block".
    */
-  entryKind?: "block" | "primitive";
+  entryKind?: "block" | "primitive" | "page";
 };
+
+// ---------------------------------------------------------------------------
+// Pure helpers (exported for testing)
+// ---------------------------------------------------------------------------
+
+/**
+ * Build the ForkshopSelection produced when an entry in a section is clicked.
+ */
+export function deriveEntrySelection(
+  entryKind: NonNullable<SidebarSection["entryKind"]>,
+  slug: string,
+): ForkshopSelection {
+  if (entryKind === "block") return { kind: "block", slug };
+  if (entryKind === "primitive") return { kind: "primitive", id: slug };
+  return { kind: "page", path: slug };
+}
+
+/**
+ * Returns true when the given selection matches an entry in a section.
+ */
+export function isEntryActive(
+  entryKind: NonNullable<SidebarSection["entryKind"]>,
+  selection: ForkshopSelection,
+  slug: string,
+): boolean {
+  if (entryKind === "block") return selection.kind === "block" && selection.slug === slug;
+  if (entryKind === "primitive") return selection.kind === "primitive" && selection.id === slug;
+  return selection.kind === "page" && selection.path === slug;
+}
+
+/**
+ * Returns true when the current selection should cause a section to auto-expand.
+ */
+export function sectionAutoExpandMatch(
+  entryKind: NonNullable<SidebarSection["entryKind"]>,
+  selection: ForkshopSelection,
+  entries: readonly SidebarEntry[],
+): boolean {
+  if (entryKind === "block")
+    return selection.kind === "block" && entries.some((e) => e.slug === selection.slug);
+  if (entryKind === "primitive")
+    return selection.kind === "primitive" && entries.some((e) => e.slug === selection.id);
+  return selection.kind === "page" && entries.some((e) => e.slug === selection.path);
+}
 
 // ---------------------------------------------------------------------------
 // Component
@@ -126,11 +170,7 @@ export function ForkshopSidebar({
   useEffect(() => {
     for (const section of sections) {
       const entryKind = section.entryKind ?? "block";
-      const isMatch =
-        entryKind === "block"
-          ? selection.kind === "block" && section.entries?.some((e) => e.slug === selection.slug)
-          : selection.kind === "primitive" && section.entries?.some((e) => e.slug === selection.id);
-      if (isMatch) {
+      if (sectionAutoExpandMatch(entryKind, selection, section.entries ?? [])) {
         setExpandedSections((prev) => ({ ...prev, [section.id]: true }));
       }
     }
@@ -213,20 +253,14 @@ export function ForkshopSidebar({
                         label={entry.name}
                         depth={2}
                         icon={entry.icon}
-                        active={
-                          entryKind === "block"
-                            ? selection.kind === "block" && selection.slug === entry.slug
-                            : selection.kind === "primitive" && selection.id === entry.slug
+                        active={isEntryActive(entryKind, selection, entry.slug)}
+                        agentActive={
+                          entryKind === "page"
+                            ? activePages.has(entry.slug)
+                            : activeBlocks.has(entry.slug) || activePrimitives.has(entry.slug)
                         }
-                        agentActive={activeBlocks.has(entry.slug) || activePrimitives.has(entry.slug)}
                         agentFileLabel={`${entry.slug}.tsx`}
-                        onClick={() =>
-                          onSelect(
-                            entryKind === "block"
-                              ? { kind: "block", slug: entry.slug }
-                              : { kind: "primitive", id: entry.slug },
-                          )
-                        }
+                        onClick={() => onSelect(deriveEntrySelection(entryKind, entry.slug))}
                       />
                     ))}
                 </div>
