@@ -150,4 +150,58 @@ describe("runInit (v2)", () => {
     const lock = JSON.parse(await fs.readFile(path.join(root, "forkshop.json"), "utf8"))
     expect(lock.srcPrefix).toBe("src/")
   })
+
+  it("refuses if forkshop.json already exists", async () => {
+    const root = await setupProject()
+    dirs.push(root)
+    await fs.writeFile(path.join(root, "forkshop.json"), "{}")
+    const result = await runInit({
+      projectRoot: root,
+      manifest: fakeManifest(),
+    })
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.reason).toMatch(/already installed/i)
+  })
+
+  it("refuses on collision with an existing scaffold file (no --force)", async () => {
+    const root = await setupProject()
+    dirs.push(root)
+    await fs.mkdir(path.join(root, ".claude/skills"), { recursive: true })
+    await fs.writeFile(path.join(root, ".claude/skills/forkshop-setup.md"), "pre-existing")
+    const result = await runInit({
+      projectRoot: root,
+      manifest: fakeManifest(),
+    })
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.reason).toMatch(/conflict/i)
+  })
+
+  it("overwrites on collision with --force", async () => {
+    const root = await setupProject()
+    dirs.push(root)
+    await fs.mkdir(path.join(root, ".claude/skills"), { recursive: true })
+    await fs.writeFile(path.join(root, ".claude/skills/forkshop-setup.md"), "pre-existing")
+    const result = await runInit({
+      projectRoot: root,
+      manifest: fakeManifest(),
+      force: true,
+    })
+    expect(result.ok).toBe(true)
+    expect(
+      await fs.readFile(path.join(root, ".claude/skills/forkshop-setup.md"), "utf8")
+    ).toBe("# setup\n")
+  })
+
+  it("rejects v1 manifest", async () => {
+    const root = await setupProject()
+    dirs.push(root)
+    const m = fakeManifest()
+    m.version = "1.0.0"
+    const result = await runInit({
+      projectRoot: root,
+      manifest: m,
+    })
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.reason).toMatch(/schema/i)
+  })
 })
