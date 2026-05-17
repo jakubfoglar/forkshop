@@ -16,27 +16,20 @@ describe("forkshop.json", () => {
     expect(await readForkshopJson(root)).toBeUndefined()
   })
 
-  it("round-trips a valid forkshop.json", async () => {
+  it("round-trips a v2-shape forkshop.json", async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), "forkshop-json-"))
     tempDirs.push(root)
     const written: ForkshopJson = {
-      registryVersion: "1.0.0",
-      installedAt: "2026-05-13T10:00:00Z",
+      schemaVersion: "2.0.0",
+      installedAt: "2026-05-17T10:00:00Z",
       registryUrl: "https://forkshop.dev/r/",
-      aliases: {
-        base: "@/",
-        components: "@/components/forkshop",
-        kits: "@/components/forkshop/kits",
-        hooks: "@/lib/forkshop/hooks",
-        lib: "@/lib/forkshop",
-        api: "@/app/api/forkshop",
-        tailwind: "@/lib/forkshop/tailwind",
-        mount: "@/app/forkshop",
-      },
-      installedBundles: ["primitives"],
+      engineVersion: "0.3.0",
+      mount: "@/app/forkshop",
+      srcPrefix: "",
+      installedBundles: ["init"],
       files: {
-        "@forkshop/lib/edit-mode": {
-          dest: "lib/forkshop/edit-mode.ts",
+        "@forkshop/skill/setup": {
+          dest: ".claude/skills/forkshop-setup.md",
           sha: "abcd1234",
         },
       },
@@ -44,6 +37,23 @@ describe("forkshop.json", () => {
     await writeForkshopJson(root, written)
     const read = await readForkshopJson(root)
     expect(read).toEqual(written)
+  })
+
+  it("round-trips with srcPrefix set", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "forkshop-json-"))
+    tempDirs.push(root)
+    const written: ForkshopJson = {
+      schemaVersion: "2.0.0",
+      installedAt: "2026-05-17T10:00:00Z",
+      registryUrl: "https://forkshop.dev/r/",
+      engineVersion: "0.3.0",
+      mount: "@/app/forkshop",
+      srcPrefix: "src/",
+      installedBundles: ["init"],
+      files: {},
+    }
+    await writeForkshopJson(root, written)
+    expect(await readForkshopJson(root)).toEqual(written)
   })
 
   it("throws a useful error on malformed JSON", async () => {
