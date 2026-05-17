@@ -148,24 +148,42 @@ Three scans, all silent. Output is data for Phase 3 — do not show progress to 
 3. Dynamic routes (`[slug]`, `[id]`, etc.) → flag as needing an enumeration source. The proposal will offer `autoDiscover: true` with a TODO marker for the user to add explicit enumeration if needed.
 4. Surface in the proposal as **counts only** ("8 routes under `(marketing)`"). The per-route list will render in the actual sidebar after install — no need to dump it into the proposal.
 
+### Scan D — Theme tokens (for Design System Board)
+
+1. Read `tailwind.config.{ts,js,mjs}` if present. Look at `theme.extend.{colors, spacing, fontFamily, borderRadius, boxShadow}`. Count non-empty keys per category.
+2. If Tailwind v4 is in use (no config file but `@theme` block in `app/globals.css` or `src/app/globals.css`), parse the `@theme` block for `--color-*`, `--spacing-*`, `--font-*`, `--radius-*`, `--shadow-*` custom properties. Same counting.
+3. Output a flag: `themeTokens.hasCustomization = any non-default category has ≥1 entry`. Also expose per-category counts (`hasCustomColors`, `hasCustomTypography`, etc.) for the proposal narrative.
+4. If neither config file nor `@theme` block exists, set `themeTokens.hasCustomization = false`.
+
+This signal fires the Design System recipe. It doesn't need to find every token — it just decides whether to scaffold a Design System Board at all.
+
+### Scan E — MDX content (for Reference Board)
+
+1. Check `package.json` dependencies (both `dependencies` and `devDependencies`) for any of: `@next/mdx`, `@mdx-js/loader`, `@mdx-js/react`, `next-mdx-remote`, `contentlayer`.
+2. Glob for `**/*.mdx` files under `app/` and a top-level `content/` directory (if it exists). Cap at 100 — we only need to know "yes there's MDX" plus a count.
+3. Look for an MDX-route pattern: `app/(content)/[...slug]/page.tsx`, `app/blog/[slug]/page.tsx`, or any `page.tsx` whose source imports `next/mdx` / `@mdx-js/react`.
+4. Output: `mdxContent = { detected: boolean, articleCount: number, routePattern?: string }`.
+
+The Reference recipe fires only when `detected === true` AND a route pattern is found. If MDX files exist but no route pattern resolves them, the skill notes this in the narrative ("I see MDX content but no route renders it — Reference Board needs a Next.js route to iframe") and skips the recipe.
+
 ### Output shape
 
 After Phase 2, you hold an internal data structure roughly like:
 
 ```
 narrative: "<2-3 sentence narrative from Phase 1>"
-projectFlags: { mobileProfile: false, tailwindMajor: 3, monorepo: false }
-inlineReactNodes: [
-  { name: "Button", sourcePath: "components/ui/button.tsx" },
-  { name: "Badge",  sourcePath: "components/ui/badge.tsx" },
+projectFlags: { mobileProfile, tailwindMajor, monorepo, authLibrary }
+primitives: [
+  { name: "Button", sourcePath: "components/ui/button.tsx", hasCva: true, cvaVariants: { variant: ["primary","secondary"], size: ["sm","md","lg"] } }
 ]
-iframeComponentNodes: [
-  { name: "Hero", sourcePath: "components/blocks/hero.tsx", fixture: "title=\"...\" eyebrow=\"...\"" },
+blocks: [
+  { name: "Hero", sourcePath: "components/blocks/hero.tsx", fixture: "title=\"...\"", previewRoute: "/" }
 ]
-iframeRouteNodes: [
-  { group: "(marketing)", count: 8, hasDynamic: false },
-  { group: "(authenticated)", count: 12, hasDynamic: true },
+routes: [
+  { group: "(marketing)", paths: ["/", "/about", "/pricing"], hasDynamic: false }
 ]
+themeTokens: { hasCustomization: true, hasCustomColors: true, hasCustomTypography: false, … }
+mdxContent: { detected: false, articleCount: 0 }
 ```
 
 > `sourcePath` is project-relative (no `@/` alias). The live-AI loop uses it to map file edits back to Board entries.
