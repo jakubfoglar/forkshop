@@ -1,11 +1,13 @@
 ---
 name: forkshop-setup
-description: Wires Forkshop into a Next.js + Tailwind project after `npx forkshop init`. Detects project type, scans components and routes, proposes a sidebar, asks before mutating next.config.ts / .claude/settings.json / root CLAUDE.md, writes per-board files, populates forkshop.config.ts. Activates on "set up Forkshop", "finish Forkshop setup", "configure Forkshop", "wire up Forkshop".
+description: Wires Forkshop into a Next.js + Tailwind project after `npx forkshop init`. Detects project type, scans components and routes, proposes a Board layout, asks before mutating next.config.ts / .claude/settings.json / root CLAUDE.md, writes per-board files, populates forkshop.config.ts. This skill scaffolds a minimal stub Forkshop installation; kit-aware audience scaffolding arrives in a later release. Activates on "set up Forkshop", "finish Forkshop setup", "configure Forkshop", "wire up Forkshop", "initialize Forkshop".
 ---
 
 # Forkshop — first-run setup
 
-You are setting up Forkshop in the user's project. The CLI (`npx forkshop init`) has already dropped Forkshop's source files (primitives, kits, fonts, API routes, an empty `forkshop.config.ts` stub, and a CLAUDE.md). Your job is to walk the user through the *configuration* — what their Forkshop's sidebar contains, which kits power each section, and which opt-in features to install — then write the per-board files and populate `forkshop.config.ts`.
+You are setting up Forkshop in the user's project. The CLI (`npx forkshop init`) has already dropped Forkshop's source files (components, hooks, lib utilities, fonts, API routes, an empty `forkshop.config.ts` stub, and a CLAUDE.md). Your job is to scaffold the user-side `{{mount}}/` files — what their Forkshop's Board contains and how Nodes are wired — then populate `forkshop.config.ts`.
+
+Forkshop's mental model is **Node / NodeType / Layout / Board / Kit**. This skill leaves the engine alone — it just scaffolds the user-side `{{mount}}/` files. The engine itself lives at `@forkshop/engine` on npm and was installed during `forkshop init`. When describing the project or the proposed scaffold, use this vocabulary: a **Board** is what renders in the sidebar; it contains **Nodes**, each of which has a **NodeType** (`inline-react`, `iframe-component`, or `iframe-route`); **Layout** controls how Nodes are arranged spatially; a **Kit** is a pre-wired Board that ships with the engine.
 
 You run **once** per project. After this, your work is mostly historical: the user reads `app/forkshop/CLAUDE.md` for ongoing customization, the sibling `forkshop-live-editing` skill auto-applies when Claude edits Forkshop-watched files, and the user-invoked `forkshop-doc-sync` skill refreshes documentation if it drifts.
 
@@ -15,7 +17,7 @@ The user owns every file you produce. They will fork freely. This file (the skil
 
 Do **all** of the following before proceeding to Phase 1. If any check fails, exit with the indicated message and stop.
 
-### Check 1 — `forkshop.json` exists at the repo root
+### Check 1 — `forkshop.json` exists at the repo root with v2 schema
 
 Read `forkshop.json` from the working directory. If missing, exit:
 
@@ -23,15 +25,19 @@ Read `forkshop.json` from the working directory. If missing, exit:
 
 `forkshop.json` is the source of truth for the `aliases.mount` path (where Forkshop's mount route lives) and the alias map needed to resolve all other paths. Without it, every subsequent step would be guessing.
 
-### Check 2 — Read `{{aliases.mount}}/CLAUDE.md`
+If `forkshop.json` exists but has `schemaVersion` set to anything other than `"2.0.0"` (or lacks `schemaVersion` entirely, indicating a v1 installation), exit:
 
-Resolve `{{aliases.mount}}` from `forkshop.json` (defaults to `app/forkshop` if absent). Read the file at `<aliases.mount>/CLAUDE.md`.
+> *"This looks like a v1 Forkshop installation. Back up `<aliases.mount>/` (your `app/forkshop/` directory), then run `npx forkshop init` to re-initialize against the v2 schema. Your custom board files are safe to restore after init completes."*
+
+### Check 2 — Read `{{mount}}/CLAUDE.md`
+
+Resolve the mount path from `forkshop.json`'s `aliases.mount` field (defaults to `app/forkshop` if absent). Read the file at `<aliases.mount>/CLAUDE.md`.
 
 If missing, exit:
 
 > *"Forkshop's installation seems incomplete — `<aliases.mount>/CLAUDE.md` is missing. Re-run `npx forkshop init --force` or restore the file manually."*
 
-That CLAUDE.md documents the kit API (`design-system-board`, `iframe-gallery`, `page-tree`), the selection model, and the conventions you'll write code against. You will rely on it instead of duplicating its content here.
+That CLAUDE.md documents the Board and Node API, the selection model, and the conventions you'll write code against. You will rely on it instead of duplicating its content here.
 
 ### Check 3 — App Router only
 
@@ -62,6 +68,8 @@ Once all four checks pass, continue to Phase 1.
 ## Phase 1 — Read the project, build understanding
 
 You will gather context *first*, then reason. Produce a narrative description of what kind of project this is — never a category lookup. Two sentences of "this is the marketing site for X" beats any dependency-graph inference.
+
+Use the 5-concept vocabulary throughout: **Board**, **Node**, **NodeType**, **Layout**, **Kit**. When you describe what will appear in the sidebar, say "a Board with N Nodes" — not "a kit section with N items" or "a section with N blocks".
 
 ### Step 1 — Read the project's own words
 
@@ -95,15 +103,15 @@ The following observations are *inputs to your reasoning*. Let any one of them u
 - **Authenticated-style route groups**: `(auth)`, `(authenticated)`, `(dashboard)`, `(app)`, `(protected)`, `(private)`.
 - **Marketing-style route groups**: `(marketing)`, `(public)`, `(home)`, `(www)`.
 - **Both kinds of route groups present** → this is most likely a hybrid project, which is the norm in production codebases, not an edge case.
-- **Mobile-web signals** — in `app/layout.tsx` or a `viewport` export: `maximumScale: 1` AND `userScalable: false`, plus breakpoint usage in the top-edited TSX files staying under `md:`. If both fire, set a *mobile profile* flag (changes `iframe-gallery` default to single-width 375 px).
+- **Mobile-web signals** — in `app/layout.tsx` or a `viewport` export: `maximumScale: 1` AND `userScalable: false`, plus breakpoint usage in the top-edited TSX files staying under `md:`. If both fire, set a *mobile profile* flag (changes the Layout default to single-width 375 px Nodes).
 
 ### Step 5 — Produce a narrative
 
-Write a 2–3 sentence description of the project. This is what the user sees in Phase 3's proposal — make it concrete and observable.
+Write a 2–3 sentence description of the project. This is what the user sees in Phase 3's proposal — make it concrete and observable. Describe what Boards and Nodes you would wire up, not what "kit" or "section" you would add.
 
 **Good (concrete, observable):**
 
-> *"This is a hybrid: a `(marketing)` surface (~8 static pages + blog MDX) plus an `(authenticated)` surface using Clerk (~12 routes). Tailwind config is heavily customized with semantic tokens. The README emphasizes the marketing site; CLAUDE.md documents the design system."*
+> *"This is a hybrid: a `(marketing)` surface (~8 static pages + blog MDX) plus an `(authenticated)` surface using Clerk (~12 routes). The Tailwind config is heavily customized with semantic tokens. I'd scaffold two Boards — one with `inline-react` Nodes for the design system, one with `iframe-route` Nodes for the page tree."*
 
 **Bad (categorical, abstract):**
 
@@ -119,21 +127,21 @@ Hold the narrative + the raw signals (auth lib name, route-group names, mobile-p
 
 Three scans, all silent. Output is data for Phase 3 — do not show progress to the user.
 
-### Scan A — Primitives
+### Scan A — Primitives (for `inline-react` Nodes)
 
 1. If `components/ui/` exists (the shadcn convention), list its direct `.tsx` files. Filter out filenames that are clearly not primitives (`use-toast.ts`, `index.ts`, `utils.ts`, anything under a `_` prefix).
 2. Otherwise, grep `components/**/*.tsx` for filenames matching this canonical set (case-insensitive): `button`, `badge`, `input`, `select`, `card`, `dialog`, `tooltip`, `avatar`, `tabs`, `switch`, `checkbox`, `radio`, `label`, `textarea`, `separator`, `skeleton`, `popover`, `dropdown`, `typography`, `heading`.
 3. For each candidate, briefly open the file (head ~30 lines) and confirm there's a default or named export of the same name. This guards against false positives like `button-helpers.ts`, `dialog-context.ts`.
-4. Cap at ~12 primitives. If more candidates exist, sort by import-count across `app/**/*.tsx` and keep the top 12. Note the cap in the proposal so the user knows you trimmed.
+4. Cap at ~12. If more candidates exist, sort by import-count across `app/**/*.tsx` and keep the top 12. Note the cap in the proposal so the user knows you trimmed.
 
-### Scan B — Blocks
+### Scan B — Blocks (for `iframe-component` Nodes)
 
 1. Look for any of: `components/blocks/`, `components/sections/`, `components/marketing/`, `components/site/`. If multiple match, prefer `blocks/` over `sections/` over the others.
 2. List direct `.tsx` exports of the chosen folder.
-3. For each block, find its first usage in `app/**/*.tsx`. Capture the *literal* props passed in that usage — those become the **fixture** the proposal references. If no usage exists, mark the block as "no fixture; will use empty props."
-4. If none of the candidate folders exist, skip the Blocks section in the proposal. Note this in the narrative ("I didn't find an obvious blocks folder").
+3. For each block, find its first usage in `app/**/*.tsx`. Capture the *literal* props passed in that usage — those become the **fixture** the proposal references. If no usage exists, mark it as "no fixture; will use empty props."
+4. If none of the candidate folders exist, skip the `iframe-component` Nodes section in the proposal. Note this in the narrative ("I didn't find an obvious blocks folder").
 
-### Scan C — Routes
+### Scan C — Routes (for `iframe-route` Nodes)
 
 1. Recurse `app/**` for `page.tsx`. Group by the closest enclosing route group (the nearest parent directory wrapped in parentheses).
 2. Static routes (no `[slug]` in the path) → list directly.
@@ -147,20 +155,20 @@ After Phase 2, you hold an internal data structure roughly like:
 ```
 narrative: "<2-3 sentence narrative from Phase 1>"
 projectFlags: { mobileProfile: false, tailwindMajor: 3, monorepo: false }
-primitives: [
+inlineReactNodes: [
   { name: "Button", sourcePath: "components/ui/button.tsx" },
-  { name: "Badge", sourcePath: "components/ui/badge.tsx" },
+  { name: "Badge",  sourcePath: "components/ui/badge.tsx" },
 ]
-blocks: [
+iframeComponentNodes: [
   { name: "Hero", sourcePath: "components/blocks/hero.tsx", fixture: "title=\"...\" eyebrow=\"...\"" },
 ]
-routes: [
+iframeRouteNodes: [
   { group: "(marketing)", count: 8, hasDynamic: false },
   { group: "(authenticated)", count: 12, hasDynamic: true },
 ]
 ```
 
-> `sourcePath` is project-relative (no `@/` alias). The live-AI loop uses it to map file edits back to sidebar entries.
+> `sourcePath` is project-relative (no `@/` alias). The live-AI loop uses it to map file edits back to Board entries.
 
 Do not render this to the user. It is the input to Phase 3.
 
