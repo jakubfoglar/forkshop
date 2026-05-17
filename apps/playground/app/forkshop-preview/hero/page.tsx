@@ -1,5 +1,5 @@
 import { Hero } from "@/components/blocks/hero"
 
-export default function HeroPreviewPage() {
+export default function HeroPreview() {
   return <Hero />
 }
