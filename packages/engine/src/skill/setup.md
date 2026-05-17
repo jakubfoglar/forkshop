@@ -647,16 +647,50 @@ The old `primitives: [...]` and `blocks: [...]` explicit arrays in `forkshopConf
 ````tsx
 "use client"
 
-import { ForkshopCanvas, DesignSystemView } from "@forkshop/engine"
+import { useMemo } from "react"
+import {
+  ForkshopCanvas,
+  DesignSystemView,
+  buildTokenRegistry,
+  discoverPrimitives,
+  type PrimitiveGroup,
+  type InlineReactNode,
+} from "@forkshop/engine"
+import { forkshopConfig } from "./forkshop.config"
 
 export default function DesignSystemBoardView() {
+  const tokens = useMemo(
+    () => buildTokenRegistry(forkshopConfig.tailwindConfig),
+    [],
+  )
+  const primitiveGroups = useMemo<PrimitiveGroup[]>(
+    () => [
+      {
+        id: "ui",
+        label: "UI Primitives",
+        primitives: discoverPrimitives(forkshopConfig.ui).map<InlineReactNode>((p) => ({
+          id: `primitive:${p.slug}`,
+          kind: "inline-react",
+          x: 0,
+          y: 0,
+          width: 320,
+          height: 160,
+          label: p.name,
+          render: () => <p.Component />,
+        })),
+      },
+    ],
+    [],
+  )
   return (
     <ForkshopCanvas>
-      <DesignSystemView />
+      <DesignSystemView tokens={tokens} primitives={primitiveGroups} />
     </ForkshopCanvas>
   )
 }
 ````
+
+**Tailwind v3 only at 1.0.** `buildTokenRegistry` accepts only a v3 `Config` shape; v4 projects (which use `@theme` in CSS and ship no `tailwind.config.*`) hit a runtime error at the import. The "DesignSystemView parameterless variant" + "Tailwind v4 token registry" follow-up specs in `docs/polish-backlog.md` track this. Until they land, v4 projects either skip the Design System Board or hand-build a token registry inline.
 
 ### Template 3 — `{{mount}}/ui-components.tsx`
 
