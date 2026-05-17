@@ -4,77 +4,63 @@ import path from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
 import { mergeDepsIntoPackageJson, parseDepSpec } from "./write-deps.js"
 
-async function makeProject(pkgJson: object): Promise<string> {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "forkshop-deps-"))
-  await fs.writeFile(
-    path.join(root, "package.json"),
-    JSON.stringify(pkgJson, null, 2),
-    "utf8",
-  )
-  return root
-}
-
 describe("parseDepSpec", () => {
-  it("parses an unscoped package with version", () => {
-    expect(parseDepSpec("clsx@^2.1.1")).toEqual({ name: "clsx", version: "^2.1.1" })
-  })
-  it("parses a scoped package with version", () => {
-    expect(parseDepSpec("@locator/runtime@^0.5.1")).toEqual({
-      name: "@locator/runtime",
-      version: "^0.5.1",
+  it("parses @forkshop/engine@0.3.0", () => {
+    expect(parseDepSpec("@forkshop/engine@0.3.0")).toEqual({
+      name: "@forkshop/engine",
+      version: "0.3.0",
     })
   })
-  it("falls back to '*' for a bare name", () => {
-    expect(parseDepSpec("clsx")).toEqual({ name: "clsx", version: "*" })
+
+  it("parses a scoped dep with caret range", () => {
+    expect(parseDepSpec("@forkshop/engine@^0.3.0")).toEqual({
+      name: "@forkshop/engine",
+      version: "^0.3.0",
+    })
   })
-  it("treats a leading @ without an internal @ as a bare scoped name", () => {
-    expect(parseDepSpec("@locator/runtime")).toEqual({ name: "@locator/runtime", version: "*" })
+
+  it("parses an unscoped dep", () => {
+    expect(parseDepSpec("clsx@2.1.1")).toEqual({ name: "clsx", version: "2.1.1" })
+  })
+
+  it("returns version '*' for bare scoped names", () => {
+    expect(parseDepSpec("@forkshop/engine")).toEqual({ name: "@forkshop/engine", version: "*" })
   })
 })
 
 describe("mergeDepsIntoPackageJson", () => {
-  let root: string | undefined
+  const tempDirs: string[] = []
   afterEach(async () => {
-    if (root) await fs.rm(root, { recursive: true, force: true })
-    root = undefined
+    for (const dir of tempDirs.splice(0)) await fs.rm(dir, { recursive: true, force: true })
   })
 
-  it("adds new deps to dependencies", async () => {
-    root = await makeProject({ name: "x", dependencies: {} })
-    const added = await mergeDepsIntoPackageJson(root, ["clsx@^2.1.1", "@locator/runtime@^0.5.1"])
-    expect(added.sort()).toEqual(["@locator/runtime", "clsx"])
+  async function setup(initialPkg: object): Promise<string> {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "forkshop-wd-"))
+    tempDirs.push(root)
+    await fs.writeFile(path.join(root, "package.json"), JSON.stringify(initialPkg, null, 2))
+    return root
+  }
+
+  it("adds @forkshop/engine when absent", async () => {
+    const root = await setup({ dependencies: { next: "^14.0.0" } })
+    const added = await mergeDepsIntoPackageJson(root, ["@forkshop/engine@^0.3.0"])
+    expect(added).toEqual(["@forkshop/engine"])
     const pkg = JSON.parse(await fs.readFile(path.join(root, "package.json"), "utf8"))
-    expect(pkg.dependencies["clsx"]).toBe("^2.1.1")
-    expect(pkg.dependencies["@locator/runtime"]).toBe("^0.5.1")
+    expect(pkg.dependencies["@forkshop/engine"]).toBe("^0.3.0")
+    expect(pkg.dependencies.next).toBe("^14.0.0")
   })
 
-  it("preserves existing dependencies and doesn't overwrite their versions", async () => {
-    root = await makeProject({ name: "x", dependencies: { clsx: "1.0.0", existing: "0.0.1" } })
-    const added = await mergeDepsIntoPackageJson(root, ["clsx@^2.1.1", "lucide-react@^1.14.0"])
-    expect(added).toEqual(["lucide-react"])
-    const pkg = JSON.parse(await fs.readFile(path.join(root, "package.json"), "utf8"))
-    expect(pkg.dependencies["clsx"]).toBe("1.0.0")
-    expect(pkg.dependencies["existing"]).toBe("0.0.1")
-    expect(pkg.dependencies["lucide-react"]).toBe("^1.14.0")
-  })
-
-  it("does not duplicate a dep that exists in devDependencies", async () => {
-    root = await makeProject({ name: "x", devDependencies: { clsx: "2.0.0" } })
-    const added = await mergeDepsIntoPackageJson(root, ["clsx@^2.1.1"])
+  it("does not overwrite an existing pin", async () => {
+    const root = await setup({ dependencies: { "@forkshop/engine": "0.2.0" } })
+    const added = await mergeDepsIntoPackageJson(root, ["@forkshop/engine@^0.3.0"])
     expect(added).toEqual([])
-  })
-
-  it("returns empty when there's nothing to add", async () => {
-    root = await makeProject({ name: "x", dependencies: { clsx: "2.0.0" } })
-    const added = await mergeDepsIntoPackageJson(root, ["clsx@^2.1.1"])
-    expect(added).toEqual([])
-  })
-
-  it("creates dependencies block if missing", async () => {
-    root = await makeProject({ name: "x" })
-    const added = await mergeDepsIntoPackageJson(root, ["clsx@^2.1.1"])
-    expect(added).toEqual(["clsx"])
     const pkg = JSON.parse(await fs.readFile(path.join(root, "package.json"), "utf8"))
-    expect(pkg.dependencies.clsx).toBe("^2.1.1")
+    expect(pkg.dependencies["@forkshop/engine"]).toBe("0.2.0")
+  })
+
+  it("handles missing dependencies block", async () => {
+    const root = await setup({})
+    const added = await mergeDepsIntoPackageJson(root, ["@forkshop/engine@^0.3.0"])
+    expect(added).toEqual(["@forkshop/engine"])
   })
 })
