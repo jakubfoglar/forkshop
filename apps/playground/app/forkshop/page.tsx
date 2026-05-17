@@ -312,6 +312,7 @@ export default function ForkshopPage() {
           width: 400,
           height: 280,
           routePath: p.path,
+          sourceFile: p.sourceFile,
         }
         return { id: node.id, label: humanizePagePath(p.path), path: p.path, node }
       }),

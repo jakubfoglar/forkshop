@@ -3,7 +3,7 @@ import { IconChevronTopSmall } from "@central-icons-react/square-outlined-radius
 import { IconChevronLeftSmall } from "@central-icons-react/square-outlined-radius-0-stroke-2/IconChevronLeftSmall"
 import { IconChevronRightSmall } from "@central-icons-react/square-outlined-radius-0-stroke-2/IconChevronRightSmall"
 import { IconArrowLeft } from "@central-icons-react/square-outlined-radius-0-stroke-2/IconArrowLeft"
-import { IconCheckmark1 } from "@central-icons-react/square-outlined-radius-0-stroke-2/IconCheckmark1"
+import { IconCheckmark2Medium } from "@central-icons-react/square-outlined-radius-0-stroke-2/IconCheckmark2Medium"
 import { IconCrossMedium } from "@central-icons-react/square-outlined-radius-0-stroke-2/IconCrossMedium"
 import { IconPlusLarge } from "@central-icons-react/square-outlined-radius-0-stroke-2/IconPlusLarge"
 import { IconQuickSearch } from "@central-icons-react/square-outlined-radius-0-stroke-2/IconQuickSearch"
@@ -41,7 +41,7 @@ export const forkshopIcons = {
   info:         IconCircleInfo,
   back:         IconArrowLeft,
   close:        IconCrossMedium,
-  check:        IconCheckmark1,
+  check:        IconCheckmark2Medium,
   plus:         IconPlusLarge,
   search:       IconQuickSearch,
   chevronDown:  IconChevronDownSmall,
