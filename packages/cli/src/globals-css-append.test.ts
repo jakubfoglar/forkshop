@@ -46,8 +46,13 @@ describe("appendForkshopCssImport", () => {
     expect(result.action).toBe("skipped")
   })
 
-  it("errors when app/globals.css doesn't exist", async () => {
+  it("returns not-found with searched paths when no globals.css exists anywhere", async () => {
     const root = await makeProject(undefined)
-    await expect(appendForkshopCssImport(root)).rejects.toThrow(/app\/globals\.css/)
+    const result = await appendForkshopCssImport(root)
+    expect(result.action).toBe("not-found")
+    if (result.action === "not-found") {
+      expect(result.searched).toContain("app/globals.css")
+      expect(result.searched).toContain("src/app/globals.css")
+    }
   })
 })

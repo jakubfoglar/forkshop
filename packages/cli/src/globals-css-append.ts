@@ -6,6 +6,7 @@ const IMPORT_REGEX = /@import\s+["']@forkshop\/engine\/forkshop\.css["'];?/
 export type AppendResult =
   | { action: "added"; target: string }
   | { action: "skipped"; target: string }
+  | { action: "not-found"; searched: string[] }
 
 /**
  * Prepend the Forkshop engine CSS import to the project's globals.css.
@@ -41,11 +42,9 @@ export async function appendForkshopCssImport(
     }
   }
   if (targetRel === undefined || existing === undefined) {
-    throw new Error(
-      `Forkshop expected to find a globals.css (looked in ${candidates.join(", ")}) so it could ` +
-        `add the engine stylesheet import. If your root CSS lives elsewhere, add this line ` +
-        `manually:\n\n  @import "@forkshop/engine/forkshop.css";\n`
-    )
+    // No globals.css found at any common location. Don't bail — let init finish
+    // and surface a clear warning so the user can add the import line manually.
+    return { action: "not-found", searched: candidates }
   }
   const target = path.join(projectRoot, targetRel)
 

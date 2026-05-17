@@ -129,6 +129,14 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
   const cssResult = await appendForkshopCssImport(projectRoot, srcPrefix)
   if (cssResult.action === "skipped") {
     console.log(pc.dim(`\n${cssResult.target} already imports forkshop.css — skipped.`))
+  } else if (cssResult.action === "not-found") {
+    console.log(
+      pc.yellow(
+        `\nNo globals.css found (looked in ${cssResult.searched.join(", ")}).\n` +
+          `Forkshop install will continue, but you need to add this line to your root CSS manually:\n\n` +
+          `  @import "@forkshop/engine/forkshop.css";\n`
+      )
+    )
   }
 
   // 11. Merge engine into package.json
