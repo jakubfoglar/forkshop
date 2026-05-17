@@ -1,19 +1,14 @@
-import { cn } from "@/lib/cn"
+import { type ComponentPropsWithoutRef } from "react"
 
-export function Button({
-  children,
-  className,
-  ...rest
-}: React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  return (
-    <button
-      {...rest}
-      className={cn(
-        "inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700",
-        className,
-      )}
-    >
-      {children}
-    </button>
-  )
+export interface ButtonProps extends ComponentPropsWithoutRef<"button"> {
+  variant?: "default" | "subtle"
+}
+
+export function Button({ variant = "default", className = "", ...rest }: ButtonProps) {
+  const base = "inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition"
+  const variants = {
+    default: "bg-gray-900 text-white hover:bg-gray-800",
+    subtle: "bg-gray-100 text-gray-900 hover:bg-gray-200",
+  }
+  return <button className={`${base} ${variants[variant]} ${className}`} {...rest} />
 }
