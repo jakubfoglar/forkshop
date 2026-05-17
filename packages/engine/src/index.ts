@@ -106,3 +106,10 @@ export {
   type NodePosition,
   type NodePositions,
 } from "@forkshop/lib/node-positions"
+
+// Barrel reflection (public — user code wires discovery hooks)
+export {
+  useDiscoveredPrimitives,
+  discoverPrimitives,
+  type DiscoveredPrimitive,
+} from "@forkshop/lib/use-discovered-primitives"
