@@ -562,15 +562,17 @@ Key placeholders:
 ### Template 1 — `{{mount}}/forkshop.config.tsx`
 
 ````tsx
-{{primitive_imports}}
+import * as UIPrimitives from "@/components/ui"
+import * as Blocks from "@/components/blocks"
+import tailwindConfig from "../../tailwind.config"
 
 export const forkshopConfig = {
-  primitives: [
-{{primitive_entries}}
-  ],
-  blocks: [
-{{block_entries}}
-  ],
+  ui: UIPrimitives,
+  blocks: Blocks,
+  paths: {
+    primitives: "components/ui",
+    blocks: ["components/blocks"],
+  },
   sitemap: {
     excludeGroups: [{{exclude_groups}}],
     autoDiscover: true,
@@ -578,23 +580,28 @@ export const forkshopConfig = {
   reference: {
     contentPaths: [{{content_paths}}],
   },
-  viewportProfile: "{{viewport_profile}}",
+  viewportProfile: "{{viewport_profile}}" as "responsive" | "mobile",
+  tailwindConfig,
 } as const
 
 export type ForkshopConfig = typeof forkshopConfig
-
-export function getBlockBySlug(slug: string) {
-  return forkshopConfig.blocks.find((b) => b.slug === slug)
-}
 ````
 
 Substitution notes:
-- `{{primitive_imports}}` — one named import per primitive: `import { Button } from "@/components/ui/button"`. Omit if no primitives.
-- `{{primitive_entries}}` — `{ slug, name, component, exampleProps }` per entry, 4-space indented, comma-terminated.
-- `{{block_entries}}` — `{ slug, name, src, component }` per entry. `component` imports lazily via the preview route; for the overview tile, `src` is the iframe URL.
-- `{{exclude_groups}}` — quoted comma-separated group names from the auth-filter modifier, or empty.
-- `{{content_paths}}` — quoted comma-separated glob paths from Scan E, or empty.
+- `{{exclude_groups}}` — quoted comma-separated route-group names from the auth-filter modifier, or empty.
+- `{{content_paths}}` — quoted comma-separated MDX glob paths from Scan E, or empty.
 - `{{viewport_profile}}` — `"responsive"` (default) or `"mobile"` (mobile flag set).
+
+The skill writes (or updates, if they exist) two **barrel files** at install time:
+
+- `{{srcPrefix}}components/ui/index.ts` — `export { Button } from "./button"`, one line per discovered primitive
+- `{{srcPrefix}}components/blocks/index.ts` — one line per discovered block
+
+These barrels are how live-mirror works: the engine's `useDiscoveredPrimitives(forkshopConfig.ui)` and `useDiscoveredBlocks(forkshopConfig.blocks)` hooks reflect over them. Adding a new primitive is two steps: (a) create the `.tsx` file, (b) add a line to the barrel. The auto-loaded `forkshop-live-editing` skill instructs Claude Code to maintain the barrel automatically when the user asks to add a primitive.
+
+If a barrel already exists at one of these paths, the skill **merges** new entries in alphabetical order rather than overwriting.
+
+The old `primitives: [...]` and `blocks: [...]` explicit arrays in `forkshopConfig` are dropped — discovery replaces them.
 
 ### Template 2 — `{{mount}}/design-system.tsx`
 
