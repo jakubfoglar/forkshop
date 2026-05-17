@@ -2,8 +2,8 @@ import { promises as fs } from "node:fs"
 import path from "node:path"
 import { fetchManifest } from "../fetch-manifest.js"
 import { readForkshopJson } from "../forkshop-json.js"
-import type { Manifest } from "../manifest-schema.js"
-import { rewriteImports } from "../rewrite.js"
+import type { Manifest, ResolvedAliases } from "../manifest-schema.js"
+import { applyTemplatePlaceholders } from "../rewrite.js"
 import { unifiedDiff } from "../unified-diff.js"
 
 export interface DiffOptions {
@@ -14,71 +14,73 @@ export interface DiffOptions {
 }
 
 export interface DiffResult {
-  exitCode: 0 | 1 | 2
-  diff: string
+  diff?: string
   message?: string
-}
-
-function aliasMapForRewrite(aliases: {
-  components: string
-  kits: string
-  hooks: string
-  lib: string
-  api: string
-  tailwind: string
-}) {
-  return {
-    "@forkshop/components": aliases.components,
-    "@forkshop/kits": aliases.kits,
-    "@forkshop/hooks": aliases.hooks,
-    "@forkshop/lib": aliases.lib,
-    "@forkshop/api": aliases.api,
-    "@forkshop/tailwind": aliases.tailwind,
-  }
+  exitCode: 0 | 1 | 2
 }
 
 export async function runDiff(options: DiffOptions): Promise<DiffResult> {
-  const forkshopJson = await readForkshopJson(options.projectRoot)
-  if (!forkshopJson) {
-    return { exitCode: 2, diff: "", message: "Run `forkshop init` first." }
+  const lock = await readForkshopJson(options.projectRoot)
+  if (!lock) {
+    return { exitCode: 2, message: "Run `forkshop init` first." }
   }
-
-  const absolute = path.isAbsolute(options.path)
-    ? options.path
-    : path.join(options.projectRoot, options.path)
-  const workspaceRelative = path.relative(options.projectRoot, absolute).split(path.sep).join("/")
-
-  const entry = Object.entries(forkshopJson.files).find(([, info]) => info.dest === workspaceRelative)
-  if (!entry) {
+  if (lock.schemaVersion !== "2.0.0") {
     return {
       exitCode: 2,
-      diff: "",
-      message: `This path isn't in forkshop.json: ${workspaceRelative}. Add it manually under "files", or rerun init.`,
+      message: "Your installation predates the v2 schema. Run `forkshop init` against a fresh layout.",
     }
   }
-  const [address] = entry
 
-  const manifest = options.manifest ?? (await fetchManifest(options.registryUrl ?? forkshopJson.registryUrl))
-  const upstream = manifest.files[address]
-  if (!upstream) {
+  // Find the address that maps to this path
+  let address: string | undefined
+  for (const [addr, entry] of Object.entries(lock.files)) {
+    if (entry.dest === options.path) {
+      address = addr
+      break
+    }
+  }
+  if (!address) {
     return {
-      exitCode: 0,
-      diff: "",
-      message: `This file was removed from the registry in version ${manifest.version}. Your local copy is preserved.`,
+      exitCode: 2,
+      message: `\`${options.path}\` is not a Forkshop-managed file (not in forkshop.json).`,
     }
   }
-  if (upstream.kind !== "text") {
-    return { exitCode: 0, diff: "", message: "Binary file — diff not supported." }
+
+  const registryUrl = options.registryUrl ?? lock.registryUrl
+  const manifest = options.manifest ?? (await fetchManifest(registryUrl))
+  const file = manifest.files[address]
+  if (!file || file.kind !== "text") {
+    return {
+      exitCode: 2,
+      message: `\`${options.path}\` is not a text file in the current manifest.`,
+    }
   }
 
-  const rewritten = rewriteImports(upstream.content, aliasMapForRewrite(forkshopJson.aliases))
-  const local = await fs.readFile(absolute, "utf8")
+  const aliases: ResolvedAliases = {
+    mount: lock.mount,
+    srcPrefix: lock.srcPrefix,
+  }
+  const upstream = applyTemplatePlaceholders(file.content, aliases)
 
-  if (local === rewritten) return { exitCode: 0, diff: "" }
+  let local: string
+  try {
+    local = await fs.readFile(path.join(options.projectRoot, options.path), "utf8")
+  } catch {
+    return {
+      exitCode: 2,
+      message: `\`${options.path}\` is in forkshop.json but missing on disk.`,
+    }
+  }
 
-  const diff = unifiedDiff(local, rewritten, {
-    from: `${workspaceRelative} (local)`,
-    to: `${workspaceRelative} (upstream)`,
-  })
-  return { exitCode: 1, diff }
+  if (local === upstream) {
+    return { exitCode: 0 }
+  }
+
+  return {
+    exitCode: 1,
+    diff: unifiedDiff(local, upstream, {
+      from: `${options.path} (local)`,
+      to: `${options.path} (upstream)`,
+    }),
+  }
 }
