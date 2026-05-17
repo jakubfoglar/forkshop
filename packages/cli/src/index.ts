@@ -1,28 +1,35 @@
 import { Command } from "commander"
+import { createInterface } from "node:readline/promises"
 import pc from "picocolors"
 import { runAdd } from "./commands/add.js"
 import { runDiff } from "./commands/diff.js"
 import { runInit } from "./commands/init.js"
+import { runUpdate } from "./commands/update.js"
+
+async function askYesNo(prompt: string): Promise<boolean> {
+  const rl = createInterface({ input: process.stdin, output: process.stdout })
+  try {
+    const answer = await rl.question(`${prompt} [y/N] `)
+    return /^y(es)?$/i.test(answer.trim())
+  } finally {
+    rl.close()
+  }
+}
 
 const program = new Command()
   .name("forkshop")
-  .description("Drop Forkshop into your Next.js + Tailwind project.")
+  .description("Install and maintain Forkshop in your Next.js + Tailwind project.")
   .version("0.0.0")
 
 program
   .command("init")
   .description("Install Forkshop into the current project.")
   .option("--force", "Overwrite existing files on collision")
-  .option("--no-install", "Skip running the package manager")
-  .option("--no-warn-dirty", "Don't warn if the git tree is dirty")
   .option("--registry <url>", "Override the registry base URL")
-  .option("--verbose", "Print verbose output")
-  .option("--quiet", "Suppress non-error output")
   .action(async (opts) => {
     const result = await runInit({
       projectRoot: process.cwd(),
       force: opts.force,
-      noInstall: !opts.install,
       registryUrl: opts.registry,
     })
     if (!result.ok) {
@@ -33,20 +40,61 @@ program
 
 program
   .command("add <bundle>")
-  .description("Add a kit or feature to your installation.")
-  .option("--force", "Overwrite existing files on collision")
-  .option("--no-install", "Skip running the package manager")
+  .description("(1.0 placeholder — kits arrive in spec #4.)")
+  .action(async (bundle) => {
+    await runAdd({ projectRoot: process.cwd(), bundleName: bundle })
+  })
+
+program
+  .command("update")
+  .description("Refresh Forkshop's thin scaffold layer (skills, CLAUDE.md, route stubs).")
+  .option("--check", "Print drift summary; exit 1 if any drift, 0 otherwise.")
+  .option("--force", "Overwrite locally edited files too.")
   .option("--registry <url>", "Override the registry base URL")
-  .action(async (bundle, opts) => {
-    const result = await runAdd({
+  .action(async (opts) => {
+    if (opts.check) {
+      const result = await runUpdate({
+        projectRoot: process.cwd(),
+        checkOnly: true,
+        registryUrl: opts.registry,
+      })
+      if (!result.ok) {
+        console.error(pc.red(result.reason))
+        process.exit(2)
+      }
+      process.exit(result.exitCode)
+    }
+
+    // Interactive: first do a dry-run pass to render the summary, then prompt.
+    const dry = await runUpdate({
       projectRoot: process.cwd(),
-      bundleName: bundle,
-      force: opts.force,
-      noInstall: !opts.install,
+      checkOnly: true,
       registryUrl: opts.registry,
     })
-    if (!result.ok) {
-      console.error(pc.red(result.reason))
+    if (!dry.ok) {
+      console.error(pc.red(dry.reason))
+      process.exit(2)
+    }
+    if (dry.exitCode === 0) {
+      // Nothing to do.
+      return
+    }
+    const confirm = await askYesNo("Apply changes?")
+    if (!confirm) {
+      console.log(pc.dim("\nNo changes applied."))
+      return
+    }
+
+    const acceptEngineBump = await askYesNo("Also bump @forkshop/engine pin in package.json?")
+    const applyResult = await runUpdate({
+      projectRoot: process.cwd(),
+      apply: true,
+      force: opts.force,
+      registryUrl: opts.registry,
+      acceptEngineBump,
+    })
+    if (!applyResult.ok) {
+      console.error(pc.red(applyResult.reason))
       process.exit(2)
     }
   })
