@@ -624,24 +624,22 @@ export default function DesignSystemBoardView() {
 ````tsx
 "use client"
 
-import { ForkshopCanvas, Gallery } from "@forkshop/engine"
+import { ForkshopCanvas, Gallery, useDiscoveredPrimitives } from "@forkshop/engine"
 import { forkshopConfig } from "./forkshop.config"
 
 export default function UIComponentsBoardView() {
-  const entries = forkshopConfig.primitives.map((p) => {
-    const Component = p.component
-    return {
-      id: p.slug,
+  const primitives = useDiscoveredPrimitives(forkshopConfig.ui)
+  const entries = primitives.map((p) => ({
+    id: p.slug,
+    label: p.name,
+    node: {
+      id: `primitive:${p.slug}`,
+      kind: "inline-react" as const,
+      x: 0, y: 0, width: 320, height: 200,
       label: p.name,
-      node: {
-        id: `primitive:${p.slug}`,
-        kind: "inline-react" as const,
-        x: 0, y: 0, width: 320, height: 200,
-        label: p.name,
-        render: () => <Component {...p.exampleProps} />,
-      },
-    }
-  })
+      render: () => <p.Component />,
+    },
+  }))
   return (
     <ForkshopCanvas>
       <Gallery entries={entries} layout="grid" viewportWidth={320} />
@@ -716,12 +714,13 @@ export default function {{primitive_name}}BoardView() {
 ````tsx
 "use client"
 
-import { ForkshopCanvas, Gallery } from "@forkshop/engine"
+import { ForkshopCanvas, Gallery, useDiscoveredBlocks } from "@forkshop/engine"
 import { forkshopConfig } from "./forkshop.config"
 
 export default function BlocksBoardView() {
   const viewport = forkshopConfig.viewportProfile === "mobile" ? 375 : 1440
-  const entries = forkshopConfig.blocks.map((b) => ({
+  const blocks = useDiscoveredBlocks(forkshopConfig.blocks)
+  const entries = blocks.map((b) => ({
     id: b.slug,
     label: b.name,
     node: {
@@ -730,7 +729,7 @@ export default function BlocksBoardView() {
       x: 0, y: 0, width: viewport, height: 600,
       label: b.name,
       slug: b.slug,
-      previewSrc: `/forkshop/block/${b.slug}`,
+      previewSrc: b.previewSrc,
     },
   }))
   return (
