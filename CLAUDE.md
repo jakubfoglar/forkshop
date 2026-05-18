@@ -51,8 +51,9 @@ apps/
                 flow against realistic project signals. Post-init artifacts are
                 gitignored.
 
-  docs/         Serves the static registry at `/r/registry.json`. See
-                "apps/docs" section below. Marketing content TBD.
+  docs/         Deployed at https://forkshop.dev. Serves the marketing
+                landing (`/`) and the static registry (`/r/registry.json`,
+                `/r/fonts/*.woff2`). See "apps/docs" section below.
 
 tests/
   smoke/        Real-install fixture exercising the CLI against a fresh Next.js
@@ -105,15 +106,32 @@ to catch template placeholder leaks.
 
 ## `apps/docs`
 
-Serves the static registry at `/r/registry.json` (and binary assets under
-`/r/fonts/*.woff2`). The route handler at `apps/docs/app/r/registry.json/route.ts`
-calls `buildManifest()` (exported from the CLI package's `manifest-builder.ts`),
-which walks `packages/engine/{src,tailwind,templates}` and emits the manifest.
+The deployed Next.js app at https://forkshop.dev. Two surfaces:
+
+- **Marketing landing at `/`** — hand-written Tailwind one-pager (hero, three
+  feature cards, footer). No Forkshop primitives mounted on the landing itself.
+- **Static registry at `/r/registry.json`** + binary assets under `/r/fonts/*.woff2`.
+  The CLI's hardcoded `DEFAULT_REGISTRY_URL` (`packages/cli/src/manifest-builder.ts`,
+  `packages/cli/src/commands/init.ts`) points here — do not move.
+
+The registry route handler at `apps/docs/app/r/registry.json/route.ts` calls
+`buildManifest()` (exported from the CLI package's `manifest-builder.ts`), which
+walks `packages/engine/{src,tailwind,templates}` and emits the manifest.
 
 A pre-build validator (`apps/docs/scripts/validate-registry.ts`) ensures every
 `@forkshop/...` import in registry source resolves to a known canonical address.
 It also confirms every bundle's items exist in the files map. Run via
 `pnpm --filter docs validate-registry`. Wired into `next build` automatically.
+
+**Deploy config:** `apps/docs/vercel.json` pins the install + build commands
+(`cd ../.. && pnpm install --frozen-lockfile --filter docs...` and
+`pnpm --filter docs build`). The filtered install avoids needing
+`CENTRAL_LICENSE_KEY` in Vercel — apps/docs consumes the CLI workspace, not the
+engine. Cache headers on the registry: `s-maxage=300, stale-while-revalidate=86400`
+(5-min CDN freshness); on fonts: `max-age=31536000, immutable`.
+
+**Docs and demo routes (`/docs`, `/demo`)** are not built yet — 404 by design.
+Their shape is sketched in `docs/strategy/2026-05-17-forkshop-dev-website-shape.md`.
 
 ---
 
@@ -335,12 +353,20 @@ version pins.
 
 ## Release cadence
 
-No schedule. Manual.
+No schedule. Manual. `v0.1.0` shipped 2026-05-18.
 
-1. Bump versions in `packages/engine/package.json` and `packages/cli/package.json`.
-2. `git tag v0.x.y`
-3. `git push && git push --tags`
-4. GitHub Actions auto-publishes to npm (when Actions workflow is set up).
+1. Bump versions in `packages/engine/package.json` and `packages/cli/package.json`
+   in lockstep. The CLI's `manifest-builder.ts` reads engine's `version` at CLI
+   build time and embeds it as the install pin — bump engine *then* rebuild CLI.
+2. Run `pnpm regen-api-snap` if engine's public surface changed.
+3. `git tag v0.x.y && git push && git push --tags`.
+4. `.github/workflows/release.yml` triggers on `v*.*.*`, builds engine + CLI,
+   publishes engine first then CLI, creates a GitHub release with auto-generated
+   notes.
+
+Required secrets (already set on `jakubfoglar/forkshop`):
+- `NPM_TOKEN` — npm Classic Automation token (bypasses 2FA).
+- `CENTRAL_LICENSE_KEY` — iconists.co license for engine preinstall.
 
 Pre-release: use `0.x.y` versions. No stability guarantees until `1.0.0`.
 
@@ -407,7 +433,7 @@ If you edit Phase 5, preserve this contract — the skill's UX depends on the si
 
 ## License + contribution posture
 
-MIT. See `LICENSE` at the repo root.
+FSL-1.1-Apache-2.0. See `LICENSE` at the repo root.
 
 Drive-by PRs welcome. No review SLA. If you're fixing a bug or adding a clearly useful primitive, open the PR — it'll get reviewed.
 
@@ -421,13 +447,15 @@ These are **not** in v0 and should not be built until there's a dedicated spec:
 
 | Deferred item             | Notes |
 |---------------------------|-------|
-| Live AI awareness         | SSE endpoint + Claude Code hook script. The `AgentActivityProvider` shell is wired but the stream is a no-op. Spec #5 home for "alive-feeling" alternatives (streamed edits, block-level HMR pulse, sidebar activity feed) per the polish spec's Change G forward-pointer. |
 | Compose mode              | Page composer (drag-to-reorder sections). Deferred from v0. |
 | Flow-graph                | Node-and-edge flow diagrams. Deferred from v0. (Originally "flow-graph kit"; renamed since Kit is no longer a concept — refinement #14.) |
-| Docs site content         | `apps/docs/` serves the registry but has no marketing content yet. Spec #6 in strategy v2's roadmap. |
-| GitHub Actions publish    | npm publish workflow. |
-| ~~Tailwind v4 token support~~ | **Shipped 2026-05-18** via `parseTokenRegistryFromCssVars` (engine) + scaffolded CSS-vars-read in Template 2b (user's design-system.tsx). Works for any framework emitting tokens to `:root` (refinement #17). |
+| `/docs` site content      | The `/docs` route on forkshop.dev is a 404 — no marketing-facing reference docs yet. Needs its own brainstorm (scope, structure, MDX vs Fumadocs/Nextra, search, versioning). |
+| `/demo` site content      | The `/demo` route on forkshop.dev is a 404 — no public interactive demo yet. Shape sketched in `docs/strategy/2026-05-17-forkshop-dev-website-shape.md` (curated boards, optional session-mode editing). |
 | Engine `Tree.autoDiscover` | Polish spec referenced this as if shipped — it isn't. Tree currently requires explicit `entries: TreeEntry[]`. Templates work around by hand-rolling routes. Real auto-discovery is a server-component fs read + manifest build step. |
 | `DesignSystemView` parameterless variant | Polish spec promised `<DesignSystemView />` with no props would auto-discover tokens/primitives. Engine still requires explicit `tokens` + `primitives`. Templates work around by building them inline from `forkshopConfig.ui` + `tailwindConfig`. |
+| ~~Live AI awareness~~ | **Shipped 2026-05-18** — `docs/specs/2026-05-18-live-ai-protocol-design.md`. Engine derives element-level signals server-side via post-hoc diff; Claude Code producer pack is a bash hook + `.claude/settings.json` merge dropped during `forkshop init`. Multi-agent stacking, per-agent colors, read-activity breathing pulse. |
+| ~~Tailwind v4 token support~~ | **Shipped 2026-05-18** via `parseTokenRegistryFromCssVars` (engine) + scaffolded CSS-vars-read in Template 2b (user's design-system.tsx). Works for any framework emitting tokens to `:root` (refinement #17). |
+| ~~GitHub Actions publish~~ | **Shipped 2026-05-18** — `.github/workflows/release.yml` triggers on `v*.*.*`, publishes engine then CLI. |
+| ~~Production deploy (forkshop.dev, npm)~~ | **Shipped 2026-05-18** — see `docs/specs/2026-05-18-production-deploy-design.md`. Public repo, Vercel deploy, `@forkshop/engine@0.1.0` + `forkshop@0.1.0` on npm. |
 
 Do not start work on deferred items without a dedicated spec.

@@ -116,6 +116,34 @@ Manual smoke (T22): user-driven via two Claude sessions editing files in `apps/d
 
 ---
 
+## Production deploy v0.1.0 — **shipped 2026-05-18**
+
+First public release. Repo public at https://github.com/jakubfoglar/forkshop. Site
+live at https://forkshop.dev (Vercel, root: `apps/docs`, DNS via Vercel
+nameservers swapped through Namecheap API). `@forkshop/engine@0.1.0` +
+`forkshop@0.1.0` published to npm via the tag-driven
+`.github/workflows/release.yml`. Marketing landing replaces the bare placeholder
+at `/`; `/docs` and `/demo` remain 404 until their own brainstorms.
+
+In-flight discoveries committed alongside the deploy work (CI fixes uncovered
+by actually running the workflow):
+- Pinned `pnpm/action-setup@v4` reads pnpm version from `package.json#packageManager`
+  — workflow override conflicts with it.
+- Bumped CI to Node 22 (pnpm 11.1.2 requires Node 22.13+ for `node:sqlite`).
+- `apps/demo/scripts/copy-engine-fonts.mjs` now falls back to the workspace path
+  when engine `dist/` doesn't exist (fresh-clone CI scenario).
+- `eslint-plugin-react-hooks` declared at root (was implicitly hoisted from
+  engine workspace, broken under `--frozen-lockfile`). Three unused-import
+  errors fixed in `packages/cli/src/{commands/update,copy-files}.test.ts` and
+  `update.ts`. 12 react-hooks/immutability warnings on
+  `use-iframe-edit-controller.ts` remain — real code-smell signals worth a
+  separate cleanup pass.
+
+Full spec + plan: `docs/specs/2026-05-18-production-deploy-design.md`,
+`docs/superpowers/plans/2026-05-18-production-deploy.md`.
+
+---
+
 ## Playground rebuild — **shipped 2026-05-18**
 
 Replaced `apps/playground/` with the `apps/demo/` (rich showcase) + `apps/test/` (pre-init fixture) split.
