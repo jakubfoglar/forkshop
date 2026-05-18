@@ -22,7 +22,6 @@ export default defineConfig({
       { find: "@forkshop/engine/api/positions/route",                    replacement: path.resolve(__dirname, "dist/api/positions/route.js") },
       { find: "@forkshop/engine/api/agent-activity/route",               replacement: path.resolve(__dirname, "dist/api/agent-activity/route.js") },
       { find: "@forkshop/engine/api/agent-activity/stream/route",        replacement: path.resolve(__dirname, "dist/api/agent-activity/stream/route.js") },
-      { find: "@forkshop/engine/tailwind-preset",                        replacement: path.resolve(__dirname, "dist/tailwind/forkshop-preset.js") },
       { find: "@forkshop/engine",                                        replacement: path.resolve(__dirname, "dist/index.js") },
       // Generic alias for engine-internal imports: @forkshop/* -> src/*
       { find: "@forkshop", replacement: path.resolve(__dirname, "src") },

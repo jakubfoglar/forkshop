@@ -33,8 +33,7 @@
     "./lib/file-to-selection":                  "./dist/lib/file-to-selection.js",
     "./lib/token-registry":                     "./dist/lib/token-registry.js",
     "./lib/parse-token-registry-from-css-vars": "./dist/lib/parse-token-registry-from-css-vars.js",
-    "./lib/sitemap-tree":                       "./dist/lib/sitemap-tree.js",
-    "./tailwind-preset":                        "./dist/tailwind/forkshop-preset.js"
+    "./lib/sitemap-tree":                       "./dist/lib/sitemap-tree.js"
   },
   "scripts": {
     "build":     "tsx scripts/build.ts",

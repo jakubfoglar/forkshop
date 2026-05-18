@@ -276,10 +276,8 @@ Mount path:    <mount, abbreviated>
                (or app/(tools)/forkshop/ — say "use tools group" to switch)
 
 Also touching automatically:
-  • app/globals.css         — @import "@forkshop/engine/forkshop.css"
-  • tailwind.config.*       — forkshop preset + engine dist in content
-  • next.config.*           — @locator/webpack-loader rule (Option-click → editor)
-  • app/forkshop/layout.tsx — full-screen overlay that hides host nav while on /forkshop
+  • app/globals.css — @import "@forkshop/engine/forkshop.css"
+  • next.config.*   — @locator/webpack-loader rule (Option-click → editor)
   • app/forkshop/block/[slug]/page.tsx — per-block preview route (auto-managed; one file)
 
 Two opt-ins (I'll confirm after you accept):
@@ -440,27 +438,9 @@ Render from Template 8 — Tree over MDX paths from `forkshopConfig.reference.co
 
 Render from Template 9 — mounts `ForkshopCanvas` + `ForkshopSidebar`. The sidebar `sections` array is built from the selected recipes; each section's `entryKind` matches its child shape (`primitive` for UI Components, `block` for Blocks, `page` for Sitemap and Reference).
 
-### Step 9b — `{{mount}}/layout.tsx`
-
-Render from Template 9b — a fixed-positioned, full-viewport overlay that hides the host project's root layout (nav/header/footer) while the user is on `/forkshop`. Without this, the host's chrome bleeds through and competes with Forkshop's canvas.
-
 ### Step 10 — `app/globals.css` (idempotent)
 
 Check whether `@import "@forkshop/engine/forkshop.css"` is present. If not, prepend it above any existing `@tailwind` directives. For src-dir projects, the file is `src/app/globals.css`.
-
-### Step 10b — `tailwind.config.*` (idempotent)
-
-Forkshop's components reference `bg-forkshop-*`, `text-forkshop-*`, `border-forkshop-*` etc. — those utilities only generate CSS when (a) the host's Tailwind config imports the forkshop preset, and (b) Tailwind scans `@forkshop/engine`'s compiled `dist/` for class names.
-
-For Tailwind v3 (host has `tailwind.config.ts` / `.js`):
-
-1. Add `import forkshopPreset from "@forkshop/engine/tailwind-preset"` at the top.
-2. Add `presets: [forkshopPreset as Partial<Config>]` to the config object (cast only needed for TS).
-3. Append `"./node_modules/@forkshop/engine/dist/**/*.js"` to the `content` array.
-
-If `presets` already exists, append `forkshopPreset` to it. If the content entry is already present, skip. Print `✓ Wired forkshop preset into tailwind.config.<ext>`.
-
-For Tailwind v4 (host uses `@theme` in CSS, no config file): no-op — token registration via `@theme` is a deferred polish item; skip with a one-line warning in Phase 7 (`Tailwind v4: preset wiring skipped — see polish-backlog`).
 
 ### Step 11 — `next.config.*` Locator rule (conditional on Phase 5 Locator opt-in)
 
@@ -1131,23 +1111,6 @@ Substitution notes:
 - `{{section_entries}}` — one `SidebarSection` object per selected recipe. Sitemap and Reference use `entryKind: "page"`; UI Components uses `entryKind: "primitive"`; Blocks uses `entryKind: "block"`.
 - `{{board_switch}}` — selection → board mapping (`selection.kind === "section" && selection.sectionId === "design-system" && <DesignSystemBoardView />`, etc., one per recipe + per-leaf cases).
 - Note: each Board component in `{{board_switch}}` wraps its own `<ForkshopCanvas>` (see Templates 2-8). `page.tsx` itself does not render `<ForkshopCanvas>` — it just mounts the sidebar and the selected Board.
-
-### Template 9b — `{{mount}}/layout.tsx`
-
-````tsx
-export default function ForkshopLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      className="fixed inset-0 z-[9999] overflow-hidden bg-forkshop-surface text-forkshop-fg"
-      data-forkshop-mount
-    >
-      {children}
-    </div>
-  )
-}
-````
-
-No substitutions. Hides the host's root layout chrome while the user is on `/forkshop` — without it, the host's nav/header/footer bleed through under Forkshop's canvas.
 
 ### Template 10 — `next.config.*` webpack-only rule (Next 14)
 
