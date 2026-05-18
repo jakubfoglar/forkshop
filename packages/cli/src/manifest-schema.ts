@@ -23,7 +23,7 @@ export type Bundle =
 export type ManifestFile =
   | {
       kind: "text"
-      ext: "tsx" | "ts" | "md" | "css"
+      ext: "tsx" | "ts" | "md" | "css" | "sh"
       content: string
       destOverride?: string
     }

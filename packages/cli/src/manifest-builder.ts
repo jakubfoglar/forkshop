@@ -30,10 +30,10 @@ async function walk(dir: string, out: string[] = []): Promise<string[]> {
   return out
 }
 
-function extOf(absolutePath: string): "ts" | "tsx" | "md" | "css" {
-  const m = absolutePath.match(/\.(ts|tsx|md|css)(?:\.template)?$/)
+function extOf(absolutePath: string): "ts" | "tsx" | "md" | "css" | "sh" {
+  const m = absolutePath.match(/\.(ts|tsx|md|css|sh)(?:\.template)?$/)
   if (!m) throw new Error(`Unknown extension for ${absolutePath}`)
-  return m[1] as "ts" | "tsx" | "md" | "css"
+  return m[1] as "ts" | "tsx" | "md" | "css" | "sh"
 }
 
 function skillAddress(rel: string): string {
@@ -59,6 +59,17 @@ function routeStubAddress(rel: string): { address: string; dest: string } | unde
   }
 }
 
+function hookAddress(rel: string): { address: string; dest: string } | undefined {
+  // templates/hooks/<name>.sh.template → .claude/hooks/<name>.sh
+  const m = rel.match(/^templates\/hooks\/(.+)\.sh\.template$/)
+  if (!m) return undefined
+  const name = m[1]!
+  return {
+    address: `@forkshop/hooks/${name}`,
+    dest: `.claude/hooks/${name}.sh`,
+  }
+}
+
 function fontAddress(rel: string): { address: string; basename: string } | undefined {
   const m = rel.match(/^fonts\/(.+)\.woff2?$/)
   if (!m) return undefined
@@ -75,6 +86,7 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
   const files: Record<string, ManifestFile> = {}
   const skillItems: string[] = []
   const routeStubItems: string[] = []
+  const hookItems: string[] = []
 
   for (const abs of skillFiles) {
     const rel = path.relative(registryRoot, abs).split(path.sep).join("/")
@@ -116,6 +128,18 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
       routeStubItems.push(stub.address)
       continue
     }
+    const hook = hookAddress(rel)
+    if (hook) {
+      const content = await fs.readFile(abs, "utf8")
+      files[hook.address] = {
+        kind: "text",
+        ext: extOf(abs),
+        content,
+        destOverride: hook.dest,
+      }
+      hookItems.push(hook.address)
+      continue
+    }
   }
 
   for (const abs of fontFiles) {
@@ -135,9 +159,12 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
     "route-stubs": { kind: "scaffold", items: routeStubItems.sort() },
     skill: { kind: "scaffold", items: skillItems.sort() },
     "claude-md": { kind: "scaffold", items: ["@forkshop/templates/claude-md"] },
+    hooks: { kind: "scaffold", items: hookItems.sort() },
     font: { kind: "asset", items: fontItems },
     init: {
       kind: "composite",
+      // Note: hooks is intentionally NOT in `init` — installed only when the
+      // user opts into the Claude Code pack during Phase 5 of setup.md.
       includes: ["route-stubs", "skill", "claude-md", "font"],
     },
   }

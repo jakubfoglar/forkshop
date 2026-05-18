@@ -104,4 +104,34 @@ describe("buildManifest (v2)", () => {
       includes: expect.arrayContaining(["route-stubs", "skill", "claude-md", "font"]),
     })
   })
+
+  it("includes the claude-code hook in a 'hooks' bundle (not in init)", async () => {
+    const root = await makeEngineFixture()
+    dirs.push(root)
+    await fs.mkdir(path.join(root, "templates/hooks"), { recursive: true })
+    await fs.writeFile(
+      path.join(root, "templates/hooks/forkshop-post-tool-use.sh.template"),
+      "#!/usr/bin/env bash\nexit 0\n",
+    )
+    const manifest = await buildManifest({ registryRoot: root })
+
+    // hooks bundle exists and has the right item
+    const hooksBundle = manifest.bundles["hooks"]!
+    expect(hooksBundle.kind).toBe("scaffold")
+    expect((hooksBundle as { kind: "scaffold"; items: string[] }).items).toContain(
+      "@forkshop/hooks/forkshop-post-tool-use",
+    )
+
+    // file entry has correct destOverride + ext
+    expect(manifest.files["@forkshop/hooks/forkshop-post-tool-use"]).toMatchObject({
+      destOverride: ".claude/hooks/forkshop-post-tool-use.sh",
+      ext: "sh",
+    })
+
+    // hooks is NOT in init.includes
+    const initBundle = manifest.bundles["init"]!
+    expect((initBundle as { kind: "composite"; includes: string[] }).includes).not.toContain(
+      "hooks",
+    )
+  })
 })
