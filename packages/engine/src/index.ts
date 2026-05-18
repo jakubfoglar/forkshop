@@ -63,11 +63,14 @@ export {
   useSiteWideActivity,
   useAgentSubstringsForPage,
   useAgentSubstringsForBlock,
-  useAllAgentSubstrings,
+  useAllAgentHunks,
+  useAgentColorByFile,
+  useAgentReadingByFile,
   useAgentEditEpoch,
   deriveAffectedBlocks,
 } from "@forkshop/components/agent-activity-context"
-export type { ActivityEntry, FileMap } from "@forkshop/components/agent-activity-context"
+export type { ActivityEntry, FileMap, AgentAction } from "@forkshop/components/agent-activity-context"
+export type { Hunk } from "@forkshop/lib/diff-to-hunks"
 export type { ActivityEntry as AgentActivityStateEntry } from "@forkshop/lib/agent-activity-state"
 export { recordActivity, subscribe } from "@forkshop/lib/agent-activity-state"
 export { AgentIframeRelay } from "@forkshop/components/agent-iframe-relay"

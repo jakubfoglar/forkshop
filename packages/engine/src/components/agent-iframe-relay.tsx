@@ -4,49 +4,35 @@ import { useEffect } from "react"
 import { useIframeRegistry } from "@forkshop/components/iframe-registry"
 import {
   useAgentActiveBlocks,
-  useAllAgentSubstrings,
+  useAgentColorByFile,
+  useAllAgentHunks,
 } from "@forkshop/components/agent-activity-context"
+import type { Hunk } from "@forkshop/lib/diff-to-hunks"
 
-// Minimal interface so the broadcast/hello helpers can be tested without DOM.
-// Real iframes / windows have many more members; we only use postMessage.
 type PostMessageTarget = {
   postMessage: (message: unknown, targetOrigin: string) => void
 }
 
-// Iframe-shaped payload — the registry returns HTMLIFrameElement[], but for
-// broadcast we only care that .contentWindow has postMessage.
 type IframeLike = { contentWindow: PostMessageTarget | null | undefined }
 
-// Pure helpers — extracted so the broadcast targeting and hello-replay
-// behavior is unit-testable. Failures inside individual postMessage calls
-// are swallowed (an iframe may be cross-origin or unloaded mid-iteration);
-// the rest of the broadcast continues.
-
-export function broadcastBlocks(iframes: readonly IframeLike[], slugs: readonly string[]): void {
-  for (const iframe of iframes) {
-    try {
-      iframe.contentWindow?.postMessage(
-        { type: "forkshop:agent-block", slugs: [...slugs] },
-        "*",
-      )
-    } catch {
-      // ignore — one bad iframe shouldn't kill the broadcast
-    }
-  }
+// Most-recent edit color across all entries. The iframe-side decoration
+// applies it inline to the elements it decorates.
+function pickColor(colorByFile: ReadonlyMap<string, string>): string {
+  // The map is ordered by insertion in the producer (entries-array iteration);
+  // tail entry is most-recent. Take last.
+  let color = "oklch(0.62 0.22 280)" // fallback purple
+  for (const value of colorByFile.values()) color = value
+  return color
 }
 
-// Each entry is one Edit/MultiEdit's old + new substrings. The receiver
-// (iframe-side use-iframe-edit-wiring) walks text nodes searching for either
-// substring (prefers newString) and flashes the closest containing element.
-export function broadcastSubstrings(
+export function broadcastBlocks(
   iframes: readonly IframeLike[],
-  strings: readonly { oldString?: string; newString?: string }[],
+  payload: { slugs: readonly string[]; color: string },
 ): void {
-  if (strings.length === 0) return
   for (const iframe of iframes) {
     try {
       iframe.contentWindow?.postMessage(
-        { type: "forkshop:agent-text", strings: [...strings] },
+        { type: "forkshop:agent-block", slugs: [...payload.slugs], color: payload.color },
         "*",
       )
     } catch {
@@ -55,12 +41,26 @@ export function broadcastSubstrings(
   }
 }
 
-// Hello-replay: when a single iframe announces itself via postMessage, reply
-// with the current snapshot to that source only. Returns true if a reply was
-// sent (i.e. the event was a hello with a valid source); false otherwise.
+export function broadcastHunks(
+  iframes: readonly IframeLike[],
+  payload: { hunks: readonly Hunk[]; color: string },
+): void {
+  if (payload.hunks.length === 0) return
+  for (const iframe of iframes) {
+    try {
+      iframe.contentWindow?.postMessage(
+        { type: "forkshop:agent-text", hunks: [...payload.hunks], color: payload.color },
+        "*",
+      )
+    } catch {
+      // ignore
+    }
+  }
+}
+
 export function handleAgentHello(
   event: { data?: unknown; source?: PostMessageTarget | null },
-  snapshot: { slugs: readonly string[]; strings: readonly { oldString?: string; newString?: string }[] },
+  snapshot: { slugs: readonly string[]; hunks: readonly Hunk[]; color: string },
 ): boolean {
   const data = event.data as { type?: string } | null | undefined
   if (data?.type !== "forkshop:agent-hello") return false
@@ -68,56 +68,50 @@ export function handleAgentHello(
   if (!source) return false
   try {
     source.postMessage(
-      { type: "forkshop:agent-block", slugs: [...snapshot.slugs] },
+      { type: "forkshop:agent-block", slugs: [...snapshot.slugs], color: snapshot.color },
       "*",
     )
-    if (snapshot.strings.length > 0) {
+    if (snapshot.hunks.length > 0) {
       source.postMessage(
-        { type: "forkshop:agent-text", strings: [...snapshot.strings] },
+        { type: "forkshop:agent-text", hunks: [...snapshot.hunks], color: snapshot.color },
         "*",
       )
     }
   } catch {
-    // ignore — caller can't do anything about a failed reply
+    // ignore
   }
   return true
 }
 
-// Pushes agent-activity state into every registered iframe via postMessage.
-// Broadcasts unfiltered: each iframe's text-walker decides whether the
-// substring matches anything in its own DOM. This removes coupling to
-// selection state and means the relay works in any canvas regardless of
-// whether the host knows which page/block the user is viewing.
 export function AgentIframeRelay() {
   const registry = useIframeRegistry()
   const activeBlocks = useAgentActiveBlocks()
-  const allSubstrings = useAllAgentSubstrings()
+  const allHunks = useAllAgentHunks()
+  const colorByFile = useAgentColorByFile()
 
-  // Push: broadcast block highlights to every iframe.
   useEffect(() => {
     if (!registry) return
-    broadcastBlocks(registry.getAll(), [...activeBlocks])
-  }, [registry, activeBlocks])
+    broadcastBlocks(registry.getAll(), {
+      slugs: [...activeBlocks],
+      color: pickColor(colorByFile),
+    })
+  }, [registry, activeBlocks, colorByFile])
 
-  // Push: broadcast every active substring to every iframe.
   useEffect(() => {
     if (!registry) return
-    broadcastSubstrings(registry.getAll(), allSubstrings)
-  }, [registry, allSubstrings])
+    broadcastHunks(registry.getAll(), { hunks: allHunks, color: pickColor(colorByFile) })
+  }, [registry, allHunks, colorByFile])
 
-  // Hello-replay: when an iframe says hello on mount (via use-iframe-edit-
-  // wiring's synthesized message event), post the current snapshot back to
-  // that specific source only.
   useEffect(() => {
     function onMessage(event: MessageEvent) {
       handleAgentHello(
         { data: event.data, source: event.source as PostMessageTarget | null },
-        { slugs: [...activeBlocks], strings: allSubstrings },
+        { slugs: [...activeBlocks], hunks: allHunks, color: pickColor(colorByFile) },
       )
     }
     window.addEventListener("message", onMessage)
     return () => window.removeEventListener("message", onMessage)
-  }, [activeBlocks, allSubstrings])
+  }, [activeBlocks, allHunks, colorByFile])
 
   return null
 }
