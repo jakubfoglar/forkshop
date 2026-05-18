@@ -11,6 +11,7 @@ import * as editRouteMod from "@forkshop/engine/api/edit/route"
 import * as positionsRouteMod from "@forkshop/engine/api/positions/route"
 import * as agentActivityRouteMod from "@forkshop/engine/api/agent-activity/route"
 import * as agentActivityStreamRouteMod from "@forkshop/engine/api/agent-activity/stream/route"
+import * as tailwindPresetMod from "@forkshop/engine/tailwind-preset"
 
 const subpathModules: Record<string, Record<string, unknown>> = {
   "@forkshop/engine": root,
@@ -24,6 +25,7 @@ const subpathModules: Record<string, Record<string, unknown>> = {
   "@forkshop/engine/api/positions/route": positionsRouteMod,
   "@forkshop/engine/api/agent-activity/route": agentActivityRouteMod,
   "@forkshop/engine/api/agent-activity/stream/route": agentActivityStreamRouteMod,
+  "@forkshop/engine/tailwind-preset": tailwindPresetMod,
 }
 
 describe("public API surface", () => {

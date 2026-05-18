@@ -16,6 +16,10 @@ export default defineConfig({
     "lib/token-registry":                 "src/lib/token-registry.ts",
     "lib/parse-token-registry-from-css-vars": "src/lib/parse-token-registry-from-css-vars.ts",
     "lib/sitemap-tree":                   "src/lib/sitemap-tree.ts",
+    // Tailwind preset — host projects import this so the forkshop-* utilities
+    // used by engine components (bg-forkshop-canvas, text-forkshop-fg, etc.)
+    // generate real CSS instead of silently dropping out at Tailwind build time.
+    "tailwind/forkshop-preset":           "tailwind/forkshop-preset.ts",
   },
   format: ["esm"],
   target: "es2022",

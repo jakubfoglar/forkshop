@@ -100,5 +100,8 @@
     "buildMarketingSitemap",
     "layoutFlatSitemap",
     "layoutTreeSitemap"
+  ],
+  "@forkshop/engine/tailwind-preset": [
+    "forkshopPreset"
   ]
 }
