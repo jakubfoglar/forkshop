@@ -1,0 +1,104 @@
+{
+  "@forkshop/engine": [
+    "AgentActivityProvider",
+    "AgentIframeRelay",
+    "AgentReadIndicator",
+    "AgentSelectionChip",
+    "BUILTIN_NODE_TYPES",
+    "DesignSystemView",
+    "EditorLink",
+    "ForkshopCanvas",
+    "ForkshopIcon",
+    "ForkshopSidebar",
+    "Gallery",
+    "IframeRegistryProvider",
+    "InspectPanel",
+    "NodeView",
+    "ResponsiveFrameView",
+    "Tree",
+    "buildTokenRegistry",
+    "deriveAffectedBlocks",
+    "discoverBlocks",
+    "discoverPrimitives",
+    "filePathToRoute",
+    "fileToSelection",
+    "findTokenForClass",
+    "forkshopIcons",
+    "getActiveTokenRegistry",
+    "getDesignSystemStageSize",
+    "iframeComponentNodeType",
+    "iframeRouteNodeType",
+    "inlineReactNodeType",
+    "isNodePositions",
+    "parseSelection",
+    "parseTokenRegistryFromCssVars",
+    "recordActivity",
+    "responsiveFrameStageDimensions",
+    "serializeSelection",
+    "setActiveTokenRegistry",
+    "subscribe",
+    "useAgentActiveBlocks",
+    "useAgentActivePages",
+    "useAgentActivePrimitives",
+    "useAgentColorByFile",
+    "useAgentEditEpoch",
+    "useAgentReadingByFile",
+    "useAgentSeenPagePaths",
+    "useAgentSubstringsForBlock",
+    "useAgentSubstringsForPage",
+    "useAllAgentHunks",
+    "useDiscoveredBlocks",
+    "useDiscoveredPrimitives",
+    "useIframeRegistry",
+    "usePageActiveFallback",
+    "useRegisterIframe",
+    "useSiteWideActivity"
+  ],
+  "@forkshop/engine/api/edit/route": [
+    "GET",
+    "POST"
+  ],
+  "@forkshop/engine/api/positions/route": [
+    "GET",
+    "POST"
+  ],
+  "@forkshop/engine/api/agent-activity/route": [
+    "POST"
+  ],
+  "@forkshop/engine/api/agent-activity/stream/route": [
+    "GET",
+    "dynamic"
+  ],
+  "@forkshop/engine/lib/discover-blocks": [
+    "discoverBlocks"
+  ],
+  "@forkshop/engine/lib/discover-primitives": [
+    "discoverPrimitives"
+  ],
+  "@forkshop/engine/lib/file-to-selection": [
+    "filePathToRoute",
+    "fileToSelection"
+  ],
+  "@forkshop/engine/lib/token-registry": [
+    "buildTokenRegistry",
+    "findTokenForClass",
+    "getActiveTokenRegistry",
+    "setActiveTokenRegistry"
+  ],
+  "@forkshop/engine/lib/parse-token-registry-from-css-vars": [
+    "parseTokenRegistryFromCssVars"
+  ],
+  "@forkshop/engine/lib/sitemap-tree": [
+    "SITEMAP_EXCLUSIONS",
+    "SITEMAP_FOOTER_PATHS",
+    "SITEMAP_HORIZONTAL_GAP",
+    "SITEMAP_IFRAME_HEIGHT",
+    "SITEMAP_IFRAME_WIDTH",
+    "SITEMAP_VERTICAL_GAP",
+    "buildFooterSitemap",
+    "buildGuideSitemap",
+    "buildMarketingSitemap",
+    "layoutFlatSitemap",
+    "layoutTreeSitemap"
+  ]
+}
