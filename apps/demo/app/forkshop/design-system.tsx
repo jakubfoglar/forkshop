@@ -68,8 +68,8 @@ function TypographySamples() {
 }
 
 export function DesignSystemBoard({
-  nodePositions,
-  onPositionChange,
+  nodePositions: _nodePositions,
+  onPositionChange: _onPositionChange,
 }: {
   nodePositions: Record<string, { x: number; y: number }>
   onPositionChange: (id: string, x: number, y: number) => void
