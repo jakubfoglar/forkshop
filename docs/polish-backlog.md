@@ -66,40 +66,30 @@ Alternative simpler approach: cap canvas zoom at 1.0 by default, with an opt-in 
 
 ---
 
-## Tailwind v4 token registry (`buildTokenRegistryFromCss`)
+## Tailwind v4 token registry — **shipped 2026-05-18, commit `0166d1f`**
 
-**Why:** `buildTokenRegistry` accepts only a Tailwind v3 `Config` object. v4 projects use `@theme` in CSS and ship no `tailwind.config.*` file. `create-next-app` defaults to v4 in 2026 — the polish smoke against a fresh Next.js project hit `Cannot find module '../../tailwind.config'` from `forkshop.config.tsx`'s import. Template 1 currently assumes v3.
+Added `useTokenRegistryFromCss` + `discoverTokenRegistryFromCss` + `parseTokenRegistryFromCssVars` to the engine. Scans `getComputedStyle(:root)` for `--color-*`, `--spacing-*`, `--radius-*`, `--shadow-*`, `--font-size-*`/`--text-*`, `--font-weight-*`, `--container-*` custom properties and builds a `TokenRegistry`. Setup skill Phase 2 Scan D records `tailwindMajor` (3 vs 4); Phase 6 Step 2 picks Template 2a (v3, `buildTokenRegistry`) or Template 2b (v4, `useTokenRegistryFromCss`).
 
-**The fix:** add `buildTokenRegistryFromCss(cssText: string)` that parses `@theme { --color-*: ...; --spacing-*: ... }` blocks and returns the same `TokenRegistry` shape `buildTokenRegistry` does. Setup skill's Phase 2 Scan D detects v3 vs v4 and writes Template 1 accordingly — either importing the config file (v3) or pointing at `app/globals.css` (v4).
-
-**Sequencing:** Blocks fresh-install support for any 2026+ Next.js project. Should ship before the next public smoke pass. Real release blocker.
+Limitations to revisit later: `classLookup` is empty for v4 (class-name → token resolution needs the prefix table from `token-registry.ts` extended for v4; out-of-scope for 1.0). Only browser-side discovery; SSR returns an empty registry pending hydration.
 
 ---
 
-## `Tree.autoDiscover` + `Tree.excludeGroups` props
+## `ForkshopCanvas` defensive-render — **shipped 2026-05-18, commit `0166d1f`**
 
-**Why:** Polish spec (`docs/specs/2026-05-17-live-mirror-and-cadence-scope-design.md`) referenced these as if shipped — they aren't. The engine's `Tree` Layout requires explicit `entries: TreeEntry[]`. Template 7 (sitemap-board.tsx) emits `<Tree excludeGroups={...} autoDiscover />` which doesn't compile. Setup skill works around by hand-rolling a routes list into `forkshopConfig.sitemap.routes` and passing entries explicitly.
-
-**The fix:** add `autoDiscover: boolean` and `excludeGroups: string[]` props to `Tree`. Server-side route enumeration via filesystem read (Node `fs.readdirSync(app/**/page.tsx)`) + a manifest-build step that bakes the discovered route list at build time. Client component then receives the routes as a prop derived from a server component above it.
-
-**Sequencing:** Same release blocker as Tailwind v4 — without this, Sitemap can't auto-grow as the user adds routes. Live-mirror promise depends on it for Sitemap.
+`ForkshopCanvas` props `stageWidth`/`stageHeight`/`containerRef`/`stageRef` are now optional with internal defaults (1400×900 stage, internal refs allocated via `useRef`). `<ForkshopCanvas>{children}</ForkshopCanvas>` works as a leaf-board root with no consumer-supplied props — matches the "drop it in a Board file and it just works" expectation from the polish spec.
 
 ---
 
-## `DesignSystemView` parameterless variant
+## `Tree.autoDiscover` + `Tree.excludeGroups` — **workaround shipped; engine work still deferred**
 
-**Why:** Polish spec promised `<DesignSystemView />` with no props would auto-discover tokens (from Tailwind config) and primitives (from `forkshopConfig.ui`). Engine still requires explicit `tokens: TokenRegistry` and `primitives: PrimitiveGroup[]`. Template 2 emits the parameterless form, which crashes at runtime.
+**Workaround (shipped 2026-05-18, commit `0de8bd0`):** setup skill emits a hand-rolled `forkshopConfig.sitemap.routes` array from Phase 2 Scan C results. Template 7 maps that array into `TreeEntry[]` at render time. New routes need a config edit (the `forkshop-live-editing` skill teaches Claude to maintain it).
 
-**The fix:** add an internal-discovery code path on `DesignSystemView`. When `tokens` is omitted, read from `useForkshopConfig()` context (new — provided by `ForkshopCanvas` or page.tsx); same for primitives. Falls back to passed props if provided. Pair with the Tailwind v4 token path so token discovery actually works for v4 projects.
-
-**Sequencing:** Release blocker. Design System Board crashes on render without this.
+**Engine work still deferred:** `Tree.autoDiscover` + server-side route enumeration would remove the manual maintenance — true filesystem-driven sitemap. Real fs-read in a server component + manifest baking at build time. Not a release blocker now that the workaround is shipped, but the live-mirror promise for Sitemap depends on it.
 
 ---
 
-## `ForkshopCanvas` defensive-render when context is missing
+## `DesignSystemView` parameterless variant — **workaround shipped; engine work still deferred**
 
-**Why:** When a Board (e.g., `design-system.tsx`) renders `<ForkshopCanvas>` directly without being wrapped in `AgentActivityProvider` (or other context providers), some internal `useRef`-based hooks fail with `Cannot read properties of undefined (reading 'current')`. The page.tsx provides providers, but leaf-board files don't always have access. Crashes on first render.
+**Workaround (shipped 2026-05-18, commit `0166d1f`):** Template 2a / 2b build `tokens` + `primitives` inline (v3 from `tailwindConfig`, v4 from `useTokenRegistryFromCss`). The user's `design-system.tsx` is a few lines longer than the original "`<DesignSystemView />` no props" promise, but everything works.
 
-**The fix:** add early null-checks / default-context fallbacks in `ForkshopCanvas`'s context consumers. The engine should render a placeholder ("not mounted inside provider tree") instead of crashing. Alternative: require Board files to be wrapped in a `<ForkshopProviders>` shell that the page.tsx renders once.
-
-**Sequencing:** Release blocker. Surfaced when any non-Sitemap Board renders.
+**Engine work still deferred:** parameterless `<DesignSystemView />` would read from a `useForkshopConfig()` context that the skill provides at the page.tsx level. Saves a few lines in `design-system.tsx`. Quality-of-life only — not a release blocker now.
