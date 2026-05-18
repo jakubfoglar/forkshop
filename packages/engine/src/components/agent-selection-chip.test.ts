@@ -1,101 +1,47 @@
-import { describe, it, expect } from "vitest"
-import { deriveChipLabel } from "@forkshop/components/agent-selection-chip"
+/** @vitest-environment jsdom */
+import { describe, expect, it } from "vitest"
+import { deriveChipStack, type ChipInput } from "@forkshop/components/agent-selection-chip"
 
-const empty = {
-  activePages: new Set<string>(),
-  activeBlocks: new Set<string>(),
-  activePrimitives: new Set<string>(),
-  siteWide: { active: false },
+function entry(o: Partial<ChipInput> & { agent: string; ts: number }): ChipInput {
+  const { agent, ...rest } = o
+  return {
+    agentLabel: agent,
+    color: "oklch(0.7 0.18 50)",
+    fileLabel: "page.tsx",
+    sessionId: "s",
+    ...rest,
+  }
 }
 
-describe("deriveChipLabel", () => {
-  it("returns undefined when nothing is active", () => {
-    expect(deriveChipLabel(empty)).toBeUndefined()
+describe("deriveChipStack", () => {
+  it("returns [] when no entries", () => {
+    expect(deriveChipStack([], 3)).toEqual({ chips: [], overflow: 0 })
   })
 
-  it("prefers the selection-specific page match over any other signal", () => {
-    const label = deriveChipLabel({
-      ...empty,
-      pageSelectionPath: "/about",
-      activePages: new Set(["/about", "/other"]),
-      activeBlocks: new Set(["hero"]),
-      activePrimitives: new Set(["button"]),
-      siteWide: { active: true, recentBasename: "utils.ts" },
-    })
-    expect(label).toBe("about/page.tsx")
+  it("sorts by ts desc and caps at maxVisible", () => {
+    const res = deriveChipStack(
+      [
+        entry({ agent: "A", ts: 1 }),
+        entry({ agent: "B", ts: 3 }),
+        entry({ agent: "C", ts: 2 }),
+        entry({ agent: "D", ts: 4 }),
+      ],
+      3,
+    )
+    expect(res.chips.map((c) => c.agentLabel)).toEqual(["D", "B", "C"])
+    expect(res.overflow).toBe(1)
   })
 
-  it("selection-specific block beats other active edits", () => {
-    const label = deriveChipLabel({
-      ...empty,
-      blockSelectionSlug: "hero",
-      activeBlocks: new Set(["hero", "cta-band"]),
-      activePages: new Set(["/contact"]),
-      siteWide: { active: true, recentBasename: "stale.ts" },
-    })
-    expect(label).toBe("hero.tsx")
-  })
-
-  it("selection-specific primitive beats other active edits", () => {
-    const label = deriveChipLabel({
-      ...empty,
-      primitiveSelectionId: "button",
-      activePrimitives: new Set(["button", "badge"]),
-      activePages: new Set(["/contact"]),
-    })
-    expect(label).toBe("button.tsx")
-  })
-
-  it("selection match falls through when the selected file isn't currently active", () => {
-    // User is viewing /about, but Claude is editing something else: chip names
-    // the unrelated edit, not /about.
-    const label = deriveChipLabel({
-      ...empty,
-      pageSelectionPath: "/about",
-      activeBlocks: new Set(["hero"]),
-    })
-    expect(label).toBe("hero.tsx")
-  })
-
-  it("falls back to first active page when no selection-specific match", () => {
-    const label = deriveChipLabel({
-      ...empty,
-      activePages: new Set(["/dashboard"]),
-    })
-    expect(label).toBe("dashboard/page.tsx")
-  })
-
-  it("page-active beats block-active in fallback", () => {
-    const label = deriveChipLabel({
-      ...empty,
-      activePages: new Set(["/contact"]),
-      activeBlocks: new Set(["hero"]),
-    })
-    expect(label).toBe("contact/page.tsx")
-  })
-
-  it("block-active beats primitive-active in fallback", () => {
-    const label = deriveChipLabel({
-      ...empty,
-      activeBlocks: new Set(["hero"]),
-      activePrimitives: new Set(["button"]),
-    })
-    expect(label).toBe("hero.tsx")
-  })
-
-  it("falls back to site-wide basename only when no scoped activity exists", () => {
-    const label = deriveChipLabel({
-      ...empty,
-      siteWide: { active: true, recentBasename: "utils.ts" },
-    })
-    expect(label).toBe("utils.ts")
-  })
-
-  it("site-wide without recentBasename is ignored", () => {
-    expect(deriveChipLabel({ ...empty, siteWide: { active: true } })).toBeUndefined()
-  })
-
-  it("formats the home route as 'page.tsx', not '/page.tsx'", () => {
-    expect(deriveChipLabel({ ...empty, activePages: new Set(["/"]) })).toBe("page.tsx")
+  it("collapses multiple entries from the same (agent, sessionId) to one chip", () => {
+    const res = deriveChipStack(
+      [
+        entry({ agent: "A", ts: 1, sessionId: "s1" }),
+        entry({ agent: "A", ts: 2, sessionId: "s1" }),
+        entry({ agent: "A", ts: 3, sessionId: "s2" }),
+      ],
+      3,
+    )
+    expect(res.chips).toHaveLength(2)
+    expect(res.overflow).toBe(0)
   })
 })

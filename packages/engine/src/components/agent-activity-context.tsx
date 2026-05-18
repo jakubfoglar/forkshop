@@ -124,6 +124,10 @@ export function useAgentSeenPagePaths(): ReadonlySet<string> {
   return useAgentActivity().seenPagePaths
 }
 
+export function useAgentActivityEntries(): readonly ActivityEntry[] {
+  return useAgentActivity().entries
+}
+
 function isEditish(action: AgentAction): boolean {
   return action === "edit" || action === "create"
 }
