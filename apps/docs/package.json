@@ -13,6 +13,9 @@
   },
   "dependencies": {
     "forkshop": "workspace:*",
+    "fumadocs-core": "^16.8.11",
+    "fumadocs-mdx": "^15.0.6",
+    "fumadocs-ui": "^16.8.11",
     "next": "^14.2.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0"
