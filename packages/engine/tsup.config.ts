@@ -8,6 +8,14 @@ export default defineConfig({
     "api/positions/route":                "src/api/positions/route.ts",
     "api/agent-activity/route":           "src/api/agent-activity/route.ts",
     "api/agent-activity/stream/route":    "src/api/agent-activity/stream/route.ts",
+    // Server-safe pure-helper subpath entries. Each compiles to a separate
+    // dist chunk WITHOUT "use client" so RSC consumers can import them.
+    "lib/discover-blocks":                "src/lib/discover-blocks.ts",
+    "lib/discover-primitives":            "src/lib/discover-primitives.ts",
+    "lib/file-to-selection":              "src/lib/file-to-selection.ts",
+    "lib/token-registry":                 "src/lib/token-registry.ts",
+    "lib/parse-token-registry-from-css-vars": "src/lib/parse-token-registry-from-css-vars.ts",
+    "lib/sitemap-tree":                   "src/lib/sitemap-tree.ts",
   },
   format: ["esm"],
   target: "es2022",
