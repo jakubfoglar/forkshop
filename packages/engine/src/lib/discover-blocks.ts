@@ -1,5 +1,5 @@
 import type { ComponentType } from "react"
-import { discoverPrimitives } from "@forkshop/lib/use-discovered-primitives"
+import { discoverPrimitives } from "@forkshop/lib/discover-primitives"
 
 export interface DiscoveredBlock {
   slug: string
