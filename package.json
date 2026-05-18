@@ -5,7 +5,7 @@
   "packageManager": "pnpm@11.1.2",
   "scripts": {
     "build": "pnpm -r build",
-    "dev": "pnpm -r --parallel --filter @forkshop/engine --filter playground run dev",
+    "dev": "pnpm -r --parallel --filter @forkshop/engine --filter demo run dev",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
