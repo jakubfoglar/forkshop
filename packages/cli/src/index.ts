@@ -19,7 +19,7 @@ async function askYesNo(prompt: string): Promise<boolean> {
 const program = new Command()
   .name("forkshop")
   .description("Install and maintain Forkshop in your Next.js + Tailwind project.")
-  .version("0.0.0")
+  .version("0.1.0")
 
 program
   .command("init")
