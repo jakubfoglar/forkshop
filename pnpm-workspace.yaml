@@ -4,3 +4,4 @@ packages:
 allowBuilds:
   '@central-icons-react/square-outlined-radius-0-stroke-2': true
   esbuild: true
+  sharp: true
