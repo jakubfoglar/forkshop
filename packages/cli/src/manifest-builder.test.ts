@@ -8,7 +8,6 @@ async function makeEngineFixture(): Promise<string> {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "engine-fixture-"))
   await fs.mkdir(path.join(root, "src/skill"), { recursive: true })
   await fs.writeFile(path.join(root, "src/skill/setup.md"), "# setup")
-  await fs.writeFile(path.join(root, "src/skill/live-editing.md"), "# live")
   await fs.writeFile(path.join(root, "src/skill/doc-sync.md"), "# doc-sync")
 
   await fs.mkdir(path.join(root, "templates/api-stubs"), { recursive: true })
