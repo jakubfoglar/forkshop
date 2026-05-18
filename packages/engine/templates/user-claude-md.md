@@ -185,7 +185,7 @@ That's it. Reload `/forkshop` and the new primitive appears on the UI Components
 
 Same pattern for blocks (`components/blocks/index.ts`).
 
-**Why the barrel?** It's how Forkshop discovers components without a build-time codegen step. The `forkshop-live-editing` skill teaches Claude Code to maintain the barrel automatically when you ask to add a primitive — so in practice, you just say "add a Card primitive" and both files get updated.
+**Why the barrel?** It's how Forkshop discovers components without a build-time codegen step. If you create a primitive or block but forget to add the barrel line, the file exists on disk but won't render on any Board. Forkshop will still surface its edit activity on the floating "Claude · &lt;filename&gt;" chip, so you'll see *something* happen — it just won't have a per-Node outline until the barrel catches up.
 
 ---
 
