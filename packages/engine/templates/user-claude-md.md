@@ -464,12 +464,14 @@ import {
   useSiteWideActivity,       // { active, recentBasename } for unmapped file edits
   useAgentSubstringsForPage, // substring list scoped to a page path
   useAgentSubstringsForBlock,// substring list scoped to a block slug
-  useAllAgentSubstrings,     // all active { oldString?, newString? } records
+  useAllAgentHunks,          // all active { oldString?, newString? } hunks (renamed from useAllAgentSubstrings)
   useAgentSeenPagePaths,     // sticky set of every page touched this session
+  useAgentColorByFile,       // per-file resolved agent color (edit OR read)
+  useAgentReadingByFile,     // per-file read-only entries with { color, agentLabel }
 } from "@forkshop/engine"
 ```
 
-The Claude Code producer pack (the `post-tool-use.sh` hook and the activity POST protocol) ships in spec #5. The consumer hooks above are live; the producer side is a no-op shell until spec #5 wires it.
+The Claude Code producer pack (the `post-tool-use.sh` hook and the activity POST protocol) is live. The hook is opt-in during `forkshop init` (Phase 5 question) and forwards Read/Edit/Write/MultiEdit tool calls to the dev server's `/api/forkshop/agent-activity` endpoint. Multiple agent identities are color-coded from an 8-slot OKLCH palette server-side; Claude defaults to orange.
 
 ### Silent synthetic routes
 

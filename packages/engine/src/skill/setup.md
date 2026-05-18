@@ -280,8 +280,9 @@ Also touching automatically:
   • next.config.*   — @locator/webpack-loader rule (Option-click → editor)
   • app/forkshop/block/[slug]/page.tsx — per-block preview route (auto-managed; one file)
 
-One opt-in (I'll confirm after you accept):
-  [1] Cadence note — teaches Claude to use small Edits on Forkshop-watched files
+Two opt-ins (I'll confirm after you accept):
+  [1] Option-click → editor — @locator/webpack-loader devDep + next.config rule
+  [2] Live-AI hook for Claude Code — .claude/hooks/forkshop-post-tool-use.sh + .claude/settings.json entry
 ````
 
 When a recipe was not selected, omit its line entirely from the sidebar tree. Truncate child lists to 3 entries plus `└ …` when there are more.
