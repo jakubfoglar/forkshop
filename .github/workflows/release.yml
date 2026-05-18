@@ -1,0 +1,47 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      CENTRAL_LICENSE_KEY: ${{ secrets.CENTRAL_LICENSE_KEY }}
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          registry-url: "https://registry.npmjs.org"
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build engine
+        run: pnpm --filter @forkshop/engine build
+
+      - name: Build CLI
+        run: pnpm --filter forkshop build
+
+      - name: Publish engine
+        run: pnpm --filter @forkshop/engine publish --no-git-checks --access public
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish CLI
+        run: pnpm --filter forkshop publish --no-git-checks --access public
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "${GITHUB_REF_NAME}" --generate-notes
