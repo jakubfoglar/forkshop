@@ -112,25 +112,25 @@ function useChipInputs(_args: {
   siteWide: { active: boolean; recentBasename?: string }
 }): ChipInput[] {
   const entries = useAgentActivityEntries()
-  const result: ChipInput[] = []
-  for (const entry of entries) {
-    const fileLabel = deriveFileLabel(entry.filePath, _args)
-    result.push({
-      agentLabel: entry.agentLabel,
-      sessionId: entry.sessionId,
-      color: entry.color,
-      fileLabel,
-      ts: entry.lastSeenAt,
-    })
-  }
-  return result
+  return useMemo(() => {
+    const result: ChipInput[] = []
+    for (const entry of entries) {
+      result.push({
+        agentLabel: entry.agentLabel,
+        sessionId: entry.sessionId,
+        color: entry.color,
+        fileLabel: deriveFileLabel(entry.filePath),
+        ts: entry.lastSeenAt,
+      })
+    }
+    return result
+  }, [entries])
 }
 
-function deriveFileLabel(
-  filePath: string,
-  args: { pageSelectionPath?: string; blockSelectionSlug?: string; primitiveSelectionId?: string },
-): string {
-  if (args.pageSelectionPath !== undefined && filePath.endsWith("page.tsx")) {
+// page.tsx files always get parent+basename ("auth/page.tsx") so the user can
+// tell which route. Everything else uses the bare basename.
+function deriveFileLabel(filePath: string): string {
+  if (filePath.endsWith("page.tsx")) {
     return filePath.split("/").slice(-2).join("/")
   }
   return filePath.split("/").pop() ?? filePath
