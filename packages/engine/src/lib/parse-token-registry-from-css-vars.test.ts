@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { parseTokenRegistryFromCssVars } from "@forkshop/lib/use-token-registry-from-css"
+import { parseTokenRegistryFromCssVars } from "@forkshop/lib/parse-token-registry-from-css-vars"
 
 describe("parseTokenRegistryFromCssVars", () => {
   it("returns empty registry for empty input", () => {

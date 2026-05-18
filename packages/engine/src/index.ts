@@ -118,8 +118,8 @@ export {
   discoverBlocks,
   type DiscoveredBlock,
 } from "@forkshop/lib/use-discovered-blocks"
-export {
-  useTokenRegistryFromCss,
-  discoverTokenRegistryFromCss,
-  parseTokenRegistryFromCssVars,
-} from "@forkshop/lib/use-token-registry-from-css"
+// Pure parser only — the "how do I read CSS vars from the browser" mechanism
+// is project-aware (server component fs.read vs client component getComputedStyle
+// vs build-time codegen) and gets scaffolded by the setup skill into the user's
+// design-system.tsx, not shipped from the engine.
+export { parseTokenRegistryFromCssVars } from "@forkshop/lib/parse-token-registry-from-css-vars"

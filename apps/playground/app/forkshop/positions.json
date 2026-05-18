@@ -1,6 +1,18 @@
 {
   "primitive:button": {
-    "x": 3502,
-    "y": -10
+    "x": 335,
+    "y": 0
+  },
+  "page:/about/careers": {
+    "x": 871,
+    "y": 360
+  },
+  "primitive:input": {
+    "x": 163,
+    "y": 142
+  },
+  "primitive:badge": {
+    "x": 163,
+    "y": 0
   }
 }

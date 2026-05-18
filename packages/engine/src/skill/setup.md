@@ -705,24 +705,48 @@ export default function DesignSystemBoardView() {
 
 ### Template 2b — `{{mount}}/design-system.tsx` (Tailwind v4)
 
-For projects without a `tailwind.config.*` file (v4 convention — tokens declared via `@theme { ... }` in `app/globals.css`). Token discovery happens at runtime by scanning CSS custom properties on `:root`:
+For projects without a `tailwind.config.*` file (v4 convention — tokens declared via `@theme { ... }` in `app/globals.css`). The browser-side CSS-var read code is scaffolded **into the user's file** so it's visible and editable; the engine only ships the pure parser:
 
 ````tsx
 "use client"
 
-import { useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
   ForkshopCanvas,
   DesignSystemView,
-  useTokenRegistryFromCss,
+  parseTokenRegistryFromCssVars,
   discoverPrimitives,
   type PrimitiveGroup,
   type InlineReactNode,
+  type TokenRegistry,
 } from "@forkshop/engine"
 import { forkshopConfig } from "./forkshop.config"
 
+const EMPTY_REGISTRY: TokenRegistry = {
+  colors: [], spacing: [], fontSizes: [], fontWeights: [],
+  radii: [], shadows: [], containers: [], classLookup: {},
+}
+
+// Read Tailwind v4 @theme tokens from :root CSS variables after hydration.
+// The skill scaffolds this here (rather than as an engine hook) so the
+// mechanism is editable per-project — if your @theme lives in a non-default
+// stylesheet, change the selector below.
+function useTokensFromCssVars(): TokenRegistry {
+  const [registry, setRegistry] = useState<TokenRegistry>(EMPTY_REGISTRY)
+  useEffect(() => {
+    const style = window.getComputedStyle(document.documentElement)
+    const pairs: [string, string][] = []
+    for (let i = 0; i < style.length; i++) {
+      const name = style.item(i)
+      if (name.startsWith("--")) pairs.push([name, style.getPropertyValue(name)])
+    }
+    setRegistry(parseTokenRegistryFromCssVars(pairs))
+  }, [])
+  return registry
+}
+
 export default function DesignSystemBoardView() {
-  const tokens = useTokenRegistryFromCss()
+  const tokens = useTokensFromCssVars()
   const primitiveGroups = useMemo<PrimitiveGroup[]>(
     () => [
       {
@@ -750,7 +774,7 @@ export default function DesignSystemBoardView() {
 }
 ````
 
-`useTokenRegistryFromCss` reads `getComputedStyle(document.documentElement)` for `--color-*`, `--spacing-*`, `--radius-*`, `--shadow-*`, `--font-size-*` / `--text-*`, `--font-weight-*`, `--container-*` custom properties. Hydration-aware: returns an empty registry on first render, then populates after mount. Adding a new `@theme` token reloads via HMR and re-runs the hook.
+Recognized v4 prefixes: `--color-*`, `--spacing-*`, `--radius-*`, `--shadow-*`, `--font-size-*` / `--text-*`, `--font-weight-*`, `--container-*`. Adding a new `@theme` token reloads via Next.js CSS HMR; the `useEffect` doesn't re-run, so a hard refresh is needed to pick up new tokens. If you want true live-mirror, attach a `MutationObserver` to the stylesheet — the scaffolded code is in your file, edit as needed.
 
 **Skill picks which variant to emit:** Phase 2 Scan D detects whether the project uses Tailwind v3 (config file present) or v4 (no config file, `@theme` block in `globals.css`). Phase 6 Step 2 emits Template 2a or 2b accordingly. The Tailwind v3 path also requires `tailwindConfig` to be present in Template 1's config; the v4 path doesn't import or reference it.
 
