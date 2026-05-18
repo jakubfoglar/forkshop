@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import { PREVIEW_AGENT_READ_CSS } from "@forkshop/lib/edit-mode"
 
 type LazyIframeProps = {
   src: string
@@ -23,6 +24,9 @@ type LazyIframeProps = {
   // Optional: called on every contentDocument resize. Used by isolation views
   // that auto-size to their content. Off by default to avoid the cost.
   onBodyHeightSync?: (height: number) => void
+  // Project-relative path / label so agent-activity decorations can target
+  // this iframe's wrapper container via data attribute.
+  hostFileLabel?: string
 }
 
 export function LazyIframe({
@@ -36,10 +40,20 @@ export function LazyIframe({
   className,
   onIframeWheel,
   onBodyHeightSync,
+  hostFileLabel,
 }: LazyIframeProps) {
   const [shouldLoad, setShouldLoad] = useState(false)
   const [measuredBodyHeight, setMeasuredBodyHeight] = useState<number | undefined>(undefined)
   const localRef = useRef<HTMLIFrameElement | null>(null)
+
+  useEffect(() => {
+    if (typeof document === "undefined") return
+    if (document.querySelector("style[data-forkshop-agent-read]") !== null) return
+    const style = document.createElement("style")
+    style.dataset.forkshopAgentRead = "true"
+    style.textContent = PREVIEW_AGENT_READ_CSS
+    document.head.append(style)
+  }, [])
 
   // Always tracks internally so the iframe element can self-size to its body,
   // and also forwards to the parent if it asked for body-height sync.
@@ -158,6 +172,7 @@ export function LazyIframe({
     <div
       style={{ width, height: resolvedHeight, overflow: "hidden", position: "relative" }}
       className={className}
+      data-forkshop-iframe-host={hostFileLabel ?? ""}
     >
       <iframe
         ref={(element) => {

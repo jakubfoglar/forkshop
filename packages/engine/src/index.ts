@@ -75,6 +75,7 @@ export type { ActivityEntry as AgentActivityStateEntry } from "@forkshop/lib/age
 export { recordActivity, subscribe } from "@forkshop/lib/agent-activity-state"
 export { AgentIframeRelay } from "@forkshop/components/agent-iframe-relay"
 export { AgentSelectionChip } from "@forkshop/components/agent-selection-chip"
+export { AgentReadIndicator } from "@forkshop/components/canvas/agent-read-indicator.js"
 
 // Iframe registry (used by AgentIframeRelay consumers and may stay public)
 export {
