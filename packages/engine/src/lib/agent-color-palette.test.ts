@@ -41,9 +41,11 @@ describe("agent-color-palette", () => {
       colors.add(getOrAssignColor("agent-" + i, "s"))
     }
     expect(colors.size).toBe(AGENT_PALETTE.length)
-    // 9th pair wraps to slot 0 (no free slots left).
+    // 9th pair wraps to slot 0 — assignments.size is 8 after the loop, and
+    // 8 % AGENT_PALETTE.length === 0. Asserting the exact slot would catch a
+    // regression in the wraparound formula that `toContain` would miss.
     const wrapped = getOrAssignColor("agent-overflow", "s")
-    expect(AGENT_PALETTE).toContain(wrapped)
+    expect(wrapped).toBe(AGENT_PALETTE[0])
   })
 
   it("palette has 8 OKLCH entries", () => {
