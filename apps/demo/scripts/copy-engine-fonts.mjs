@@ -6,12 +6,18 @@ import { existsSync } from "node:fs"
 
 const require = createRequire(import.meta.url)
 
-// Resolve the engine package root via its main entry (always in exports).
-// Walk up from dist/index.js until we find the package root.
-const engineMain = require.resolve("@forkshop/engine")
-// engineMain = .../node_modules/@forkshop/engine/dist/index.js
-// pkgRoot    = .../node_modules/@forkshop/engine
-const pkgRoot = dirname(dirname(engineMain)) // up from dist/ to package root
+// Resolve the engine package root. Try the main entry (post-build state),
+// then fall back to the workspace path (fresh-clone state, no dist/ yet).
+let pkgRoot
+try {
+  // engineMain = .../node_modules/@forkshop/engine/dist/index.js
+  const engineMain = require.resolve("@forkshop/engine")
+  pkgRoot = dirname(dirname(engineMain)) // up from dist/ to package root
+} catch {
+  // dist/index.js doesn't exist (fresh clone, no engine build yet).
+  // Fall back to the workspace symlink target via this script's own location.
+  pkgRoot = resolve(dirname(new URL(import.meta.url).pathname), "../../../packages/engine")
+}
 
 let src
 // Real-user path: dist/fonts/ (after `pnpm --filter @forkshop/engine build`).
