@@ -3,13 +3,6 @@
 import { useEffect } from "react"
 import { isTextElement, PREVIEW_AGENT_CSS, PREVIEW_EDIT_CSS, SKIP_TAGS } from "@forkshop/lib/edit-mode"
 
-type AgentMessage =
-  | { type: "forkshop:agent-block"; slugs: string[] }
-  | {
-      type: "forkshop:agent-text"
-      strings: readonly { oldString?: string; newString?: string }[]
-    }
-  | { type: "forkshop:agent-page-active"; active: boolean }
 
 function findElementContainingSubstring(
   iframeDocument: Document,
@@ -292,15 +285,22 @@ export function useIframeEditWiring({
       agentMessageHandler = (event: MessageEvent) => {
         const data = event.data as unknown
         if (data === null || typeof data !== "object") return
-        const message = data as Partial<AgentMessage> & { type?: string }
+        const message = data as {
+          type?: string
+          slugs?: string[]
+          hunks?: readonly { oldString?: string; newString?: string }[]
+          color?: string
+        }
         if (message.type === "forkshop:agent-block") {
-          const targetSlugs = new Set<string>(message.slugs)
+          const targetSlugs = new Set<string>(message.slugs ?? [])
+          const color = message.color ?? "oklch(0.62 0.22 280)"
           for (const node of iframeDocument.querySelectorAll<HTMLElement>(
             "[data-forkshop-block][data-forkshop-agent-active]",
           )) {
             const slug = node.dataset.forkshopBlock
             if (slug && !targetSlugs.has(slug)) {
               delete node.dataset.forkshopAgentActive
+              node.style.removeProperty("--forkshop-agent-color")
             }
           }
           for (const slug of targetSlugs) {
@@ -308,6 +308,7 @@ export function useIframeEditWiring({
               `[data-forkshop-block="${CSS.escape(slug)}"]`,
             )) {
               node.dataset.forkshopAgentActive = ""
+              node.style.setProperty("--forkshop-agent-color", color)
             }
             const previous = agentBlockTimers.get(slug)
             if (previous) clearTimeout(previous)
@@ -318,6 +319,7 @@ export function useIframeEditWiring({
                   `[data-forkshop-block="${CSS.escape(slug)}"]`,
                 )) {
                   delete node.dataset.forkshopAgentActive
+                  node.style.removeProperty("--forkshop-agent-color")
                 }
                 agentBlockTimers.delete(slug)
               }, 2000),
@@ -326,24 +328,32 @@ export function useIframeEditWiring({
           return
         }
         if (message.type === "forkshop:agent-page-active") {
-          if (message.active) {
+          const active = (data as { active?: boolean }).active
+          if (active) {
             iframeDocument.documentElement.dataset.forkshopAgentPageActive = ""
+            iframeDocument.documentElement.style.setProperty(
+              "--forkshop-agent-color",
+              message.color ?? "oklch(0.62 0.22 280)",
+            )
           } else {
             delete iframeDocument.documentElement.dataset.forkshopAgentPageActive
+            iframeDocument.documentElement.style.removeProperty("--forkshop-agent-color")
           }
           return
         }
         if (message.type === "forkshop:agent-text") {
-          for (const change of message.strings ?? []) {
-            const targets = findAllTargetsForChange(iframeDocument, change)
+          const color = message.color ?? "oklch(0.62 0.22 280)"
+          for (const hunk of message.hunks ?? []) {
+            const targets = findAllTargetsForChange(iframeDocument, hunk)
             for (const target of targets) {
-              // Force re-trigger by toggling the attribute off and on across a frame.
               delete target.dataset.forkshopAgentTextPulse
               // oxlint-disable-next-line no-unused-expressions
               void target.offsetHeight
               target.dataset.forkshopAgentTextPulse = ""
+              target.style.setProperty("--forkshop-agent-color", color)
               const timer = setTimeout(() => {
                 delete target.dataset.forkshopAgentTextPulse
+                target.style.removeProperty("--forkshop-agent-color")
                 agentTextTimers.delete(timer)
               }, 2100)
               agentTextTimers.add(timer)
