@@ -5,6 +5,7 @@ import type { NodeType } from "@forkshop/types/node-type"
 import type { IframeComponentNode } from "@forkshop/types/node"
 import { LazyIframe } from "@forkshop/components/canvas/lazy-iframe"
 import { IframeEditOverlay } from "@forkshop/components/canvas/iframe-edit-overlay"
+import { AgentReadIndicator } from "@forkshop/components/canvas/agent-read-indicator"
 import { useForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
 import { useRegisterIframe } from "@forkshop/components/iframe-registry"
 
@@ -19,6 +20,7 @@ function IframeComponentRender({
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
   const [iframeEl, setIframeEl] = useState<HTMLIFrameElement | null>(null)
   useRegisterIframe(iframeRef)
+  const sourceFile = node.sourceFile ?? node.componentPath
 
   const handleIframeWheel = useCallback(
     (event: WheelEvent, iframe: HTMLIFrameElement) => {
@@ -43,6 +45,7 @@ function IframeComponentRender({
         title={node.slug}
         width={node.width}
         heightCap={node.height}
+        hostFileLabel={sourceFile}
         onIframeWheel={handleIframeWheel}
         onBodyHeightSync={onBodyHeightChange}
         iframeRef={(el) => {
@@ -51,7 +54,8 @@ function IframeComponentRender({
         }}
         className="bg-white shadow-md"
       />
-      <IframeEditOverlay iframe={iframeEl} sourceFile={node.sourceFile ?? node.componentPath} />
+      {sourceFile !== undefined && <AgentReadIndicator hostFileLabel={sourceFile} />}
+      <IframeEditOverlay iframe={iframeEl} sourceFile={sourceFile} />
     </>
   )
 }

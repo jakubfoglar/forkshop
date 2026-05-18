@@ -5,6 +5,7 @@ import type { NodeType } from "@forkshop/types/node-type"
 import type { IframeRouteNode } from "@forkshop/types/node"
 import { LazyIframe } from "@forkshop/components/canvas/lazy-iframe"
 import { IframeEditOverlay } from "@forkshop/components/canvas/iframe-edit-overlay"
+import { AgentReadIndicator } from "@forkshop/components/canvas/agent-read-indicator"
 import { useForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
 import { useRegisterIframe } from "@forkshop/components/iframe-registry"
 
@@ -44,6 +45,7 @@ function IframeRouteRender({
         width={node.width}
         heightCap={node.height}
         desktopWidth={1440}
+        hostFileLabel={node.sourceFile ?? ""}
         onIframeWheel={handleIframeWheel}
         onBodyHeightSync={onBodyHeightChange}
         iframeRef={(el) => {
@@ -52,6 +54,7 @@ function IframeRouteRender({
         }}
         className="bg-white shadow-md"
       />
+      {node.sourceFile !== undefined && <AgentReadIndicator hostFileLabel={node.sourceFile} />}
       <IframeEditOverlay iframe={iframeEl} sourceFile={node.sourceFile} />
     </>
   )
