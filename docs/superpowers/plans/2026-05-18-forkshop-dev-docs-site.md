@@ -14,7 +14,7 @@ both the landing and the docs surface. Fumadocs's CSS variables are overridden i
 tokens. No changes to the registry route, no rename of `apps/docs`, no new Vercel
 project.
 
-**Tech Stack:** Next.js 14 App Router, Tailwind 3.4, MDX via `fumadocs-mdx`,
+**Tech Stack:** Next.js 15 App Router, React 19, Tailwind 3.4, MDX via `fumadocs-mdx`,
 `fumadocs-core`, `fumadocs-ui`. Existing local Raveo font (already loaded).
 
 **Verification model:** This work is config + content. Pure-TDD doesn't fit. Each task
