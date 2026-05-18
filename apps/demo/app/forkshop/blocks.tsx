@@ -28,7 +28,9 @@ export default function BlocksBoardView({
           x: 0,
           y: 0,
           width: viewport,
-          height: 600,
+          // height here flows into iframe-component NodeType's LazyIframe as heightMode="cap" + height.
+          // Generous cap so block content (CTA, Hero, etc.) isn't clipped silently.
+          height: 3000,
           label: b.name,
           slug: b.slug,
           previewSrc: b.previewSrc,
@@ -38,7 +40,7 @@ export default function BlocksBoardView({
     [blocks, viewport],
   )
   return (
-    <PlaygroundBoard stageWidth={1800} stageHeight={1400} fitMode="width">
+    <PlaygroundBoard stageWidth={1800} stageHeight={6000} fitMode="width">
       {({ nodePositions: pos, onPositionChange: onPosChange }) => (
         <Gallery
           entries={entries}
