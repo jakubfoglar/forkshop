@@ -26,11 +26,13 @@ program
   .description("Install Forkshop into the current project.")
   .option("--force", "Overwrite existing files on collision")
   .option("--registry <url>", "Override the registry base URL")
+  .option("--install-claude-pack", "Install the Claude Code live-AI hook (default: skip)")
   .action(async (opts) => {
     const result = await runInit({
       projectRoot: process.cwd(),
       force: opts.force,
       registryUrl: opts.registry,
+      installClaudePack: opts.installClaudePack === true,
     })
     if (!result.ok) {
       console.error(pc.red(result.reason))

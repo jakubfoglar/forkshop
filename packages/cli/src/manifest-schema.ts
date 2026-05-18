@@ -60,6 +60,9 @@ export interface ForkshopJson {
   srcPrefix: "" | "src/"              // mirror of ResolvedAliases.srcPrefix
   installedBundles: string[]
   files: Record<string, ForkshopJsonFile>
+  producerPack?: {
+    claudeCode?: boolean
+  }
 }
 
 export interface ForkshopJsonFile {

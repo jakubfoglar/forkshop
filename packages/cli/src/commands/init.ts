@@ -18,12 +18,14 @@ import { preflightInit } from "../preflight.js"
 import { resolveBundles } from "../resolve-bundles.js"
 import { resolveDestination } from "../resolve-destination.js"
 import { mergeDepsIntoPackageJson } from "../write-deps.js"
+import { maybeInstallClaudeCodePack } from "../install-claude-pack.js"
 
 export interface InitOptions {
   projectRoot: string
   manifest?: Manifest                 // injected by tests; production uses fetchManifest
   registryUrl?: string
   force?: boolean
+  installClaudePack?: boolean         // opt-in: writes hook + settings.json
 }
 
 export type InitResult = { ok: true } | { ok: false; reason: string }
@@ -31,7 +33,7 @@ export type InitResult = { ok: true } | { ok: false; reason: string }
 const DEFAULT_REGISTRY_URL = "https://forkshop.dev/r/"
 
 export async function runInit(options: InitOptions): Promise<InitResult> {
-  const { projectRoot, force = false } = options
+  const { projectRoot, force = false, installClaudePack: cliFlag } = options
   const registryUrl = options.registryUrl ?? DEFAULT_REGISTRY_URL
 
   // 1. Preflight
@@ -144,6 +146,15 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
     `@forkshop/engine@^${manifest.engineVersion}`,
   ])
 
+  // 11a. Install Claude Code producer pack if user opted in (via setup skill
+  // setting FORKSHOP_INSTALL_CLAUDE_PACK=1, or via CLI flag).
+  const consent = cliFlag === true || process.env.FORKSHOP_INSTALL_CLAUDE_PACK === "1"
+  const pack = await maybeInstallClaudeCodePack({
+    projectRoot,
+    manifest,
+    consent,
+  })
+
   // 12. Write forkshop.json
   const allPlan = [...textPlan, ...(fontPlanEntry ? [fontPlanEntry] : [])]
   const lock: ForkshopJson = {
@@ -156,11 +167,15 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
     srcPrefix: aliases.srcPrefix,
     installedBundles: resolved.bundleNames,
     files: Object.fromEntries(allPlan.map((e) => [e.address, { dest: e.dest, sha: e.sha }])),
+    ...(pack.installed ? { producerPack: { claudeCode: true } } : {}),
   }
   await writeForkshopJson(projectRoot, lock)
 
   // 13. Summary
   console.log(pc.green(`\nInstalled ${allPlan.length} files into your project.`))
+  if (pack.installed) {
+    console.log(pc.dim(`Claude Code live-AI hook installed to .claude/hooks/forkshop-post-tool-use.sh`))
+  }
   if (addedDeps.length > 0) {
     const pm = await detectPackageManager(projectRoot)
     const installCmd =
