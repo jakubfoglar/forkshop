@@ -56,8 +56,7 @@ Read in parallel:
 - The board files in `<aliases.mount>/*-board.tsx` — which kits are wired and how.
 - `forkshop.json` — installed bundles, alias map, where files actually live.
 - Top-level `tailwind.config.{ts,js,mjs}` — whether the forkshop preset is wired.
-- `.claude/settings.json` and `.claude/hooks/post-tool-use.sh` — whether the live-AI hook is installed.
-- Root `CLAUDE.md` — whether the cadence note is appended.
+- `.claude/settings.json` and `.claude/hooks/forkshop-post-tool-use.sh` — whether the Claude Code live-AI producer pack is installed. (Cadence note + reactive feedback hook were retired in spec #5; the `forkshop-live-editing.md` skill no longer ships.)
 
 ### Step 3 — Read the upstream template
 
@@ -86,7 +85,7 @@ These are the highest-yield drift candidates in any Forkshop installation. Walk 
 3. **Consumer hooks** — every name in the "Consumer hooks" list must still be exported from `@forkshop/engine`. Cross-check against `<aliases.base>/components/forkshop/agent-activity-context.tsx` exports.
 4. **API routes** — request/response shapes documented in the file should match `<aliases.api>/edit/route.ts`, `<aliases.api>/positions/route.ts`, `<aliases.api>/agent-activity/route.ts`.
 5. **`forkshop.config.ts` example** — should reflect the user's actual Node/page entries, not the original placeholder names.
-6. **Opt-ins** — Locator.js / live-AI hook / cadence note sections should match whether each is actually installed.
+6. **Opt-ins** — Locator.js / live-AI hook sections should match whether each is actually installed. (The cadence-note opt-in was retired in spec #5; if the user's CLAUDE.md still has a "Cadence note" section, propose removing it.)
 
 ## Phase 3 — Render the proposal
 
