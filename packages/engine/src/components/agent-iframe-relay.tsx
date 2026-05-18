@@ -83,6 +83,12 @@ export function handleAgentHello(
   return true
 }
 
+/**
+ * @deprecated AgentIframeRelay is auto-mounted by `AgentActivityProvider` since v0.x.y.
+ * Manually mounting it has no effect (it's idempotent — postMessage is harmless
+ * if no iframes are listening) but doesn't crash. Drop the manual mount in your code.
+ * This export will be removed at the next 0.x major bump.
+ */
 export function AgentIframeRelay() {
   const registry = useIframeRegistry()
   const activeBlocks = useAgentActiveBlocks()

@@ -1,3 +1,4 @@
+/** @vitest-environment jsdom */
 import { describe, expect, it, vi } from "vitest"
 import {
   broadcastBlocks,
@@ -80,5 +81,22 @@ describe("handleAgentHello", () => {
   it("returns false for non-hello messages", () => {
     expect(handleAgentHello({ data: {}, source: {} as never }, { slugs: [], hunks: [], color: "" }))
       .toBe(false)
+  })
+})
+
+import { createElement } from "react"
+import { render } from "@testing-library/react"
+import { AgentActivityProvider } from "@forkshop/components/agent-activity-context"
+import { AgentIframeRelay } from "@forkshop/components/agent-iframe-relay"
+
+describe("auto-mount", () => {
+  it("manual <AgentIframeRelay /> inside AgentActivityProvider does not crash", () => {
+    const { unmount } = render(
+      createElement(
+        AgentActivityProvider,
+        { fileMap: { primitives: [], blocks: [] }, children: createElement(AgentIframeRelay) },
+      ),
+    )
+    expect(() => unmount()).not.toThrow()
   })
 })

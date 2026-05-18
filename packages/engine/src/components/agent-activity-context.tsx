@@ -4,6 +4,8 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import type { Hunk } from "@forkshop/lib/diff-to-hunks"
 import type { ActivityEntry, AgentAction } from "@forkshop/lib/agent-activity-state"
 import { fileToSelection } from "@forkshop/lib/file-to-selection"
+import { IframeRegistryProvider } from "@forkshop/components/iframe-registry"
+import { AgentIframeRelay } from "@forkshop/components/agent-iframe-relay"
 
 export type { Hunk, ActivityEntry, AgentAction }
 
@@ -113,7 +115,14 @@ export function AgentActivityProvider({
     [entries, fileMap, seenPagePaths],
   )
 
-  return <Context.Provider value={value}>{children}</Context.Provider>
+  return (
+    <Context.Provider value={value}>
+      <IframeRegistryProvider>
+        <AgentIframeRelay />
+        {children}
+      </IframeRegistryProvider>
+    </Context.Provider>
+  )
 }
 
 function useAgentActivity(): AgentActivityValue {
