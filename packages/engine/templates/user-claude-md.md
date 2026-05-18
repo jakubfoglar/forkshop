@@ -1,6 +1,6 @@
 # Forkshop
 
-Forkshop is a Figma-style canvas + sidebar tool installed into your Next.js + Tailwind project. It shows the real thing — your actual components and pages rendered in live iframes. Edit in place. Drag to arrange.
+Forkshop is a Figma-style canvas + sidebar tool installed into your Next.js App Router project. It shows the real thing — your actual components and pages rendered in live iframes. Edit in place. Drag to arrange. Works with whatever styling system you use (Tailwind, Panda CSS, Vanilla Extract, plain CSS — the Design System Board reads tokens from `:root` CSS variables at runtime).
 
 This file is auto-loaded by Claude Code when working in `{{srcPrefix}}app/forkshop/`. Everything in that directory is yours to customize.
 
