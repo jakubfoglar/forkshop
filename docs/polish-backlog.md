@@ -137,3 +137,40 @@ Deferred from this rebuild:
 - CI workflow (`.github/workflows/ci.yml`). No CI exists today; creating one requires `CENTRAL_LICENSE_KEY` secret config. Tracked as a separate "pre-publish prep" item.
 - `pnpm verify-publish` (tarball install verification). Worth doing before the first `0.1.0` tag.
 
+
+---
+
+## Demo polish backlog (post-playground-rebuild, 2026-05-18)
+
+The two-app split (`apps/demo/` + `apps/test/`) landed clean at the architecture level — engine touch-ups (server-safe subpath exports, auto-mount provider, `LazyIframe.heightMode`), public-API snapshot, demo rewiring all green. But smoke testing surfaced three polish-on-content issues in `apps/demo/` that the rebuild didn't address. Each is a self-contained follow-up.
+
+### 1. Blocks Board frame heights — partially fixed; verify after hard refresh
+
+**Symptom:** On `localhost:3000/forkshop#/section/blocks`, the four block frames (CTA, FeatureGrid, Hero, Pricing) were clipping to ~200px tall, showing only the top portion of each block.
+
+**Root cause:** `iframe-component` NodeType used `heightMode="cap"` with the demo's `node.height = 3000`. The `body.scrollHeight` was being measured during initial render before fonts/layout fully settled, the ResizeObserver fired on that partial value (~200px), and the wrapper got stuck there because `cap` mode locks to the measurement.
+
+**Fix shipped (`e3db774`):** changed `iframe-component` NodeType to `heightMode="auto"` — no cap. The wrapper still tracks `body.scrollHeight`, but the auto branch keeps it growing as content fully renders.
+
+**Verification needed:** hard refresh `localhost:3000/forkshop#/section/blocks` and confirm all four blocks render with full content vertically. If still clipped, the underlying issue is `body.scrollHeight` measurement timing — investigate `LazyIframe`'s `onLoad` → `sync()` → `ResizeObserver` chain.
+
+### 2. Frame-level activity indicator not firing on block edits
+
+**Symptom:** When editing `apps/demo/components/blocks/hero.tsx` from a Claude session, the floating "Claude · hero.tsx" chip at top fires (correct), but the per-block frame outline + corner pill don't appear on the Hero frame.
+
+**Diagnosis:** `useSiteWideActivity` produces the chip *only* when `fileToSelection` returns `"site-wide"` (i.e., the file didn't match any configured block / page / primitive). So the chip firing while the outline doesn't = `fileToSelection` is mapping the edit to site-wide, not to a block. That means the `FILE_MAP` slug-to-path match is missing.
+
+**Likely cause:** the Claude session is at the repo root (not in `apps/demo/`), so the hook fires from the root `.claude/hooks/forkshop-post-tool-use.sh`. The root session's `process.cwd()` on the dev server side is `apps/demo/` (because that's where Next dev runs from). The hook sends Claude Code's `file_path` (absolute) → engine route handler resolves against `process.cwd()=apps/demo/` → produces `components/blocks/hero.tsx` (workspace-relative). `FILE_MAP.blocks[].sourcePath = "components/blocks/hero.tsx"` should match. So in theory this should work.
+
+**Next debug step:** while editing, open dev tools Network tab, find the `POST /api/forkshop/agent-activity` request, inspect the body's `file:` field. If it's `"components/blocks/hero.tsx"` it should match; if it's an absolute path or different shape, the mismatch is somewhere in the producer → route resolution chain.
+
+### 3. Button variant text splits into two lines
+
+**Symptom:** On `localhost:3000/forkshop#/primitive/button`, both `default` and `subtle` Button variants render with "Click me" split across two lines because the button itself is rendered very narrow.
+
+**Root cause:** `apps/demo/app/forkshop/ui-components/button.tsx` defines each inline-react node as `width: 240, height: 80`. The wrapper inside is `p-6` (24px padding all sides), so the content area is `192×32px`. The Button's `h-10` (40px tall) doesn't fit in 32px vertical, the cell squishes, and the button's horizontal width also gets constrained by the cell.
+
+**Fix:** bump `height: 80` → `height: 160` (or larger) in the inline-react node, OR reduce the wrapper's `p-6` to `p-3`. Two-character edit. Same issue is potentially present in `apps/demo/app/forkshop/ui-components/badge.tsx` and `input.tsx` — verify and fix consistently.
+
+This is a demo content polish issue, not an engine bug. The engine's `inline-react` NodeType honors whatever dimensions the consumer specifies.
+
