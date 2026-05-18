@@ -10,7 +10,8 @@
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
     "check": "pnpm typecheck && pnpm lint",
-    "regen-api-snap": "pnpm --filter @forkshop/engine build && cd packages/engine && pnpm exec tsx scripts/generate-public-api-snap.ts"
+    "regen-api-snap": "pnpm --filter @forkshop/engine build && cd packages/engine && pnpm exec tsx scripts/generate-public-api-snap.ts",
+    "reset-test": "./apps/test/scripts/reset.sh"
   },
   "devDependencies": {
     "typescript": "^5.5.0",
