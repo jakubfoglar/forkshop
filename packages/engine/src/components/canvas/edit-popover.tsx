@@ -18,9 +18,9 @@ export function EditPopover({
   onDiscard,
   onDismissError,
   // Recompute position whenever any of these change (re-render trigger).
-  transformZoom,
-  transformPanX,
-  transformPanY,
+  transformZoom: _transformZoom,
+  transformPanX: _transformPanX,
+  transformPanY: _transformPanY,
 }: {
   element: Element | undefined
   isSaving: boolean

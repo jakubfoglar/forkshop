@@ -19,6 +19,15 @@ const config = {
           { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
         ],
       },
+      {
+        source: "/r/registry.json",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=300, s-maxage=300, stale-while-revalidate=86400",
+          },
+        ],
+      },
     ]
   },
 }

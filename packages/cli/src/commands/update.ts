@@ -9,7 +9,6 @@ import {
   readEnginePin,
 } from "../engine-version.js"
 import {
-  type ForkshopJson,
   type Manifest,
   type ResolvedAliases,
 } from "../manifest-schema.js"

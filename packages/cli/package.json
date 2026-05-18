@@ -1,7 +1,8 @@
 {
   "name": "forkshop",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
+  "private": false,
+  "publishConfig": { "access": "public" },
   "type": "module",
   "bin": { "forkshop": "./dist/index.js" },
   "files": ["dist"],
