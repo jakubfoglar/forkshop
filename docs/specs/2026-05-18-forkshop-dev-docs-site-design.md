@@ -318,7 +318,7 @@ None of these block v1. None require restructuring v1.
 
 ## Dev workflow
 
-- `pnpm --filter docs dev` boots the site at `:3000` with hot-reload
+- `pnpm --filter docs dev` boots the site at `:3001` with hot-reload
   on both the landing and MDX changes.
 - Adding a docs page: create an MDX file under `content/docs/`, add
   its slug to `meta.json`.
