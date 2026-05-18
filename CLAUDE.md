@@ -1,6 +1,6 @@
 # Forkshop — Maintainer Guide
 
-Forkshop is an OSS Figma-style canvas + sidebar tool for Next.js + Tailwind projects. This file is for contributors and future-Jakub.
+Forkshop is an OSS Figma-style canvas + sidebar tool for Next.js App Router projects. Tailwind is the most common styling layer but not required — Forkshop's Design System Board works with any styling system that compiles tokens to `:root` CSS variables (Tailwind v4 `@theme`, Panda CSS, Vanilla Extract, Stitches with `--token`, plain hand-written CSS). See strategy v2 refinement #17. This file is for contributors and future-Jakub.
 
 > **Lineage:** Forkshop was extracted from **Ravineo's in-house Fogma** tool (in the `ravineo-web` monorepo). Where this guide mentions "Ravineo's Fogma" or "the in-house Fogma," it's referring to that upstream tool — not to Forkshop itself. Both names live on independently: Ravineo's Fogma stays internal under its original name; Forkshop is the public OSS extraction.
 
@@ -416,7 +416,7 @@ These are **not** in v0 and should not be built until there's a dedicated spec:
 | Flow-graph                | Node-and-edge flow diagrams. Deferred from v0. (Originally "flow-graph kit"; renamed since Kit is no longer a concept — refinement #14.) |
 | Docs site content         | `apps/docs/` serves the registry but has no marketing content yet. Spec #6 in strategy v2's roadmap. |
 | GitHub Actions publish    | npm publish workflow. |
-| Tailwind v4 token support | `buildTokenRegistry` only accepts v3 Config shape. v4 projects use `@theme` in CSS instead of a config file. Needs `buildTokenRegistryFromCss` or similar. Caught during the polish smoke test against a fresh `create-next-app` (Tailwind v4). |
+| ~~Tailwind v4 token support~~ | **Shipped 2026-05-18** via `parseTokenRegistryFromCssVars` (engine) + scaffolded CSS-vars-read in Template 2b (user's design-system.tsx). Works for any framework emitting tokens to `:root` (refinement #17). |
 | Engine `Tree.autoDiscover` | Polish spec referenced this as if shipped — it isn't. Tree currently requires explicit `entries: TreeEntry[]`. Templates work around by hand-rolling routes. Real auto-discovery is a server-component fs read + manifest build step. |
 | `DesignSystemView` parameterless variant | Polish spec promised `<DesignSystemView />` with no props would auto-discover tokens/primitives. Engine still requires explicit `tokens` + `primitives`. Templates work around by building them inline from `forkshopConfig.ui` + `tailwindConfig`. |
 

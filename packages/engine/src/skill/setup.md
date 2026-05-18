@@ -1,6 +1,6 @@
 ---
 name: forkshop-setup
-description: Wires Forkshop into a Next.js + Tailwind project after `npx forkshop init`. Detects project type, scans components and routes, proposes a Board layout, asks before mutating next.config.ts / .claude/settings.json / root CLAUDE.md, writes per-board files, populates forkshop.config.tsx. This skill scaffolds an audience-aware Forkshop installation tailored to the project type. Activates on "set up Forkshop", "finish Forkshop setup", "configure Forkshop", "wire up Forkshop", "initialize Forkshop".
+description: Wires Forkshop into a Next.js App Router project after `npx forkshop init`. Detects the styling system (Tailwind v3, Tailwind v4, Panda CSS, Vanilla Extract, plain CSS variables, or none), scans components and routes, proposes a Board layout, asks before mutating next.config / package.json, writes per-board files, populates forkshop.config.tsx. Tailwind is the most common case but not required. Activates on "set up Forkshop", "finish Forkshop setup", "configure Forkshop", "wire up Forkshop", "initialize Forkshop".
 ---
 
 # Forkshop — first-run setup
@@ -88,7 +88,7 @@ Five quick reads:
 1. `package.json` — dependencies, `name`, `description`, `scripts`.
 2. `app/layout.tsx` — fonts loaded, head exports, metadata pattern.
 3. `app/page.tsx` if present — is this a landing page or a redirect?
-4. `tailwind.config.{ts,js,mjs}` — is the theme defaults-only or heavily customized (many semantic tokens, custom font families)?
+4. **Styling system fingerprint** — look for whichever of these is present, in order: `tailwind.config.{ts,js,mjs}` (Tailwind v3), `@theme { ... }` block in `app/globals.css` or `src/app/globals.css` (Tailwind v4), `panda.config.{ts,js}` (Panda CSS), `*.css.ts` files (Vanilla Extract), `stitches.config.{ts,js}` (Stitches), or just a `:root { --color-*: ... }` block in any project CSS file (generic CSS vars). All of these are valid token sources; Forkshop's Design System Board renders whichever the project emits.
 5. `next.config.{ts,js,mjs}` — bundler, redirects, output mode, anything unusual.
 
 ### Step 3 — Scan two directories one level deep
@@ -111,7 +111,7 @@ Write a 2–3 sentence description of the project. This is what the user sees in
 
 **Good (concrete, observable):**
 
-> *"This is a hybrid: a `(marketing)` surface (~8 static pages + blog MDX) plus an `(authenticated)` surface using Clerk (~12 routes). The Tailwind config is heavily customized with semantic tokens. I'd scaffold two Boards — one with `inline-react` Nodes for the design system, one with `iframe-route` Nodes for the page tree."*
+> *"This is a hybrid: a `(marketing)` surface (~8 static pages + blog MDX) plus an `(authenticated)` surface using Clerk (~12 routes). Heavy theme customization with semantic tokens (Tailwind config / Panda config / `:root` CSS vars — whatever the project uses). I'd scaffold two Boards — one with `inline-react` Nodes for the design system, one with `iframe-route` Nodes for the page tree."*
 
 **Bad (categorical, abstract):**
 
@@ -121,7 +121,7 @@ The narrative is the proposal's first paragraph. Users correct narratives faster
 
 ### Step 6 — Carry the narrative forward
 
-Hold the narrative + the raw signals (auth lib name, route-group names, mobile-profile flag, Tailwind v3-vs-v4) as Phase 2's input. Do not show the user the signal list — show the narrative.
+Hold the narrative + the raw signals (auth lib name, route-group names, mobile-profile flag, styling-system fingerprint) as Phase 2's input. Do not show the user the signal list — show the narrative.
 
 ## Phase 2 — Scan for primitives, blocks, routes
 
@@ -148,15 +148,35 @@ Three scans, all silent. Output is data for Phase 3 — do not show progress to 
 3. Dynamic routes (`[slug]`, `[id]`, etc.) → flag as needing an enumeration source. The proposal will offer `autoDiscover: true` with a TODO marker for the user to add explicit enumeration if needed.
 4. Surface in the proposal as **counts only** ("8 routes under `(marketing)`"). The per-route list will render in the actual sidebar after install — no need to dump it into the proposal.
 
-### Scan D — Theme tokens (for Design System Board)
+### Scan D — Design tokens (for Design System Board)
 
-1. Read `tailwind.config.{ts,js,mjs}` if present. Look at `theme.extend.{colors, spacing, fontFamily, borderRadius, boxShadow}`. Count non-empty keys per category.
-2. If Tailwind v4 is in use (no config file but `@theme` block in `app/globals.css` or `src/app/globals.css`), parse the `@theme` block for `--color-*`, `--spacing-*`, `--font-*`, `--radius-*`, `--shadow-*` custom properties. Same counting.
-3. Output a flag: `themeTokens.hasCustomization = any non-default category has ≥1 entry`. Also expose per-category counts (`hasCustomColors`, `hasCustomTypography`, etc.) for the proposal narrative.
-4. Record `themeTokens.tailwindMajor`: `3` when a config file exists, `4` when only an `@theme` block exists. Phase 6 Step 2 reads this to pick Template 2a (v3, `buildTokenRegistry`) vs Template 2b (v4, `useTokenRegistryFromCss`).
-5. If neither config file nor `@theme` block exists, set `themeTokens.hasCustomization = false` (Design System recipe doesn't fire).
+Forkshop's Design System Board renders **whatever token source the project uses**. Tailwind is the most common but not required — Panda CSS, Vanilla Extract, Stitches, plain `:root` CSS variables, or any combination all work. Scan in this order; stop at the first match:
 
-This signal fires the Design System recipe. It doesn't need to find every token — it just decides whether to scaffold a Design System Board at all.
+1. **Tailwind v3** — `tailwind.config.{ts,js,mjs}` exists. Read `theme.extend.{colors, spacing, fontFamily, borderRadius, boxShadow}` and count non-empty keys. Record `themeTokens.source = "tailwind-v3-config"`.
+2. **Tailwind v4** — no Tailwind config file, but a `@theme { ... }` block exists in `app/globals.css` (or `src/app/globals.css`). Parse the block for `--color-*`, `--spacing-*`, `--font-*`, `--radius-*`, `--shadow-*` custom properties. Record `themeTokens.source = "css-vars-tailwind-v4"`.
+3. **Panda CSS** — `panda.config.{ts,js}` exists. Read `theme.tokens.{colors, spacing, fonts, radii, shadows}`. Record `themeTokens.source = "panda-config"`.
+4. **Vanilla Extract** — `*.css.ts` files exist with `createGlobalTheme` / `createTheme` calls. Find them and count exported token-shaped objects. Record `themeTokens.source = "vanilla-extract"`.
+5. **Generic `:root` CSS variables** — any project CSS file (typically `app/globals.css`, `app/styles/*.css`, or wherever the user puts their roots) contains a `:root { --color-* / --spacing-* / --radius-* / --shadow-* / --font-size-* / --text-* / --font-weight-* / --container-* ... }` declaration. Count entries by category. Record `themeTokens.source = "css-vars-generic"`.
+6. **None of the above** — `themeTokens.hasCustomization = false`. Design System recipe doesn't fire; the Board is skipped.
+
+For sources 2-5, **Phase 6 Step 2 emits Template 2b** (the universal CSS-vars-read variant): tokens come from `getComputedStyle(:root)` at runtime. Works for any framework that compiles tokens to CSS custom properties — which is all of them except Tailwind v3.
+
+For source 1 (Tailwind v3), Phase 6 Step 2 emits Template 2a (imports `tailwindConfig`, calls `buildTokenRegistry`). The user can still opt into Template 2b by editing — useful if they emit Tailwind tokens as CSS vars and want a unified codepath.
+
+Output:
+
+```
+themeTokens: {
+  hasCustomization: true,
+  source: "tailwind-v3-config" | "css-vars-tailwind-v4" | "panda-config" |
+          "vanilla-extract" | "css-vars-generic",
+  hasCustomColors: true,
+  hasCustomTypography: false,
+  // ...
+}
+```
+
+This signal fires the Design System recipe. The skill doesn't need to find every token at scan time — it just decides whether to scaffold a Design System Board at all, and which template to emit.
 
 ### Scan E — MDX content (for Reference Board)
 
@@ -173,7 +193,7 @@ After Phase 2, you hold an internal data structure roughly like:
 
 ```
 narrative: "<2-3 sentence narrative from Phase 1>"
-projectFlags: { mobileProfile, tailwindMajor, monorepo, authLibrary }
+projectFlags: { mobileProfile, monorepo, authLibrary }
 primitives: [
   { name: "Button", sourcePath: "components/ui/button.tsx", hasCva: true, cvaVariants: { variant: ["primary","secondary"], size: ["sm","md","lg"] } }
 ]
@@ -220,7 +240,7 @@ Cross-cutting modifiers:
 
 - If `projectFlags.authLibrary` is set, mark Sitemap as `authFilter: true` (filters out `(authenticated|dashboard|app|protected|private)` route groups in the default scaffold).
 - If `projectFlags.mobileProfile` is true, mark all Galleries + Blocks for single-viewport (375px).
-- Tailwind v3 vs v4 affects only the Design System Board's token-scan path (handled in Phase 6 templates).
+- The styling-system fingerprint (Scan D `themeTokens.source`) affects only the Design System Board's token-scan path (handled in Phase 6 Step 2 by picking Template 2a vs 2b).
 
 ### Proposal template
 
@@ -354,7 +374,7 @@ Render from Template 1 (see Scaffolding templates). **Gate config keys + imports
 
 - **UI Components recipe fired:** write `components/{srcPrefix}ui/index.ts` barrel (one `export { Name } from "./slug"` per discovered primitive), emit `import * as UIPrimitives from "@/components/ui"` + `ui: UIPrimitives,` in the config.
 - **Blocks recipe fired:** write `components/{srcPrefix}blocks/index.ts` barrel, emit `import * as Blocks from "@/components/blocks"` + `blocks: Blocks,`.
-- **Design System recipe fired:** emit `import tailwindConfig from "../../tailwind.config"` + `tailwindConfig,` in the config. (Tailwind v3 only at 1.0 — v4 path deferred.)
+- **Design System recipe fired AND `themeTokens.source === "tailwind-v3-config"`:** emit `import tailwindConfig from "../../tailwind.config"` + `tailwindConfig,` in the config (Template 2a will use it). For all other token sources (`css-vars-tailwind-v4`, `panda-config`, `vanilla-extract`, `css-vars-generic`), omit the `tailwindConfig` import — Template 2b reads from `:root` at runtime instead.
 - **Sitemap always fires:** emit `sitemap: { routes: [...] }` populated from Phase 2 Scan C, filtering out auth-flagged route groups when the modifier fires.
 - **Reference recipe fired:** emit `reference: { contentPaths: [...] }` from Scan E. Otherwise omit the key.
 
@@ -362,7 +382,10 @@ If neither UI Components nor Blocks fired (e.g., a project with only routes), `f
 
 ### Step 2 — `{{mount}}/design-system.tsx` (if Design System recipe fired)
 
-Render from Template 2a (Tailwind v3) or Template 2b (Tailwind v4) based on Phase 2 Scan D's detected Tailwind major. v3 uses `buildTokenRegistry(forkshopConfig.tailwindConfig)`; v4 uses `useTokenRegistryFromCss()` to read `@theme` variables from the live stylesheet.
+Render Template 2a or Template 2b based on Scan D's `themeTokens.source`:
+
+- `tailwind-v3-config` → Template 2a (imports `tailwindConfig`, calls `buildTokenRegistry`)
+- `css-vars-tailwind-v4`, `panda-config`, `vanilla-extract`, `css-vars-generic` → Template 2b (scans `getComputedStyle(:root)` at runtime — works for any framework that compiles tokens to CSS variables)
 
 ### Step 3 — `{{mount}}/ui-components.tsx` parent (if UI Components recipe fired)
 
@@ -546,9 +569,9 @@ If `package.json` pins `@forkshop/engine` at a version older than what `forkshop
 
 Do not block setup — write the artifacts and include the warning in Phase 7.
 
-### `tailwind.config.*` missing (likely Tailwind v4)
+### `tailwind.config.*` missing (Tailwind v4, Panda, Vanilla Extract, plain CSS vars, or no styling system)
 
-Proceed with everything else. The `globals.css` import (Step 4) still applies. Surface in the Phase 7 summary: *"Tailwind v4 detected — the engine CSS is imported via globals.css, which is the correct v4 path. No `tailwind.config.*` changes needed."*
+Proceed with everything else. The `globals.css` import (Step 4) still applies. Phase 6 Step 2 emits Template 2b (the universal CSS-vars-read variant) when Scan D's `themeTokens.source` is anything except `tailwind-v3-config`. If `themeTokens.hasCustomization` is false (no token source found at all), the Design System recipe doesn't fire and that Board is skipped.
 
 ### Monorepo (no repo-root `app/`, but `pnpm-workspace.yaml` or `turbo.json`)
 
@@ -608,7 +631,7 @@ Key placeholders:
 
 ### Template 1 — `{{mount}}/forkshop.config.tsx`
 
-The skill emits imports and config keys conditionally — only when the matching recipe fired in Phase 3. The full shape below is for a hybrid project (all five recipes fire). For a thin project (just Sitemap), omit `ui`, `blocks`, and `tailwindConfig` lines + their imports. For a Tailwind v3 project but no Design System recipe, omit `tailwindConfig`. The user can re-run setup later to grow the config when they add directories.
+The skill emits imports and config keys conditionally — only when the matching recipe fired in Phase 3. The full shape below is for a hybrid project (all five recipes fire) on Tailwind v3. For thinner shapes, omit `ui`, `blocks`, and `tailwindConfig` lines + their imports. For projects on a non-Tailwind-v3 token system (Tailwind v4, Panda CSS, Vanilla Extract, plain `:root` CSS vars), omit `tailwindConfig` entirely — Template 2b reads tokens from `:root` at runtime instead of from a config import. The user can re-run setup later to grow the config when they add directories.
 
 ````tsx
 import * as UIPrimitives from "@/components/ui"
@@ -653,9 +676,9 @@ If a barrel already exists at one of these paths, the skill **merges** new entri
 
 The old `primitives: [...]` and `blocks: [...]` explicit arrays in `forkshopConfig` are dropped — discovery replaces them.
 
-### Template 2a — `{{mount}}/design-system.tsx` (Tailwind v3)
+### Template 2a — `{{mount}}/design-system.tsx` (Tailwind v3 config-based)
 
-For projects with a `tailwind.config.{ts,js,mjs}` file (v3 convention):
+For Tailwind v3 projects where tokens live in a JS config file (`tailwind.config.{ts,js,mjs}`):
 
 ````tsx
 "use client"
@@ -703,9 +726,9 @@ export default function DesignSystemBoardView() {
 }
 ````
 
-### Template 2b — `{{mount}}/design-system.tsx` (Tailwind v4)
+### Template 2b — `{{mount}}/design-system.tsx` (universal — any CSS-vars-based token system)
 
-For projects without a `tailwind.config.*` file (v4 convention — tokens declared via `@theme { ... }` in `app/globals.css`). The browser-side CSS-var read code is scaffolded **into the user's file** so it's visible and editable; the engine only ships the pure parser:
+For any project where tokens compile to `:root` CSS custom properties — Tailwind v4 (`@theme`), Panda CSS, Vanilla Extract, Stitches with the `--token` pattern, or plain hand-written `:root { --color-* }` declarations. The browser-side CSS-var read code is scaffolded **into the user's file** so it's visible and editable; the engine only ships the pure parser:
 
 ````tsx
 "use client"
@@ -727,10 +750,12 @@ const EMPTY_REGISTRY: TokenRegistry = {
   radii: [], shadows: [], containers: [], classLookup: {},
 }
 
-// Read Tailwind v4 @theme tokens from :root CSS variables after hydration.
+// Read design tokens from :root CSS variables after hydration. Works for
+// any framework that compiles tokens to CSS custom properties — Tailwind v4
+// (@theme), Panda CSS, Vanilla Extract, Stitches, hand-written :root blocks.
 // The skill scaffolds this here (rather than as an engine hook) so the
-// mechanism is editable per-project — if your @theme lives in a non-default
-// stylesheet, change the selector below.
+// mechanism is editable per-project — change the selector below or attach
+// a MutationObserver if you want true live-mirror across style edits.
 function useTokensFromCssVars(): TokenRegistry {
   const [registry, setRegistry] = useState<TokenRegistry>(EMPTY_REGISTRY)
   useEffect(() => {
@@ -774,9 +799,9 @@ export default function DesignSystemBoardView() {
 }
 ````
 
-Recognized v4 prefixes: `--color-*`, `--spacing-*`, `--radius-*`, `--shadow-*`, `--font-size-*` / `--text-*`, `--font-weight-*`, `--container-*`. Adding a new `@theme` token reloads via Next.js CSS HMR; the `useEffect` doesn't re-run, so a hard refresh is needed to pick up new tokens. If you want true live-mirror, attach a `MutationObserver` to the stylesheet — the scaffolded code is in your file, edit as needed.
+Recognized prefixes: `--color-*`, `--spacing-*`, `--radius-*`, `--shadow-*`, `--font-size-*` / `--text-*`, `--font-weight-*`, `--container-*`. The parser is purely shape-based, not Tailwind-specific — any framework using the same naming conventions works. Adding a new token reloads via Next.js CSS HMR; the `useEffect` doesn't re-run, so a hard refresh is needed to pick up new tokens. If you want true live-mirror, attach a `MutationObserver` to the stylesheet — the scaffolded code is in your file, edit as needed.
 
-**Skill picks which variant to emit:** Phase 2 Scan D detects whether the project uses Tailwind v3 (config file present) or v4 (no config file, `@theme` block in `globals.css`). Phase 6 Step 2 emits Template 2a or 2b accordingly. The Tailwind v3 path also requires `tailwindConfig` to be present in Template 1's config; the v4 path doesn't import or reference it.
+**Skill picks which variant to emit:** Phase 2 Scan D detects the project's token source. `tailwind-v3-config` → Template 2a. Any of `css-vars-tailwind-v4`, `panda-config`, `vanilla-extract`, `css-vars-generic` → Template 2b. The v3 path requires `tailwindConfig` in Template 1's config; the universal CSS-vars path doesn't import or reference it.
 
 ### Template 3 — `{{mount}}/ui-components.tsx`
 

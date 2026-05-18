@@ -18,7 +18,7 @@ This v2 supersedes the 2026-05-13 strategy after a thorough product/architecture
 | 6 | Drill-in | Hardcoded to ResponsiveFrameView | Removed for 1.0; each sidebar leaf is its own board (see "Strategy refinements" at the bottom) |
 | 7 | Kits at 1.0 | 3 named board layouts | No OSS kits at 1.0 — setup skill v2 composes Boards from recipes (refinement #14) |
 | 8 | Live AI | Ravineo-flavored, single producer | Vendor-neutral protocol; Claude Code pack ships at 1.0 |
-| 9 | Styling | User installs Tailwind preset | Engine ships compiled CSS; no theme overrides at 1.0 |
+| 9 | Styling | User installs Tailwind preset | Engine ships compiled CSS; framework-agnostic at 1.0 (any CSS-vars-emitting system works for Design System — refinement #17) |
 | 10 | Sidebar customization | Fixed shape | Fixed shape (intentionally no public customization API) |
 | 11 | Icons | `iconoir-react` dep | Built-in SVG set, no external dep |
 | 12 | Package name | `@forkshop/registry` (private) | `@forkshop/engine` (published) |
@@ -27,7 +27,7 @@ This v2 supersedes the 2026-05-13 strategy after a thorough product/architecture
 
 ## Goal
 
-Open-source Forkshop as a canvas + sidebar tool for visualizing structured sets of React things in Next.js + Tailwind projects. Component dev / design systems is the flagship use case; docs sites, marketing sites, and content libraries are explicitly part of the audience.
+Open-source Forkshop as a canvas + sidebar tool for visualizing structured sets of React things in Next.js App Router projects. Tailwind is the most common styling layer (and the only one with config-file token discovery shipped at 1.0), but **not a hard requirement** — any styling system that compiles tokens to `:root` CSS variables (Tailwind v4, Panda CSS, Vanilla Extract, Stitches, hand-written CSS) works (refinement #17). Component dev / design systems is the flagship use case; docs sites, marketing sites, and content libraries are explicitly part of the audience.
 
 Every install is conceptually unique — Claude Code helps the user set Forkshop up against *their* project's components and pages, and the user owns the thin surface files afterward. The heavy engine lives as a maintained npm package that updates without manual intervention.
 
@@ -44,11 +44,12 @@ The v1 strategy's *"No commercial path. The shipped artifact is the message"* is
 
 ## Audience & positioning
 
-Forkshop is **a canvas + sidebar tool for visualizing structured sets of React things in Next.js + Tailwind projects.**
+Forkshop is **a canvas + sidebar tool for visualizing structured sets of React things in Next.js App Router projects.**
 
 - Flagship use case: component dev / design systems
 - Explicit secondary audiences: docs sites, marketing sites, content libraries
-- Locked stack: Next.js App Router + Tailwind + React 18+
+- Locked stack: Next.js App Router + React 18+
+- Recommended (most common): Tailwind for styling. Refinement #17: not required — any styling system whose tokens compile to `:root` CSS variables (Tailwind v4, Panda CSS, Vanilla Extract, Stitches with `--token` pattern, hand-written CSS) works for the Design System Board. Non-CSS-vars systems (CSS-in-JS without `:root` emission) still work for every Board except Design System.
 - Non-audience: Pages Router, Vite, Remix, non-React, real-time multi-user collab
 
 ## Conceptual model
@@ -615,6 +616,21 @@ Plus two installer ergonomics fixes during the smoke:
 - CLI bailed when `globals.css` wasn't at one of 4 standard paths; now warns and continues (commit `23b3e59`). Some projects (ezometr-style) use scoped CSS files imported directly from `layout.tsx` with no globals.css at all.
 
 Bugs 1, 2, 3, 5, 6 are template-level fixes (in flight). Bugs 4 and 7 are engine-level work deferred to a follow-up spec.
+
+### Framework-agnostic styling (2026-05-18)
+
+**17. Tailwind dropped from the locked stack.** Strategy v2 originally listed "Next.js App Router + Tailwind + React 18+" as the locked stack. Audit during smoke testing (against fresh `create-next-app` Tailwind v4 + later against ezometr's scoped-CSS layout) showed Forkshop is actually much closer to framework-agnostic than that framing suggested:
+
+- Engine UI (canvas, sidebar, drag, zoom, edit popover, agent activity) ships in `forkshop.css` — pre-compiled, namespaced `forkshop-*` classes that work in any project regardless of styling layer.
+- Live text editing, NodeTypes, position persistence, agent-activity protocol, Option-click → editor — none touch Tailwind.
+- Sitemap / UI Components / Blocks / Reference Boards just render the user's components — agnostic to styling.
+- **Design System Board** was the only Tailwind-coupled piece. Polish work (refinement #15) added the `parseTokenRegistryFromCssVars` pure parser; the user's `design-system.tsx` reads `:root` CSS variables at runtime via a scaffolded `useEffect` + `getComputedStyle`. This works for **any** styling system that compiles tokens to `:root`: Tailwind v4 (`@theme`), Panda CSS, Vanilla Extract, Stitches with the `--token` pattern, plain hand-written CSS, etc.
+
+**Updated locked stack:** Next.js App Router + React 18+. Tailwind is the most common styling layer (and the only one with config-file token discovery shipped at 1.0 via `buildTokenRegistry`), but **not required**. Non-CSS-vars styling systems (CSS-in-JS without `:root` emission) still work for every Board except Design System.
+
+**Setup skill detection:** Phase 2 Scan D records `themeTokens.source` in priority order — `tailwind-v3-config`, `css-vars-tailwind-v4`, `panda-config`, `vanilla-extract`, `css-vars-generic`. Phase 6 Step 2 emits Template 2a (config-import) only for `tailwind-v3-config`; everything else gets Template 2b (universal CSS-vars-read scaffolded into the user's file).
+
+Positioning shifts subtly: Forkshop becomes "a canvas + sidebar tool for Next.js App Router projects" instead of "for Next.js + Tailwind projects." Marketing / docs site copy follows.
 
 ### Refinements from setup skill v2 (2026-05-17)
 
