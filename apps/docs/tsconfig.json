@@ -26,7 +26,8 @@
     "content/**/*",
     "scripts/**/*",
     "source.config.ts",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    ".source/**/*"
   ],
   "exclude": ["node_modules"]
 }
