@@ -9,7 +9,7 @@ You are setting up Forkshop in the user's project. The CLI (`npx forkshop init`)
 
 Forkshop's mental model is **Node / NodeType / Layout / Board** (four concepts). This skill leaves the engine alone — it just scaffolds the user-side `{{mount}}/` files. The engine itself lives at `@forkshop/engine` on npm and was installed during `forkshop init`. When describing the project or the proposed scaffold, use this vocabulary: a **Board** is what renders in the sidebar; it contains **Nodes**, each of which has a **NodeType** (`inline-react`, `iframe-component`, or `iframe-route`); **Layout** controls how Nodes are arranged spatially.
 
-You run **once** per project. After this, your work is mostly historical: the user reads `app/forkshop/CLAUDE.md` for ongoing customization, the sibling `forkshop-live-editing` skill auto-applies when Claude edits Forkshop-watched files, and the user-invoked `forkshop-doc-sync` skill refreshes documentation if it drifts.
+You run **once** per project. After this, your work is mostly historical: the user reads `app/forkshop/CLAUDE.md` for ongoing customization, and the user-invoked `forkshop-doc-sync` skill refreshes documentation if it drifts.
 
 The user owns every file you produce. They will fork freely. This file (the skill itself) is in their repo too — they can edit it. Lean toward shorter outputs, explicit user consent on every config mutation, and language that frames Forkshop as something they *have*, not something they *use*.
 
@@ -327,22 +327,24 @@ After rendering the Phase 3 proposal, wait for the user's reply. Loop:
 
 ## Phase 5 — Consent for config mutations
 
-The setup skill writes only to Forkshop-namespaced locations by default. Two mutations to existing user files require explicit consent — both gated through `AskUserQuestion`:
+The setup skill writes only to Forkshop-namespaced locations by default. Two opt-ins require explicit consent via `AskUserQuestion` (plus one always-confirmed mutation):
 
-1. **`app/globals.css` import line** — always confirmed (added by `forkshop init` when possible; the skill verifies idempotently).
-2. **Locator opt-in** — adds `@locator/webpack-loader` to `package.json` devDependencies and merges a webpack/turbopack rule into `next.config.*`. Powers Option-click → editor.
+- **`app/globals.css` import line** — always confirmed (added by `forkshop init` when possible; the skill verifies idempotently). No `AskUserQuestion` call needed.
+- **Locator opt-in** — adds `@locator/webpack-loader` to `package.json` devDependencies and merges a webpack/turbopack rule into `next.config.*`. Powers Option-click → editor.
+- **Claude Code live-AI hook** — adds `.claude/hooks/forkshop-post-tool-use.sh` + one entry to `.claude/settings.json`. Forwards file paths to the dev server so Nodes light up as you work. Reversible.
 
-The Locator opt-in is the only `AskUserQuestion` call in Phase 5. Glue text:
+Phase 5 has two `AskUserQuestion` calls — one per opt-in. Glue text:
 
 ````
 Two things need your call before I write anything that touches your existing files:
 
   [1] Option-click → editor — add @locator/webpack-loader devDep + a webpack/turbopack rule in next.config.*
+  [2] Live-AI hook for Claude Code — add .claude/hooks/forkshop-post-tool-use.sh (~30 lines bash) + one entry to .claude/settings.json. No effect on agent behavior; only forwards file paths to your dev server's Forkshop tab so Nodes light up as you work. Reversible.
 
-Glance at the diff first with "Show me", or pick yes/no.
+Glance at the diffs first with "Show me" on either, or pick yes/no.
 ````
 
-Then `AskUserQuestion`:
+First `AskUserQuestion`:
 
 ````ts
 {
@@ -362,7 +364,25 @@ If the answer is `Show me`, render the planned dep + next.config diff inline, th
 
 If the project's `next.config.*` has a shape too unusual for clean automated merging (e.g., functional config that imports from elsewhere), surface that during Phase 6 — for now, take the user's consent at face value.
 
-The cadence-note opt-in that previous setup skill versions had is **removed**. Cadence guidance now ships exclusively via the auto-loading `forkshop-live-editing` skill (in `.claude/skills/`) and the `app/forkshop/CLAUDE.md` dir-loaded note. Both are properly scoped — they don't influence agent behavior outside Forkshop's surface.
+Then the second `AskUserQuestion`:
+
+````ts
+{
+  questions: [{
+    question: "Install Claude Code live-AI hook (recommended)?",
+    header: "Live-AI hook",
+    options: [
+      { label: "Yes, install", description: "Adds .claude/hooks/forkshop-post-tool-use.sh + one entry to .claude/settings.json. Reversible." },
+      { label: "No, skip",     description: "Skip Claude Code wiring — you can install manually later" },
+      { label: "Show me",      description: "Print the planned script + settings diff first, then re-ask" },
+    ],
+  }],
+}
+````
+
+If the answer is `Show me`, render the planned hook script + settings diff inline, then re-call `AskUserQuestion` with only `Yes, install` and `No, skip`.
+
+If the user accepts, Phase 6 sets the env var `FORKSHOP_INSTALL_CLAUDE_PACK=1` for the CLI install step (or equivalent CLI flag in headless mode). The CLI writes the hook script with mode 0o755 and idempotently merges settings.json.
 
 ## Phase 6 — Write the artifacts
 
@@ -433,6 +453,17 @@ If the user declined: skip this step entirely. Phase 7 will surface a one-line n
 
 If the next.config.* shape can't be merged cleanly (rare — functional config importing from elsewhere, etc.), fall back to printing the snippet for manual paste with a `!` warning in Phase 6 output.
 
+### Step 12 — Claude Code live-AI hook (conditional on Phase 5 live-AI opt-in)
+
+If the user accepted the live-AI hook opt-in in Phase 5:
+
+Run `npx forkshop init --install-claude-pack` (or set `FORKSHOP_INSTALL_CLAUDE_PACK=1` before the CLI install step). The CLI:
+
+1. Writes `.claude/hooks/forkshop-post-tool-use.sh` with mode 0o755. Print `✓ Wrote .claude/hooks/forkshop-post-tool-use.sh`.
+2. Idempotently merges one `PostToolUse` entry into `.claude/settings.json`. Print `✓ Merged hook entry into .claude/settings.json`.
+
+If the user declined: skip this step entirely. Phase 7 will surface a one-line note: `Live-AI hook: skipped (re-run setup to enable).`
+
 ### Failure handling
 
 If any step throws, print `✗ <step> — <reason>`, stop, tell the user how to resume.
@@ -456,7 +487,6 @@ Try it:
   → click a route under Sitemap
 
 Sibling skills:
-  forkshop-live-editing   auto-applies on Forkshop file edits
   forkshop-doc-sync       invoke when app/forkshop/CLAUDE.md drifts
 ```
 
@@ -469,6 +499,16 @@ If the user declined the Phase 5 Locator opt-in, add one line above `Try it:`:
 ```
 Option-click: skipped (re-run setup to enable)
 ```
+
+### With live-AI hook skipped
+
+If the user declined the Phase 5 live-AI hook opt-in, add one line above `Try it:`:
+
+```
+Live-AI hook: skipped (re-run setup to enable)
+```
+
+Both lines can appear simultaneously if both were declined.
 
 ### With Phase 6 failure or manual-paste fallback
 
@@ -492,7 +532,6 @@ Try it:
   → click a route under Sitemap
 
 Sibling skills:
-  forkshop-live-editing   auto-applies on Forkshop file edits
   forkshop-doc-sync       invoke when app/forkshop/CLAUDE.md drifts
 ```
 
@@ -514,12 +553,12 @@ Looks like Forkshop is already set up. Here's your current config:
 
   Mount:   <mount>
   Board:   <board name from current forkshop.config.tsx>
-  Opt-in:  <state observed: ✓/✗ for cadence note (presence of the marker in root CLAUDE.md)>
+  Opt-in:  <state observed: ✓/✗ for Locator, ✓/✗ for live-AI hook>
 
 What would you like to change?
   • "add nodes"                   → rescan blocks and propose additions
   • "rename board"                → rename the Components board
-  • "install cadence note"        → walk Phase 5 again
+  • "install opt-ins"             → walk Phase 5 again
   • "rescan components"           → re-run Phase 2 and propose a diff
   • "open config"                 → print forkshop.config.tsx path, do nothing
 
@@ -530,7 +569,7 @@ Or describe what you want.
 
 - **Add nodes** → Run Phase 2 Scan B against the blocks folder. Diff new scan vs current `nodes` in `forkshop.config.tsx`. Show what's new / removed. On accept, patch `forkshop.config.tsx` in place.
 - **Rename board** → Update the section title in `page.tsx` and the component name in `components-board.tsx`. Do not rewrite the files from scratch — patch only the affected identifiers.
-- **Install cadence note** → Walk Phase 5. On accept, apply Phase 6 Step 6.
+- **Install opt-ins** → Walk Phase 5. On accept, apply the relevant Phase 6 steps (Step 11 for Locator, Step 12 for live-AI hook).
 - **Rescan components** → Run Phase 2. Diff new scan against current `forkshop.config.tsx`. Show: *"I found 3 new blocks (Hero, CTA, Feature) and 1 missing (Testimonials was removed). Update forkshop.config.tsx to add/remove?"*
 - **Open config** → Print the path. Do not modify anything.
 - **Free-form** → Interpret as best you can. If unclear, ask one short clarifying question.
@@ -670,7 +709,7 @@ The skill writes (or updates, if they exist) two **barrel files** at install tim
 - `{{srcPrefix}}components/ui/index.ts` — `export { Button } from "./button"`, one line per discovered primitive
 - `{{srcPrefix}}components/blocks/index.ts` — one line per discovered block
 
-These barrels are how live-mirror works: the engine's `useDiscoveredPrimitives(forkshopConfig.ui)` and `useDiscoveredBlocks(forkshopConfig.blocks)` hooks reflect over them. Adding a new primitive is two steps: (a) create the `.tsx` file, (b) add a line to the barrel. The auto-loaded `forkshop-live-editing` skill instructs Claude Code to maintain the barrel automatically when the user asks to add a primitive.
+These barrels are how live-mirror works: the engine's `useDiscoveredPrimitives(forkshopConfig.ui)` and `useDiscoveredBlocks(forkshopConfig.blocks)` hooks reflect over them. Adding a new primitive is two steps: (a) create the `.tsx` file, (b) add a line to the barrel. See `app/forkshop/CLAUDE.md` for guidance.
 
 If a barrel already exists at one of these paths, the skill **merges** new entries in alphabetical order rather than overwriting.
 
@@ -993,7 +1032,7 @@ export default function SitemapBoardView() {
 }
 ````
 
-The engine's `Tree` Layout doesn't auto-discover routes (deferred — see polish-backlog). The routes list lives in `forkshopConfig.sitemap.routes`; the user edits it to add or remove entries. The `forkshop-live-editing` skill teaches Claude to update the list when the user asks to add a route.
+The engine's `Tree` Layout doesn't auto-discover routes (deferred — see polish-backlog). The routes list lives in `forkshopConfig.sitemap.routes`; the user edits it to add or remove entries. See `app/forkshop/CLAUDE.md` for guidance on maintaining the routes list.
 
 ### Template 8 — `{{mount}}/reference.tsx`
 
