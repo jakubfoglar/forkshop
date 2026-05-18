@@ -53,37 +53,49 @@ export const PREVIEW_EDIT_CSS = `
 }
 `
 
-// CSS for the Live-AI agent decorations. Injected alongside PREVIEW_EDIT_CSS;
-// must NOT inherit the global animation-disable rule above (we re-enable
-// animations for the pulse + text flash). --forkshop-agent-color is set on
-// documentElement by the host so it scales with zoom-invariant calculations.
+// CSS for the Live-AI agent decorations inside iframes. The host sets
+// --forkshop-agent-color inline on the decorated element (per-event color).
+// This block intentionally does NOT declare --forkshop-agent-color on :root
+// — colors are always per-event from agent identity.
 export const PREVIEW_AGENT_CSS = `
-:root {
-  --forkshop-agent-color: oklch(0.62 0.22 280);
-}
-/* Block markers from withBlockMarker use display:contents — they have no box,
-   so outline/background applied directly is invisible. Target the first
-   concrete child of each marker (the block's rendered root element). */
 [data-forkshop-block][data-forkshop-agent-active] > * {
-  outline: calc(2px / var(--canvas-zoom, 1)) solid var(--forkshop-agent-color) !important;
+  outline: calc(2px / var(--canvas-zoom, 1)) solid var(--forkshop-agent-color, oklch(0.62 0.22 280)) !important;
   outline-offset: calc(4px / var(--canvas-zoom, 1)) !important;
   border-radius: calc(2px / var(--canvas-zoom, 1));
 }
-/* Softer, slower pulse on every block when the entire page is being edited
-   (Claude touched the page's TSX, which composes blocks via props). Gives
-   "this page is being worked on" without claiming a specific block changed. */
-[data-forkshop-agent-page-active] [data-forkshop-block] > * {
-  animation: forkshop-agent-page-block-pulse 2.4s ease-in-out infinite !important;
-  animation-duration: 2.4s !important;
-}
-@keyframes forkshop-agent-page-block-pulse {
-  0%, 100% { box-shadow: none; }
-  50% { box-shadow: 0 0 0 calc(2px / var(--canvas-zoom, 1)) color-mix(in oklch, var(--forkshop-agent-color) 30%, transparent); }
+@media (prefers-reduced-motion: no-preference) {
+  [data-forkshop-agent-page-active] [data-forkshop-block] > * {
+    animation: forkshop-agent-page-block-pulse 2.4s ease-in-out infinite !important;
+    animation-duration: 2.4s !important;
+  }
+  @keyframes forkshop-agent-page-block-pulse {
+    0%, 100% { box-shadow: none; }
+    50%      { box-shadow: 0 0 0 calc(2px / var(--canvas-zoom, 1)) color-mix(in oklch, var(--forkshop-agent-color, oklch(0.62 0.22 280)) 30%, transparent); }
+  }
 }
 [data-forkshop-agent-text-pulse] {
-  outline: calc(2px / var(--canvas-zoom, 1)) solid var(--forkshop-agent-color) !important;
+  outline: calc(2px / var(--canvas-zoom, 1)) solid var(--forkshop-agent-color, oklch(0.62 0.22 280)) !important;
   outline-offset: calc(3px / var(--canvas-zoom, 1)) !important;
   border-radius: calc(2px / var(--canvas-zoom, 1));
+}
+`
+
+// CSS for read activity. Mounted in the HOST document (not inside iframes).
+// Targets the iframe-host wrapper container by data attribute.
+export const PREVIEW_AGENT_READ_CSS = `
+[data-forkshop-iframe-host][data-forkshop-agent-reading] {
+  outline: calc(2px / var(--canvas-zoom, 1)) solid color-mix(in oklch, var(--forkshop-agent-color, oklch(0.62 0.22 280)) 30%, transparent) !important;
+  outline-offset: calc(4px / var(--canvas-zoom, 1)) !important;
+  border-radius: calc(2px / var(--canvas-zoom, 1));
+}
+@media (prefers-reduced-motion: no-preference) {
+  [data-forkshop-iframe-host][data-forkshop-agent-reading] {
+    animation: forkshop-agent-read-breathe 2.4s ease-in-out infinite !important;
+  }
+  @keyframes forkshop-agent-read-breathe {
+    0%, 100% { outline-color: color-mix(in oklch, var(--forkshop-agent-color, oklch(0.62 0.22 280)) 25%, transparent); }
+    50%      { outline-color: color-mix(in oklch, var(--forkshop-agent-color, oklch(0.62 0.22 280)) 60%, transparent); }
+  }
 }
 `
 
