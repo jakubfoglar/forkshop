@@ -1,18 +1,20 @@
 // forkshop:auto-managed — block preview route for iframe leaves.
 // Safe to delete this entire `block/` subtree if you don't have blocks.
 
-"use client"
-
-import { notFound, useParams } from "next/navigation"
-import { useDiscoveredBlocks } from "@forkshop/engine"
+import { notFound } from "next/navigation"
+import { discoverBlocks } from "@forkshop/engine/lib/discover-blocks"
 import { forkshopConfig } from "../../forkshop.config"
 
-export default function PlaygroundBlockPreviewPage() {
+export default async function PlaygroundBlockPreviewPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}) {
   if (process.env.NODE_ENV === "production") notFound()
-  const params = useParams<{ slug: string }>()
-  const blocks = useDiscoveredBlocks(forkshopConfig.blocks)
-  const entry = blocks.find((b) => b.slug === params.slug)
-  if (!entry) return null
+  const { slug } = await params
+  const blocks = discoverBlocks(forkshopConfig.blocks)
+  const entry = blocks.find((b) => b.slug === slug)
+  if (!entry) notFound()
   const Component = entry.Component
   return (
     <div className="bg-white">
