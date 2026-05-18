@@ -1,11 +1,13 @@
 "use client"
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
+import type { Hunk } from "@forkshop/lib/diff-to-hunks"
+import type { ActivityEntry, AgentAction } from "@forkshop/lib/agent-activity-state"
 import { fileToSelection } from "@forkshop/lib/file-to-selection"
 
+export type { Hunk, ActivityEntry, AgentAction }
+
 // PascalCase → kebab-case: "HeroDisplay" → "hero-display".
-// Used to map a block slug to the component name Claude would write in a
-// page's JSX (e.g. <HeroDisplay …/>).
 function slugToComponentName(slug: string): string {
   return slug
     .split("-")
@@ -13,10 +15,9 @@ function slugToComponentName(slug: string): string {
     .join("")
 }
 
-// Scan a TSX substring (Edit tool's old_string/new_string) for usages of known
-// block components. Returns the slugs whose component appears as <Name … />,
-// <Name>, or </Name>. Empty when the substring has no recognisable block tags
-// (e.g. Claude touched only className or non-JSX code).
+// Scan a TSX substring (an Edit hunk) for block-component tags. Returns the
+// slugs whose component appears as <Name … />, <Name>, or </Name>. Empty when
+// the substring has no recognisable block tags.
 export function deriveAffectedBlocks(
   substring: string | undefined,
   blockSlugs: readonly string[],
@@ -25,19 +26,10 @@ export function deriveAffectedBlocks(
   const matched: string[] = []
   for (const slug of blockSlugs) {
     const component = slugToComponentName(slug)
-    // \b before <Name, then must be followed by whitespace, >, /, or end —
-    // avoids matching prefixes like <Heroic when looking for <Hero.
     const pattern = new RegExp(`<${component}(?:\\s|/|>|$)|</${component}>`)
     if (pattern.test(substring)) matched.push(slug)
   }
   return matched
-}
-
-export type ActivityEntry = {
-  filePath: string
-  oldString?: string
-  newString?: string
-  lastSeenAt: number
 }
 
 export type FileMap = {
@@ -99,11 +91,6 @@ export function AgentActivityProvider({
     return () => clearInterval(interval)
   }, [])
 
-  // Accumulate page paths the agent has touched — sticky so newly-created
-  // pages stay surfaced after the 5s activity window closes. The sidebar reads
-  // this set via `useAgentSeenPagePaths` to extend its routes list silently;
-  // entries surfaced this way render identically to configured routes (no pill,
-  // no badge). Sticky across the React-component lifetime, clears on reload.
   useEffect(() => {
     if (entries.length === 0) return
     setSeenPagePaths((current) => {
@@ -133,11 +120,12 @@ function useAgentActivity(): AgentActivityValue {
   return useContext(Context)
 }
 
-// Sticky set of every page path Claude has touched during this session.
-// Sidebar uses it (minus the already-known server-side routes) to surface
-// newly-created pages mid-build as silent synthetic entries.
 export function useAgentSeenPagePaths(): ReadonlySet<string> {
   return useAgentActivity().seenPagePaths
+}
+
+function isEditish(action: AgentAction): boolean {
+  return action === "edit" || action === "create"
 }
 
 export function useAgentActivePages(): ReadonlySet<string> {
@@ -145,6 +133,7 @@ export function useAgentActivePages(): ReadonlySet<string> {
   return useMemo(() => {
     const pages = new Set<string>()
     for (const entry of entries) {
+      if (!isEditish(entry.action)) continue
       const selection = fileToSelection(entry.filePath, fileMap)
       if (selection && selection !== "site-wide" && selection.kind === "page") {
         pages.add(selection.path)
@@ -160,17 +149,18 @@ export function useAgentActiveBlocks(): ReadonlySet<string> {
     const blocks = new Set<string>()
     const blockSlugs = fileMap.blocks.map((b) => b.slug)
     for (const entry of entries) {
+      if (!isEditish(entry.action)) continue
       const selection = fileToSelection(entry.filePath, fileMap)
       if (selection === undefined || selection === "site-wide") continue
       if (selection.kind === "block") {
         blocks.add(selection.slug)
         continue
       }
-      // For page edits, infer affected blocks by scanning the substring for
-      // <ComponentName> usages — Claude touching `<Hero …/>` flags Hero.
       if (selection.kind === "page") {
-        for (const slug of deriveAffectedBlocks(entry.oldString, blockSlugs)) blocks.add(slug)
-        for (const slug of deriveAffectedBlocks(entry.newString, blockSlugs)) blocks.add(slug)
+        for (const hunk of entry.hunks ?? []) {
+          for (const slug of deriveAffectedBlocks(hunk.oldString, blockSlugs)) blocks.add(slug)
+          for (const slug of deriveAffectedBlocks(hunk.newString, blockSlugs)) blocks.add(slug)
+        }
       }
     }
     return blocks
@@ -182,6 +172,7 @@ export function useAgentActivePrimitives(): ReadonlySet<string> {
   return useMemo(() => {
     const primitives = new Set<string>()
     for (const entry of entries) {
+      if (!isEditish(entry.action)) continue
       const selection = fileToSelection(entry.filePath, fileMap)
       if (selection && selection !== "site-wide" && selection.kind === "primitive") {
         primitives.add(selection.id)
@@ -191,11 +182,9 @@ export function useAgentActivePrimitives(): ReadonlySet<string> {
   }, [entries, fileMap])
 }
 
-// True when the given page is being edited AND no specific block could be
-// identified from the edit substrings. Used by the iframe relay to decide
-// whether to fall back to the diffuse "all blocks softly pulse" treatment.
-// When a specific block IS identified, the tier-2 outline on that single
-// block is enough — we don't want every block competing for attention.
+// True when the given page is being edited AND no specific block was identified
+// from any of its hunks. Used by the iframe relay to decide whether to fall back
+// to the diffuse "all blocks softly pulse" treatment.
 export function usePageActiveFallback(pagePath: string | undefined): boolean {
   const { entries, fileMap } = useAgentActivity()
   return useMemo(() => {
@@ -204,6 +193,7 @@ export function usePageActiveFallback(pagePath: string | undefined): boolean {
     let pageHit = false
     let anyBlockIdentified = false
     for (const entry of entries) {
+      if (!isEditish(entry.action)) continue
       const selection = fileToSelection(entry.filePath, fileMap)
       if (
         selection === undefined ||
@@ -214,11 +204,13 @@ export function usePageActiveFallback(pagePath: string | undefined): boolean {
         continue
       }
       pageHit = true
-      if (
-        deriveAffectedBlocks(entry.oldString, blockSlugs).length > 0 ||
-        deriveAffectedBlocks(entry.newString, blockSlugs).length > 0
-      ) {
-        anyBlockIdentified = true
+      for (const hunk of entry.hunks ?? []) {
+        if (
+          deriveAffectedBlocks(hunk.oldString, blockSlugs).length > 0 ||
+          deriveAffectedBlocks(hunk.newString, blockSlugs).length > 0
+        ) {
+          anyBlockIdentified = true
+        }
       }
     }
     return pageHit && !anyBlockIdentified
@@ -234,6 +226,7 @@ export function useSiteWideActivity(): {
     let recentBasename: string | undefined
     let mostRecent = 0
     for (const entry of entries) {
+      if (!isEditish(entry.action)) continue
       const selection = fileToSelection(entry.filePath, fileMap)
       if (selection === "site-wide" && entry.lastSeenAt > mostRecent) {
         recentBasename = entry.filePath.split("/").pop()
@@ -244,12 +237,8 @@ export function useSiteWideActivity(): {
   }, [entries, fileMap])
 }
 
-// Monotonic epoch (lastSeenAt of the most recent matching entry) for the given
-// iframe identity. Bumps each time an edit lands for a file mapping to that
-// page or block. Consumers (ResponsiveFrameView) treat each bump as a signal
-// to reload the iframe — Next.js Fast Refresh doesn't propagate into the
-// iframe documents reliably in Forkshop's nested setup, so we force a fresh
-// load instead.
+// Monotonic epoch — bumps each time an edit lands for a file mapping to that
+// page or block. Consumers (ResponsiveFrameView) reload iframes on bump.
 export function useAgentEditEpoch(
   identity: { kind: "page"; path: string } | { kind: "block"; slug: string } | undefined,
 ): number {
@@ -258,6 +247,7 @@ export function useAgentEditEpoch(
     if (identity === undefined) return 0
     let max = 0
     for (const entry of entries) {
+      if (!isEditish(entry.action)) continue
       const selection = fileToSelection(entry.filePath, fileMap)
       if (selection === undefined || selection === "site-wide") continue
       const matches =
@@ -273,14 +263,65 @@ export function useAgentEditEpoch(
   }, [entries, fileMap, identity])
 }
 
+// All hunks from currently-active edit-ish entries. The relay broadcasts these
+// to every iframe; each iframe's text-walker filters by what actually appears
+// in its own DOM.
+export function useAllAgentHunks(): readonly Hunk[] {
+  const { entries } = useAgentActivity()
+  return useMemo(() => {
+    const out: Hunk[] = []
+    for (const entry of entries) {
+      if (!isEditish(entry.action)) continue
+      for (const hunk of entry.hunks ?? []) out.push(hunk)
+    }
+    return out
+  }, [entries])
+}
+
+// Per-file resolved color of the most-recent active entry, edit OR read.
+// Used by canvas-side decorations to color the outline matching the agent.
+export function useAgentColorByFile(): ReadonlyMap<string, string> {
+  const { entries } = useAgentActivity()
+  return useMemo(() => {
+    const out = new Map<string, string>()
+    const seen = new Map<string, number>() // filePath → lastSeenAt
+    for (const entry of entries) {
+      const prevTs = seen.get(entry.filePath) ?? 0
+      if (entry.lastSeenAt > prevTs) {
+        out.set(entry.filePath, entry.color)
+        seen.set(entry.filePath, entry.lastSeenAt)
+      }
+    }
+    return out
+  }, [entries])
+}
+
+// File paths currently being READ (not edited) plus the agent color to draw.
+// Drives the breathing-pulse decoration on iframe-host containers.
+export function useAgentReadingByFile(): ReadonlyMap<string, { color: string; agentLabel: string }> {
+  const { entries } = useAgentActivity()
+  return useMemo(() => {
+    const out = new Map<string, { color: string; agentLabel: string }>()
+    for (const entry of entries) {
+      if (entry.action !== "read") continue
+      out.set(entry.filePath, { color: entry.color, agentLabel: entry.agentLabel })
+    }
+    return out
+  }, [entries])
+}
+
+// Substring projections (back-compat with existing consumers): pull oldString/
+// newString out of hunks. These hooks were public; preserve them as one-version
+// projections.
 export function useAgentSubstringsForPage(
   pagePath: string | undefined,
 ): readonly { oldString?: string; newString?: string }[] {
   const { entries, fileMap } = useAgentActivity()
   return useMemo(() => {
     if (pagePath === undefined) return []
-    const result: { oldString?: string; newString?: string }[] = []
+    const out: { oldString?: string; newString?: string }[] = []
     for (const entry of entries) {
+      if (!isEditish(entry.action)) continue
       const selection = fileToSelection(entry.filePath, fileMap)
       if (
         selection &&
@@ -288,10 +329,10 @@ export function useAgentSubstringsForPage(
         selection.kind === "page" &&
         selection.path === pagePath
       ) {
-        result.push({ oldString: entry.oldString, newString: entry.newString })
+        for (const hunk of entry.hunks ?? []) out.push(hunk)
       }
     }
-    return result
+    return out
   }, [entries, fileMap, pagePath])
 }
 
@@ -301,8 +342,9 @@ export function useAgentSubstringsForBlock(
   const { entries, fileMap } = useAgentActivity()
   return useMemo(() => {
     if (slug === undefined) return []
-    const result: { oldString?: string; newString?: string }[] = []
+    const out: { oldString?: string; newString?: string }[] = []
     for (const entry of entries) {
+      if (!isEditish(entry.action)) continue
       const selection = fileToSelection(entry.filePath, fileMap)
       if (
         selection &&
@@ -310,29 +352,9 @@ export function useAgentSubstringsForBlock(
         selection.kind === "block" &&
         selection.slug === slug
       ) {
-        result.push({ oldString: entry.oldString, newString: entry.newString })
+        for (const hunk of entry.hunks ?? []) out.push(hunk)
       }
     }
-    return result
+    return out
   }, [entries, fileMap, slug])
-}
-
-// All substrings from currently-active entries, regardless of which page or
-// block they belong to. The relay broadcasts this set to every iframe; each
-// iframe's text-walker filters by what actually appears in its own DOM, which
-// is a more reliable filter than selection-state matching.
-export function useAllAgentSubstrings(): readonly {
-  oldString?: string
-  newString?: string
-}[] {
-  const { entries } = useAgentActivity()
-  return useMemo(() => {
-    const result: { oldString?: string; newString?: string }[] = []
-    for (const entry of entries) {
-      if (entry.oldString !== undefined || entry.newString !== undefined) {
-        result.push({ oldString: entry.oldString, newString: entry.newString })
-      }
-    }
-    return result
-  }, [entries])
 }

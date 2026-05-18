@@ -1,21 +1,32 @@
+import type { Hunk } from "@forkshop/lib/diff-to-hunks"
+
+export type AgentAction = "read" | "edit" | "create" | "delete"
+
 export type ActivityEntry = {
   filePath: string
-  oldString?: string
-  newString?: string
+  agent: string
+  agentLabel: string
+  sessionId: string
+  color: string
+  action: AgentAction
   lastSeenAt: number
+  hunks?: ReadonlyArray<Hunk>
 }
 
 type Subscriber = (snapshot: ActivityEntry[]) => void
 
-// state and subscribers live on globalThis so HMR re-execution of this module
-// in Next.js dev doesn't lose subscribers or split state between module
-// instances. The bug without this: an SSE connection subscribes into module
-// instance A; a file edit triggers HMR; the POST handler then runs in module
-// instance B; broadcast(B) iterates an empty subscriber set and the SSE never
-// sees the event.
+// Compound key — two concurrent agents (or two sessions of the same agent)
+// on the same file both surface as distinct entries.
+function entryKey(entry: Pick<ActivityEntry, "agent" | "sessionId" | "filePath">): string {
+  return `${entry.agent}/${entry.sessionId}/${entry.filePath}`
+}
+
 declare global {
+  // eslint-disable-next-line no-var
   var __forkshopAgentActivityState: Map<string, ActivityEntry> | undefined
+  // eslint-disable-next-line no-var
   var __forkshopAgentActivitySubscribers: Set<Subscriber> | undefined
+  // eslint-disable-next-line no-var
   var __forkshopAgentActivityPruneTimer: ReturnType<typeof setInterval> | undefined
 }
 
@@ -49,18 +60,9 @@ function broadcast(): void {
   }
 }
 
-export function recordActivity(input: {
-  filePath: string
-  oldString?: string
-  newString?: string
-}): void {
+export function recordActivity(entry: ActivityEntry): void {
   pruneIdle()
-  state.set(input.filePath, {
-    filePath: input.filePath,
-    oldString: input.oldString,
-    newString: input.newString,
-    lastSeenAt: Date.now(),
-  })
+  state.set(entryKey(entry), entry)
   broadcast()
 }
 
@@ -77,5 +79,16 @@ export function subscribe(subscriber: Subscriber): () => void {
 }
 
 if (!globalThis.__forkshopAgentActivityPruneTimer) {
+  globalThis.__forkshopAgentActivityPruneTimer = setInterval(pruneIdle, 1000)
+}
+
+// Test helper. Not exported from the engine's public surface.
+export function __resetActivityStateForTests(): void {
+  state.clear()
+  subscribers.clear()
+  // Re-register the prune interval so it is captured by fake timers in tests.
+  if (globalThis.__forkshopAgentActivityPruneTimer) {
+    clearInterval(globalThis.__forkshopAgentActivityPruneTimer)
+  }
   globalThis.__forkshopAgentActivityPruneTimer = setInterval(pruneIdle, 1000)
 }

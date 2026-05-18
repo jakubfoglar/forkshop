@@ -1,75 +1,90 @@
-import { describe, it, expect, beforeEach } from "vitest"
-import { recordActivity, subscribe } from "@forkshop/lib/agent-activity-state"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import {
+  __resetActivityStateForTests,
+  recordActivity,
+  subscribe,
+  type ActivityEntry,
+} from "@forkshop/lib/agent-activity-state"
+
+beforeEach(() => {
+  vi.useFakeTimers()
+  vi.setSystemTime(1000) // fixed epoch so tests using small lastSeenAt values don't trigger prune
+  __resetActivityStateForTests()
+})
+afterEach(() => {
+  vi.useRealTimers()
+})
+
+const base = {
+  agent: "claude-code",
+  agentLabel: "Claude",
+  sessionId: "s1",
+  color: "oklch(0.7 0.18 50)",
+  action: "edit" as const,
+}
 
 describe("agent-activity-state", () => {
-  beforeEach(() => {
-    // Drain any leftover state from previous tests by waiting past the
-    // 5s prune window — too slow for a unit test. Instead, the module is
-    // stateful and we accept that each test sees prior writes. Each test
-    // uses unique file paths to avoid collision.
+  it("subscriber receives current snapshot on subscribe", () => {
+    const seen: ActivityEntry[][] = []
+    subscribe((snap) => seen.push(snap))
+    expect(seen[0]).toEqual([])
   })
 
-  it("records and broadcasts a single entry", () => {
-    const received: unknown[][] = []
-    const unsub = subscribe((snapshot) => received.push(snapshot))
-    // subscribe immediately invokes with current state — capture the
-    // baseline length.
-    const baseline = received[0]!.length
-
-    recordActivity({ filePath: "test/unique-1.ts", oldString: "a", newString: "b" })
-
-    expect(received.length).toBeGreaterThan(1)
-    const last = received[received.length - 1] as Array<{ filePath: string }>
-    expect(last.some((e) => e.filePath === "test/unique-1.ts")).toBe(true)
-    expect(last.length).toBe(baseline + 1)
-
-    unsub()
+  it("recordActivity broadcasts the entry to subscribers", () => {
+    const seen: ActivityEntry[][] = []
+    subscribe((snap) => seen.push(snap))
+    recordActivity({
+      filePath: "components/ui/button.tsx",
+      ...base,
+      hunks: [{ oldString: "a", newString: "b" }],
+      lastSeenAt: 1000,
+    })
+    const latest = seen.at(-1)!
+    expect(latest).toHaveLength(1)
+    expect(latest[0]).toMatchObject({
+      filePath: "components/ui/button.tsx",
+      agent: "claude-code",
+      sessionId: "s1",
+      color: "oklch(0.7 0.18 50)",
+      action: "edit",
+      hunks: [{ oldString: "a", newString: "b" }],
+    })
   })
 
-  it("upserts on repeat filePath rather than appending", () => {
-    const received: unknown[][] = []
-    const unsub = subscribe((snapshot) => received.push(snapshot))
-    const baseline = received[0]!.length
-
-    recordActivity({ filePath: "test/unique-2.ts", oldString: "x", newString: "y" })
-    recordActivity({ filePath: "test/unique-2.ts", oldString: "x2", newString: "y2" })
-
-    const last = received[received.length - 1] as Array<{
-      filePath: string
-      newString?: string
-    }>
-    const matches = last.filter((e) => e.filePath === "test/unique-2.ts")
-    expect(matches.length).toBe(1)
-    expect(matches[0]!.newString).toBe("y2")
-    expect(last.length).toBe(baseline + 1)
-
-    unsub()
+  it("two agents on the same file produce two entries (compound key)", () => {
+    const seen: ActivityEntry[][] = []
+    subscribe((snap) => seen.push(snap))
+    recordActivity({ filePath: "x.tsx", ...base, lastSeenAt: 1000 })
+    recordActivity({
+      filePath: "x.tsx",
+      agent: "cursor",
+      agentLabel: "Cursor",
+      sessionId: "s2",
+      color: "oklch(0.7 0.18 200)",
+      action: "edit",
+      lastSeenAt: 1100,
+    })
+    const latest = seen.at(-1)!
+    expect(latest).toHaveLength(2)
+    expect(latest.map((e) => e.agent).sort()).toEqual(["claude-code", "cursor"])
   })
 
-  it("broadcasts to multiple subscribers", () => {
-    const a: unknown[] = []
-    const b: unknown[] = []
-    const unsubA = subscribe((s) => a.push(s))
-    const unsubB = subscribe((s) => b.push(s))
-
-    recordActivity({ filePath: "test/unique-3.ts" })
-
-    // Each subscriber received the initial snapshot + the new broadcast.
-    expect(a.length).toBe(2)
-    expect(b.length).toBe(2)
-
-    unsubA()
-    unsubB()
+  it("two sessions of the same agent on the same file also produce two entries", () => {
+    const seen: ActivityEntry[][] = []
+    subscribe((snap) => seen.push(snap))
+    recordActivity({ filePath: "x.tsx", ...base, sessionId: "s1", lastSeenAt: 1000 })
+    recordActivity({ filePath: "x.tsx", ...base, sessionId: "s2", lastSeenAt: 1100 })
+    expect(seen.at(-1)).toHaveLength(2)
   })
 
-  it("subscribe returns an unsubscribe that stops further notifications", () => {
-    const received: unknown[] = []
-    const unsub = subscribe((s) => received.push(s))
-    const lenAfterSubscribe = received.length
-
-    unsub()
-    recordActivity({ filePath: "test/unique-4.ts" })
-
-    expect(received.length).toBe(lenAfterSubscribe)
+  it("entries prune after 5s of inactivity", () => {
+    vi.setSystemTime(1000)
+    const seen: ActivityEntry[][] = []
+    subscribe((snap) => seen.push(snap))
+    recordActivity({ filePath: "x.tsx", ...base, lastSeenAt: 1000 })
+    expect(seen.at(-1)).toHaveLength(1)
+    vi.setSystemTime(7000)
+    vi.advanceTimersByTime(1100) // prune timer fires every 1s
+    expect(seen.at(-1)).toHaveLength(0)
   })
 })

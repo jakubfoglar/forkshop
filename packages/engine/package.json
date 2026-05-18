@@ -43,7 +43,8 @@
   },
   "dependencies": {
     "clsx": "^2.1.1",
-    "diff": "^5.2.0"
+    "diff": "^5.2.0",
+    "zod": "^3.23.0"
   },
   "devDependencies": {
     "@central-icons-react/square-outlined-radius-0-stroke-2": "^1.1.237",
