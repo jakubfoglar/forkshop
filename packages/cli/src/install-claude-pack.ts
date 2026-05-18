@@ -6,6 +6,13 @@ import { mergeClaudeSettings, type ClaudeSettings } from "./settings-merge.js"
 const HOOK_ADDRESS = "@forkshop/hooks/forkshop-post-tool-use"
 const HOOK_DEST = ".claude/hooks/forkshop-post-tool-use.sh"
 const SETTINGS_PATH = ".claude/settings.json"
+/**
+ * Claude Code resolves hook commands against the shell — we prefix with
+ * $CLAUDE_PROJECT_DIR so the hook runs regardless of the shell's cwd when
+ * the user invokes `claude` from a subdirectory. The quotes around the env
+ * var are required because the literal `$` makes the shell expand it.
+ */
+const HOOK_COMMAND = '"$CLAUDE_PROJECT_DIR"/.claude/hooks/forkshop-post-tool-use.sh'
 
 export type InstallPackOptions = {
   projectRoot: string
@@ -39,7 +46,7 @@ export async function maybeInstallClaudeCodePack(
     if (code !== "ENOENT") throw error
   }
 
-  const { merged, changed } = mergeClaudeSettings(existing, HOOK_DEST)
+  const { merged, changed } = mergeClaudeSettings(existing, HOOK_COMMAND)
   if (changed) {
     await fs.mkdir(path.dirname(settingsPath), { recursive: true })
     await fs.writeFile(settingsPath, JSON.stringify(merged, null, 2) + "\n", "utf8")

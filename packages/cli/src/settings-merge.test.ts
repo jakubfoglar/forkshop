@@ -1,24 +1,27 @@
 import { describe, expect, it } from "vitest"
-import { mergeClaudeSettings } from "./settings-merge.js"
+import { mergeClaudeSettings, type HookEntry } from "./settings-merge.js"
 
 const HOOK_CMD = ".claude/hooks/forkshop-post-tool-use.sh"
+const EXPECTED_ENTRY: HookEntry = {
+  matcher: "Edit|Write|MultiEdit|Read",
+  hooks: [{ type: "command", command: HOOK_CMD, timeout: 5 }],
+}
 
 describe("mergeClaudeSettings", () => {
-  it("creates hooks.PostToolUse from empty settings", () => {
+  it("creates hooks.PostToolUse with Claude Code's matcher+hooks schema from empty settings", () => {
     const result = mergeClaudeSettings({}, HOOK_CMD)
-    expect(result.merged.hooks.PostToolUse).toEqual([{ command: HOOK_CMD }])
+    expect(result.merged.hooks.PostToolUse).toEqual([EXPECTED_ENTRY])
     expect(result.changed).toBe(true)
   })
 
-  it("appends to existing PostToolUse array", () => {
-    const existing = {
-      hooks: { PostToolUse: [{ command: "other-hook.sh" }] },
+  it("appends to existing PostToolUse array preserving prior entries", () => {
+    const existingEntry: HookEntry = {
+      matcher: "Edit",
+      hooks: [{ type: "command", command: "other-hook.sh" }],
     }
+    const existing = { hooks: { PostToolUse: [existingEntry] } }
     const result = mergeClaudeSettings(existing, HOOK_CMD)
-    expect(result.merged.hooks.PostToolUse).toEqual([
-      { command: "other-hook.sh" },
-      { command: HOOK_CMD },
-    ])
+    expect(result.merged.hooks.PostToolUse).toEqual([existingEntry, EXPECTED_ENTRY])
     expect(result.changed).toBe(true)
   })
 
@@ -26,17 +29,21 @@ describe("mergeClaudeSettings", () => {
     const first = mergeClaudeSettings({}, HOOK_CMD)
     const second = mergeClaudeSettings(first.merged, HOOK_CMD)
     expect(second.changed).toBe(false)
-    expect(second.merged.hooks.PostToolUse).toEqual([{ command: HOOK_CMD }])
+    expect(second.merged.hooks.PostToolUse).toEqual([EXPECTED_ENTRY])
   })
 
   it("preserves unrelated top-level keys verbatim", () => {
     const existing = {
       permissions: { fileSystemRoot: ".", allowed: ["pnpm"] },
-      hooks: { PreToolUse: [{ command: "x.sh" }] },
+      hooks: {
+        PreToolUse: [
+          { matcher: "Edit", hooks: [{ type: "command" as const, command: "x.sh" }] },
+        ],
+      },
     }
     const result = mergeClaudeSettings(existing, HOOK_CMD)
     expect(result.merged.permissions).toEqual(existing.permissions)
-    expect(result.merged.hooks.PreToolUse).toEqual([{ command: "x.sh" }])
+    expect(result.merged.hooks.PreToolUse).toEqual(existing.hooks.PreToolUse)
   })
 
   it("throws when input is not a plain object", () => {

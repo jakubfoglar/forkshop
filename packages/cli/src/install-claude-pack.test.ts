@@ -4,6 +4,13 @@ import path from "node:path"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { maybeInstallClaudeCodePack } from "./install-claude-pack.js"
 import type { Manifest } from "./manifest-schema.js"
+import type { HookEntry } from "./settings-merge.js"
+
+const HOOK_COMMAND = '"$CLAUDE_PROJECT_DIR"/.claude/hooks/forkshop-post-tool-use.sh'
+const EXPECTED_ENTRY: HookEntry = {
+  matcher: "Edit|Write|MultiEdit|Read",
+  hooks: [{ type: "command", command: HOOK_COMMAND, timeout: 5 }],
+}
 
 let tmp: string
 beforeEach(async () => {
@@ -31,6 +38,11 @@ const manifest: Manifest = {
   },
 }
 
+type SettingsShape = {
+  hooks: { PostToolUse: HookEntry[] }
+  permissions?: { allowed: string[] }
+}
+
 describe("maybeInstallClaudeCodePack", () => {
   it("does nothing when consent is false", async () => {
     const result = await maybeInstallClaudeCodePack({ projectRoot: tmp, manifest, consent: false })
@@ -50,10 +62,8 @@ describe("maybeInstallClaudeCodePack", () => {
     expect(hookContent).toMatch(/^#!\/usr\/bin\/env bash/)
     const settings = JSON.parse(
       await fs.readFile(path.join(tmp, ".claude/settings.json"), "utf8"),
-    ) as { hooks: { PostToolUse: { command: string }[] } }
-    expect(settings.hooks.PostToolUse).toContainEqual({
-      command: ".claude/hooks/forkshop-post-tool-use.sh",
-    })
+    ) as SettingsShape
+    expect(settings.hooks.PostToolUse).toContainEqual(EXPECTED_ENTRY)
   })
 
   it("is idempotent on second call", async () => {
@@ -61,11 +71,11 @@ describe("maybeInstallClaudeCodePack", () => {
     await maybeInstallClaudeCodePack({ projectRoot: tmp, manifest, consent: true })
     const settings = JSON.parse(
       await fs.readFile(path.join(tmp, ".claude/settings.json"), "utf8"),
-    ) as { hooks: { PostToolUse: { command: string }[] } }
-    const ptu = settings.hooks.PostToolUse.filter(
-      (e) => e.command === ".claude/hooks/forkshop-post-tool-use.sh",
+    ) as SettingsShape
+    const matching = settings.hooks.PostToolUse.filter((entry) =>
+      entry.hooks.some((h) => h.command === HOOK_COMMAND),
     )
-    expect(ptu).toHaveLength(1)
+    expect(matching).toHaveLength(1)
   })
 
   it("preserves existing settings.json keys", async () => {
@@ -77,8 +87,8 @@ describe("maybeInstallClaudeCodePack", () => {
     await maybeInstallClaudeCodePack({ projectRoot: tmp, manifest, consent: true })
     const settings = JSON.parse(
       await fs.readFile(path.join(tmp, ".claude/settings.json"), "utf8"),
-    ) as { permissions: { allowed: string[] }; hooks: { PostToolUse: { command: string }[] } }
-    expect(settings.permissions.allowed).toEqual(["pnpm"])
+    ) as SettingsShape
+    expect(settings.permissions?.allowed).toEqual(["pnpm"])
     expect(settings.hooks.PostToolUse).toHaveLength(1)
   })
 })

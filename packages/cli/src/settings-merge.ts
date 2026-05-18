@@ -1,4 +1,20 @@
-export type HookEntry = { command: string }
+/**
+ * Claude Code's PostToolUse hook entry shape:
+ *   { matcher: "Edit|Write|...", hooks: [{ type: "command", command: "...", timeout?: number }] }
+ *
+ * (NOT the simplified `{ command }` shape — Claude Code's settings parser
+ * rejects that with a "hooks: Expected array, but received undefined" error.)
+ */
+export type HookCommand = {
+  type: "command"
+  command: string
+  timeout?: number
+}
+
+export type HookEntry = {
+  matcher: string
+  hooks: HookCommand[]
+}
 
 export type ClaudeSettings = {
   hooks?: { PostToolUse?: HookEntry[]; PreToolUse?: HookEntry[]; [k: string]: unknown }
@@ -9,6 +25,9 @@ export type MergeResult = {
   merged: ClaudeSettings & { hooks: { PostToolUse: HookEntry[] } }
   changed: boolean
 }
+
+const DEFAULT_MATCHER = "Edit|Write|MultiEdit|Read"
+const DEFAULT_TIMEOUT = 5
 
 export function mergeClaudeSettings(
   input: ClaudeSettings,
@@ -27,8 +46,16 @@ export function mergeClaudeSettings(
   }
 
   const ptu = ([...((existingPTU as HookEntry[] | undefined) ?? [])] as HookEntry[])
+
+  // Idempotency: is any entry already wiring this exact command?
   const alreadyPresent = ptu.some(
-    (entry) => typeof entry === "object" && entry !== null && entry.command === hookCommand,
+    (entry) =>
+      typeof entry === "object" &&
+      entry !== null &&
+      Array.isArray(entry.hooks) &&
+      entry.hooks.some(
+        (h) => typeof h === "object" && h !== null && h.command === hookCommand,
+      ),
   )
   if (alreadyPresent) {
     return {
@@ -39,7 +66,17 @@ export function mergeClaudeSettings(
       changed: false,
     }
   }
-  ptu.push({ command: hookCommand })
+
+  ptu.push({
+    matcher: DEFAULT_MATCHER,
+    hooks: [
+      {
+        type: "command",
+        command: hookCommand,
+        timeout: DEFAULT_TIMEOUT,
+      },
+    ],
+  })
   return {
     merged: {
       ...input,
