@@ -93,3 +93,47 @@ Limitations to revisit later: `classLookup` is empty for v4 (class-name → toke
 **Workaround (shipped 2026-05-18, commit `0166d1f`):** Template 2a / 2b build `tokens` + `primitives` inline (v3 from `tailwindConfig`, v4 from `useTokenRegistryFromCss`). The user's `design-system.tsx` is a few lines longer than the original "`<DesignSystemView />` no props" promise, but everything works.
 
 **Engine work still deferred:** parameterless `<DesignSystemView />` would read from a `useForkshopConfig()` context that the skill provides at the page.tsx level. Saves a few lines in `design-system.tsx`. Quality-of-life only — not a release blocker now.
+
+---
+
+## Live AI protocol + Claude Code pack — **shipped 2026-05-18, spec #5**
+
+Vendor-neutral live-AI protocol + Claude Code producer pack. 24 commits between `508080d` and `71f2143`.
+
+What landed:
+- Engine-side post-hoc diff via `file-snapshot.ts` + `diff-to-hunks.ts`. RSC consumers POST `{ agent, agentLabel, sessionId, file, action, ts }` to `/api/forkshop/agent-activity`; engine reads disk, diffs against snapshot, emits synthetic hunks for the existing iframe relay.
+- 8-slot OKLCH `agent-color-palette.ts` assigns colors server-side keyed on `(agent, sessionId)`. Claude defaults to orange.
+- `AgentActivityProvider`'s `ActivityEntry` shape gained `agent`/`agentLabel`/`sessionId`/`color`/`action`/`hunks?`. Map key is the compound `(agent, sessionId, file)` — multi-agent stacking works.
+- `AgentSelectionChip` renders multi-agent stack at top-center (up to 3, +N overflow).
+- `AgentReadIndicator` component + `LazyIframe.hostFileLabel` attr drives the read-activity breathing pulse on the iframe wrapper.
+- Claude Code producer pack: bash hook (`forkshop-post-tool-use.sh`) + `.claude/settings.json` merge, opt-in via Phase 5 of the setup skill.
+- Cadence skill (`forkshop-live-editing.md`) retired. Reactive feedback hook dropped entirely. Forkshop has no opinion on how agents save files.
+- CLI gained `forkshop-post-tool-use.sh.template` + manifest builder support for `.sh` extension + `settings-merge.ts` for idempotent settings.json updates + `--install-claude-pack` flag + producer pack tracking in `forkshop.json`.
+
+Full design: `docs/specs/2026-05-18-live-ai-protocol-design.md`. Plan: `docs/superpowers/plans/2026-05-18-live-ai-protocol.md`. Strategy refinements: #18, #19, #20.
+
+Manual smoke (T22): user-driven via two Claude sessions editing files in `apps/demo/` simultaneously — verify two chips stack with distinct colors, frame outline + text-pulse fire for edits, breathing pulse fires for reads.
+
+---
+
+## Playground rebuild — **shipped 2026-05-18**
+
+Replaced `apps/playground/` with the `apps/demo/` (rich showcase) + `apps/test/` (pre-init fixture) split.
+
+What landed:
+- `apps/playground/` → `apps/demo/` (git mv, 51 files, history preserved). Demo rewired to consume engine helpers: drops manual `<AgentIframeRelay />` (auto-mounted now), drops custom `BlocksBoardView` (uses `Gallery + useDiscoveredBlocks` + generous height cap), reverts client-side block-preview workaround (uses new server-safe subpath).
+- `apps/test/` new app with curated content: 4 UI primitives (cva-shaped Badge/Button/Input/Select), 4 blocks (Hero/FeatureGrid/CTA/Pricing), 4 routes (home/about/pricing/contact), 2 MDX content files, tailwind theme with non-default colors/font/radii. Designed to exercise the setup skill's signal detection (Design System, UI Components, Blocks, Sitemap, Reference recipes).
+- `pnpm reset-test` script wipes Forkshop scaffold artifacts so the user can re-run init cleanly.
+- Engine touch-ups:
+  - `@forkshop/engine/lib/*` server-safe subpath exports (6 helpers: discover-blocks, discover-primitives, file-to-selection, token-registry, parse-token-registry-from-css-vars, sitemap-tree). Removes the `"use client"` directive trap for RSC consumers.
+  - `IframeRegistryProvider` + `AgentIframeRelay` auto-mounted inside `AgentActivityProvider`. Single provider, both behaviors.
+  - `LazyIframe.heightMode: "auto" | "cap" | "fixed"` replaces the magic `height ?? heightCap` shape.
+  - Tightened `package.json` exports map — deep imports rejected by Node's resolver.
+  - Public-API snapshot test at `packages/engine/src/__tests__/public-api.test.ts`. Run `pnpm regen-api-snap` to update intentionally.
+
+Full design: `docs/specs/2026-05-18-playground-rebuild-design.md`. Plan: `docs/superpowers/plans/2026-05-18-playground-rebuild.md`. Strategy refinements: #21, #22.
+
+Deferred from this rebuild:
+- CI workflow (`.github/workflows/ci.yml`). No CI exists today; creating one requires `CENTRAL_LICENSE_KEY` secret config. Tracked as a separate "pre-publish prep" item.
+- `pnpm verify-publish` (tarball install verification). Worth doing before the first `0.1.0` tag.
+

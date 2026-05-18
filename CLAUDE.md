@@ -38,9 +38,18 @@ packages/
       raveo/        RaveoVF.woff2 — binary shipped to user's project on init
 
 apps/
-  playground/   Minimal Next.js demo that mounts a Forkshop installation.
-                Hand-maintained dev surface with 4 boards (Foundations, Components,
-                Blocks, Pages). The canonical "does it work?" check.
+  demo/         Renamed from playground. Rich showcase that mounts a Forkshop
+                installation. Hand-maintained dev surface with 4 boards
+                (Design System, Components, Blocks, Sitemap). Runs under
+                `pnpm dev`. Consumes engine helpers (useDiscoveredPrimitives,
+                useDiscoveredBlocks, auto-mounted iframe registry).
+
+  test/         Pre-init fixture with curated content (4 primitives in
+                components/ui/, 4 blocks, 4 routes, MDX, non-default tailwind
+                theme). User runs `pnpm reset-test && cd apps/test && claude`,
+                then "set up Forkshop" to validate the full init + setup-skill
+                flow against realistic project signals. Post-init artifacts are
+                gitignored.
 
   docs/         Serves the static registry at `/r/registry.json`. See
                 "apps/docs" section below. Marketing content TBD.
@@ -116,7 +125,7 @@ A lint check at `packages/engine/scripts/check-canonical-imports.ts` enforces it
 part of `pnpm --filter @forkshop/engine lint`.
 
 The engine's own `tsconfig.json` maps `@forkshop/*` → `./src/*` so local typecheck
-and Vitest resolve correctly. The playground (`apps/playground`) needs additional
+and Vitest resolve correctly. The demo (`apps/demo`) needs additional
 per-subdir webpack/turbopack alias entries in `next.config.mjs` to resolve those
 imports across the workspace boundary.
 
@@ -130,7 +139,8 @@ not require path-rewriting at init time.
 ## Commands
 
 ```bash
-pnpm dev          # Start playground dev server (apps/playground)
+pnpm dev          # Start demo dev server (apps/demo)
+pnpm reset-test   # Wipe Forkshop scaffold artifacts from apps/test/ for re-init
 pnpm build        # Build all packages
 pnpm typecheck    # tsc --noEmit across the workspace
 pnpm lint         # ESLint across the workspace
@@ -155,7 +165,7 @@ Setup:
 2. `direnv allow .` (install [direnv](https://direnv.net) if you don't have it).
 3. `pnpm install` — should now succeed.
 
-Only the engine workspace needs the key. If you're contributing to CLI, docs, or playground without touching `packages/engine/src/`, you can scope install to skip engine:
+Only the engine workspace needs the key. If you're contributing to CLI, docs, demo, or test without touching `packages/engine/src/`, you can scope install to skip engine:
 
 ```
 pnpm install --filter '!@forkshop/engine'
@@ -275,7 +285,7 @@ All Forkshop-internal styling must be decoupled from any host project's brand.
 Rules:
 - All CSS tokens must be `forkshop-*`-namespaced (e.g. `forkshop-fg`, `forkshop-canvas-bg`, `forkshop-accent`). **Never** `text`, `background`, or any other non-namespaced token that collides with Tailwind defaults.
 - Icons via `<ForkshopIcon icon={X} />` from `@forkshop/engine`. Never import raw Iconoir or any other icon library directly in registry code.
-- Font via Raveo only. Loaded by the playground via `next/font/local`. The registry itself does not load fonts — it assumes the host has loaded them.
+- Font via Raveo only. Loaded by the demo via `next/font/local`. The registry itself does not load fonts — it assumes the host has loaded them.
 - CSS variables are defined in `packages/engine/tailwind/forkshop.css`. The tailwind preset (`forkshop.config.ts`) references them.
 - The `forkshop-*` Tailwind preset is configured in `packages/engine/tailwind/`. Users add it to their `tailwind.config.ts`.
 
@@ -374,7 +384,7 @@ If you edit Phase 5, preserve this contract — the skill's UX depends on the si
 
 ### Updating
 
-- **Activation triggers** — in the `description:` field of the frontmatter. Test by invoking with each trigger phrase against `apps/playground` (or against any fresh Next.js fixture).
+- **Activation triggers** — in the `description:` field of the frontmatter. Test by invoking with each trigger phrase against `apps/test/` (the canonical pre-init fixture; see `pnpm reset-test` workflow) or any fresh Next.js fixture.
 - **Phase content** — the phases are read top-to-bottom by Claude at invocation time. Treat the file as a prompt: terse, imperative, no fluff. Refer the reader to `app/forkshop/CLAUDE.md` in the user's repo for Board / NodeType / Layout API details rather than duplicating them.
 - **Templates** — every template MUST be inside a fenced code block in the `## Scaffolding templates` section. The `validateSkillPlaceholders` check in `apps/docs/scripts/validate-registry.ts` enforces this.
 - **Placeholders** — use `{{snake_case}}` only. Lowercase, underscores. Document any new placeholder in the substitution-rules block at the top of the templates section.
