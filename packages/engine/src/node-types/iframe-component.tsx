@@ -44,7 +44,7 @@ function IframeComponentRender({
         src={node.previewSrc}
         title={node.slug}
         width={node.width}
-        heightCap={node.height}
+        heightMode="cap" height={node.height}
         hostFileLabel={sourceFile}
         onIframeWheel={handleIframeWheel}
         onBodyHeightSync={onBodyHeightChange}

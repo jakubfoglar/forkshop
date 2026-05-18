@@ -3,13 +3,23 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { PREVIEW_AGENT_READ_CSS } from "@forkshop/lib/edit-mode"
 
+export type LazyIframeHeightMode = "auto" | "cap" | "fixed"
+
 type LazyIframeProps = {
   src: string
   title: string
   width: number
-  // Either a fixed pixel `height` or a `heightCap` (height undefined when 0).
-  // If both are provided, `height` wins.
+  /**
+   * How the iframe wrapper's height is computed:
+   * - "auto": grow to fit body.scrollHeight, no cap (default)
+   * - "cap": grow to fit body.scrollHeight, but never exceed `height`
+   * - "fixed": always render at `height`, ignoring body scrollHeight
+   *
+   * `height` is required for "cap" and "fixed"; ignored for "auto".
+   */
+  heightMode?: LazyIframeHeightMode
   height?: number
+  /** @deprecated Use heightMode="cap" + height instead. heightCap maps to heightMode="cap". */
   heightCap?: number
   /**
    * When provided, the iframe loads at this intrinsic width (e.g. 1440 for a
@@ -33,6 +43,7 @@ export function LazyIframe({
   src,
   title,
   width,
+  heightMode,
   height,
   heightCap,
   desktopWidth,
@@ -155,15 +166,25 @@ export function LazyIframe({
     }
   }, [shouldLoad, onIframeWheel, handleBodySync])
 
-  // Self-size the iframe element to its body content, capped by `heightCap`.
-  // A fixed `height` always wins. Falls back to `heightCap` until the first
-  // ResizeObserver tick reports the body's actual scrollHeight.
-  const cap = heightCap !== undefined && heightCap > 0 ? heightCap : undefined
-  const fittedHeight =
-    measuredBodyHeight !== undefined && cap !== undefined
-      ? Math.min(measuredBodyHeight, cap)
-      : (measuredBodyHeight ?? cap)
-  const resolvedHeight = height ?? fittedHeight
+  // Resolve height based on the explicit mode, falling back to the
+  // deprecated heightCap behavior for back-compat.
+  const effectiveMode: LazyIframeHeightMode =
+    heightMode ?? (heightCap !== undefined ? "cap" : "auto")
+  const effectiveCap =
+    effectiveMode === "cap" ? (height ?? heightCap) : undefined
+
+  let resolvedHeight: number | undefined
+  if (effectiveMode === "fixed") {
+    resolvedHeight = height
+  } else if (effectiveMode === "cap") {
+    resolvedHeight =
+      measuredBodyHeight !== undefined && effectiveCap !== undefined
+        ? Math.min(measuredBodyHeight, effectiveCap)
+        : (measuredBodyHeight ?? effectiveCap)
+  } else {
+    // "auto" — content drives height, no cap
+    resolvedHeight = measuredBodyHeight
+  }
 
   const useScaling = desktopWidth !== undefined && desktopWidth > 0
   const scale = useScaling ? width / desktopWidth : 1
