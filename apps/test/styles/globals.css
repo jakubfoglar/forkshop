@@ -1,3 +1,4 @@
+@import "@forkshop/engine/forkshop.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

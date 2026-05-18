@@ -8,7 +8,7 @@ export interface HeroProps {
 
 export function Hero({
   eyebrow = "Just shipped",
-  title = "Build interfaces from the inside out",
+  title = "Ship at the speed of code",
   description = "Drop components onto a canvas. Drag, edit, ship.",
 }: HeroProps) {
   return (

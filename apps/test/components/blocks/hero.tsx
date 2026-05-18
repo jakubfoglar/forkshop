@@ -10,7 +10,7 @@ export interface HeroProps {
 
 export function Hero({
   eyebrow = "Just shipped",
-  title = "Your codebase, on a canvas",
+  title = "Your codebase, your canvas",
   description = "Drop components onto a canvas. Drag, edit, ship.",
   ctaLabel = "Get started",
 }: HeroProps) {

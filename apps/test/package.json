@@ -9,17 +9,20 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@forkshop/engine": "workspace:*",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
     "next": "^14.2.0",
     "react": "^18.3.0",
-    "react-dom": "^18.3.0",
-    "class-variance-authority": "^0.7.0",
-    "clsx": "^2.1.1"
+    "react-dom": "^18.3.0"
   },
   "devDependencies": {
+    "@locator/webpack-loader": "^0.5.0",
+    "@types/node": "^20.0.0",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
-    "@types/node": "^20.0.0",
     "autoprefixer": "^10.4.0",
+    "forkshop": "file:../../packages/cli",
     "postcss": "^8.4.0",
     "tailwindcss": "^3.4.0",
     "typescript": "^5.5.0"

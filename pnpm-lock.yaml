@@ -91,6 +91,9 @@ importers:
 
   apps/test:
     dependencies:
+      '@forkshop/engine':
+        specifier: workspace:*
+        version: link:../../packages/engine
       class-variance-authority:
         specifier: ^0.7.0
         version: 0.7.1
@@ -107,6 +110,9 @@ importers:
         specifier: ^18.3.0
         version: 18.3.1(react@18.3.1)
     devDependencies:
+      '@locator/webpack-loader':
+        specifier: ^0.5.0
+        version: 0.5.1(tsx@4.21.0)(webpack@5.106.2(postcss@8.5.14))
       '@types/node':
         specifier: ^20.0.0
         version: 20.19.41
@@ -119,6 +125,9 @@ importers:
       autoprefixer:
         specifier: ^10.4.0
         version: 10.5.0(postcss@8.5.14)
+      forkshop:
+        specifier: file:../../packages/cli
+        version: link:../../packages/cli
       postcss:
         specifier: ^8.4.0
         version: 8.5.14

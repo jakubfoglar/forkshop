@@ -7,9 +7,9 @@ export interface CTAProps {
 }
 
 export function CTA({
-  title = "Try the playground",
-  description = "Click around. Open /forkshop to see the canvas in action.",
-  ctaLabel = "Open Forkshop",
+  title = "Stop guessing. Start shipping.",
+  description = "Forkshop turns your components into a live canvas — edit copy, swap variants, and watch changes land in your codebase instantly.",
+  ctaLabel = "Launch the canvas",
 }: CTAProps) {
   return (
     <section className="bg-gray-900 py-20 text-white">
