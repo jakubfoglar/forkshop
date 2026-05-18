@@ -22,12 +22,18 @@
     "README.md"
   ],
   "exports": {
-    ".":                                 "./dist/index.js",
-    "./forkshop.css":                    "./dist/forkshop.css",
-    "./api/edit/route":                  "./dist/api/edit/route.js",
-    "./api/positions/route":             "./dist/api/positions/route.js",
-    "./api/agent-activity/route":        "./dist/api/agent-activity/route.js",
-    "./api/agent-activity/stream/route": "./dist/api/agent-activity/stream/route.js"
+    ".":                                        "./dist/index.js",
+    "./forkshop.css":                           "./dist/forkshop.css",
+    "./api/edit/route":                         "./dist/api/edit/route.js",
+    "./api/positions/route":                    "./dist/api/positions/route.js",
+    "./api/agent-activity/route":               "./dist/api/agent-activity/route.js",
+    "./api/agent-activity/stream/route":        "./dist/api/agent-activity/stream/route.js",
+    "./lib/discover-blocks":                    "./dist/lib/discover-blocks.js",
+    "./lib/discover-primitives":                "./dist/lib/discover-primitives.js",
+    "./lib/file-to-selection":                  "./dist/lib/file-to-selection.js",
+    "./lib/token-registry":                     "./dist/lib/token-registry.js",
+    "./lib/parse-token-registry-from-css-vars": "./dist/lib/parse-token-registry-from-css-vars.js",
+    "./lib/sitemap-tree":                       "./dist/lib/sitemap-tree.js"
   },
   "scripts": {
     "build":     "tsx scripts/build.ts",
