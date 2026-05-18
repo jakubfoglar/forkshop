@@ -60,6 +60,7 @@ export function NodeView({
   const derivedActivity = useNodeAgentActive(node)
   const effectiveAgentActive = agentActive !== undefined ? agentActive : derivedActivity.agentActive
   const effectiveAgentFileLabel = agentFileLabel ?? derivedActivity.agentFileLabel
+  const effectiveAgentColor = derivedActivity.agentColor
   if (!nodeType) {
     if (typeof console !== "undefined") {
       console.warn(`[forkshop] No NodeType matched node ${node.id} (kind=${node.kind})`)
@@ -87,6 +88,7 @@ export function NodeView({
       isSelected={isSelected}
       agentActive={effectiveAgentActive}
       agentFileLabel={effectiveAgentFileLabel}
+      agentColor={effectiveAgentColor}
       onSelect={onSelect}
       onPositionChange={onPositionChange}
       getSnapTargets={getSnapTargets}

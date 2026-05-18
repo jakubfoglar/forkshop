@@ -22,11 +22,11 @@ function outlineFor(isSelected: boolean, isHovered: boolean): string {
   return "none"
 }
 
-const AGENT_COLOR = "oklch(0.62 0.22 280)"
+const FALLBACK_AGENT_COLOR = "oklch(0.62 0.22 280)"
 
-function agentBoxShadow(agentActive: boolean): string | undefined {
+function agentBoxShadow(agentActive: boolean, color: string): string | undefined {
   if (!agentActive) return undefined
-  return `0 0 0 calc(2px / var(--canvas-zoom, 1)) ${AGENT_COLOR}, 0 0 0 calc(7px / var(--canvas-zoom, 1)) color-mix(in oklch, ${AGENT_COLOR} 18%, transparent)`
+  return `0 0 0 calc(2px / var(--canvas-zoom, 1)) ${color}, 0 0 0 calc(7px / var(--canvas-zoom, 1)) color-mix(in oklch, ${color} 18%, transparent)`
 }
 
 export type NodeFrameProps = {
@@ -40,6 +40,7 @@ export type NodeFrameProps = {
   isSelected: boolean
   agentActive?: boolean
   agentFileLabel?: string
+  agentColor?: string
   onSelect?: () => void
   onPositionChange: (id: string, x: number, y: number) => void
   getSnapTargets: GetSnapTargets
@@ -61,6 +62,7 @@ export function NodeFrame({
   isSelected,
   agentActive = false,
   agentFileLabel,
+  agentColor,
   onSelect,
   onPositionChange,
   getSnapTargets,
@@ -88,6 +90,7 @@ export function NodeFrame({
     onSelectChange:
       onSelectChange === undefined ? undefined : (selected) => onSelectChange(id, selected),
   })
+  const effectiveAgentColor = agentColor ?? FALLBACK_AGENT_COLOR
   return (
     <div
       ref={containerRef}
@@ -108,7 +111,7 @@ export function NodeFrame({
         width,
         outline: outlineFor(isSelected, isHovered),
         outlineOffset: 0,
-        boxShadow: agentBoxShadow(agentActive),
+        boxShadow: agentBoxShadow(agentActive, effectiveAgentColor),
         ...style,
       }}
       className={className}
@@ -147,7 +150,7 @@ export function NodeFrame({
           <CanvasLabel
             style={{
               transformOrigin: "bottom right",
-              background: AGENT_COLOR,
+              background: effectiveAgentColor,
               color: "white",
               padding: "1px 6px",
               borderRadius: 3,
