@@ -4,7 +4,6 @@ import React, { useCallback, useEffect, useMemo, useState } from "react"
 import {
   ForkshopSidebar,
   AgentActivityProvider,
-  AgentIframeRelay,
   AgentSelectionChip,
   DesignSystemView,
   Gallery,
@@ -134,7 +133,6 @@ export default function ForkshopPage() {
 
   return (
     <AgentActivityProvider fileMap={FILE_MAP}>
-      <AgentIframeRelay />
       <div className="flex h-screen overflow-hidden">
         <ForkshopSidebar
           selection={selection}
