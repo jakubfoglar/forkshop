@@ -101,16 +101,30 @@ export async function runUpdate(options: UpdateOptions): Promise<UpdateResult> {
     })
   }
 
+  // Orphan detection: files in the lock but no longer in the manifest.
+  // After the live-AI work, .claude/skills/forkshop-live-editing.md becomes
+  // an orphan. Surface in summary + delete on apply.
+  const orphanAddresses: string[] = []
+  for (const address of Object.keys(lock.files)) {
+    if (manifest.files[address] === undefined) {
+      orphanAddresses.push(address)
+    }
+  }
+  const orphansWithDest = orphanAddresses.map((address) => ({
+    address,
+    dest: lock.files[address]!.dest,
+  }))
+
   // Engine-pin drift
   const enginePin = await readEnginePin(projectRoot)
   const engineBehind = enginePin && isEnginePinBehind(enginePin.normalized, manifest.engineVersion)
 
   // Summary
-  printSummary(manifest, plan, enginePin, engineBehind ?? false)
+  printSummary(manifest, plan, enginePin, engineBehind ?? false, orphansWithDest)
 
   if (checkOnly) {
     const anyDrift =
-      plan.some((p) => p.state !== "unchanged") || engineBehind === true
+      plan.some((p) => p.state !== "unchanged") || engineBehind === true || orphanAddresses.length > 0
     return { ok: true, exitCode: anyDrift ? 1 : 0 }
   }
 
@@ -132,6 +146,40 @@ export async function runUpdate(options: UpdateOptions): Promise<UpdateResult> {
     updatedCount++
   }
 
+  // Producer pack hook refresh — in-place rewrite of the script file. No
+  // re-merge of .claude/settings.json (install-only mutation).
+  if (lock.producerPack?.claudeCode === true) {
+    const hookAddress = "@forkshop/hooks/forkshop-post-tool-use"
+    const hookFile = manifest.files[hookAddress]
+    if (hookFile && hookFile.kind === "text") {
+      const hookPath = path.join(projectRoot, ".claude/hooks/forkshop-post-tool-use.sh")
+      await fs.mkdir(path.dirname(hookPath), { recursive: true })
+      await fs.writeFile(hookPath, hookFile.content, { mode: 0o755 })
+    }
+  }
+
+  // Orphan deletion — best-effort.
+  let orphanDeletedCount = 0
+  for (const address of orphanAddresses) {
+    const dest = lock.files[address]?.dest
+    if (!dest) continue
+    const abs = path.join(projectRoot, dest)
+    try {
+      await fs.unlink(abs)
+      delete lock.files[address]
+      orphanDeletedCount++
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code
+      if (code === "ENOENT") {
+        // Already gone; remove from lock anyway.
+        delete lock.files[address]
+        orphanDeletedCount++
+      } else {
+        console.log(pc.yellow(`Could not delete ${dest}: ${(error as Error).message}`))
+      }
+    }
+  }
+
   // Engine bump
   if (engineBehind && options.acceptEngineBump) {
     await bumpEnginePin(projectRoot, manifest.engineVersion)
@@ -140,6 +188,9 @@ export async function runUpdate(options: UpdateOptions): Promise<UpdateResult> {
 
   await writeForkshopJson(projectRoot, lock)
   console.log(pc.green(`\nUpdated ${updatedCount} file${updatedCount === 1 ? "" : "s"}.`))
+  if (orphanDeletedCount > 0) {
+    console.log(pc.dim(`Removed ${orphanDeletedCount} orphan${orphanDeletedCount === 1 ? "" : "s"}.`))
+  }
   if (engineBehind && options.acceptEngineBump) {
     console.log(
       pc.dim(`Engine pin bumped to ${manifest.engineVersion}. Run \`pnpm install\` to fetch it.`)
@@ -152,7 +203,8 @@ function printSummary(
   manifest: Manifest,
   plan: PlanEntry[],
   enginePin: { raw: string; normalized: string } | undefined,
-  engineBehind: boolean
+  engineBehind: boolean,
+  orphans: Array<{ address: string; dest: string }>,
 ): void {
   console.log(
     pc.bold(`\nforkshop update — registry@${manifest.generatedAt.slice(0, 10)}`)
@@ -181,7 +233,13 @@ function printSummary(
       console.log(`  ! ${p.dest}    (${p.state}; rerun with --force to overwrite)`)
     }
   }
-  if (!drift.length && !skipped.length && !engineBehind) {
+  if (orphans.length) {
+    console.log(`\n${orphans.length} file${orphans.length === 1 ? "" : "s"} no longer in registry — will delete:`)
+    for (const o of orphans) {
+      console.log(`  - ${o.dest}    (orphan)`)
+    }
+  }
+  if (!drift.length && !skipped.length && !engineBehind && !orphans.length) {
     console.log(pc.dim("\nNothing to update."))
   }
 }

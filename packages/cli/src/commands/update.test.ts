@@ -206,4 +206,168 @@ describe("runUpdate", () => {
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.reason).toMatch(/forkshop init/)
   })
+
+  it("refreshes the hook script when producerPack.claudeCode is true", async () => {
+    const content = "setup"
+    const sha = sha256Hex(content)
+    const root = await setupInstalled({
+      setupContentOnDisk: content,
+      lockSha: sha,
+    })
+    dirs.push(root)
+
+    // Pre-place an old hook script.
+    const hookDir = path.join(root, ".claude/hooks")
+    await fs.mkdir(hookDir, { recursive: true })
+    const hookPath = path.join(hookDir, "forkshop-post-tool-use.sh")
+    await fs.writeFile(hookPath, "#!/bin/sh\necho old", { mode: 0o755 })
+
+    // Inject producerPack into the lock.
+    const lockRaw = JSON.parse(await fs.readFile(path.join(root, "forkshop.json"), "utf8"))
+    lockRaw.producerPack = { claudeCode: true }
+    await fs.writeFile(path.join(root, "forkshop.json"), JSON.stringify(lockRaw, null, 2))
+
+    // Manifest that includes the new hook file content.
+    const manifest: Manifest = {
+      ...manifestWithSetupContent(content),
+      files: {
+        ...manifestWithSetupContent(content).files,
+        "@forkshop/hooks/forkshop-post-tool-use": {
+          kind: "text",
+          ext: "sh",
+          content: "#!/bin/sh\necho new-hook",
+          destOverride: ".claude/hooks/forkshop-post-tool-use.sh",
+        },
+      },
+    }
+
+    await runUpdate({ projectRoot: root, manifest, apply: true })
+
+    const hookContent = await fs.readFile(hookPath, "utf8")
+    expect(hookContent).toBe("#!/bin/sh\necho new-hook")
+  })
+
+  it("silently skips hook refresh when manifest has no hook entry", async () => {
+    const content = "setup"
+    const sha = sha256Hex(content)
+    const root = await setupInstalled({
+      setupContentOnDisk: content,
+      lockSha: sha,
+    })
+    dirs.push(root)
+
+    // Inject producerPack into the lock (no hook entry in manifest).
+    const lockRaw = JSON.parse(await fs.readFile(path.join(root, "forkshop.json"), "utf8"))
+    lockRaw.producerPack = { claudeCode: true }
+    await fs.writeFile(path.join(root, "forkshop.json"), JSON.stringify(lockRaw, null, 2))
+
+    // Run without a hook file in the manifest — should not throw.
+    const result = await runUpdate({
+      projectRoot: root,
+      manifest: manifestWithSetupContent(content),
+      apply: true,
+    })
+    expect(result.ok).toBe(true)
+
+    // Hook dir should not have been created.
+    const hookExists = await fs
+      .access(path.join(root, ".claude/hooks/forkshop-post-tool-use.sh"))
+      .then(() => true)
+      .catch(() => false)
+    expect(hookExists).toBe(false)
+  })
+
+  it("deletes orphan files and removes them from lock", async () => {
+    const content = "setup"
+    const sha = sha256Hex(content)
+    const root = await setupInstalled({
+      setupContentOnDisk: content,
+      lockSha: sha,
+    })
+    dirs.push(root)
+
+    // Add an orphan entry to the lock — a file that does NOT exist in the manifest.
+    const orphanDest = ".claude/skills/forkshop-live-editing.md"
+    const lockRaw = JSON.parse(await fs.readFile(path.join(root, "forkshop.json"), "utf8"))
+    lockRaw.files["@forkshop/skill/live-editing"] = { dest: orphanDest, sha: "abc123" }
+    await fs.writeFile(path.join(root, "forkshop.json"), JSON.stringify(lockRaw, null, 2))
+
+    // Place the orphan file on disk.
+    await fs.mkdir(path.join(root, ".claude/skills"), { recursive: true })
+    await fs.writeFile(path.join(root, orphanDest), "old live editing skill")
+
+    // Run update — manifest does NOT contain @forkshop/skill/live-editing.
+    await runUpdate({
+      projectRoot: root,
+      manifest: manifestWithSetupContent(content),
+      apply: true,
+    })
+
+    // File should be gone.
+    const stillExists = await fs
+      .access(path.join(root, orphanDest))
+      .then(() => true)
+      .catch(() => false)
+    expect(stillExists).toBe(false)
+
+    // Key should be removed from forkshop.json.
+    const lockAfter = JSON.parse(await fs.readFile(path.join(root, "forkshop.json"), "utf8"))
+    expect(lockAfter.files["@forkshop/skill/live-editing"]).toBeUndefined()
+  })
+
+  it("--check exits 1 when orphan exists", async () => {
+    const content = "setup"
+    const sha = sha256Hex(content)
+    const root = await setupInstalled({
+      setupContentOnDisk: content,
+      lockSha: sha,
+    })
+    dirs.push(root)
+
+    // Add an orphan entry to the lock.
+    const lockRaw = JSON.parse(await fs.readFile(path.join(root, "forkshop.json"), "utf8"))
+    lockRaw.files["@forkshop/skill/live-editing"] = {
+      dest: ".claude/skills/forkshop-live-editing.md",
+      sha: "abc123",
+    }
+    await fs.writeFile(path.join(root, "forkshop.json"), JSON.stringify(lockRaw, null, 2))
+
+    const result = await runUpdate({
+      projectRoot: root,
+      manifest: manifestWithSetupContent(content),
+      checkOnly: true,
+    })
+    expect(result.ok).toBe(true)
+    if (result.ok) expect(result.exitCode).toBe(1)
+  })
+
+  it("handles ENOENT orphan gracefully and still removes from lock", async () => {
+    const content = "setup"
+    const sha = sha256Hex(content)
+    const root = await setupInstalled({
+      setupContentOnDisk: content,
+      lockSha: sha,
+    })
+    dirs.push(root)
+
+    // Add an orphan entry to the lock but do NOT create the file on disk.
+    const lockRaw = JSON.parse(await fs.readFile(path.join(root, "forkshop.json"), "utf8"))
+    lockRaw.files["@forkshop/skill/live-editing"] = {
+      dest: ".claude/skills/forkshop-live-editing.md",
+      sha: "abc123",
+    }
+    await fs.writeFile(path.join(root, "forkshop.json"), JSON.stringify(lockRaw, null, 2))
+
+    // Should not throw even though the file doesn't exist.
+    const result = await runUpdate({
+      projectRoot: root,
+      manifest: manifestWithSetupContent(content),
+      apply: true,
+    })
+    expect(result.ok).toBe(true)
+
+    // Key should still be removed from forkshop.json.
+    const lockAfter = JSON.parse(await fs.readFile(path.join(root, "forkshop.json"), "utf8"))
+    expect(lockAfter.files["@forkshop/skill/live-editing"]).toBeUndefined()
+  })
 })
