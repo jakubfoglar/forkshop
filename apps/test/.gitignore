@@ -1,0 +1,13 @@
+.next/
+node_modules/
+forkshop.json
+
+# Forkshop scaffold artifacts (regenerated each forkshop init)
+app/forkshop/
+app/api/forkshop/
+.claude/skills/forkshop-*.md
+.claude/hooks/forkshop-*.sh
+.claude/settings.json
+
+# Engine tarball if you ever pack for verify-publish
+forkshop-engine-*.tgz
