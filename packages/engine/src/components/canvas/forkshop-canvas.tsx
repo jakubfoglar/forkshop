@@ -70,27 +70,44 @@ export function ForkshopCanvas({
   ref,
   initialTransform,
   onTransformChange,
-  stageWidth,
-  stageHeight,
+  stageWidth: stageWidthProp,
+  stageHeight: stageHeightProp,
   fitMode = "width",
   onContainerClick,
-  containerRef,
-  stageRef,
+  containerRef: containerRefProp,
+  stageRef: stageRefProp,
   nodeTypes = [],
   children,
 }: {
   ref?: RefObject<ForkshopCanvasHandle | null>
   initialTransform?: Transform
   onTransformChange?: (transform: Transform) => void
-  stageWidth: number
-  stageHeight: number
+  /** Optional. Defaults to 1400 — large enough that the canvas's auto-fit
+   *  shrinks-to-fit comfortably on any viewport. Pass a specific value when
+   *  the board's content has a known footprint (e.g., ResponsiveFrameView). */
+  stageWidth?: number
+  /** Optional. Defaults to 900. Same fit reasoning as `stageWidth`. */
+  stageHeight?: number
   fitMode?: "width" | "both"
   onContainerClick?: (event: React.MouseEvent<HTMLDivElement>) => void
-  containerRef: RefObject<HTMLDivElement | null>
-  stageRef: RefObject<HTMLDivElement | null>
+  /** Optional. If omitted, ForkshopCanvas allocates its own internal ref —
+   *  matches the "drop it in a Board file and it just works" expectation
+   *  from the live-mirror polish spec. Pass a ref when external code needs
+   *  to read the container element (e.g., for overlay positioning). */
+  containerRef?: RefObject<HTMLDivElement | null>
+  /** Optional. Same fallback as `containerRef`. */
+  stageRef?: RefObject<HTMLDivElement | null>
   nodeTypes?: ReadonlyArray<NodeType<AnyNode>>
   children: ReactNode
 }) {
+  // Provide internal defaults so <ForkshopCanvas>{children}</ForkshopCanvas>
+  // works as a leaf-board root without consumer-supplied refs/dimensions.
+  const internalContainerRef = useRef<HTMLDivElement | null>(null)
+  const internalStageRef = useRef<HTMLDivElement | null>(null)
+  const containerRef = containerRefProp ?? internalContainerRef
+  const stageRef = stageRefProp ?? internalStageRef
+  const stageWidth = stageWidthProp ?? 1400
+  const stageHeight = stageHeightProp ?? 900
   const [transform, setTransformState] = useState<Transform>(
     initialTransform ?? { zoom: 0.5, panX: 80, panY: 80 },
   )

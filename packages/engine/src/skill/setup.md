@@ -153,7 +153,8 @@ Three scans, all silent. Output is data for Phase 3 — do not show progress to 
 1. Read `tailwind.config.{ts,js,mjs}` if present. Look at `theme.extend.{colors, spacing, fontFamily, borderRadius, boxShadow}`. Count non-empty keys per category.
 2. If Tailwind v4 is in use (no config file but `@theme` block in `app/globals.css` or `src/app/globals.css`), parse the `@theme` block for `--color-*`, `--spacing-*`, `--font-*`, `--radius-*`, `--shadow-*` custom properties. Same counting.
 3. Output a flag: `themeTokens.hasCustomization = any non-default category has ≥1 entry`. Also expose per-category counts (`hasCustomColors`, `hasCustomTypography`, etc.) for the proposal narrative.
-4. If neither config file nor `@theme` block exists, set `themeTokens.hasCustomization = false`.
+4. Record `themeTokens.tailwindMajor`: `3` when a config file exists, `4` when only an `@theme` block exists. Phase 6 Step 2 reads this to pick Template 2a (v3, `buildTokenRegistry`) vs Template 2b (v4, `useTokenRegistryFromCss`).
+5. If neither config file nor `@theme` block exists, set `themeTokens.hasCustomization = false` (Design System recipe doesn't fire).
 
 This signal fires the Design System recipe. It doesn't need to find every token — it just decides whether to scaffold a Design System Board at all.
 
@@ -361,7 +362,7 @@ If neither UI Components nor Blocks fired (e.g., a project with only routes), `f
 
 ### Step 2 — `{{mount}}/design-system.tsx` (if Design System recipe fired)
 
-Render from Template 2 — single-leaf Board over `DesignSystemView`.
+Render from Template 2a (Tailwind v3) or Template 2b (Tailwind v4) based on Phase 2 Scan D's detected Tailwind major. v3 uses `buildTokenRegistry(forkshopConfig.tailwindConfig)`; v4 uses `useTokenRegistryFromCss()` to read `@theme` variables from the live stylesheet.
 
 ### Step 3 — `{{mount}}/ui-components.tsx` parent (if UI Components recipe fired)
 
@@ -652,7 +653,9 @@ If a barrel already exists at one of these paths, the skill **merges** new entri
 
 The old `primitives: [...]` and `blocks: [...]` explicit arrays in `forkshopConfig` are dropped — discovery replaces them.
 
-### Template 2 — `{{mount}}/design-system.tsx`
+### Template 2a — `{{mount}}/design-system.tsx` (Tailwind v3)
+
+For projects with a `tailwind.config.{ts,js,mjs}` file (v3 convention):
 
 ````tsx
 "use client"
@@ -700,7 +703,56 @@ export default function DesignSystemBoardView() {
 }
 ````
 
-**Tailwind v3 only at 1.0.** `buildTokenRegistry` accepts only a v3 `Config` shape; v4 projects (which use `@theme` in CSS and ship no `tailwind.config.*`) hit a runtime error at the import. The "DesignSystemView parameterless variant" + "Tailwind v4 token registry" follow-up specs in `docs/polish-backlog.md` track this. Until they land, v4 projects either skip the Design System Board or hand-build a token registry inline.
+### Template 2b — `{{mount}}/design-system.tsx` (Tailwind v4)
+
+For projects without a `tailwind.config.*` file (v4 convention — tokens declared via `@theme { ... }` in `app/globals.css`). Token discovery happens at runtime by scanning CSS custom properties on `:root`:
+
+````tsx
+"use client"
+
+import { useMemo } from "react"
+import {
+  ForkshopCanvas,
+  DesignSystemView,
+  useTokenRegistryFromCss,
+  discoverPrimitives,
+  type PrimitiveGroup,
+  type InlineReactNode,
+} from "@forkshop/engine"
+import { forkshopConfig } from "./forkshop.config"
+
+export default function DesignSystemBoardView() {
+  const tokens = useTokenRegistryFromCss()
+  const primitiveGroups = useMemo<PrimitiveGroup[]>(
+    () => [
+      {
+        id: "ui",
+        label: "UI Primitives",
+        primitives: discoverPrimitives(forkshopConfig.ui).map<InlineReactNode>((p) => ({
+          id: `primitive:${p.slug}`,
+          kind: "inline-react",
+          x: 0,
+          y: 0,
+          width: 320,
+          height: 160,
+          label: p.name,
+          render: () => <p.Component />,
+        })),
+      },
+    ],
+    [],
+  )
+  return (
+    <ForkshopCanvas>
+      <DesignSystemView tokens={tokens} primitives={primitiveGroups} />
+    </ForkshopCanvas>
+  )
+}
+````
+
+`useTokenRegistryFromCss` reads `getComputedStyle(document.documentElement)` for `--color-*`, `--spacing-*`, `--radius-*`, `--shadow-*`, `--font-size-*` / `--text-*`, `--font-weight-*`, `--container-*` custom properties. Hydration-aware: returns an empty registry on first render, then populates after mount. Adding a new `@theme` token reloads via HMR and re-runs the hook.
+
+**Skill picks which variant to emit:** Phase 2 Scan D detects whether the project uses Tailwind v3 (config file present) or v4 (no config file, `@theme` block in `globals.css`). Phase 6 Step 2 emits Template 2a or 2b accordingly. The Tailwind v3 path also requires `tailwindConfig` to be present in Template 1's config; the v4 path doesn't import or reference it.
 
 ### Template 3 — `{{mount}}/ui-components.tsx`
 

@@ -118,3 +118,8 @@ export {
   discoverBlocks,
   type DiscoveredBlock,
 } from "@forkshop/lib/use-discovered-blocks"
+export {
+  useTokenRegistryFromCss,
+  discoverTokenRegistryFromCss,
+  parseTokenRegistryFromCssVars,
+} from "@forkshop/lib/use-token-registry-from-css"
