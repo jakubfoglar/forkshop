@@ -226,7 +226,7 @@ describe("runInit (v2)", () => {
     })
     expect(result.ok).toBe(true)
     expect(spawnSyncMock).toHaveBeenCalledTimes(1)
-    const [cmd, args, opts] = spawnSyncMock.mock.calls[0]
+    const [cmd, args, opts] = spawnSyncMock.mock.calls[0]!
     expect(cmd).toBe("npm") // fixture has no lockfile → detectPackageManager falls back to npm
     expect(args).toEqual(["install"])
     expect(opts).toMatchObject({ cwd: root, stdio: "inherit" })
@@ -250,5 +250,33 @@ describe("runInit (v2)", () => {
     }
     expect(spawnSyncMock).not.toHaveBeenCalled()
     expect(logs.some((l) => /to fetch it/i.test(l))).toBe(true)
+  })
+
+  it("returns {ok: false} when the package manager install exits non-zero", async () => {
+    spawnSyncMock.mockReturnValueOnce({
+      status: 1,
+      stdout: "",
+      stderr: "npm error",
+      pid: 0,
+      output: [],
+      signal: null,
+    })
+    const root = await setupProject()
+    dirs.push(root)
+    const errors: string[] = []
+    const originalError = console.error
+    console.error = (msg: string) => { errors.push(String(msg)) }
+    try {
+      const result = await runInit({
+        projectRoot: root,
+        manifest: fakeManifest(),
+      })
+      expect(result.ok).toBe(false)
+      if (!result.ok) expect(result.reason).toMatch(/install exited/i)
+    } finally {
+      console.error = originalError
+    }
+    expect(errors.some((l) => /install failed/i.test(l))).toBe(true)
+    expect(errors.some((l) => /re-run.*install/i.test(l))).toBe(true)
   })
 })
