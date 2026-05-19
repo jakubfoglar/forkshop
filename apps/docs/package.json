@@ -8,14 +8,21 @@
     "build": "pnpm validate-registry && next build",
     "start": "next start --port 3001",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint app components lib",
+    "lint": "eslint app components",
     "validate-registry": "tsx scripts/validate-registry.ts"
   },
   "dependencies": {
+    "@mdx-js/loader": "^3.1.1",
+    "@mdx-js/react": "^3.1.1",
+    "@next/mdx": "^16.2.6",
+    "@tailwindcss/typography": "^0.5.19",
+    "@types/mdx": "^2.0.13",
     "forkshop": "workspace:*",
     "next": "^15.0.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "remark-frontmatter": "^5.0.0",
+    "remark-mdx-frontmatter": "^5.2.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

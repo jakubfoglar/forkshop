@@ -1,5 +1,16 @@
+import createMDX from "@next/mdx"
+import remarkFrontmatter from "remark-frontmatter"
+import remarkMdxFrontmatter from "remark-mdx-frontmatter"
+
+const withMDX = createMDX({
+  options: {
+    remarkPlugins: [remarkFrontmatter, [remarkMdxFrontmatter, { name: "frontmatter" }]],
+  },
+})
+
 /** @type {import('next').NextConfig} */
 const config = {
+  pageExtensions: ["ts", "tsx", "md", "mdx"],
   transpilePackages: ["forkshop"],
   webpack(config) {
     config.resolve.extensionAlias = {
@@ -29,4 +40,4 @@ const config = {
   },
 }
 
-export default config
+export default withMDX(config)
