@@ -389,6 +389,10 @@ If the user accepts, Phase 6 sets the env var `FORKSHOP_INSTALL_CLAUDE_PACK=1` f
 
 Sequential. Failures stop the sequence — no transactional rollback. Each step prints `✓ <action> <path>` on success.
 
+### Step 0 — `{{mount}}/use-forkshop-positions.ts`
+
+Render Template 13 verbatim. Every Board template imports this hook to persist drag-positions to `/api/forkshop/positions`. No conditions — always write it, even on minimal installs (Sitemap recipe always fires and consumes it via Template 7).
+
 ### Step 1 — `{{mount}}/forkshop.config.tsx`
 
 Render from Template 1 (see Scaffolding templates). **Gate config keys + imports on which recipes fired in Phase 3:**
@@ -434,9 +438,11 @@ Render from Template 7 — Tree visualization over routes from `forkshopConfig.s
 
 Render from Template 8 — Tree over MDX paths from `forkshopConfig.reference.contentPaths`.
 
-### Step 9 — `{{mount}}/page.tsx`
+### Step 9 — `{{mount}}/single-page-board.tsx` and `{{mount}}/page.tsx`
 
-Render from Template 9 — mounts `ForkshopCanvas` + `ForkshopSidebar`. The sidebar `sections` array is built from the selected recipes; each section's `entryKind` matches its child shape (`primitive` for UI Components, `block` for Blocks, `page` for Sitemap and Reference).
+First write `single-page-board.tsx` from Template 12 — a `ResponsiveFrameView` that renders a single route at 1440 / 768 / 375 widths. This is the per-page detail board, mounted when the user clicks a route under the engine's PAGES sidebar tree.
+
+Then write `page.tsx` from Template 9 — mounts `ForkshopSidebar`, wires sections per selected recipe, passes `forkshopConfig.sitemap.routes` to the engine's `routes` prop so the built-in PAGES tree handles per-route navigation. Sections never duplicate the Sitemap as drill-down entries — Sitemap is a header-only section that selects the Tree Board; the PAGES tree handles single-page navigation separately.
 
 ### Step 10 — `app/globals.css` (idempotent)
 
@@ -446,7 +452,7 @@ Check whether `@import "@forkshop/engine/forkshop.css"` is present. If not, prep
 
 If the user accepted the Locator opt-in in Phase 5:
 
-1. Merge `@locator/webpack-loader` into `package.json` devDependencies (idempotent — skip if already present). Print `✓ Added @locator/webpack-loader to devDependencies`.
+1. Merge `@locator/webpack-loader` at version `^0.5.0` into `package.json` devDependencies (idempotent — skip if already present). The package's 0.4.x line was never published; do not guess from older training data. If a future version needs pinning, edit this step. Print `✓ Added @locator/webpack-loader ^0.5.0 to devDependencies`.
 2. Apply Template 10 (Next 14 webpack-only) or Template 11 (Next 15/16 turbopack + webpack) based on the project's Next major. Merge into existing config rather than replace. Print `✓ Merged Locator rule into next.config.<ext>`.
 3. Tell the user once at the end of Phase 6: `"Run pnpm install before pnpm dev — Locator dep was just added."`
 
@@ -727,8 +733,10 @@ import {
   type InlineReactNode,
 } from "@forkshop/engine"
 import { forkshopConfig } from "./forkshop.config"
+import { useForkshopPositions } from "./use-forkshop-positions"
 
 export default function DesignSystemBoardView() {
+  const { nodePositions, onPositionChange } = useForkshopPositions()
   const tokens = useMemo(
     () => buildTokenRegistry(forkshopConfig.tailwindConfig),
     [],
@@ -754,7 +762,12 @@ export default function DesignSystemBoardView() {
   )
   return (
     <ForkshopCanvas>
-      <DesignSystemView tokens={tokens} primitives={primitiveGroups} />
+      <DesignSystemView
+        tokens={tokens}
+        primitives={primitiveGroups}
+        nodePositions={nodePositions}
+        onPositionChange={onPositionChange}
+      />
     </ForkshopCanvas>
   )
 }
@@ -778,6 +791,7 @@ import {
   type TokenRegistry,
 } from "@forkshop/engine"
 import { forkshopConfig } from "./forkshop.config"
+import { useForkshopPositions } from "./use-forkshop-positions"
 
 const EMPTY_REGISTRY: TokenRegistry = {
   colors: [], spacing: [], fontSizes: [], fontWeights: [],
@@ -805,6 +819,7 @@ function useTokensFromCssVars(): TokenRegistry {
 }
 
 export default function DesignSystemBoardView() {
+  const { nodePositions, onPositionChange } = useForkshopPositions()
   const tokens = useTokensFromCssVars()
   const primitiveGroups = useMemo<PrimitiveGroup[]>(
     () => [
@@ -827,7 +842,12 @@ export default function DesignSystemBoardView() {
   )
   return (
     <ForkshopCanvas>
-      <DesignSystemView tokens={tokens} primitives={primitiveGroups} />
+      <DesignSystemView
+        tokens={tokens}
+        primitives={primitiveGroups}
+        nodePositions={nodePositions}
+        onPositionChange={onPositionChange}
+      />
     </ForkshopCanvas>
   )
 }
@@ -844,8 +864,10 @@ Recognized prefixes: `--color-*`, `--spacing-*`, `--radius-*`, `--shadow-*`, `--
 
 import { ForkshopCanvas, Gallery, useDiscoveredPrimitives } from "@forkshop/engine"
 import { forkshopConfig } from "./forkshop.config"
+import { useForkshopPositions } from "./use-forkshop-positions"
 
 export default function UIComponentsBoardView() {
+  const { nodePositions, onPositionChange } = useForkshopPositions()
   const primitives = useDiscoveredPrimitives(forkshopConfig.ui)
   const entries = primitives.map((p) => ({
     id: p.slug,
@@ -860,7 +882,13 @@ export default function UIComponentsBoardView() {
   }))
   return (
     <ForkshopCanvas>
-      <Gallery entries={entries} layout="grid" viewportWidth={320} />
+      <Gallery
+        entries={entries}
+        layout="grid"
+        viewportWidth={320}
+        nodePositions={nodePositions}
+        onPositionChange={onPositionChange}
+      />
     </ForkshopCanvas>
   )
 }
@@ -934,8 +962,10 @@ export default function {{primitive_name}}BoardView() {
 
 import { ForkshopCanvas, Gallery, useDiscoveredBlocks } from "@forkshop/engine"
 import { forkshopConfig } from "./forkshop.config"
+import { useForkshopPositions } from "./use-forkshop-positions"
 
 export default function BlocksBoardView() {
+  const { nodePositions, onPositionChange } = useForkshopPositions()
   const viewport = forkshopConfig.viewportProfile === "mobile" ? 375 : 1440
   const blocks = useDiscoveredBlocks(forkshopConfig.blocks)
   const entries = blocks.map((b) => ({
@@ -952,7 +982,13 @@ export default function BlocksBoardView() {
   }))
   return (
     <ForkshopCanvas>
-      <Gallery entries={entries} layout="grid" viewportWidth={viewport} />
+      <Gallery
+        entries={entries}
+        layout="grid"
+        viewportWidth={viewport}
+        nodePositions={nodePositions}
+        onPositionChange={onPositionChange}
+      />
     </ForkshopCanvas>
   )
 }
@@ -1007,8 +1043,10 @@ import {
   type IframeRouteNode,
 } from "@forkshop/engine"
 import { forkshopConfig } from "./forkshop.config"
+import { useForkshopPositions } from "./use-forkshop-positions"
 
 export default function SitemapBoardView() {
+  const { nodePositions, onPositionChange } = useForkshopPositions()
   const entries: TreeEntry[] = forkshopConfig.sitemap.routes.map((r) => {
     const node: IframeRouteNode = {
       id: `page:${r.path}`,
@@ -1021,7 +1059,11 @@ export default function SitemapBoardView() {
   })
   return (
     <ForkshopCanvas>
-      <Tree entries={entries} />
+      <Tree
+        entries={entries}
+        nodePositions={nodePositions}
+        onPositionChange={onPositionChange}
+      />
     </ForkshopCanvas>
   )
 }
@@ -1051,16 +1093,20 @@ export default function ReferenceBoardView() {
 ````tsx
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect{{component_type_import}} } from "react"
 import {
   ForkshopSidebar,
   AgentActivityProvider,
   parseSelection,
   serializeSelection,
+{{layout_imports}}{{discover_primitives_import}}
   type ForkshopSelection,
 } from "@forkshop/engine"
 import { forkshopConfig } from "./forkshop.config"
 {{board_imports}}
+{{primitive_imports}}
+
+{{primitive_boards_map}}
 
 const DEFAULT_SELECTION: ForkshopSelection = { kind: "section", sectionId: "{{default_section}}" }
 
@@ -1078,7 +1124,7 @@ export default function ForkshopPage() {
     if (!hasHydrated) return
     window.history.replaceState({}, "", serializeSelection(selection))
   }, [selection, hasHydrated])
-
+{{primitive_entries_setup}}
   return (
     <AgentActivityProvider fileMap={{ primitives: [], blocks: [] }}>
       <div className="flex h-screen overflow-hidden">
@@ -1088,7 +1134,7 @@ export default function ForkshopPage() {
           sections={[
 {{section_entries}}
           ]}
-          routes={[]}
+          routes={{{routes_prop}}}
         />
         <div className="relative flex flex-1 overflow-hidden">
 {{board_switch}}
@@ -1100,11 +1146,115 @@ export default function ForkshopPage() {
 ````
 
 Substitution notes:
-- `{{board_imports}}` — `import DesignSystemBoardView from "./design-system"` etc., one line per selected recipe.
-- `{{default_section}}` — id of the first selected recipe (`design-system`, `ui-components`, etc.).
-- `{{section_entries}}` — one `SidebarSection` object per selected recipe. Sitemap and Reference use `entryKind: "page"`; UI Components uses `entryKind: "primitive"`; Blocks uses `entryKind: "block"`.
-- `{{board_switch}}` — selection → board mapping (`selection.kind === "section" && selection.sectionId === "design-system" && <DesignSystemBoardView />`, etc., one per recipe + per-leaf cases).
-- Note: each Board component in `{{board_switch}}` wraps its own `<ForkshopCanvas>` (see Templates 2-8). `page.tsx` itself does not render `<ForkshopCanvas>` — it just mounts the sidebar and the selected Board.
+
+The engine's sidebar types are non-negotiable. Use these exact field names — do **not** invent `label`, `path`, etc.:
+
+```ts
+type SidebarSection = { id: string; title: string; entryKind?: "block" | "primitive" | "page"; entries?: SidebarEntry[]; icon?: ForkshopIconComponent }
+type SidebarEntry   = { slug: string; name: string; icon?: ForkshopIconComponent }
+type ForkshopSelection = { kind: "section"; sectionId: string } | { kind: "block"; slug: string } | { kind: "primitive"; id: string } | { kind: "page"; path: string }
+```
+
+There is no `selection.kind === "leaf"`. The four kinds above are the only ones.
+
+- `{{board_imports}}` — one line per selected parent Board recipe:
+  - Design System: `import DesignSystemBoardView from "./design-system"`
+  - UI Components: `import UIComponentsBoardView from "./ui-components"`
+  - Blocks: `import BlocksBoardView from "./blocks"`
+  - Sitemap: `import SitemapBoardView from "./sitemap-board"`
+  - Reference: `import ReferenceBoardView from "./reference"`
+
+  Also always emit (Sitemap recipe always fires, and the engine's PAGES tree needs a per-page Board):
+  - `import SinglePageBoardView from "./single-page-board"`
+
+- `{{primitive_imports}}` — one line per primitive discovered in Phase 2 Scan A (UI Components recipe only). Omit this placeholder entirely if UI Components didn't fire. Format: `import <PascalName>BoardView from "./ui-components/<slug>"`. Example:
+  ```tsx
+  import ButtonBoardView from "./ui-components/button"
+  import BadgeBoardView from "./ui-components/badge"
+  // …one per primitive
+  ```
+
+- `{{primitive_boards_map}}` — emit this `const` declaration only when UI Components fires; otherwise omit the placeholder. Keys are slugs from Phase 2 Scan A:
+  ```tsx
+  const PRIMITIVE_BOARDS: Record<string, ComponentType> = {
+    button: ButtonBoardView,
+    badge: BadgeBoardView,
+    // …
+  }
+  ```
+
+- `{{component_type_import}}` — emit `, type ComponentType` only when UI Components fires (needed by `PRIMITIVE_BOARDS`). Otherwise empty string.
+
+- `{{discover_primitives_import}}` — emit `  discoverPrimitives,\n` (2-space indented, trailing newline) only when UI Components fires. Otherwise empty string.
+
+- `{{primitive_entries_setup}}` — emit this block (with leading newline + 2-space indent inside the function) only when UI Components fires; otherwise empty:
+  ```tsx
+
+    const primitiveEntries = discoverPrimitives(forkshopConfig.ui)
+      .map(({ slug, name }) => ({ slug, name }))
+      .sort((a, b) => a.name.localeCompare(b.name))
+  ```
+
+- `{{layout_imports}}` — Layout components are imported only to source their `.icon` on the matching `SidebarSection`. Add one line per selected recipe, 2-space indented, comma-terminated:
+  - Design System recipe: `  DesignSystemView,`
+  - UI Components or Blocks recipe (either or both): `  Gallery,`
+  - Sitemap or Reference recipe (either or both): `  Tree,`
+  Skip recipes that didn't fire to avoid unused-import warnings.
+
+- `{{default_section}}` — id of the first selected recipe (`design-system`, `ui-components`, `blocks`, `sitemap`, or `reference`).
+
+- `{{section_entries}}` — one `SidebarSection` literal per selected recipe, in the order Design System → UI Components → Blocks → Sitemap → Reference. **The Sitemap section has no entries** — the engine's built-in PAGES tree handles per-route navigation via the `routes` prop. Comma-terminate every line. Use **these exact shapes**:
+
+  ```tsx
+  // Design System recipe — no entries (parent Board handles its own canvas)
+  { id: "design-system", title: "Design System", icon: DesignSystemView.icon },
+
+  // UI Components recipe — entries discovered at runtime, sorted alphabetically by name.
+  // Pass primitiveEntries (computed from {{primitive_entries_setup}} above).
+  { id: "ui-components", title: "UI Components", icon: Gallery.icon, entryKind: "primitive", entries: primitiveEntries },
+
+  // Blocks recipe — entries from Phase 2 Scan B.
+  { id: "blocks", title: "Blocks", icon: Gallery.icon, entryKind: "block", entries: [
+    { slug: "hero", name: "Hero" },
+    // …
+  ] },
+
+  // Sitemap recipe — header only. Per-route navigation lives in the engine's PAGES tree below (fed by the `routes` prop).
+  { id: "sitemap", title: "Sitemap", icon: Tree.icon },
+
+  // Reference recipe — entries from Phase 2 Scan E.
+  { id: "reference", title: "Reference", icon: Tree.icon, entryKind: "page", entries: [
+    { slug: "intro", name: "Introduction" },
+    // …
+  ] },
+  ```
+
+- `{{routes_prop}}` — always emit `forkshopConfig.sitemap.routes.map((r) => r.path)`. The engine renders these under a built-in "PAGES" sidebar tree; clicking a page entry sets `selection.kind === "page"` with the matching `path`, which `{{board_switch}}` routes to `<SinglePageBoardView />`. Agent-discovered routes (files Claude edits that aren't in this list) get appended to the same tree silently.
+
+- `{{board_switch}}` — selection → board mapping. Emit one header line per recipe, then drill-down lines:
+
+  ```tsx
+  // Section headers — one per selected recipe
+  {selection.kind === "section" && selection.sectionId === "design-system" && <DesignSystemBoardView />}
+  {selection.kind === "section" && selection.sectionId === "ui-components" && <UIComponentsBoardView />}
+  {selection.kind === "section" && selection.sectionId === "blocks" && <BlocksBoardView />}
+  {selection.kind === "section" && selection.sectionId === "sitemap" && <SitemapBoardView />}
+  {selection.kind === "section" && selection.sectionId === "reference" && <ReferenceBoardView />}
+
+  // UI Components per-primitive — route through PRIMITIVE_BOARDS map (UI Components recipe only)
+  {selection.kind === "primitive" && (() => {
+    const Board = PRIMITIVE_BOARDS[selection.id]
+    return Board ? <Board /> : null
+  })()}
+
+  // Blocks per-block — emit only when Blocks recipe fires
+  {selection.kind === "block" && <BlocksBoardView />}
+
+  // PAGES tree → single-page detail (always emit; Sitemap recipe always fires)
+  {selection.kind === "page" && <SinglePageBoardView path={selection.path} />}
+  ```
+
+- Note: each Board component in `{{board_switch}}` wraps its own `<ForkshopCanvas>` (see Templates 2-8, 12). `page.tsx` itself does not render `<ForkshopCanvas>` — it just mounts the sidebar and the selected Board.
 
 ### Template 10 — `next.config.*` webpack-only rule (Next 14)
 
@@ -1158,3 +1308,101 @@ webpack(config) {
 ```
 
 If `turbopack.rules` already exists, merge the new glob keys into the existing object. If a `webpack` function already exists, append the `config.module.rules.push(...)` call inside it.
+
+### Template 12 — `{{mount}}/single-page-board.tsx`
+
+Renders one route from `forkshopConfig.sitemap.routes` inside a `ResponsiveFrameView` (default viewports: 1440 / 768 / 375). Mounted automatically whenever the user clicks a page entry under the engine's PAGES sidebar tree (`selection.kind === "page"`).
+
+```tsx
+"use client"
+
+import { useCallback, useMemo, useState } from "react"
+import {
+  ForkshopCanvas,
+  ResponsiveFrameView,
+  responsiveFrameStageDimensions,
+  BUILTIN_NODE_TYPES,
+} from "@forkshop/engine"
+import { forkshopConfig } from "./forkshop.config"
+
+const VIEWPORTS = [1440, 768, 375]
+
+export default function SinglePageBoardView({ path }: { path: string }) {
+  const route = forkshopConfig.sitemap.routes.find((r) => r.path === path)
+  const [measuredHeight, setMeasuredHeight] = useState<number | undefined>(undefined)
+  const handleBodyHeightChange = useCallback((_id: string, h: number) => setMeasuredHeight(h), [])
+  const { width, height } = useMemo(
+    () => responsiveFrameStageDimensions(measuredHeight, VIEWPORTS),
+    [measuredHeight],
+  )
+  return (
+    <ForkshopCanvas
+      stageWidth={width}
+      stageHeight={height}
+      fitMode="width"
+      nodeTypes={BUILTIN_NODE_TYPES}
+    >
+      <ResponsiveFrameView
+        kind="page"
+        path={path}
+        source={path}
+        viewports={VIEWPORTS}
+        measuredHeight={measuredHeight}
+        onBodyHeightChange={handleBodyHeightChange}
+        sourceFile={route?.sourceFile}
+      />
+    </ForkshopCanvas>
+  )
+}
+```
+
+No substitutions. Same body for every install — the path comes in as a prop, the matching `sourceFile` is looked up at render time. Once the engine ships `BUILTIN_NODE_TYPES` as a `ForkshopCanvas` default (post-0.2.x), the `nodeTypes` line and its import can be dropped from the scaffold.
+
+### Template 13 — `{{mount}}/use-forkshop-positions.ts`
+
+Local hook that loads persisted Node positions from `/api/forkshop/positions` and POSTs back on every drag commit. Lives in the user's project (not exported from the engine) so the persistence behavior is editable per-install — e.g. swap to `localStorage`, scope by board, debounce, etc. Every parent Board imports this hook and forwards `nodePositions` / `onPositionChange` to its Layout.
+
+```ts
+"use client"
+
+import { useCallback, useEffect, useState } from "react"
+import { isNodePositions, type NodePositions } from "@forkshop/engine"
+
+const ENDPOINT = "/api/forkshop/positions"
+
+export function useForkshopPositions(): {
+  nodePositions: NodePositions
+  onPositionChange: (id: string, x: number, y: number) => void
+} {
+  const [nodePositions, setNodePositions] = useState<NodePositions>({})
+
+  useEffect(() => {
+    let cancelled = false
+    void fetch(ENDPOINT)
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((data) => {
+        if (cancelled) return
+        if (isNodePositions(data)) {
+          setNodePositions(data)
+        }
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const onPositionChange = useCallback((id: string, x: number, y: number) => {
+    setNodePositions((prev) => ({ ...prev, [id]: { x, y } }))
+    void fetch(ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, x, y }),
+    }).catch(() => {})
+  }, [])
+
+  return { nodePositions, onPositionChange }
+}
+```
+
+No substitutions. Required for any install with a Board (i.e. all installs — Sitemap recipe always fires). Templates 2a/2b/3/5/7/9 import it.
