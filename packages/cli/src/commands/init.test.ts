@@ -231,4 +231,24 @@ describe("runInit (v2)", () => {
     expect(args).toEqual(["install"])
     expect(opts).toMatchObject({ cwd: root, stdio: "inherit" })
   })
+
+  it("skips install when skipInstall is true and prints the manual command", async () => {
+    const root = await setupProject()
+    dirs.push(root)
+    const logs: string[] = []
+    const originalLog = console.log
+    console.log = (msg: string) => { logs.push(String(msg)) }
+    try {
+      const result = await runInit({
+        projectRoot: root,
+        manifest: fakeManifest(),
+        skipInstall: true,
+      })
+      expect(result.ok).toBe(true)
+    } finally {
+      console.log = originalLog
+    }
+    expect(spawnSyncMock).not.toHaveBeenCalled()
+    expect(logs.some((l) => /run.*npm install/i.test(l))).toBe(true)
+  })
 })

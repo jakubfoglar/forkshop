@@ -27,6 +27,7 @@ export interface InitOptions {
   registryUrl?: string
   force?: boolean
   installClaudePack?: boolean         // opt-in: writes hook + settings.json
+  skipInstall?: boolean               // opt-out: skip `<pm> install` (for CI / scripted use)
 }
 
 export type InitResult = { ok: true } | { ok: false; reason: string }
@@ -34,7 +35,7 @@ export type InitResult = { ok: true } | { ok: false; reason: string }
 const DEFAULT_REGISTRY_URL = "https://forkshop.dev/r/"
 
 export async function runInit(options: InitOptions): Promise<InitResult> {
-  const { projectRoot, force = false, installClaudePack: cliFlag } = options
+  const { projectRoot, force = false, installClaudePack: cliFlag, skipInstall = false } = options
   const registryUrl = options.registryUrl ?? DEFAULT_REGISTRY_URL
 
   // 1. Preflight
@@ -181,15 +182,29 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
   // 14. Run package manager install (unless --no-install)
   if (addedDeps.length > 0) {
     const pm = await detectPackageManager(projectRoot)
-    console.log(pc.dim(`\nInstalling @forkshop/engine via ${pm}...`))
-    const result = spawnSync(pm, ["install"], { cwd: projectRoot, stdio: "inherit" })
-    if (result.status !== 0) {
-      console.error(
-        pc.red(
-          `\n${pm} install failed. Scaffold files are in place — re-run \`${pm} install\` manually to retry.`
-        )
+    if (skipInstall) {
+      const installCmd =
+        pm === "pnpm"
+          ? "pnpm install"
+          : pm === "yarn"
+            ? "yarn"
+            : pm === "bun"
+              ? "bun install"
+              : "npm install"
+      console.log(
+        pc.dim(`\nAdded \`@forkshop/engine\` to package.json. Run \`${installCmd}\` to fetch it.`)
       )
-      return { ok: false, reason: `${pm} install exited with status ${result.status ?? "unknown"}` }
+    } else {
+      console.log(pc.dim(`\nInstalling @forkshop/engine via ${pm}...`))
+      const result = spawnSync(pm, ["install"], { cwd: projectRoot, stdio: "inherit" })
+      if (result.status !== 0) {
+        console.error(
+          pc.red(
+            `\n${pm} install failed. Scaffold files are in place — re-run \`${pm} install\` manually to retry.`
+          )
+        )
+        return { ok: false, reason: `${pm} install exited with status ${result.status ?? "unknown"}` }
+      }
     }
   }
 
