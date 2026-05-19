@@ -597,7 +597,7 @@ Note in the narrative that dynamic routes were found. The stub Board doesn't use
 
 ### `@forkshop/engine` missing (engine not installed)
 
-If the engine package isn't found in `node_modules/@forkshop/engine`, exit:
+`forkshop init` runs the user's package manager automatically, so this state usually means init was run with `--no-install` or the install failed. If the engine package isn't found in `node_modules/@forkshop/engine`, exit:
 
 > *"Forkshop's engine package isn't installed. Run `pnpm install` (or your package manager's equivalent) and try again."*
 
