@@ -216,4 +216,19 @@ describe("runInit (v2)", () => {
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.reason).toMatch(/schema/i)
   })
+
+  it("runs the detected package manager install after writing scaffold", async () => {
+    const root = await setupProject()
+    dirs.push(root)
+    const result = await runInit({
+      projectRoot: root,
+      manifest: fakeManifest(),
+    })
+    expect(result.ok).toBe(true)
+    expect(spawnSyncMock).toHaveBeenCalledTimes(1)
+    const [cmd, args, opts] = spawnSyncMock.mock.calls[0]
+    expect(cmd).toBe("npm") // fixture has no lockfile → detectPackageManager falls back to npm
+    expect(args).toEqual(["install"])
+    expect(opts).toMatchObject({ cwd: root, stdio: "inherit" })
+  })
 })

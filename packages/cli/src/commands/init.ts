@@ -1,5 +1,6 @@
 import path from "node:path"
 import { promises as fs } from "node:fs"
+import { spawnSync } from "node:child_process"
 import pc from "picocolors"
 import { detectPackageManager } from "../detect-pm.js"
 import { detectSrcPrefix } from "../detect-src-dir.js"
@@ -176,20 +177,22 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
   if (pack.installed) {
     console.log(pc.dim(`Claude Code live-AI hook installed to .claude/hooks/forkshop-post-tool-use.sh`))
   }
+
+  // 14. Run package manager install (unless --no-install)
   if (addedDeps.length > 0) {
     const pm = await detectPackageManager(projectRoot)
-    const installCmd =
-      pm === "pnpm"
-        ? "pnpm install"
-        : pm === "yarn"
-          ? "yarn"
-          : pm === "bun"
-            ? "bun install"
-            : "npm install"
-    console.log(
-      pc.dim(`\nAdded \`@forkshop/engine\` to package.json. Run \`${installCmd}\` to fetch it.`)
-    )
+    console.log(pc.dim(`\nInstalling @forkshop/engine via ${pm}...`))
+    const result = spawnSync(pm, ["install"], { cwd: projectRoot, stdio: "inherit" })
+    if (result.status !== 0) {
+      console.error(
+        pc.red(
+          `\n${pm} install failed. Scaffold files are in place — re-run \`${pm} install\` manually to retry.`
+        )
+      )
+      return { ok: false, reason: `${pm} install exited with status ${result.status ?? "unknown"}` }
+    }
   }
+
   console.log("\nNext steps:")
   console.log("  1. Open Claude Code in this project and type 'set up Forkshop' to finish wiring.")
   console.log("  2. Or read `app/forkshop/CLAUDE.md` to extend Forkshop by hand.")
