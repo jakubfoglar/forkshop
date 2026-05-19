@@ -1,97 +1,96 @@
 ---
 title: CLI
-description: Three commands you'll use — init, update, diff — plus a future stub.
+description: The forkshop CLI — init, update, diff, and the forkshop.json lock.
 ---
 
-The `forkshop` CLI manages the scaffold layer Forkshop drops into
-your project.
+The `forkshop` CLI manages the scaffold layer Forkshop drops into your
+project. Four commands.
 
-## `forkshop init`
+## `init`
 
-Adds Forkshop to a Next.js project. Run once.
+Adds Forkshop to a Next.js App Router project. Run once.
 
 ```bash
 npx forkshop init
 ```
 
-Behavior:
-
-1. Preflights — requires `app/` (App Router) and a `@/*` path
-   alias in `tsconfig.json`.
-2. Aborts if `forkshop.json` already exists. Use `forkshop update`
-   to refresh an existing install.
-3. Fetches the registry manifest from `forkshop.dev/r/`.
-4. Drops the scaffold layer (route stubs, skill files,
-   `app/forkshop/CLAUDE.md`, Raveo font).
-5. Appends `@import "@forkshop/engine/forkshop.css";` to your
-   `globals.css` — idempotent. Warns if it can't find a globals.css.
-6. Merges `@forkshop/engine` into `package.json` `dependencies`. **Does
-   not run your package manager** — it prints the install command for
-   you.
-7. Optionally installs the Claude Code producer pack (see below).
-8. Writes `forkshop.json`.
-
 | Flag                     | Description                                                  |
 |--------------------------|--------------------------------------------------------------|
-| `--force`                | Overwrite existing files. Use after a half-finished install. |
+| `--force`                | Overwrite existing files.                                    |
 | `--registry <url>`       | Use an alternate registry URL.                               |
-| `--install-claude-pack`  | Drop `.claude/hooks/forkshop-post-tool-use.sh` and register it in `.claude/settings.json`. See [Live AI agents](/docs/live-ai-agents). |
+| `--install-claude-pack`  | Drop the Claude Code activity hook. See [Live AI agents](/docs/live-ai-agents). |
 
-After `init`, run your install command, then open Claude Code and
-say "set up Forkshop" — the setup skill scaffolds your first Board
-and wires `next.config.*` for the locator.
+Init merges `@forkshop/engine` into `package.json` but does **not**
+run your package manager — it prints the install command. After
+install, open Claude Code in the project and say "set up Forkshop"
+to scaffold your first Board.
 
-## `forkshop update`
+Aborts if `forkshop.json` already exists. Use `update` to refresh.
 
-Refreshes the scaffold against the manifest the manifest points at.
+## `update`
+
+Refreshes the scaffold against the latest manifest.
 
 ```bash
 npx forkshop update
 ```
 
-What it does:
+| Flag                | Description                                  |
+|---------------------|----------------------------------------------|
+| `--check`           | Dry-run. Exits non-zero if any file drifted. |
+| `--force`           | Overwrite locally edited files.              |
+| `--registry <url>`  | Use an alternate registry URL.               |
 
-- Compares every scaffolded file's checksum against the upstream
-  manifest.
-- Lists files that have drifted (in upstream, in your copy, or
-  both).
-- Prompts once for confirmation; on accept, overwrites with
-  upstream.
-- Offers to bump the `@forkshop/engine` pin in `package.json` if a
-  newer engine is available.
+Prompts before overwriting locally edited files. Offers a soft
+`@forkshop/engine` version bump if a newer engine is available.
 
-| Flag               | Description                                |
-|--------------------|--------------------------------------------|
-| `--check`          | Dry-run. Exits non-zero if any file drifted. |
-| `--force`          | Overwrite locally edited files without confirming. |
-| `--registry <url>` | Use an alternate registry URL.             |
+## `diff <path>`
 
-## `forkshop diff <path>`
-
-Shows a unified diff between your local copy of one scaffolded file
+Shows a unified diff between your local copy of a scaffolded file
 and the upstream version.
 
 ```bash
 npx forkshop diff app/forkshop/CLAUDE.md
 ```
 
-| Flag               | Description                  |
-|--------------------|------------------------------|
-| `--registry <url>` | Use an alternate registry URL. |
+| Flag                | Description                  |
+|---------------------|------------------------------|
+| `--registry <url>`  | Use an alternate registry URL. |
 
-## `forkshop add <bundle>`
+## `add <bundle>`
 
-Not available yet. Returns a "not yet released" message. Reserved
-for future community bundles.
+Not available yet. Reserved for future community bundles.
 
 ## `forkshop.json`
 
-`init` writes this file at your project root. It records:
+The lockfile `init` writes at your project root. Records the pinned
+`@forkshop/engine` version and a checksum of every scaffolded file.
+`update` reads it to detect drift. Commit it.
 
-- The pinned `@forkshop/engine` version.
-- A checksum of every file `init` dropped.
-- The list of bundles installed (currently just `init`).
-- A schema version.
+## Uninstall
 
-Commit it. `update` reads it to figure out which files came from
-where and to detect drift.
+There's no `forkshop uninstall` command. To remove Forkshop manually:
+
+```bash
+# 1. Delete the scaffold layer
+rm -rf app/forkshop app/api/forkshop forkshop.json
+rm -rf .claude/skills/forkshop-*.md
+rm -rf .claude/hooks/forkshop-post-tool-use.sh   # if you installed it
+rm -rf public/fonts/forkshop
+
+# 2. Remove the dep
+pnpm remove @forkshop/engine
+# or: npm uninstall / yarn remove
+```
+
+Then by hand:
+
+- Delete the `@import "@forkshop/engine/forkshop.css";` line from
+  your `globals.css`.
+- If you wired the locator: remove `@locator/webpack-loader` from
+  `package.json` and its loader rule from `next.config.*`, and
+  delete any `<EditorLink />` mount in your root layout.
+- If you installed the Claude Code hook: remove its entry from
+  `.claude/settings.json`.
+
+Restart your dev server.
