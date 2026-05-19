@@ -249,6 +249,6 @@ describe("runInit (v2)", () => {
       console.log = originalLog
     }
     expect(spawnSyncMock).not.toHaveBeenCalled()
-    expect(logs.some((l) => /run.*npm install/i.test(l))).toBe(true)
+    expect(logs.some((l) => /to fetch it/i.test(l))).toBe(true)
   })
 })
