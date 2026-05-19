@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { clampReportedHeight } from "@forkshop/components/canvas/lazy-iframe"
+import { clampReportedHeight, buildIframeContentStyle } from "@forkshop/components/canvas/lazy-iframe"
 
 describe("clampReportedHeight", () => {
   it("returns the measured value in auto mode regardless of cap", () => {
@@ -25,5 +25,24 @@ describe("clampReportedHeight", () => {
 
   it("returns measured when cap mode but cap is undefined", () => {
     expect(clampReportedHeight(900, "cap", undefined)).toBe(900)
+  })
+})
+
+describe("buildIframeContentStyle", () => {
+  it("always hides Next dev chrome", () => {
+    expect(buildIframeContentStyle("auto")).toContain("nextjs-portal")
+    expect(buildIframeContentStyle("cap")).toContain("nextjs-portal")
+    expect(buildIframeContentStyle("fixed")).toContain("nextjs-portal")
+  })
+
+  it("always neutralizes min-h-screen", () => {
+    expect(buildIframeContentStyle("auto")).toContain("min-h-screen")
+    expect(buildIframeContentStyle("cap")).toContain("min-h-screen")
+  })
+
+  it("injects body overflow lock only in cap mode", () => {
+    expect(buildIframeContentStyle("cap")).toContain("overflow: hidden")
+    expect(buildIframeContentStyle("auto")).not.toContain("overflow: hidden")
+    expect(buildIframeContentStyle("fixed")).not.toContain("overflow: hidden")
   })
 })

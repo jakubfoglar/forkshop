@@ -14,6 +14,28 @@ export function clampReportedHeight(
   return measured
 }
 
+export function buildIframeContentStyle(mode: LazyIframeHeightMode): string {
+  // Always: hide Next dev chrome and decouple body height from the iframe
+  // viewport so min-h-screen doesn't pin body to the iframe's CSS height.
+  // Cap mode additionally locks scroll inside the iframe doc — the canvas
+  // is the scroll surface, not the embedded page.
+  const lockScroll =
+    mode === "cap" ? "html, body { overflow: hidden !important; }\n" : ""
+  return `
+  nextjs-portal,
+  [data-nextjs-toast],
+  [data-nextjs-dev-overlay],
+  #__next-build-watcher {
+    display: none !important;
+  }
+  html, body { min-height: 0 !important; height: auto !important; }
+  [class*="min-h-screen"],
+  [class*="min-h-dvh"],
+  [class*="min-h-svh"],
+  [class*="min-h-lvh"] { min-height: 0 !important; }
+  ${lockScroll}`
+}
+
 type LazyIframeProps = {
   src: string
   title: string
@@ -131,19 +153,7 @@ export function LazyIframe({
       // pinned to the iframe's CSS height — which would defeat the
       // ResizeObserver-driven self-sizing below.
       styleElement = document_.createElement("style")
-      styleElement.textContent = `
-  nextjs-portal,
-  [data-nextjs-toast],
-  [data-nextjs-dev-overlay],
-  #__next-build-watcher {
-    display: none !important;
-  }
-  html, body { min-height: 0 !important; height: auto !important; }
-  [class*="min-h-screen"],
-  [class*="min-h-dvh"],
-  [class*="min-h-svh"],
-  [class*="min-h-lvh"] { min-height: 0 !important; }
-`
+      styleElement.textContent = buildIframeContentStyle(effectiveMode)
       document_.head.append(styleElement)
       if (onIframeWheel) {
         wheelHandler = (event) => onIframeWheel(event, iframe)
@@ -180,7 +190,7 @@ export function LazyIframe({
         attached.removeEventListener("gestureend", gestureHandler)
       }
     }
-  }, [shouldLoad, onIframeWheel, handleBodySync])
+  }, [shouldLoad, onIframeWheel, handleBodySync, effectiveMode])
 
   // Resolve height based on the explicit mode, falling back to the
   // deprecated heightCap behavior for back-compat.
