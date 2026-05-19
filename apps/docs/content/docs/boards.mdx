@@ -1,0 +1,134 @@
+---
+title: Boards
+description: The four Layouts that ship with the engine, with props and examples.
+---
+
+These are the four Layouts the engine ships. Each is a React component
+exported from `@forkshop/engine`. You compose them in `app/forkshop/`
+to build the Boards visible in your sidebar.
+
+## `ResponsiveFrameView`
+
+Renders one page at three viewport sizes side-by-side. The defining
+board for visual development — see your hero on desktop, tablet, and
+mobile at once. Edits in any viewport propagate to the others in real
+time.
+
+**Props:**
+
+| Prop          | Type             | Description                              |
+|---------------|------------------|------------------------------------------|
+| `url`         | `string`         | The path to render (e.g., `/`, `/pricing`). |
+| `viewports`   | `Viewport[]`     | Optional — defaults to `[mobile, tablet, desktop]`. |
+| `sourceFile`  | `string`         | Optional — TSX file backing the URL, enables canvas editing. |
+
+**Example:**
+
+```tsx
+import { ResponsiveFrameView } from "@forkshop/engine"
+
+export default function HeroBoard() {
+  return (
+    <ResponsiveFrameView
+      url="/"
+      sourceFile="app/page.tsx"
+    />
+  )
+}
+```
+
+## `Gallery`
+
+A free-form grid of Nodes. Use for a UI components board, a blocks
+board, an icon set — anywhere you want a flat collection laid out
+edge-to-edge.
+
+**Props:**
+
+| Prop      | Type           | Description                              |
+|-----------|----------------|------------------------------------------|
+| `nodes`   | `NodeSpec[]`   | The Nodes to render. Each has a URL and optional NodeType. |
+| `columns` | `number`       | Optional — defaults to auto-fit.         |
+
+**Example:**
+
+```tsx
+import { Gallery } from "@forkshop/engine"
+
+export default function ComponentsBoard() {
+  return (
+    <Gallery
+      nodes={[
+        { url: "/forkshop/iframes/button", nodeType: "component" },
+        { url: "/forkshop/iframes/card", nodeType: "component" },
+      ]}
+    />
+  )
+}
+```
+
+## `Tree`
+
+A sitemap-style hierarchical tree. Each entry can have children. Use
+for a routes overview or a content hierarchy.
+
+**Props:**
+
+| Prop      | Type           | Description                              |
+|-----------|----------------|------------------------------------------|
+| `entries` | `TreeEntry[]`  | The tree structure. Each entry has a URL, label, and optional `children`. |
+
+**Example:**
+
+```tsx
+import { Tree } from "@forkshop/engine"
+
+export default function SitemapBoard() {
+  return (
+    <Tree
+      entries={[
+        {
+          url: "/",
+          label: "Home",
+          children: [
+            { url: "/pricing", label: "Pricing" },
+            { url: "/about", label: "About" },
+          ],
+        },
+      ]}
+    />
+  )
+}
+```
+
+## `DesignSystemView`
+
+Your design tokens (colors, typography, spacing) plus your UI
+primitives, arranged on a single foundations + components board.
+Tokens are pulled from a `tokens` prop (typically built by reading
+your `:root` CSS variables at runtime).
+
+**Props:**
+
+| Prop         | Type             | Description                              |
+|--------------|------------------|------------------------------------------|
+| `tokens`     | `TokenRegistry`  | Color, spacing, typography token groups. |
+| `primitives` | `PrimitiveSpec[]`| Your UI components, with URLs to render them. |
+
+**Example:**
+
+See the `app/forkshop/design-system.tsx` scaffolded by `forkshop init`
+— it shows the canonical setup, including the `parseTokenRegistryFromCssVars`
+helper that reads your existing `:root` CSS variables.
+
+## Picking a Layout
+
+| If you want…                                       | Use                  |
+|----------------------------------------------------|----------------------|
+| One page, multiple viewport sizes                  | `ResponsiveFrameView`|
+| A flat collection of components or pages           | `Gallery`            |
+| A hierarchical view (sitemap, content tree)        | `Tree`               |
+| Tokens + primitives together as a design system    | `DesignSystemView`   |
+
+For shapes that none of these match, write your own — see
+**[Extending Forkshop](/docs/extending)**.
