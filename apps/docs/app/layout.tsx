@@ -1,6 +1,7 @@
 import localFont from "next/font/local"
 import { RootProvider } from "fumadocs-ui/provider"
 import "./globals.css"
+import { SiteHeader } from "@/components/site-header"
 
 const raveo = localFont({
   src: "../../../packages/engine/fonts/raveo/RaveoVF.woff2",
@@ -18,7 +19,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={raveo.variable}>
       <body className="font-raveo antialiased">
-        <RootProvider>{children}</RootProvider>
+        <RootProvider>
+          <SiteHeader />
+          {children}
+        </RootProvider>
       </body>
     </html>
   )
