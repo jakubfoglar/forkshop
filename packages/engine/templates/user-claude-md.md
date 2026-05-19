@@ -54,7 +54,7 @@ const aboutNode: IframeRouteNode = {
   id: "page:/about",
   kind: "iframe-route",
   x: 0, y: 0, width: 1200, height: 800,
-  path: "/about",
+  routePath: "/about",
   sourceFile: "app/about/page.tsx",
 }
 ```
@@ -210,7 +210,7 @@ const nodes: GalleryEntry[] = [
       id: "doc:getting-started",
       kind: "iframe-route",
       x: 0, y: 0, width: 1200, height: 800,
-      path: "/docs/getting-started",
+      routePath: "/docs/getting-started",
       sourceFile: "app/docs/getting-started/page.tsx",
     },
   },
@@ -284,9 +284,49 @@ import { BUILTIN_NODE_TYPES } from "@forkshop/engine"
 export const nodeTypes = [...BUILTIN_NODE_TYPES, storybookStoryNodeType]
 ```
 
+**Wrapping a built-in NodeType.** When you need an `iframe-route` variant with one tweak (a sidebar-only clip, custom framing, a non-default `desktopWidth`), spread the built-in's properties and override only the parts that differ. This inherits `agentMatch` so route-level live-AI attribution keeps working:
+
+```tsx
+// app/forkshop/node-types/sidebar-only-frame.tsx
+"use client"
+import { iframeRouteNodeType } from "@forkshop/engine"
+import type { NodeType, IframeRouteNode } from "@forkshop/engine"
+
+type SidebarOnlyFrame = IframeRouteNode & { kind: "sidebar-only-frame" }
+
+export const sidebarOnlyFrameNodeType: NodeType<SidebarOnlyFrame> = {
+  ...iframeRouteNodeType,
+  id: "sidebar-only-frame",
+  match: (node): node is SidebarOnlyFrame => node.kind === "sidebar-only-frame",
+  // agentMatch inherited — route attribution still works
+  render: ({ node, onBodyHeightChange }) => (
+    <div style={{ width: 520, overflow: "hidden" }}>
+      <div style={{ marginLeft: -(1440 - 520) }}>
+        {iframeRouteNodeType.render({ node, onBodyHeightChange })}
+      </div>
+    </div>
+  ),
+}
+```
+
+Use this pattern whenever you'd otherwise reach for `inline-react` + a hand-rolled iframe — wrapping `iframe-route` keeps live-edit overlay, agent-read indicator, wheel forwarding, and route-level pulses intact.
+
 ---
 
 ## How edit, spacing, and open-in-editor work
+
+### Frame heights
+
+`iframe-route` clamps the rendered iframe to `node.height`. The iframe loads the
+full page, auto-sizes vertically until it hits the cap, then clips. Scrolling
+inside the iframe is locked — the canvas is the scroll surface, not the
+embedded page.
+
+If you want the iframe to grow taller to fit a long page, increase `node.height`.
+If you want a fixed-thumbnail look regardless of content length, set `node.height`
+to your desired tile height — the iframe will clip the page accordingly.
+
+(`iframe-component` follows the same rules using its `previewSrc` URL.)
 
 ### Live text editing
 
