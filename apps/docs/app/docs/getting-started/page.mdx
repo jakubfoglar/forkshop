@@ -1,70 +1,71 @@
 ---
 title: Getting Started
-description: Install Forkshop in your Next.js project and open your first board.
+description: Add Forkshop to an existing Next.js App Router project.
 ---
 
-Forkshop adds a thin scaffold to your existing Next.js App Router
-project. There's no separate dev server, no monorepo restructure, no
-deploy step. Run one command, restart your dev server, and you have a
-canvas at `/forkshop`.
+`npx forkshop init` scaffolds the file layer Forkshop needs into an
+existing Next.js project. It doesn't install your deps — it edits
+`package.json` and prints the command to run.
 
 ## Prerequisites
 
-- A Next.js App Router project (Next.js 14 or 15).
-- A package manager — `pnpm`, `npm`, or `yarn`. Forkshop detects which
-  you use.
-- A `globals.css` (or equivalent) that Forkshop can append its CSS
-  import to. Most Next.js scaffolds have this by default.
+- A Next.js App Router project.
+- `tsconfig.json` with a `@/*` path alias (the standard Next scaffold
+  has this).
+- A `globals.css` that gets imported from your root layout.
 
-## Install
+## Run init
 
-From the root of your Next.js project:
+From your project root:
 
 ```bash
 npx forkshop init
 ```
 
-This does five things:
+What it does, in order:
 
-1. Installs `@forkshop/engine` as a dependency (via your detected
-   package manager).
-2. Drops a small scaffold layer into your project under `app/forkshop/`
-   — your canvas page, a few NodeTypes, a placeholder design-system
-   board.
-3. Drops route stubs under `app/api/forkshop/` — the dev-only edit
-   API and the agent-activity SSE feed.
-4. Appends a CSS import to your `globals.css` so Forkshop's chrome
-   styles load.
-5. Writes a `forkshop.json` lock recording the engine version and
-   scaffold checksums (so `forkshop update` can compare later).
+1. Preflights — refuses to run if `app/` isn't found or `@/*` isn't
+   in `tsconfig.json`.
+2. Aborts if `forkshop.json` already exists. Re-running an install
+   isn't the right command — see [CLI](/docs/cli) for `update` and
+   `diff`.
+3. Fetches the registry manifest from `forkshop.dev/r/`.
+4. Drops the scaffold layer:
+   - Route stubs in `app/api/forkshop/` (the dev-only edit API and
+     the agent activity routes).
+   - Skill files in `.claude/skills/forkshop-*.md` (read by Claude
+     Code when you're working in the project).
+   - `app/forkshop/CLAUDE.md` (the on-project agent reference).
+   - The Raveo font in `public/fonts/forkshop/`.
+5. Appends `@import "@forkshop/engine/forkshop.css";` to your
+   `globals.css` if it isn't already there.
+6. Merges `@forkshop/engine` into your `package.json` `dependencies`.
+7. Writes `forkshop.json` — engine version, scaffold checksums,
+   installed bundles.
 
-## Open your first board
+Init does **not** invoke your package manager. After it finishes, it
+prints the install command for your detected package manager.
 
-Start your dev server:
+## Finish the setup
 
-```bash
-pnpm dev   # or npm run dev / yarn dev
-```
+Two more steps:
 
-Visit `/forkshop` in your browser. You'll see:
+1. **Install deps.** Run the command init printed (`pnpm install`,
+   `npm install`, or `yarn`).
+2. **Open Claude Code in the project and say "set up Forkshop."**
+   The setup skill (dropped by init in step 4) scaffolds your first
+   Board, wires the locator loader into `next.config.*`, and detects
+   your existing primitives and routes. It's the part init
+   deliberately doesn't do.
 
-- A canvas surface filling the viewport.
-- A left sidebar listing the boards the init scaffolded.
-- One default board showing a few of your existing pages or
-  components, depending on what `forkshop init` detected.
+Then start your dev server and open `/forkshop`.
 
-## What got scaffolded
+## Opting in to the Claude Code activity hook
 
-The init creates `app/forkshop/` in your project. Open
-`app/forkshop/CLAUDE.md` — it's a short reference that any Claude Code
-session in your project will pick up automatically. That file is the
-canonical "how to use Forkshop in this project" guide; the docs site
-covers the parts that don't change between projects.
-
-## Next steps
-
-- **[Concepts](/docs/concepts)** — Nodes, NodeTypes, Layouts, Boards.
-- **[Boards](/docs/boards)** — the four Layouts that ship with the
-  engine.
-- **[Extending Forkshop](/docs/extending)** — add your own NodeTypes
-  and Layouts.
+Pass `--install-claude-pack` to `init` (or set
+`FORKSHOP_INSTALL_CLAUDE_PACK=1`) to also drop the post-tool-use
+bash hook into `.claude/hooks/` and register it in
+`.claude/settings.json`. The hook POSTs to your dev server when
+Claude reads or edits files, so the canvas can highlight them. See
+[Live AI agents](/docs/live-ai-agents) for what the activity looks
+like.

@@ -1,28 +1,16 @@
 ---
 title: Boards
-description: The four Layouts that ship with the engine, with props and examples.
+description: The four Layouts that ship with the engine.
 ---
 
-These are the four Layouts the engine ships. Each is a React component
-exported from `@forkshop/engine`. You compose them in `app/forkshop/`
-to build the Boards visible in your sidebar.
+A Board is one entry in your sidebar — a Layout configured with
+data. The engine ships four Layouts. Each is a React component
+exported from `@forkshop/engine`. Compose them in `app/forkshop/`.
 
 ## `ResponsiveFrameView`
 
-Renders one page at three viewport sizes side-by-side. The defining
-board for visual development — see your hero on desktop, tablet, and
-mobile at once. Edits in any viewport propagate to the others in real
-time.
-
-**Props:**
-
-| Prop          | Type             | Description                              |
-|---------------|------------------|------------------------------------------|
-| `url`         | `string`         | The path to render (e.g., `/`, `/pricing`). |
-| `viewports`   | `Viewport[]`     | Optional — defaults to `[mobile, tablet, desktop]`. |
-| `sourceFile`  | `string`         | Optional — TSX file backing the URL, enables canvas editing. |
-
-**Example:**
+Renders one route at multiple viewport widths, side-by-side. Edits
+in any frame mirror across the others as you type.
 
 ```tsx
 import { ResponsiveFrameView } from "@forkshop/engine"
@@ -30,105 +18,89 @@ import { ResponsiveFrameView } from "@forkshop/engine"
 export default function HeroBoard() {
   return (
     <ResponsiveFrameView
-      url="/"
+      path="/"
+      source="/"
       sourceFile="app/page.tsx"
     />
   )
 }
 ```
 
+| Prop          | Notes                                                                |
+|---------------|----------------------------------------------------------------------|
+| `path`        | Required. Logical identifier — drives agent-activity matching.       |
+| `source`      | Required. The iframe `src` URL.                                      |
+| `viewports`   | Pixel widths. Default `[1440, 768, 375]`.                            |
+| `kind`        | `"page"` or `"block"`. Default `"page"`.                             |
+| `sourceFile`  | Path to the TSX file backing the route. Required for live editing.   |
+
+`path` and `source` are usually the same string — they're separated
+because some Boards point at a generated preview route that doesn't
+match the conceptual identity of the page.
+
 ## `Gallery`
 
-A free-form grid of Nodes. Use for a UI components board, a blocks
-board, an icon set — anywhere you want a flat collection laid out
-edge-to-edge.
-
-**Props:**
-
-| Prop      | Type           | Description                              |
-|-----------|----------------|------------------------------------------|
-| `nodes`   | `NodeSpec[]`   | The Nodes to render. Each has a URL and optional NodeType. |
-| `columns` | `number`       | Optional — defaults to auto-fit.         |
-
-**Example:**
+A flat collection of Nodes laid out in a grid or stacked column.
+Use for a UI components board, a blocks board, or a comparison
+spread.
 
 ```tsx
 import { Gallery } from "@forkshop/engine"
 
-export default function ComponentsBoard() {
-  return (
-    <Gallery
-      nodes={[
-        { url: "/forkshop/iframes/button", nodeType: "component" },
-        { url: "/forkshop/iframes/card", nodeType: "component" },
-      ]}
-    />
-  )
+export default function ComponentsBoard({ entries }) {
+  return <Gallery entries={entries} layout="grid" />
 }
 ```
 
+| Prop           | Notes                                                  |
+|----------------|--------------------------------------------------------|
+| `entries`      | Required. Array of `{ id, label?, node, row?, column? }`. |
+| `layout`       | Required. `"stack"` or `"grid"`.                       |
+| `viewportWidth`| Pixel width per tile. Default 1200 (stack) / 400 (grid). |
+| `rowGap`       | Default 32 (stack) / 48 (grid).                        |
+| `columnGap`    | Default 0 (stack) / 32 (grid).                         |
+| `fitContent`   | When `true`, tiles shrink to their content height.     |
+
+Each `GalleryEntry` carries an `AnyNode` — typically built from
+`iframeComponentNodeType` or `iframeRouteNodeType`. See
+[Extending Forkshop](/docs/extending) for custom Node kinds.
+
 ## `Tree`
 
-A sitemap-style hierarchical tree. Each entry can have children. Use
-for a routes overview or a content hierarchy.
-
-**Props:**
-
-| Prop      | Type           | Description                              |
-|-----------|----------------|------------------------------------------|
-| `entries` | `TreeEntry[]`  | The tree structure. Each entry has a URL, label, and optional `children`. |
-
-**Example:**
+A hierarchical board derived from URL paths. A `TreeEntry` with
+`path: "/about/team"` is rendered as a child of one with
+`path: "/about"`. There is no `children` array — the structure
+falls out of the paths themselves.
 
 ```tsx
 import { Tree } from "@forkshop/engine"
 
-export default function SitemapBoard() {
-  return (
-    <Tree
-      entries={[
-        {
-          url: "/",
-          label: "Home",
-          children: [
-            { url: "/pricing", label: "Pricing" },
-            { url: "/about", label: "About" },
-          ],
-        },
-      ]}
-    />
-  )
+export default function SitemapBoard({ entries }) {
+  return <Tree entries={entries} />
 }
 ```
 
+Each `TreeEntry` is `{ id, label?, path, node }`. Useful for
+sitemap-shaped Boards and content hierarchies.
+
 ## `DesignSystemView`
 
-Your design tokens (colors, typography, spacing) plus your UI
-primitives, arranged on a single foundations + components board.
-Tokens are pulled from a `tokens` prop (typically built by reading
-your `:root` CSS variables at runtime).
+Tokens plus primitives on one Board.
 
-**Props:**
+```tsx
+import { DesignSystemView } from "@forkshop/engine"
 
-| Prop         | Type             | Description                              |
-|--------------|------------------|------------------------------------------|
-| `tokens`     | `TokenRegistry`  | Color, spacing, typography token groups. |
-| `primitives` | `PrimitiveSpec[]`| Your UI components, with URLs to render them. |
+export default function FoundationsBoard({ tokens, primitives }) {
+  return <DesignSystemView tokens={tokens} primitives={primitives} />
+}
+```
 
-**Example:**
+| Prop          | Notes                                                          |
+|---------------|----------------------------------------------------------------|
+| `tokens`      | A `TokenRegistry` — usually built at runtime from `:root` vars. |
+| `primitives`  | Array of `PrimitiveGroup` — each is `{ id, label, primitives: AnyNode[] }`. |
+| `typography`  | Optional Node for the typography stage.                        |
 
-See the `app/forkshop/design-system.tsx` scaffolded by `forkshop init`
-— it shows the canonical setup, including the `parseTokenRegistryFromCssVars`
-helper that reads your existing `:root` CSS variables.
-
-## Picking a Layout
-
-| If you want…                                       | Use                  |
-|----------------------------------------------------|----------------------|
-| One page, multiple viewport sizes                  | `ResponsiveFrameView`|
-| A flat collection of components or pages           | `Gallery`            |
-| A hierarchical view (sitemap, content tree)        | `Tree`               |
-| Tokens + primitives together as a design system    | `DesignSystemView`   |
-
-For shapes that none of these match, write your own — see
-**[Extending Forkshop](/docs/extending)**.
+The init scaffold sets you up to build the `tokens` registry from
+your existing CSS variables via `parseTokenRegistryFromCssVars` —
+no separate token source needed.

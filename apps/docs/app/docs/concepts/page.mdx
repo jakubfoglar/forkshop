@@ -1,78 +1,70 @@
 ---
 title: Concepts
-description: The mental model for working with Forkshop — Nodes, NodeTypes, Layouts, and Boards.
+description: Nodes, NodeTypes, Layouts, and Boards.
 ---
 
-Four words you'll see repeatedly. Reading this page once anchors the
-rest of the docs.
+Forkshop has four user-facing primitives. Most of the API surface is
+either an instance of one of these or a function over them.
 
 ## Node
 
-A **Node** is a single iframe-backed tile on the canvas. Every visible
-thing on a Forkshop canvas is a Node. A Node points at a real URL or
-source file in your project; the iframe loads that URL and renders it
-inside the canvas tile.
+A **Node** is a positioned thing on the canvas. It carries an `id`,
+a `kind`, an `x/y/width/height`, and an optional `label`. Three
+kinds ship in the engine:
+
+- `inline-react` — renders a React element directly in the host
+  context. No iframe.
+- `iframe-route` — renders a route of your app inside an iframe.
+  `routePath: "/pricing"` becomes `<iframe src="/pricing">`.
+- `iframe-component` — renders a single component preview inside an
+  iframe via a generated preview route.
+
+Nodes are plain data. You compose them into Boards; the engine
+positions them on the canvas.
 
 ## NodeType
 
-A **NodeType** is a named configuration for a Node — the iframe's
-viewport size, the label that appears above the tile, the aspect
-ratio, and any per-type styling. NodeTypes are how you say "this kind
-of Node is a mobile preview" versus "this kind of Node is a 1440-wide
-desktop view."
+A **NodeType** is a plugin object that tells the engine how to
+render a kind of Node. It satisfies this interface:
 
-The engine ships a handful of default NodeTypes. You can add your own
-in `app/forkshop/node-types/` — see
-**[Extending Forkshop](/docs/extending)**.
+```ts
+type NodeType<T extends AnyNode> = {
+  id: string
+  match: (node: AnyNode) => node is T
+  render: (props: RenderProps<T>) => ReactNode
+  agentMatch?: (node: T, activity: AgentActivitySnapshot) => AgentMatchResult
+}
+```
+
+`match` is a TypeScript type guard that decides whether a NodeType
+handles a given Node. `render` returns the React tree for it.
+`agentMatch` is optional — it tells the engine whether agent
+activity on a file should highlight this Node.
+
+There is no `defineNodeType()` factory. A NodeType is just an
+object satisfying the interface. The engine ships three built-ins
+(`inlineReactNodeType`, `iframeRouteNodeType`,
+`iframeComponentNodeType`) collected in `BUILTIN_NODE_TYPES`.
 
 ## Layout
 
-A **Layout** is a React component that arranges Nodes into a named
-board shape. The engine ships four Layouts:
+A **Layout** is a React component that arranges Nodes on the canvas.
+The engine ships four:
 
-- `ResponsiveFrameView` — one page rendered at three viewports
-  side-by-side, with live cross-viewport sync.
-- `Gallery` — a free-form grid of Nodes.
-- `Tree` — a sitemap-style hierarchical tree.
-- `DesignSystemView` — your design tokens and UI primitives laid out
-  as a foundations + components board.
+- `Gallery` — flat grid or stacked column of Nodes.
+- `Tree` — hierarchical view derived from URL paths.
+- `DesignSystemView` — tokens + primitives on one board.
+- `ResponsiveFrameView` — one route at three viewport widths,
+  side-by-side, with live sync.
 
-Layouts compose NodeTypes. A single Layout typically renders multiple
-Nodes of one or two NodeTypes.
+Layouts decide where Nodes sit. NodeTypes decide what each tile
+renders. The two are independent.
 
 ## Board
 
-A **Board** is what you mount on your canvas — one Layout
-configuration with its data. A Forkshop install usually has a few
-Boards: a Design System board, a UI Components board, a Sitemap board,
-and so on. You compose them in `app/forkshop/`. You see them in the
-sidebar.
+A **Board** is one entry in your sidebar. It's a Layout configured
+with data — `<ResponsiveFrameView path="/pricing" source="/pricing" />`
+is a Board.
 
-## How it fits together
-
-```
-Board   = one entry in the sidebar
-  └── Layout    = how its Nodes are arranged
-        └── Node      = one iframe tile
-              └── NodeType  = the tile's configuration
-```
-
-You'll spend most of your time writing Boards. NodeTypes and Layouts
-are reusable building blocks; once you have a set that works for your
-project, Boards are quick to scaffold — by hand or by your agent.
-
-## Where each lives
-
-| Concept   | Lives in                                |
-|-----------|-----------------------------------------|
-| Node      | Implicit — emitted by Layouts at render |
-| NodeType  | `app/forkshop/node-types/` (custom) or shipped by the engine |
-| Layout    | Shipped by the engine, imported in your Boards |
-| Board     | `app/forkshop/` in your project          |
-
-## Next
-
-- **[Boards](/docs/boards)** — the four engine-shipped Layouts in
-  detail.
-- **[Extending Forkshop](/docs/extending)** — custom NodeTypes and
-  Layouts.
+Boards live in `app/forkshop/` in your project. You compose them as
+plain React; you don't register them anywhere.

@@ -389,6 +389,20 @@ Changes that require a doc sync:
 - Changed file layout after init
 - Changed behavior of edit, spacing, or locator wiring
 
+## Public docs site (`forkshop.dev/docs`)
+
+The 9 MDX pages live at `apps/docs/app/docs/<slug>/page.mdx`. When you edit them, follow `docs/forkshop-voice.md` — it's the style guide and was written deliberately. Cliché openings, marketing superlatives, and meta-narration are out. Verb-first, concrete, short paragraphs are in.
+
+When you add or rename a docs page, update the hardcoded nav array in `apps/docs/components/docs-sidebar.tsx` — there's no auto-discovery.
+
+Facts in the docs must match `packages/engine/` source. Common drift points worth grepping before claiming anything:
+- The CSS export is `@forkshop/engine/forkshop.css` (not `styles.css`)
+- The 11 `--forkshop-*` CSS variables live in `packages/engine/tailwind/forkshop.css`
+- There is no `defineNodeType` function — a NodeType is a plain object `{ id, match, render, agentMatch? }`
+- `init` does not invoke a package manager and does not scaffold `app/forkshop/page.tsx` (the setup skill does)
+- The locator uses `data-locatorjs` attributes, not React's `__source`
+- Live AI activity is HTTP POST to `/api/forkshop/agent-activity`, not a socket
+
 ---
 
 ## Maintaining `packages/engine/src/skill/setup.md`

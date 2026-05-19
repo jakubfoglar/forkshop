@@ -1,44 +1,49 @@
 ---
 title: CLI
-description: The forkshop CLI — init, update, diff, and the forkshop.json lock.
+description: Three commands you'll use — init, update, diff — plus a future stub.
 ---
 
-The `forkshop` CLI scaffolds and maintains Forkshop in your project.
-Three commands you'll use; one stub for the future.
+The `forkshop` CLI manages the scaffold layer Forkshop drops into
+your project.
 
 ## `forkshop init`
 
-Sets Forkshop up in your project. Run once.
+Adds Forkshop to a Next.js project. Run once.
 
 ```bash
 npx forkshop init
 ```
 
-What it does:
+Behavior:
 
-1. Detects your package manager (pnpm / npm / yarn).
-2. Runs `<pm> add @forkshop/engine` to add the engine as a dep.
-3. Drops the scaffold layer — `app/forkshop/`, `app/api/forkshop/`,
-   skill files, the user-side `CLAUDE.md`, the Raveo font file.
-4. Appends `@import "@forkshop/engine/styles.css"` (or equivalent) to
-   your `globals.css`.
-5. Writes `forkshop.json` at your project root — records the engine
-   version pin and the checksum of each scaffolded file.
+1. Preflights — requires `app/` (App Router) and a `@/*` path
+   alias in `tsconfig.json`.
+2. Aborts if `forkshop.json` already exists. Use `forkshop update`
+   to refresh an existing install.
+3. Fetches the registry manifest from `forkshop.dev/r/`.
+4. Drops the scaffold layer (route stubs, skill files,
+   `app/forkshop/CLAUDE.md`, Raveo font).
+5. Appends `@import "@forkshop/engine/forkshop.css";` to your
+   `globals.css` — idempotent. Warns if it can't find a globals.css.
+6. Merges `@forkshop/engine` into `package.json` `dependencies`. **Does
+   not run your package manager** — it prints the install command for
+   you.
+7. Optionally installs the Claude Code producer pack (see below).
+8. Writes `forkshop.json`.
 
-The init is idempotent. Re-running it offers to refresh any
-scaffolded file that's drifted (you'll see a confirm prompt per file).
+| Flag                     | Description                                                  |
+|--------------------------|--------------------------------------------------------------|
+| `--force`                | Overwrite existing files. Use after a half-finished install. |
+| `--registry <url>`       | Use an alternate registry URL.                               |
+| `--install-claude-pack`  | Drop `.claude/hooks/forkshop-post-tool-use.sh` and register it in `.claude/settings.json`. See [Live AI agents](/docs/live-ai-agents). |
 
-**Flags:**
-
-| Flag                | Description                                       |
-|---------------------|---------------------------------------------------|
-| `--yes`             | Skip all consent prompts (use defaults).          |
-| `--package-manager` | Override package manager detection.               |
+After `init`, run your install command, then open Claude Code and
+say "set up Forkshop" — the setup skill scaffolds your first Board
+and wires `next.config.*` for the locator.
 
 ## `forkshop update`
 
-Bulk-refreshes the scaffold to the version of the engine you've pinned
-in `forkshop.json`.
+Refreshes the scaffold against the manifest the manifest points at.
 
 ```bash
 npx forkshop update
@@ -48,42 +53,45 @@ What it does:
 
 - Compares every scaffolded file's checksum against the upstream
   manifest.
-- Lists files that have changed (in upstream, in your copy, or both).
-- One confirm-all prompt; accept and it overwrites with upstream.
-- Soft-offers an `@forkshop/engine` version bump if a newer engine is
-  available.
+- Lists files that have drifted (in upstream, in your copy, or
+  both).
+- Prompts once for confirmation; on accept, overwrites with
+  upstream.
+- Offers to bump the `@forkshop/engine` pin in `package.json` if a
+  newer engine is available.
 
-**Flags:**
-
-| Flag       | Description                                          |
-|------------|------------------------------------------------------|
-| `--check`  | Dry-run. Show the diff without writing.              |
-| `--force`  | Skip the consent prompt.                             |
+| Flag               | Description                                |
+|--------------------|--------------------------------------------|
+| `--check`          | Dry-run. Exits non-zero if any file drifted. |
+| `--force`          | Overwrite locally edited files without confirming. |
+| `--registry <url>` | Use an alternate registry URL.             |
 
 ## `forkshop diff <path>`
 
-Shows a unified diff of one scaffolded file against the upstream
-version, using the schema recorded in `forkshop.json`.
+Shows a unified diff between your local copy of one scaffolded file
+and the upstream version.
 
 ```bash
-npx forkshop diff app/forkshop/page.tsx
+npx forkshop diff app/forkshop/CLAUDE.md
 ```
 
-Useful for inspecting a single file before running `update`.
+| Flag               | Description                  |
+|--------------------|------------------------------|
+| `--registry <url>` | Use an alternate registry URL. |
 
 ## `forkshop add <bundle>`
 
-Reserved for future community-contributed scaffolding bundles. Not
-available at v1; returns a "not yet available" message and a link to
-the roadmap.
+Not available yet. Returns a "not yet released" message. Reserved
+for future community bundles.
 
-## The `forkshop.json` lock
+## `forkshop.json`
 
-`forkshop init` writes this file at your project root. It records:
+`init` writes this file at your project root. It records:
 
 - The pinned `@forkshop/engine` version.
-- The checksum of every file the init dropped.
-- The schema version of the lock format itself.
+- A checksum of every file `init` dropped.
+- The list of bundles installed (currently just `init`).
+- A schema version.
 
-Commit it. `forkshop update` reads it to know which scaffolded files
-came from where, and to detect drift between upstream and your copy.
+Commit it. `update` reads it to figure out which files came from
+where and to detect drift.

@@ -1,51 +1,62 @@
 ---
 title: Open in editor
-description: Option-click any text on the canvas to jump to that exact line in your editor.
+description: Hold Option and click any element on the canvas to open its source file in your editor.
 ---
 
-Hold Option (⌥) and click any element in a Forkshop canvas. Your
-editor opens at the file and line where that element is defined.
+Hold **Option** (`⌥`) over a Forkshop tile. Elements get a blue
+ring as you hover. Click one — your editor opens at the exact file
+and line that rendered it.
 
-It's the inverse of canvas editing: instead of bringing the edit into
-the canvas, you bring the canvas back to your editor.
+## How it works
 
-## What it does
+`@locator/webpack-loader` runs at compile time and stamps a
+`data-locatorjs="<file>:<line>:<col>"` attribute onto every JSX
+element. Forkshop's `EditorLink` component lives inside your app's
+root layout — so it loads inside each iframed page, not in the
+Forkshop shell. When the modifier is held, `EditorLink` listens for
+clicks, reads the `data-locatorjs` attribute, and points
+`window.top` at `vscode://file/<abs-path>:<line>:<col>`. Your OS
+hands the URL to whichever app registered the `vscode://` scheme.
 
-Every JSX element rendered through the iframe carries `__source` data
-attached at compile time. Option-click reads that data, constructs a
-`vscode://file/...:line:col` URL, and navigates the top window — your
-OS hands off the URL to VS Code (or whichever editor registered as the
-`vscode://` handler).
+`EditorLink` activates only when:
 
-## Opting in
+- `process.env.NODE_ENV === "development"`,
+- the page is rendered inside an iframe, and
+- the parent's pathname starts with `/forkshop`.
 
-Open-in-editor is **opt-in** during `forkshop init`. The setup skill
-asks "Add Option-click → editor?" and, if you accept, makes two
-changes to your project:
-
-1. Adds `@locator/webpack-loader` (or the equivalent Turbopack rule on
-   Next.js 15+) to your devDependencies.
-2. Merges a loader/rule into your `next.config.js` so the loader runs
-   over every JSX file at compile time.
-
-If you skipped the opt-in at install time, re-run `forkshop init`
-(idempotent) and answer Yes the second time.
+So the ring never appears in production and never appears on your
+real pages — only on tiles inside the Forkshop canvas.
 
 ## Editor support
 
-The default URL handler is `vscode://`, which works with:
+The URL scheme is `vscode://file/...`. That works in:
 
-- **VS Code**
-- **Cursor** (registers the same handler)
-- **VS Code Insiders** (via `vscode-insiders://`)
-- **JetBrains IDEs** via their `jetbrains://` handler (manual config)
+- **VS Code.**
+- **Cursor.** Cursor registers the same scheme.
+- **VS Code Insiders.** With the `vscode-insiders://` handler.
 
-If your editor doesn't register a `vscode://` handler, the click
-silently fails. Forkshop won't try to fall back — installing a URL
-handler for your editor is a one-time OS-level setup outside
-Forkshop's scope.
+Other editors (JetBrains, Zed, Neovim) aren't wired in. The fix
+would be a different URL scheme; the underlying click handler is
+small.
+
+If clicking does nothing, your editor probably hasn't registered a
+`vscode://` handler with the OS. That's a one-time editor setup,
+not something Forkshop can paper over.
+
+## Setup
+
+The setup skill — run from Claude Code after `forkshop init`, when
+you say "set up Forkshop" — adds `@locator/webpack-loader` to your
+devDependencies and merges the loader rule into `next.config.*`.
+`EditorLink` lands in your root layout at the same time.
+
+`forkshop init` itself does **not** wire this up. If you want it
+without running the setup skill, add the loader to `next.config.*`
+yourself and mount `<EditorLink />` from `@forkshop/engine` in your
+root layout.
 
 ## Disabling
 
-Remove the `@locator/webpack-loader` dep and the loader entry from
-your `next.config.js`. The Option-click hover indicator disappears.
+Remove the `@locator/webpack-loader` entry from `next.config.*`
+(and the dep from `package.json`), or remove the `<EditorLink />`
+mount from your root layout. The hover ring disappears.

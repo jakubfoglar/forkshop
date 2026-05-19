@@ -1,66 +1,67 @@
 ---
 title: Canvas editing
-description: Edit any text in the canvas with one click — saves write back to your source files.
+description: Click text in the canvas to edit it. ⌘↵ writes the change to your source file.
 ---
 
-Canvas editing is Forkshop's defining feature. Hover any text in the
-canvas; if it's editable, you'll see a blue outline. Click it. The
-text becomes editable in place. Type. ⌘↵ saves to disk; Esc discards.
+Hover any text in a Forkshop tile. A blue outline means the engine
+can trace it back to a string in your source — click it and the
+text becomes editable in place. Type. **⌘↵** saves. **Esc** discards.
 
-This only runs in dev. Production builds tree-shake the entire
-overlay.
+The overlay runs in dev only. Production builds tree-shake the
+wiring entirely, and the `/api/forkshop/edit` route returns 403.
 
 ## What's editable
 
-You can edit:
+The engine fetches the source file for the current tile, parses it,
+and builds a set of strings that originated in that file:
 
-- **String literals** in your source — text inside `"..."`, `'...'`, or
-  simple template literals.
-- **JSX text children** — the text between JSX tags (`<p>Hello</p>`).
+- **String literals.** Text inside `"…"`, `'…'`, and simple
+  backtick template literals — no interpolation.
+- **JSX text children.** The text between tags
+  (`<p>Hello world</p>`).
 
-You can't edit:
+Text rendered by a sub-component the current page doesn't author
+shows a gray dashed outline — locked. Editing it would write the
+change to the wrong file, so the engine prevents the click. To edit
+the shared component's text, open a Board that points at that
+component directly.
 
-- Strings that come from external data (CMS, JSON imports, fetched at
-  runtime).
-- Computed strings (template literals with interpolation).
-- Text rendered inside sub-components that the current page didn't
-  author. Hover those and you'll see a gray dashed outline — the
-  "locked" indicator.
+## Save flow
 
-The locked state is a safety feature: editing a shared `<Button>`
-shouldn't be possible from a page board, because the change would
-land in the wrong file.
+1. You click editable text. The element becomes `contentEditable`,
+   and a Save / Discard popover floats next to it.
+2. You type.
+3. **⌘↵** (or click Save) POSTs `{ pagePath, originalText, newText }`
+   to `/api/forkshop/edit`.
+4. The route requires `originalText` to occur exactly once in the
+   source file. If unique, it splices `newText` in and writes the
+   file.
+5. Next.js HMR picks up the file change and updates the iframe's
+   React tree in place — no reload.
 
-## The save flow
-
-1. You click editable text. The element becomes `contentEditable`.
-2. A small Save / Discard popover floats next to the element.
-3. You type.
-4. ⌘↵ (or click Save) POSTs to `/api/forkshop/edit` with the new text
-   and the source-file span.
-5. The route writes the change to disk.
-6. Next.js HMR picks up the change and the iframe reloads.
+If `originalText` matches multiple lines in the source, the save
+fails with a clear error. The fix is to disambiguate by editing a
+larger surrounding span.
 
 ## Multi-viewport sync
 
-On a `ResponsiveFrameView` board with three viewports of the same
-page: when you save in one viewport, all three viewports refetch the
-source file and re-render. Edits show up in all three within ~100ms of
-the save.
+On a `ResponsiveFrameView` with several iframes of the same route:
+
+- **As you type**, the engine mirrors your edits live across sibling
+  iframes using the iframe registry. No save needed.
+- **On save**, the engine fires a `forkshop:source-changed` event on
+  `window` with the affected `sourceFile`. Every controller
+  subscribed to that file refetches its editable-set so future edits
+  resolve against the new source.
 
 ## Production behavior
 
-The whole canvas-editing wiring is gated behind `process.env.NODE_ENV
-!== "production"`. Production builds skip the overlay entirely; the
-iframes render as static page previews. The `/api/forkshop/edit` route
-also returns 403 in production.
+Two gates:
 
-There is no "edit mode in production." The story is: dev is for
-editing, production is for showing.
+- `iframe-edit-overlay.tsx` returns `null` when `process.env.NODE_ENV
+  === "production"` or when `sourceFile` is unset.
+- `/api/forkshop/edit` returns `403 Forbidden` for both GET and POST
+  in production.
 
-## Related
-
-- **[Open in editor](/docs/open-in-editor)** — Option-click to jump
-  from any text on the canvas to its line in VS Code.
-- **[Live AI agents](/docs/live-ai-agents)** — see Claude's edits land
-  on the canvas in real time.
+There is no "edit mode in production." Dev is for editing; production
+ships static.

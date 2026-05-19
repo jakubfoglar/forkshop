@@ -1,39 +1,38 @@
 ---
 title: Introduction
-description: A Figma-style canvas for your Next.js project, mounted inside your dev environment.
+description: A Figma-style canvas mounted inside your Next.js dev server.
 ---
 
-Forkshop is a Figma-style canvas for your Next.js project. It mounts a
-sidebar and an infinite-scrolling canvas inside your app's dev
-environment — not in a separate design tool, not in a separate
-Storybook server. Your pages, components, and design tokens render as
-iframes on the canvas. You edit text directly in the canvas. You watch
-your AI agent make changes in real time.
+Forkshop mounts a sidebar and an infinite canvas inside your Next.js
+dev server. Your pages, components, and design tokens render on the
+canvas as iframes — at multiple viewports, side-by-side. Click text
+in any tile to edit it; ⌘↵ saves to source. When an agent edits a
+file your canvas is showing, you see it land in real time.
+
+## What you get
+
+- A canvas at `/forkshop` in your dev server. The sidebar lists the
+  Boards you've composed; the canvas renders the active one.
+- Live text editing across iframes. The source file changes on disk;
+  Next.js HMR picks it up.
+- An activity feed for coding agents. Edits and reads highlight on
+  the canvas in the agent's color.
+- Production tree-shakes the editing overlay and 403s the dev-only
+  routes. Forkshop is a dev tool — it doesn't ship to users.
 
 ## Who it's for
 
-- Developers building UI in Next.js who want the side-by-side viewport
-  comparison and "design board" experience without leaving their code.
-- Teams using Claude Code (or another coding agent) who want a visual
-  surface to watch the agent's work as it lands.
-- People who already maintain a design system in code (Tailwind,
-  shadcn/ui, custom) and don't want to mirror it into Figma.
+- Developers who want a "design board" view of their app without
+  duplicating the design into Figma.
+- Teams using a coding agent (Claude Code, Cursor) who want a visual
+  surface to watch the agent's work.
+- Projects whose design system lives in code already — Tailwind,
+  shadcn/ui, or your own primitives.
 
-## Why this exists when Figma and Storybook do
+## How it sits next to Figma and Storybook
 
-Figma is a great drawing tool, but the design lives in a separate file
-that has to be kept in sync with your code by hand. Storybook is a
-great component catalog, but the pages render in a sandbox detached
-from your real routes and real data. Forkshop renders your actual
-pages, in your actual project, at multiple viewports at once — and the
-text on the canvas is the text in your source files. Edit it on the
-canvas, ⌘↵, and the TSX file changes on disk.
-
-## Where to go next
-
-- **[Getting Started](/docs/getting-started)** — install Forkshop and open
-  your first board.
-- **[Concepts](/docs/concepts)** — the mental model: Nodes, NodeTypes,
-  Layouts, Boards.
-- **[Extending Forkshop](/docs/extending)** — write your own NodeTypes
-  and Layouts, or ask your agent to.
+Figma renders a separate file you keep in sync by hand. Storybook
+renders components in a sandbox detached from your real routes.
+Forkshop renders your real routes at your real viewports, in your
+real dev environment — and the text on the canvas is the text in
+your source files.
