@@ -5,6 +5,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { runInit } from "./init.js"
 import type { Manifest } from "../manifest-schema.js"
 
+// Hoisted so the factory runs before `runInit` imports child_process.
+const spawnSyncMock = vi.hoisted(() =>
+  vi.fn().mockReturnValue({ status: 0, stdout: "", stderr: "", pid: 0, output: [], signal: null })
+)
+
+vi.mock("node:child_process", async () => {
+  const actual = await vi.importActual<typeof import("node:child_process")>("node:child_process")
+  return { ...actual, spawnSync: spawnSyncMock }
+})
+
 function fakeManifest(): Manifest {
   return {
     version: "2.0.0",
@@ -82,6 +92,8 @@ describe("runInit (v2)", () => {
       ok: true,
       arrayBuffer: async () => payload.buffer,
     } as unknown as Response)
+    spawnSyncMock.mockClear()
+    spawnSyncMock.mockReturnValue({ status: 0, stdout: "", stderr: "", pid: 0, output: [], signal: null })
   })
 
   afterEach(async () => {
