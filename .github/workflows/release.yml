@@ -42,4 +42,13 @@ jobs:
       - name: GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create "${GITHUB_REF_NAME}" --generate-notes
+        # Release notes come from the annotated tag's body (kept short
+        # and hand-curated). Falls back to --generate-notes if the tag
+        # is lightweight (no body).
+        run: |
+          NOTES=$(git tag -l --format='%(contents:body)' "${GITHUB_REF_NAME}")
+          if [ -z "${NOTES}" ]; then
+            gh release create "${GITHUB_REF_NAME}" --generate-notes
+          else
+            gh release create "${GITHUB_REF_NAME}" --notes "${NOTES}"
+          fi
