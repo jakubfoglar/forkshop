@@ -19,6 +19,10 @@ describe("clampReportedHeight", () => {
     expect(clampReportedHeight(900, "cap", 500)).toBe(500)
   })
 
+  it("returns cap when cap mode and measured equals cap", () => {
+    expect(clampReportedHeight(500, "cap", 500)).toBe(500)
+  })
+
   it("returns measured when cap mode but cap is undefined", () => {
     expect(clampReportedHeight(900, "cap", undefined)).toBe(900)
   })
