@@ -52,26 +52,6 @@ export default function HomePage() {
           </article>
         </section>
 
-        <footer className="mt-24 border-t border-ink/10 pt-8 text-sm text-muted">
-          <a
-            href="https://github.com/jakubfoglar/forkshop"
-            className="hover:text-ink"
-          >
-            github.com/jakubfoglar/forkshop
-          </a>
-          <span className="mx-3">·</span>
-          <span>FSL-1.1-Apache-2.0</span>
-          <span className="mx-3">·</span>
-          <span>
-            Built by{" "}
-            <a
-              href="https://github.com/jakubfoglar"
-              className="hover:text-ink"
-            >
-              @jakubfoglar
-            </a>
-          </span>
-        </footer>
       </div>
     </main>
   )
