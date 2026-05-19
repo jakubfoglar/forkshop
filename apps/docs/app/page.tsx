@@ -1,3 +1,5 @@
+import Image from "next/image"
+
 export default function HomePage() {
   return (
     <main className="min-h-screen px-6 py-16 sm:px-8 sm:py-24">
@@ -26,6 +28,23 @@ export default function HomePage() {
             </a>
           </div>
         </header>
+
+        <div className="mt-14 mb-20 overflow-hidden rounded-md shadow-xl">
+          <div className="flex items-center gap-1.5 bg-[#2a2a2a] px-3 py-2">
+            <span className="size-2.5 rounded-full bg-[#ff5f57]" />
+            <span className="size-2.5 rounded-full bg-[#febc2e]" />
+            <span className="size-2.5 rounded-full bg-[#28c840]" />
+            <span className="ml-3 text-[11px] text-white/40">localhost:3000/forkshop</span>
+          </div>
+          <Image
+            src="/homepage-screenshot.png"
+            alt="Forkshop running in a Next.js project — sidebar with boards on the left, canvas with stacked iframe viewports on the right."
+            width={1536}
+            height={1024}
+            priority
+            className="block w-full"
+          />
+        </div>
 
         <section className="grid gap-8 sm:grid-cols-3">
           <article>
