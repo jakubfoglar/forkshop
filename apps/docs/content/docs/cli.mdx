@@ -1,0 +1,89 @@
+---
+title: CLI
+description: The forkshop CLI — init, update, diff, and the forkshop.json lock.
+---
+
+The `forkshop` CLI scaffolds and maintains Forkshop in your project.
+Three commands you'll use; one stub for the future.
+
+## `forkshop init`
+
+Sets Forkshop up in your project. Run once.
+
+```bash
+npx forkshop init
+```
+
+What it does:
+
+1. Detects your package manager (pnpm / npm / yarn).
+2. Runs `<pm> add @forkshop/engine` to add the engine as a dep.
+3. Drops the scaffold layer — `app/forkshop/`, `app/api/forkshop/`,
+   skill files, the user-side `CLAUDE.md`, the Raveo font file.
+4. Appends `@import "@forkshop/engine/styles.css"` (or equivalent) to
+   your `globals.css`.
+5. Writes `forkshop.json` at your project root — records the engine
+   version pin and the checksum of each scaffolded file.
+
+The init is idempotent. Re-running it offers to refresh any
+scaffolded file that's drifted (you'll see a confirm prompt per file).
+
+**Flags:**
+
+| Flag                | Description                                       |
+|---------------------|---------------------------------------------------|
+| `--yes`             | Skip all consent prompts (use defaults).          |
+| `--package-manager` | Override package manager detection.               |
+
+## `forkshop update`
+
+Bulk-refreshes the scaffold to the version of the engine you've pinned
+in `forkshop.json`.
+
+```bash
+npx forkshop update
+```
+
+What it does:
+
+- Compares every scaffolded file's checksum against the upstream
+  manifest.
+- Lists files that have changed (in upstream, in your copy, or both).
+- One confirm-all prompt; accept and it overwrites with upstream.
+- Soft-offers an `@forkshop/engine` version bump if a newer engine is
+  available.
+
+**Flags:**
+
+| Flag       | Description                                          |
+|------------|------------------------------------------------------|
+| `--check`  | Dry-run. Show the diff without writing.              |
+| `--force`  | Skip the consent prompt.                             |
+
+## `forkshop diff <path>`
+
+Shows a unified diff of one scaffolded file against the upstream
+version, using the schema recorded in `forkshop.json`.
+
+```bash
+npx forkshop diff app/forkshop/page.tsx
+```
+
+Useful for inspecting a single file before running `update`.
+
+## `forkshop add <bundle>`
+
+Reserved for future community-contributed scaffolding bundles. Not
+available at v1; returns a "not yet available" message and a link to
+the roadmap.
+
+## The `forkshop.json` lock
+
+`forkshop init` writes this file at your project root. It records:
+
+- The pinned `@forkshop/engine` version.
+- The checksum of every file the init dropped.
+- The schema version of the lock format itself.
+
+Commit it. `forkshop update` reads it to know which scaffolded files
+came from where, and to detect drift between upstream and your copy.
