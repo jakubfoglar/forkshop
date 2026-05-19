@@ -23,11 +23,8 @@
     "app/**/*",
     "components/**/*",
     "lib/**/*",
-    "content/**/*",
     "scripts/**/*",
-    "source.config.ts",
-    ".next/types/**/*.ts",
-    ".source/**/*"
+    ".next/types/**/*.ts"
   ],
   "exclude": ["node_modules"]
 }

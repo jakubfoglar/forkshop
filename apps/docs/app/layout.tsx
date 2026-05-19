@@ -1,5 +1,4 @@
 import localFont from "next/font/local"
-import { RootProvider } from "fumadocs-ui/provider"
 import "./globals.css"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
@@ -20,11 +19,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={raveo.variable}>
       <body className="font-raveo antialiased flex min-h-screen flex-col">
-        <RootProvider>
-          <SiteHeader />
-          <div className="flex-1">{children}</div>
-          <SiteFooter />
-        </RootProvider>
+        <SiteHeader />
+        <div className="flex-1">{children}</div>
+        <SiteFooter />
       </body>
     </html>
   )
