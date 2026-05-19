@@ -299,10 +299,11 @@ export const sidebarOnlyFrameNodeType: NodeType<SidebarOnlyFrame> = {
   id: "sidebar-only-frame",
   match: (node): node is SidebarOnlyFrame => node.kind === "sidebar-only-frame",
   // agentMatch inherited — route attribution still works
-  render: ({ node, onBodyHeightChange }) => (
+  render: (props) => (
     <div style={{ width: 520, overflow: "hidden" }}>
+      {/* clip to a 520px right-edge slice of the full 1440px desktop render */}
       <div style={{ marginLeft: -(1440 - 520) }}>
-        {iframeRouteNodeType.render({ node, onBodyHeightChange })}
+        {iframeRouteNodeType.render(props)}
       </div>
     </div>
   ),
