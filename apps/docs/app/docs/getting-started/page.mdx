@@ -40,11 +40,11 @@ What it does, in order:
    - The Raveo font in `public/fonts/forkshop/`.
 5. Appends `@import "@forkshop/engine/forkshop.css";` to your
    `globals.css` if it isn't already there.
-6. Merges `@forkshop/engine` into your `package.json` `dependencies`
+6. Writes `forkshop.json` — engine version, scaffold checksums,
+   installed bundles.
+7. Merges `@forkshop/engine` into your `package.json` `dependencies`
    and runs your detected package manager's install. Pass
    `--no-install` to skip this step.
-7. Writes `forkshop.json` — engine version, scaffold checksums,
-   installed bundles.
 
 ## Finish the setup
 
