@@ -1,6 +1,39 @@
 ---
 title: Introduction
-description: A Figma-style canvas for your Next.js project.
+description: A Figma-style canvas for your Next.js project, mounted inside your dev environment.
 ---
 
-Hello docs. This page will be replaced in a later task.
+Forkshop is a Figma-style canvas for your Next.js project. It mounts a
+sidebar and an infinite-scrolling canvas inside your app's dev
+environment — not in a separate design tool, not in a separate
+Storybook server. Your pages, components, and design tokens render as
+iframes on the canvas. You edit text directly in the canvas. You watch
+your AI agent make changes in real time.
+
+## Who it's for
+
+- Developers building UI in Next.js who want the side-by-side viewport
+  comparison and "design board" experience without leaving their code.
+- Teams using Claude Code (or another coding agent) who want a visual
+  surface to watch the agent's work as it lands.
+- People who already maintain a design system in code (Tailwind,
+  shadcn/ui, custom) and don't want to mirror it into Figma.
+
+## Why this exists when Figma and Storybook do
+
+Figma is a great drawing tool, but the design lives in a separate file
+that has to be kept in sync with your code by hand. Storybook is a
+great component catalog, but the pages render in a sandbox detached
+from your real routes and real data. Forkshop renders your actual
+pages, in your actual project, at multiple viewports at once — and the
+text on the canvas is the text in your source files. Edit it on the
+canvas, ⌘↵, and the TSX file changes on disk.
+
+## Where to go next
+
+- **[Getting Started](/docs/getting-started)** — install Forkshop and open
+  your first board.
+- **[Concepts](/docs/concepts)** — the mental model: Nodes, NodeTypes,
+  Layouts, Boards.
+- **[Extending Forkshop](/docs/extending)** — write your own NodeTypes
+  and Layouts, or ask your agent to.
