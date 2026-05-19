@@ -38,6 +38,7 @@ describe("buildIframeContentStyle", () => {
   it("always neutralizes min-h-screen", () => {
     expect(buildIframeContentStyle("auto")).toContain("min-h-screen")
     expect(buildIframeContentStyle("cap")).toContain("min-h-screen")
+    expect(buildIframeContentStyle("fixed")).toContain("min-h-screen")
   })
 
   it("injects body overflow lock only in cap mode", () => {
