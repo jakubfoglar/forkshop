@@ -1,0 +1,63 @@
+---
+title: Live AI agents
+description: See your coding agent work — highlights on the canvas, per-agent colors, heartbeat in the sidebar.
+---
+
+When an agent edits a file your canvas is showing, Forkshop highlights
+the change on the canvas in real time. A pulsing dot in the sidebar
+shows which agent is active and what file it's editing. Multiple
+agents working at once stack with distinct colors so you can tell
+sessions apart.
+
+## What you'll see
+
+- **Live highlights** — elements affected by an in-progress edit pulse
+  with the agent's color until the edit lands.
+- **Sidebar heartbeat** — a small row in the canvas sidebar shows
+  "Claude · editing `Hero.tsx`" with a breathing pulse. Idle agents
+  fade out after a few seconds.
+- **Read activity** — when an agent is _reading_ (not editing), the
+  pulse breathes more slowly. Useful for sensing what an agent is
+  paying attention to.
+
+## Setting it up
+
+For Claude Code (the reference producer), `forkshop init` opts you in
+when you accept the "Wire live AI awareness?" prompt. It makes two
+changes to your project:
+
+1. Drops a small bash hook script into `.claude/hooks/` that emits
+   activity events to a local socket as Claude runs tools.
+2. Merges the hook registration into `.claude/settings.json`.
+
+That's it. Start a Claude Code session, ask Claude to edit a file on a
+visible board, and you'll see the heartbeat appear in the sidebar.
+
+## Other agents
+
+Live AI agents is a small wire protocol. The engine consumes a stream
+of activity events; any agent runtime can be a producer if it emits
+events on the protocol. The producer pack for Claude Code is one
+implementation.
+
+The protocol is documented in
+[`docs/specs/2026-05-18-live-ai-protocol-design.md`](https://github.com/jakubfoglar/forkshop/blob/main/docs/specs/2026-05-18-live-ai-protocol-design.md)
+in the repo — short, JSON over a local socket, no auth (it's dev-only).
+A producer for Cursor, Aider, or any other agent runtime is a small
+script that observes the agent's tool calls and emits matching events.
+
+## Multi-agent stacking
+
+When two agents work at the same time, their pulses stack in the
+sidebar with distinct colors. Each agent's edits highlight on the
+canvas in that agent's color, so a glance at the canvas tells you
+which agent is touching what.
+
+The color set is deterministic per agent name — start the same agent
+twice and you'll see the same color.
+
+## Disabling
+
+Remove the hook registration from `.claude/settings.json` (or delete
+the hook script). The sidebar heartbeat disappears. Forkshop falls
+back to the no-op shell.
