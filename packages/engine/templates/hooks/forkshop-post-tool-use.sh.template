@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 # Forkshop live-AI hook. Forwards Read/Edit/Write/MultiEdit tool results to the
 # Forkshop dev server. Fire-and-forget; never blocks Claude or fails if Forkshop
-# isn't running. Override FORKSHOP_DEV_URL if your dev server isn't on
-# http://localhost:3000.
+# isn't running.
+#
+# Tries ports 3000-3009 to handle the case where Next picks an alternate port
+# (3000 taken by something else). Override the range by exporting
+# FORKSHOP_DEV_PORTS, or pin a full URL with FORKSHOP_DEV_URL.
 set -uo pipefail
 command -v jq >/dev/null 2>&1 || exit 0
 
@@ -20,7 +23,6 @@ case "$file_path" in
 esac
 
 session_id="$(printf '%s' "$input" | jq -r '.session_id // "default"')"
-url="${FORKSHOP_DEV_URL:-http://localhost:3000}/api/forkshop/agent-activity"
 
 action="edit"
 case "$tool" in
@@ -36,9 +38,31 @@ payload="$(jq -n \
   --arg act "$action" \
   '{agent: $agent, agentLabel: $label, sessionId: $sid, file: $fp, action: $act, ts: (now * 1000 | floor)}')"
 
-curl -sS -X POST "$url" \
-  -H 'content-type: application/json' \
-  -d "$payload" \
-  --max-time 1 >/dev/null 2>&1 &
+post() {
+  curl -sS -X POST "$1" \
+    -H 'content-type: application/json' \
+    -d "$payload" \
+    --max-time 1 \
+    --write-out '%{http_code}' \
+    --output /dev/null \
+    2>/dev/null || echo "000"
+}
+
+# If user pinned a full URL, use it. Otherwise sweep the port range until one accepts.
+if [ -n "${FORKSHOP_DEV_URL:-}" ]; then
+  post "${FORKSHOP_DEV_URL}/api/forkshop/agent-activity" >/dev/null &
+  disown -a 2>/dev/null || true
+  exit 0
+fi
+
+ports="${FORKSHOP_DEV_PORTS:-3000 3001 3002 3003 3004 3005 3006 3007 3008 3009}"
+(
+  for port in $ports; do
+    code="$(post "http://localhost:$port/api/forkshop/agent-activity")"
+    if [ "$code" = "200" ]; then
+      break
+    fi
+  done
+) &
 disown -a 2>/dev/null || true
 exit 0
