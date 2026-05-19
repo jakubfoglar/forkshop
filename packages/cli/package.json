@@ -4,8 +4,16 @@
   "private": false,
   "publishConfig": { "access": "public" },
   "type": "module",
+  "license": "MIT",
+  "description": "CLI for installing and updating Forkshop in a Next.js project.",
+  "homepage": "https://forkshop.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jakubfoglar/forkshop.git",
+    "directory": "packages/cli"
+  },
   "bin": { "forkshop": "./dist/index.js" },
-  "files": ["dist"],
+  "files": ["dist", "LICENSE"],
   "exports": {
     ".": "./dist/index.js",
     "./manifest-builder": "./src/manifest-builder.ts",
