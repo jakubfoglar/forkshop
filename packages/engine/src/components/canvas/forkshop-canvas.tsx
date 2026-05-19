@@ -18,6 +18,7 @@ import type { NodeType } from "@forkshop/types/node-type"
 import type { AnyNode } from "@forkshop/types/node"
 import { IframeRegistryProvider } from "@forkshop/components/iframe-registry"
 import { AgentIframeRelay } from "@forkshop/components/agent-iframe-relay"
+import { BUILTIN_NODE_TYPES } from "@forkshop/node-types"
 
 export type WheelInput = {
   deltaX: number
@@ -76,7 +77,7 @@ export function ForkshopCanvas({
   onContainerClick,
   containerRef: containerRefProp,
   stageRef: stageRefProp,
-  nodeTypes = [],
+  nodeTypes = BUILTIN_NODE_TYPES,
   children,
 }: {
   ref?: RefObject<ForkshopCanvasHandle | null>
