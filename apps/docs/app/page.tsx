@@ -1,4 +1,5 @@
 import Image from "next/image"
+import heroScreenshot from "@/public/homepage-screenshot.png"
 
 export default function HomePage() {
   return (
@@ -37,12 +38,10 @@ export default function HomePage() {
             <span className="ml-3 text-xs text-white/40">localhost:3000/forkshop</span>
           </div>
           <Image
-            src="/homepage-screenshot.png"
+            src={heroScreenshot}
             alt="Forkshop running in a Next.js project — sidebar with boards on the left, canvas with stacked iframe viewports on the right."
-            width={1536}
-            height={1024}
             priority
-            className="block w-full"
+            className="block h-auto w-full"
           />
         </div>
 
