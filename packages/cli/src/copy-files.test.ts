@@ -84,7 +84,7 @@ describe("findCollisions", () => {
     await fs.writeFile(path.join(root, ".claude/skills/forkshop-setup.md"), "old")
     const collisions = await findCollisions(root, [
       ".claude/skills/forkshop-setup.md",
-      ".claude/skills/forkshop-doc-sync.md",
+      ".claude/skills/forkshop-nonexistent.md",
     ])
     expect(collisions).toEqual([".claude/skills/forkshop-setup.md"])
   })

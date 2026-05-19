@@ -9,7 +9,7 @@ You are setting up Forkshop in the user's project. The CLI (`npx forkshop init`)
 
 Forkshop's mental model is **Node / NodeType / Layout / Board** (four concepts). This skill leaves the engine alone — it just scaffolds the user-side `{{mount}}/` files. The engine itself lives at `@forkshop/engine` on npm and was installed during `forkshop init`. When describing the project or the proposed scaffold, use this vocabulary: a **Board** is what renders in the sidebar; it contains **Nodes**, each of which has a **NodeType** (`inline-react`, `iframe-component`, or `iframe-route`); **Layout** controls how Nodes are arranged spatially.
 
-You run **once** per project. After this, your work is mostly historical: the user reads `app/forkshop/CLAUDE.md` for ongoing customization, and the user-invoked `forkshop-doc-sync` skill refreshes documentation if it drifts.
+You run **once** per project. After this, your work is mostly historical: the user reads `app/forkshop/CLAUDE.md` for ongoing customization.
 
 The user owns every file you produce. They will fork freely. This file (the skill itself) is in their repo too — they can edit it. Lean toward shorter outputs, explicit user consent on every config mutation, and language that frames Forkshop as something they *have*, not something they *use*.
 
@@ -486,9 +486,6 @@ Try it:
   pnpm dev
   → open /forkshop
   → click a route under Sitemap
-
-Sibling skills:
-  forkshop-doc-sync       invoke when app/forkshop/CLAUDE.md drifts
 ```
 
 The `Boards` line lists what was actually wired (e.g., `Sitemap (3 routes) · UI Components (4 primitives) · Blocks (2 blocks)`).
@@ -531,9 +528,6 @@ Try it:
   pnpm dev
   → open /forkshop
   → click a route under Sitemap
-
-Sibling skills:
-  forkshop-doc-sync       invoke when app/forkshop/CLAUDE.md drifts
 ```
 
 ### Rules
