@@ -5,6 +5,15 @@ import { PREVIEW_AGENT_READ_CSS } from "@forkshop/lib/edit-mode"
 
 export type LazyIframeHeightMode = "auto" | "cap" | "fixed"
 
+export function clampReportedHeight(
+  measured: number,
+  mode: LazyIframeHeightMode,
+  cap: number | undefined,
+): number {
+  if (mode === "cap" && cap !== undefined) return Math.min(measured, cap)
+  return measured
+}
+
 type LazyIframeProps = {
   src: string
   title: string
@@ -66,14 +75,21 @@ export function LazyIframe({
     document.head.append(style)
   }, [])
 
+  // Resolve mode + cap up-front so handleBodySync can reference them.
+  const effectiveMode: LazyIframeHeightMode =
+    heightMode ?? (heightCap !== undefined ? "cap" : "auto")
+  const effectiveCap =
+    effectiveMode === "cap" ? (height ?? heightCap) : undefined
+
   // Always tracks internally so the iframe element can self-size to its body,
   // and also forwards to the parent if it asked for body-height sync.
   const handleBodySync = useCallback(
     (h: number) => {
+      // Internal state stays raw so the wrapper can render Math.min(measured, cap).
       setMeasuredBodyHeight((prev) => (prev === h ? prev : h))
-      onBodyHeightSync?.(h)
+      onBodyHeightSync?.(clampReportedHeight(h, effectiveMode, effectiveCap))
     },
-    [onBodyHeightSync],
+    [onBodyHeightSync, effectiveMode, effectiveCap],
   )
 
   useEffect(() => {
@@ -168,11 +184,6 @@ export function LazyIframe({
 
   // Resolve height based on the explicit mode, falling back to the
   // deprecated heightCap behavior for back-compat.
-  const effectiveMode: LazyIframeHeightMode =
-    heightMode ?? (heightCap !== undefined ? "cap" : "auto")
-  const effectiveCap =
-    effectiveMode === "cap" ? (height ?? heightCap) : undefined
-
   let resolvedHeight: number | undefined
   if (effectiveMode === "fixed") {
     resolvedHeight = height
