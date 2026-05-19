@@ -1,4 +1,14 @@
 {
   "title": "Docs",
-  "pages": ["index", "getting-started", "concepts", "boards", "canvas-editing", "open-in-editor", "live-ai-agents", "cli"]
+  "pages": [
+    "index",
+    "getting-started",
+    "concepts",
+    "boards",
+    "canvas-editing",
+    "open-in-editor",
+    "live-ai-agents",
+    "cli",
+    "extending"
+  ]
 }

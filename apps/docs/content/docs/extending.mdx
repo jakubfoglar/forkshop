@@ -1,0 +1,159 @@
+---
+title: Extending Forkshop
+description: Forkshop is a kit, not a closed app. Build your own NodeTypes, Layouts, and themes.
+---
+
+The canvas, the sidebar, the edit overlay — they're React primitives
+you compose. The engine ships four Layouts and a handful of NodeTypes
+to get you started. Everything else is yours to add. Build it by hand,
+or ask your agent to.
+
+## Custom NodeTypes
+
+A NodeType is a small object describing how a Node should render —
+viewport, label, aspect ratio. NodeTypes live in
+`app/forkshop/node-types/` in your project.
+
+A custom NodeType for, say, an email preview:
+
+```ts
+// app/forkshop/node-types/email-preview.ts
+import { defineNodeType } from "@forkshop/engine"
+
+export const emailPreview = defineNodeType({
+  id: "email-preview",
+  label: "Email",
+  viewport: { width: 600, height: 800 },
+  aspectRatio: 600 / 800,
+})
+```
+
+Reference it from a Board:
+
+```tsx
+import { Gallery } from "@forkshop/engine"
+import { emailPreview } from "./node-types/email-preview"
+
+export default function EmailsBoard() {
+  return (
+    <Gallery
+      nodes={[
+        { url: "/emails/welcome", nodeType: emailPreview },
+        { url: "/emails/receipt", nodeType: emailPreview },
+      ]}
+    />
+  )
+}
+```
+
+NodeTypes are just data. Anything iframable works — docs pages, MDX,
+a Storybook frame, a design-token playground, an email preview, a
+chart, a 3D scene.
+
+## Custom Layouts
+
+A Layout is a React component that arranges Nodes. Write one when none
+of the four shipped Layouts fits.
+
+```tsx
+// app/forkshop/layouts/two-column-diff.tsx
+import { Node } from "@forkshop/engine"
+
+interface Props {
+  before: string
+  after: string
+}
+
+export function TwoColumnDiff({ before, after }: Props) {
+  return (
+    <div style={{ display: "flex", gap: 24 }}>
+      <Node url={before} label="Before" />
+      <Node url={after} label="After" />
+    </div>
+  )
+}
+```
+
+Use it from a Board:
+
+```tsx
+import { TwoColumnDiff } from "./layouts/two-column-diff"
+
+export default function CompareBoard() {
+  return <TwoColumnDiff before="/old/page" after="/new/page" />
+}
+```
+
+The engine's `Node` primitive handles iframe loading, viewport
+sizing, and the edit overlay. Your Layout just decides where Nodes
+sit.
+
+## Ask your agent to build one
+
+Forkshop is small enough that Claude (or another coding agent) can
+scaffold a new NodeType or Layout from a paragraph of description.
+Open a Claude Code session in your project and ask:
+
+> "Add a Forkshop Layout called `FlowGraph` that arranges Nodes as a
+> connected graph with edges between them. Take an array of
+> `{ url, position, edges }` and render each Node at its position with
+> SVG arrows for edges. Wire it up to a new `app/forkshop/flow.tsx`
+> Board."
+
+The user-side `app/forkshop/CLAUDE.md` (scaffolded by `forkshop init`)
+already teaches the agent how Forkshop's API works, so the request
+above lands in one step.
+
+## Theming
+
+Every Forkshop style is namespaced (`forkshop-*`) and bound to CSS
+variables.
+
+```css
+:root {
+  --forkshop-canvas-bg: #1a1a1a;       /* dark canvas */
+  --forkshop-fg: #e5e5e5;
+  --forkshop-accent: #f97316;          /* orange accent */
+  --forkshop-sidebar-bg: #111;
+}
+```
+
+Set these anywhere in your global CSS. Forkshop's chrome picks them up
+on the next render — no rebuild needed.
+
+The full token list is in `@forkshop/engine/styles.css`. Override the
+ones you care about; the rest fall back to defaults.
+
+## Embedding
+
+`<ForkshopCanvas>` is a normal React component. Mount it inside your
+own marketing pages, internal dashboards, or design-system reviews.
+
+```tsx
+import { ForkshopCanvas } from "@forkshop/engine"
+import HeroBoard from "@/forkshop/hero-board"
+
+export default function MarketingFeature() {
+  return (
+    <section style={{ height: 600 }}>
+      <ForkshopCanvas size="small">
+        <HeroBoard />
+      </ForkshopCanvas>
+    </section>
+  )
+}
+```
+
+Each iframe is a real Chrome context, so keep mini-Forkshops to a
+handful per page. For a fully static preview at video-grade
+performance, a future `mode="static"` variant of `<ForkshopCanvas>`
+will swap iframes for screenshots.
+
+## Where to go from here
+
+- Open `app/forkshop/CLAUDE.md` in your project — it's the
+  hands-on reference your agent reads.
+- Browse the engine source on GitHub for the full set of exports:
+  [github.com/jakubfoglar/forkshop](https://github.com/jakubfoglar/forkshop).
+- Open an issue or PR with NodeTypes and Layouts you'd like to see
+  shipped in the engine.
