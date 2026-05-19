@@ -10,7 +10,7 @@ const raveo = localFont({
 })
 
 export const metadata = {
-  title: "Forkshop — A Figma-style canvas for your Next.js project",
+  title: "Forkshop — An infinite canvas for your Next.js project",
   description:
     "Mount a sidebar and canvas in your Next.js app. See pages at multiple viewports, edit text in iframes, and watch AI agents work — all in your dev environment.",
 }

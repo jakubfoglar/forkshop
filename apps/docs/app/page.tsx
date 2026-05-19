@@ -8,13 +8,13 @@ export default function HomePage() {
         <header className="mb-20">
           <h1 className="text-5xl tracking-tight sm:text-7xl">Forkshop</h1>
           <p className="mt-6 text-xl text-ink sm:text-2xl">
-            A Figma-style canvas for your Next.js project.
+            Your real app on a canvas.
           </p>
           <p className="mt-4 max-w-2xl text-base text-muted sm:text-lg">
-            Forkshop mounts a sidebar and a canvas inside your app&apos;s dev
-            environment. Open multiple viewports of your pages side-by-side,
-            edit text in any iframe and save back to source, and watch your AI
-            assistant make changes in real time — all without leaving your code.
+            Forkshop mounts a canvas inside your app&apos;s dev environment.
+            Open any page at multiple viewports side-by-side, edit text in
+            place to save back to source, and watch your AI agents work in
+            real time.
           </p>
 
           <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -28,6 +28,9 @@ export default function HomePage() {
               View on GitHub →
             </a>
           </div>
+          <p className="mt-4 text-xs text-muted">
+            Next.js only for now.
+          </p>
         </header>
 
         <div className="mt-14 mb-20 overflow-hidden rounded-md shadow-xl">
