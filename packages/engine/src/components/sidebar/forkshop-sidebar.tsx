@@ -186,9 +186,14 @@ export function ForkshopSidebar({
       {/* Header */}
       <div className="flex shrink-0 items-center justify-between gap-forkshop-1.5 border-b border-forkshop-border bg-forkshop-surface px-forkshop-3 pb-forkshop-2 pt-forkshop-2.5">
         <div className="flex items-center gap-forkshop-1.5">
-          <span className="text-forkshop-sm font-forkshop-semibold tracking-forkshop-tight text-forkshop-fg">
+          <a
+            href="https://forkshop.dev/docs"
+            target="_blank"
+            rel="noreferrer"
+            className="text-forkshop-sm font-forkshop-semibold tracking-forkshop-tight text-forkshop-fg transition-colors hover:text-forkshop-fg-muted"
+          >
             Forkshop
-          </span>
+          </a>
         </div>
         <button
           type="button"

@@ -66,26 +66,6 @@ export function HelpModal({
       <p className="sr-only">Quick reference for editing in forkshop.</p>
       <div className="flex flex-col gap-forkshop-2">
         <Tip
-          visual={<ColorSwatch className="ring-blue-500/60 bg-blue-500/30" />}
-          title="Page spacing"
-          body={
-            <>
-              Hold <Kbd>⌘</Kbd> and hover any element — blue strips are padding & gap. Click a
-              strip to pick a new value. Edits save to the page file.
-            </>
-          }
-        />
-        <Tip
-          visual={<ColorSwatch className="ring-purple-400 bg-purple-500/30" />}
-          title="Block spacing"
-          body={
-            <>
-              Same <Kbd>⌘</Kbd>-hover, but purple strips mean the spacing lives inside a block
-              component. Edits save to components/blocks/&lt;slug&gt;.tsx — never the page.
-            </>
-          }
-        />
-        <Tip
           visual={<KbdGlyph>T</KbdGlyph>}
           title="Edit text"
           body={
@@ -105,31 +85,19 @@ export function HelpModal({
           body="Hold Option and click any element to jump to its source file in your editor."
         />
         <Tip
-          visual={<KbdGlyph>2×</KbdGlyph>}
-          title="Isolate"
-          body={
-            <>
-              Double-click a page or block in the sidebar (or on a sitemap tile) to open it
-              full-size. <Kbd>esc</Kbd> returns.
-            </>
-          }
-        />
-        <Tip
           visual={<KbdGlyph>↻</KbdGlyph>}
           title="Saves are real"
           body="Every edit writes directly to the source TSX. Revert with git — there's no undo inside forkshop."
         />
-        <Tip
-          visual={<DraftPill />}
-          title="Drafts"
-          body={
-            <>
-              Pages with a <DraftPill /> pill are work-in-progress — you can still access them via
-              direct link, but they won&apos;t appear in the public sitemap.
-            </>
-          }
-        />
       </div>
+      <a
+        href="https://forkshop.dev/docs"
+        target="_blank"
+        rel="noreferrer"
+        className="text-forkshop-xs text-forkshop-fg-muted transition-colors hover:text-forkshop-fg"
+      >
+        More at forkshop.dev/docs →
+      </a>
     </dialog>
   )
 }
@@ -144,10 +112,6 @@ function Tip({ visual, title, body }: { visual: ReactNode; title: string; body: 
       </div>
     </div>
   )
-}
-
-function ColorSwatch({ className }: { className: string }) {
-  return <span className={`block size-forkshop-3.5 rounded-forkshop-lg ring-1 ${className}`} />
 }
 
 function Kbd({ children }: { children: ReactNode }) {
@@ -166,10 +130,3 @@ function KbdGlyph({ children }: { children: ReactNode }) {
   )
 }
 
-function DraftPill() {
-  return (
-    <span className="rounded-forkshop-lg bg-forkshop-surface-2 px-forkshop-1 py-[1px] text-[9px] font-forkshop-medium uppercase tracking-forkshop-wider text-forkshop-fg-muted">
-      Draft
-    </span>
-  )
-}
