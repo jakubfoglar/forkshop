@@ -1,0 +1,51 @@
+---
+title: Open in editor
+description: Option-click any text on the canvas to jump to that exact line in your editor.
+---
+
+Hold Option (⌥) and click any element in a Forkshop canvas. Your
+editor opens at the file and line where that element is defined.
+
+It's the inverse of canvas editing: instead of bringing the edit into
+the canvas, you bring the canvas back to your editor.
+
+## What it does
+
+Every JSX element rendered through the iframe carries `__source` data
+attached at compile time. Option-click reads that data, constructs a
+`vscode://file/...:line:col` URL, and navigates the top window — your
+OS hands off the URL to VS Code (or whichever editor registered as the
+`vscode://` handler).
+
+## Opting in
+
+Open-in-editor is **opt-in** during `forkshop init`. The setup skill
+asks "Add Option-click → editor?" and, if you accept, makes two
+changes to your project:
+
+1. Adds `@locator/webpack-loader` (or the equivalent Turbopack rule on
+   Next.js 15+) to your devDependencies.
+2. Merges a loader/rule into your `next.config.js` so the loader runs
+   over every JSX file at compile time.
+
+If you skipped the opt-in at install time, re-run `forkshop init`
+(idempotent) and answer Yes the second time.
+
+## Editor support
+
+The default URL handler is `vscode://`, which works with:
+
+- **VS Code**
+- **Cursor** (registers the same handler)
+- **VS Code Insiders** (via `vscode-insiders://`)
+- **JetBrains IDEs** via their `jetbrains://` handler (manual config)
+
+If your editor doesn't register a `vscode://` handler, the click
+silently fails. Forkshop won't try to fall back — installing a URL
+handler for your editor is a one-time OS-level setup outside
+Forkshop's scope.
+
+## Disabling
+
+Remove the `@locator/webpack-loader` dep and the loader entry from
+your `next.config.js`. The Option-click hover indicator disappears.
