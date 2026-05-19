@@ -279,18 +279,22 @@ export function ForkshopSidebar({
           </>
         )}
 
-        {/* Pages section */}
-        <SectionHeader>Pages</SectionHeader>
-        {tree.map((node) => (
-          <PageTreeRow
-            key={node.path}
-            node={node}
-            depth={1}
-            selection={selection}
-            onSelect={onSelect}
-            activePages={activePages}
-          />
-        ))}
+        {/* Pages section — hide when no routes and no agent-discovered paths */}
+        {tree.length > 0 && (
+          <>
+            <SectionHeader>Pages</SectionHeader>
+            {tree.map((node) => (
+              <PageTreeRow
+                key={node.path}
+                node={node}
+                depth={1}
+                selection={selection}
+                onSelect={onSelect}
+                activePages={activePages}
+              />
+            ))}
+          </>
+        )}
 
         {/* Other section (only rendered when otherRoutes are provided) */}
         {otherTree.length > 0 && (
