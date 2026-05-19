@@ -66,11 +66,12 @@ tests/
 
 The published `forkshop` npm CLI. Commands:
 
-- `forkshop init` — detects the user's package manager, runs `<pm> add @forkshop/engine`,
-  drops a thin scaffold layer (~8 files + 1 binary: skill files, route stubs, font,
-  CLAUDE.md) into the user's project, appends the CSS import to `globals.css`, and writes
-  a slim `forkshop.json` lock recording the engine version and scaffold file checksums.
-  Does not copy engine source — engine ships from npm.
+- `forkshop init` — drops a thin scaffold layer (~8 files + 1 binary: skill files, route
+  stubs, font, CLAUDE.md) into the user's project, appends the CSS import to `globals.css`,
+  merges `@forkshop/engine` into `package.json`, runs `<pm> install` via the detected
+  package manager (skip with `--no-install`), and writes a slim `forkshop.json` lock
+  recording the engine version and scaffold file checksums. Does not copy engine source —
+  engine ships from npm.
 - `forkshop update` — bulk-refreshes the scaffold layer (skill files, CLAUDE.md, route
   stubs) with a single confirm-all consent prompt. Soft-offers an `@forkshop/engine` pin
   bump. Supports `--check` (dry-run diff) and `--force` (skip consent).
