@@ -5,8 +5,8 @@ const REGISTRY_FONTS_ROOT = path.resolve(process.cwd(), "../../packages/engine/f
 
 export const dynamic = "force-static"
 
-export async function GET(_req: Request, { params }: { params: Promise<{ path: string[] }> }) {
-  const { path: segments } = await params
+export async function GET(_req: Request, { params }: { params: { path: string[] } }) {
+  const { path: segments } = params
   const absolute = path.join(REGISTRY_FONTS_ROOT, ...segments)
   if (!absolute.startsWith(REGISTRY_FONTS_ROOT + path.sep)) {
     return new Response(null, { status: 403 })

@@ -16,8 +16,9 @@ file your canvas is showing, the change lands in real time.
 npx forkshop init
 ```
 
-Then run your package manager's install command (init prints it) and
-open Claude Code in the project — say "set up Forkshop" to scaffold
+Init scaffolds the file layer, merges `@forkshop/engine` into your
+`package.json`, and runs your package manager's install. Then open
+Claude Code in the project and say "set up Forkshop" to scaffold
 your first Board.
 
 ## What it does

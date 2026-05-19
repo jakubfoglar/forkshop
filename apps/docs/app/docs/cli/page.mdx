@@ -19,11 +19,15 @@ npx forkshop init
 | `--force`                | Overwrite existing files.                                    |
 | `--registry <url>`       | Use an alternate registry URL.                               |
 | `--install-claude-pack`  | Drop the Claude Code activity hook. See [Live AI agents](/docs/live-ai-agents). |
+| `--no-install`           | Skip the automatic package-manager install.                  |
 
-Init merges `@forkshop/engine` into `package.json` but does **not**
-run your package manager — it prints the install command. After
-install, open Claude Code in the project and say "set up Forkshop"
-to scaffold your first Board.
+Init merges `@forkshop/engine` into `package.json` and runs your
+detected package manager's install (`pnpm install`, `npm install`,
+or `yarn`). Pass `--no-install` if you'd rather run install yourself
+— useful in CI or scripted setups.
+
+Once install finishes, open Claude Code in the project and say "set
+up Forkshop" to scaffold your first Board.
 
 Aborts if `forkshop.json` already exists. Use `update` to refresh.
 
