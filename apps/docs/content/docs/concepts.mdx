@@ -1,0 +1,78 @@
+---
+title: Concepts
+description: The mental model for working with Forkshop — Nodes, NodeTypes, Layouts, and Boards.
+---
+
+Four words you'll see repeatedly. Reading this page once anchors the
+rest of the docs.
+
+## Node
+
+A **Node** is a single iframe-backed tile on the canvas. Every visible
+thing on a Forkshop canvas is a Node. A Node points at a real URL or
+source file in your project; the iframe loads that URL and renders it
+inside the canvas tile.
+
+## NodeType
+
+A **NodeType** is a named configuration for a Node — the iframe's
+viewport size, the label that appears above the tile, the aspect
+ratio, and any per-type styling. NodeTypes are how you say "this kind
+of Node is a mobile preview" versus "this kind of Node is a 1440-wide
+desktop view."
+
+The engine ships a handful of default NodeTypes. You can add your own
+in `app/forkshop/node-types/` — see
+**[Extending Forkshop](/docs/extending)**.
+
+## Layout
+
+A **Layout** is a React component that arranges Nodes into a named
+board shape. The engine ships four Layouts:
+
+- `ResponsiveFrameView` — one page rendered at three viewports
+  side-by-side, with live cross-viewport sync.
+- `Gallery` — a free-form grid of Nodes.
+- `Tree` — a sitemap-style hierarchical tree.
+- `DesignSystemView` — your design tokens and UI primitives laid out
+  as a foundations + components board.
+
+Layouts compose NodeTypes. A single Layout typically renders multiple
+Nodes of one or two NodeTypes.
+
+## Board
+
+A **Board** is what you mount on your canvas — one Layout
+configuration with its data. A Forkshop install usually has a few
+Boards: a Design System board, a UI Components board, a Sitemap board,
+and so on. You compose them in `app/forkshop/`. You see them in the
+sidebar.
+
+## How it fits together
+
+```
+Board   = one entry in the sidebar
+  └── Layout    = how its Nodes are arranged
+        └── Node      = one iframe tile
+              └── NodeType  = the tile's configuration
+```
+
+You'll spend most of your time writing Boards. NodeTypes and Layouts
+are reusable building blocks; once you have a set that works for your
+project, Boards are quick to scaffold — by hand or by your agent.
+
+## Where each lives
+
+| Concept   | Lives in                                |
+|-----------|-----------------------------------------|
+| Node      | Implicit — emitted by Layouts at render |
+| NodeType  | `app/forkshop/node-types/` (custom) or shipped by the engine |
+| Layout    | Shipped by the engine, imported in your Boards |
+| Board     | `app/forkshop/` in your project          |
+
+## Next
+
+- **[Boards](/docs/boards)** — the four engine-shipped Layouts in
+  detail.
+- **[Extending Forkshop](/docs/extending)** — custom NodeTypes and
+  Layouts.
