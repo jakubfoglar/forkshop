@@ -1,0 +1,66 @@
+---
+title: Canvas editing
+description: Edit any text in the canvas with one click — saves write back to your source files.
+---
+
+Canvas editing is Forkshop's defining feature. Hover any text in the
+canvas; if it's editable, you'll see a blue outline. Click it. The
+text becomes editable in place. Type. ⌘↵ saves to disk; Esc discards.
+
+This only runs in dev. Production builds tree-shake the entire
+overlay.
+
+## What's editable
+
+You can edit:
+
+- **String literals** in your source — text inside `"..."`, `'...'`, or
+  simple template literals.
+- **JSX text children** — the text between JSX tags (`<p>Hello</p>`).
+
+You can't edit:
+
+- Strings that come from external data (CMS, JSON imports, fetched at
+  runtime).
+- Computed strings (template literals with interpolation).
+- Text rendered inside sub-components that the current page didn't
+  author. Hover those and you'll see a gray dashed outline — the
+  "locked" indicator.
+
+The locked state is a safety feature: editing a shared `<Button>`
+shouldn't be possible from a page board, because the change would
+land in the wrong file.
+
+## The save flow
+
+1. You click editable text. The element becomes `contentEditable`.
+2. A small Save / Discard popover floats next to the element.
+3. You type.
+4. ⌘↵ (or click Save) POSTs to `/api/forkshop/edit` with the new text
+   and the source-file span.
+5. The route writes the change to disk.
+6. Next.js HMR picks up the change and the iframe reloads.
+
+## Multi-viewport sync
+
+On a `ResponsiveFrameView` board with three viewports of the same
+page: when you save in one viewport, all three viewports refetch the
+source file and re-render. Edits show up in all three within ~100ms of
+the save.
+
+## Production behavior
+
+The whole canvas-editing wiring is gated behind `process.env.NODE_ENV
+!== "production"`. Production builds skip the overlay entirely; the
+iframes render as static page previews. The `/api/forkshop/edit` route
+also returns 403 in production.
+
+There is no "edit mode in production." The story is: dev is for
+editing, production is for showing.
+
+## Related
+
+- **[Open in editor](/docs/open-in-editor)** — Option-click to jump
+  from any text on the canvas to its line in VS Code.
+- **[Live AI agents](/docs/live-ai-agents)** — see Claude's edits land
+  on the canvas in real time.
