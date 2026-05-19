@@ -2,6 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    --background: 60 14% 98%;        /* #fafaf7 — canvas */
+    --foreground: 60 6% 10%;         /* #1a1a18 — ink */
+    --muted: 60 8% 95%;
+    --muted-foreground: 60 2% 43%;   /* #6e6e6a — muted */
+    --popover: 60 14% 98%;
+    --popover-foreground: 60 6% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 60 6% 10%;
+    --border: 60 6% 90%;
+    --primary: 224 86% 56%;          /* #3057f0 — accent */
+    --primary-foreground: 0 0% 100%;
+    --accent: 60 8% 95%;
+    --accent-foreground: 60 6% 10%;
+    --ring: 224 86% 56%;
+  }
+}
+
 html, body {
   background: theme("colors.canvas");
   color: theme("colors.ink");
