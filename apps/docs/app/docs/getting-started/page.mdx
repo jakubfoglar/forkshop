@@ -4,8 +4,9 @@ description: Add Forkshop to an existing Next.js App Router project.
 ---
 
 `npx forkshop init` scaffolds the file layer Forkshop needs into an
-existing Next.js project. It doesn't install your deps — it edits
-`package.json` and prints the command to run.
+existing Next.js project and installs `@forkshop/engine` via your
+package manager. After it finishes, open Claude Code and say "set up
+Forkshop" — that's the only remaining step.
 
 ## Prerequisites
 
@@ -47,13 +48,11 @@ What it does, in order:
 
 ## Finish the setup
 
-One more step:
-
-- **Open Claude Code in the project and say "set up Forkshop."** The
-  setup skill (dropped by init in step 4) scaffolds your first
-  Board, wires the locator loader into `next.config.*`, and detects
-  your existing primitives and routes. It's the project-specific
-  layer init deliberately leaves to the skill.
+Open Claude Code in the project and say **"set up Forkshop."** The
+setup skill (dropped by init in step 4) scaffolds your first Board,
+wires the locator loader into `next.config.*`, and detects your
+existing primitives and routes. It's the part init deliberately
+doesn't do.
 
 Then start your dev server and open `/forkshop`.
 
