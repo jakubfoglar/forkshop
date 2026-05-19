@@ -1,0 +1,70 @@
+---
+title: Getting Started
+description: Install Forkshop in your Next.js project and open your first board.
+---
+
+Forkshop adds a thin scaffold to your existing Next.js App Router
+project. There's no separate dev server, no monorepo restructure, no
+deploy step. Run one command, restart your dev server, and you have a
+canvas at `/forkshop`.
+
+## Prerequisites
+
+- A Next.js App Router project (Next.js 14 or 15).
+- A package manager — `pnpm`, `npm`, or `yarn`. Forkshop detects which
+  you use.
+- A `globals.css` (or equivalent) that Forkshop can append its CSS
+  import to. Most Next.js scaffolds have this by default.
+
+## Install
+
+From the root of your Next.js project:
+
+```bash
+npx forkshop init
+```
+
+This does five things:
+
+1. Installs `@forkshop/engine` as a dependency (via your detected
+   package manager).
+2. Drops a small scaffold layer into your project under `app/forkshop/`
+   — your canvas page, a few NodeTypes, a placeholder design-system
+   board.
+3. Drops route stubs under `app/api/forkshop/` — the dev-only edit
+   API and the agent-activity SSE feed.
+4. Appends a CSS import to your `globals.css` so Forkshop's chrome
+   styles load.
+5. Writes a `forkshop.json` lock recording the engine version and
+   scaffold checksums (so `forkshop update` can compare later).
+
+## Open your first board
+
+Start your dev server:
+
+```bash
+pnpm dev   # or npm run dev / yarn dev
+```
+
+Visit `/forkshop` in your browser. You'll see:
+
+- A canvas surface filling the viewport.
+- A left sidebar listing the boards the init scaffolded.
+- One default board showing a few of your existing pages or
+  components, depending on what `forkshop init` detected.
+
+## What got scaffolded
+
+The init creates `app/forkshop/` in your project. Open
+`app/forkshop/CLAUDE.md` — it's a short reference that any Claude Code
+session in your project will pick up automatically. That file is the
+canonical "how to use Forkshop in this project" guide; the docs site
+covers the parts that don't change between projects.
+
+## Next steps
+
+- **[Concepts](/docs/concepts)** — Nodes, NodeTypes, Layouts, Boards.
+- **[Boards](/docs/boards)** — the four Layouts that ship with the
+  engine.
+- **[Extending Forkshop](/docs/extending)** — add your own NodeTypes
+  and Layouts.
