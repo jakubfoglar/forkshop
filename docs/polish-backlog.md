@@ -2,6 +2,168 @@
 
 Small, deferrable improvements not blocking 1.0. Filed as they're discovered. Pull from this list when scoping 1.x or later cycles.
 
+**Field reports:** see `docs/feedback/` for verbatim session transcripts that drove individual entries here. Skim those before grooming this list — they carry context (which step the user got stuck on, what workarounds they tried) that gets lost in summarization.
+
+- `docs/feedback/2026-05-19-board-building-session.md` — wiring two custom Boards (Dashboard + Charts) in `ravineo-frontend`. Source of entries marked *(board-building feedback)* below.
+
+---
+
+## Gallery grid auto-flow when `entry.row` / `entry.column` are undefined *(board-building feedback)*
+
+**Symptom:** With `<Gallery layout="grid" entries={...} />` and no `row`/`column` on entries, every cell renders at `(0, 0)` and visually overlaps. The natural reading of "grid layout" implies auto-flow; the actual behavior is "all cells pinned to cell (0,0)." Took a wasted iteration in the field session to discover.
+
+**Note:** an earlier hypothesis attributed this to `node.x=0,y=0` semantics. The board-building feedback (doc #2) pins it to `GalleryEntry.row` and `GalleryEntry.column` defaulting to 0 — different field, sharper diagnosis.
+
+**Fix direction:** two cheap interventions, either or both:
+
+1. **Auto-assign sequential `column`** (or `row`) when undefined. Most consumers want left-to-right flow; this matches the implicit default and removes the need to pass `idx` per entry. Single source change in Gallery's layout function.
+2. **Dev-only console warning** when multiple entries resolve to the same `(row, column)` cell. Cheap diagnostic that surfaces the bug without changing behavior.
+
+Ship both. Option 1 is the actual fix; option 2 protects against the next analogous footgun (e.g. all entries explicitly set to `column: 0`).
+
+**Sequencing:** TL;DR top-3 in the board-building feedback. First 1.x cycle.
+
+---
+
+## `iframe-route` body-height callback ignores `heightMode: "cap"` *(board-building feedback)*
+
+**Symptom:** A custom Board uses `iframe-route` Nodes with `node.height = 2500` and `heightMode: "cap"`. The iframe wrapper visually clips at 2500px (correct), but Gallery's measured cell height grows past the cap as the embedded page autoloads more content — frames eventually pile on top of each other. Was the single biggest source of friction in the board-building session; the user worked around by abandoning `iframe-route` entirely and reimplementing the iframe lifecycle in `inline-react`, losing live-edit overlay, agent-read indicator, and wheel forwarding in the process.
+
+**Root cause:** `LazyIframe`'s `onBodyHeightSync` callback fires with the **uncapped** measured `body.scrollHeight`, even when `heightMode === "cap"`. Gallery then sizes the cell to that uncapped value. The visual clip and the layout measurement are using different numbers.
+
+**Fix direction:** in `LazyIframe`, cap the callback value when in cap mode:
+```ts
+const reportedHeight = heightMode === "cap" ? Math.min(measured, height) : measured
+onBodyHeightSync?.(id, reportedHeight)
+```
+
+Optional further work (lower priority): add a `maxHeight?: number` field on `IframeRouteNode` that bounds both the wrapper *and* the callback — useful when consumers want "render at full height but never exceed N pixels."
+
+**Sequencing:** TL;DR #1 in the board-building feedback. First thing to ship in 1.x — unblocks an entire class of "iframe at a route with explicit framing" boards.
+
+Related: existing "Blocks Board frame heights" entry below — likely the same root cause as observed via `iframe-component` rather than `iframe-route`. Fixing this should subsume that.
+
+---
+
+## Export `LazyIframe` (+ `useForkshopCanvas`, canvas handle/transform/wheel-input types) *(board-building feedback)*
+
+**Symptom:** Custom Boards that want any iframe-shaped content must reimplement what `LazyIframe` already does: `IntersectionObserver` lazy-load, `nextjs-portal` / `min-h-screen` neutralization, wheel forwarding to canvas, body-height sync via `ResizeObserver`, `scrolling="no"` + overflow wrapper, optionally `AgentReadIndicator` + `IframeEditOverlay`. The field session rewrote ~80% of `LazyIframe` by hand.
+
+Smaller analogous gap: `useForkshopCanvas` (which gives consumers `applyWheelInput`, `transformRef`) is referenced from the engine's own NodeTypes but never exported. So custom NodeTypes can't reuse the same wiring.
+
+Smallest: `ForkshopCanvasHandle`, `Transform`, `WheelInput` types appear in the `.d.ts` but aren't in the `export { ... }` block. Consumers have to redeclare them structurally to type a `useRef`. Pure DX paper cut.
+
+**Fix direction:** three separable changes, in increasing scope:
+
+1. **Type exports** (handle / transform / wheel-input). 5-minute fix to `index.ts`. Ship first.
+2. **Export `useForkshopCanvas`.** Verify the hook's contract is stable enough for a public API (the engine uses it internally — should be solid). Document the two methods consumers care about.
+3. **Export `LazyIframe`** (or wrap it in a thinner public `IframeFrame`) with `maxHeight` + `lockScroll` props. Biggest scope — needs to lock down the iframe primitive's contract for the long term. Combine with the `heightMode: "cap"` callback fix above; same surface.
+
+**Sequencing:** TL;DR #3 in the board-building feedback. Type exports = first cycle, no-brainer. `useForkshopCanvas` = next cycle, needs a quick contract review. `LazyIframe` export = aligned with the cap-callback fix, ship them together.
+
+---
+
+## Portal-rendered tooltips escape canvas zoom *(board-building feedback)*
+
+**Symptom:** Charts board uses visx tooltips, which render via `createPortal(..., document.body)`. The canvas applies `transform: scale(zoom)` on a stage div *inside* the container; anything portaled out of that subtree renders at 100% scale regardless of canvas zoom. Tooltips look comically large when zoomed out.
+
+This will also bite any consumer using Radix Popover / Tooltip / Select / DropdownMenu, all of which portal by default.
+
+**Field workaround:** `MutationObserver` on `document.body` watching for tooltip insertions/style mutations, then applying CSS `scale: <zoom>` + `transform-origin: 0 0` imperatively. Uses CSS `scale` rather than `transform: scale` so visx's own `translate` stays intact.
+
+**Fix direction:** layered options, pick one or stack:
+
+1. **Expose `--canvas-zoom` on `:root`** instead of inline-styling the stage div. Portaled DOM can read it via CSS inheritance. Cheapest fix; consumers opt in via their own CSS.
+2. **`ForkshopPortal` context provider.** Descendants of `ForkshopCanvas` get a context with the stage element ref; consumers pass it to Radix's `portalContainer` / Popover's `container` prop / visx's `portalContainer`. Library-friendly; no body portals at all.
+3. **Auto-scale opt-in selector.** Any `body > [data-forkshop-portal]` gets the canvas-zoom scale applied automatically by an engine-shipped style block. Brittle in the long run; useful escape hatch for libraries that *don't* expose a portal container.
+
+Option 2 is the durable answer for Radix-shaped libraries (most modern popover stacks). Option 1 is the floor — ship it as part of the same change. Option 3 only if there's real demand.
+
+**Sequencing:** bug #3 in the board-building feedback. Doesn't block any specific Board recipe, but any visualisation library with portaled overlays will hit it. First 1.x cycle.
+
+---
+
+## DesignSystemView persisted positions drift after reload
+
+**Symptom:** On the Design System Board, drag a primitive frame (Popover, Skeleton, etc.) into a new spot. Reload the page. Frames reappear in noticeably different positions — sometimes overlapping the token grid, sometimes way off-canvas. The persisted x/y is being applied, but visually it lands wrong.
+
+**Root cause (hypothesis):** `DesignSystemView` computes its own stage layout (token color graph footprint + primitives section + typography section). Stage origin and dimensions depend on the inputs (token count, primitive count). Persisted positions are stored as absolute pixel coords. On reload, if the stage origin shifts even slightly (e.g. one more token row, one fewer primitive), positions persisted in the old coordinate system land somewhere else visually.
+
+**Fix direction:** options, in increasing order of correctness:
+
+1. **Snap drift to nearest section.** Detect when a persisted position is "implausible" (e.g. negative, off-stage) and clamp into a sensible default. Quick win, masks the underlying issue.
+2. **Store positions relative to layout sections.** Each section (`tokens`, `primitives`, `typography`) gets its own coord space. `DesignSystemView` knows how to translate. Survives stage-size shifts. Requires position-storage format to carry a section discriminator.
+3. **Version positions per-layout schema.** When `DesignSystemView`'s internal layout shape changes (new section added, primitives count crossing a row boundary), bump a schema version and invalidate old positions. Heavyweight.
+
+Option 2 is the right long-term fix; option 1 is acceptable as a short-term unblock.
+
+**Sequencing:** 1.x. Surface impact is high (first thing users do is drag stuff around; reload showing chaos is a confidence killer), but the bug only bites on the Design System Board specifically — Gallery / Tree / ResponsiveFrameView aren't affected.
+
+---
+
+## User-side CLAUDE.md template — stale field names in "Configuring file mapping"
+
+**Why:** Surfaced during the iframe-primitive-contract code review (2026-05-19). The "Configuring file mapping" subsection (`packages/engine/templates/user-claude-md.md` around lines 480–490) shows code examples that reference fields that don't exist on the engine's Node types:
+
+- `sourcePath: "components/ui/button.tsx"` on an `InlineReactNode` — but `InlineReactNode` has `filePath?: string`, not `sourcePath`.
+- `path: "/"` on an `IframeComponentNode` — but `IframeComponentNode` has no `path` field (it has `slug` + `previewSrc`).
+- `sourcePath: "..."` on the same `IframeComponentNode` example — also a non-existent field.
+
+Any user who copy-pastes those examples hits a TypeScript error. The 2026-05-19 spec only covered iframe-route's `path` → `routePath` rename in the field-mapping section; this is the same class of bug elsewhere in the same template, scoped out at the time.
+
+**The fix:** audit every code example in `user-claude-md.md` against `packages/engine/src/types/node.ts`. Reconcile field names. Update the surrounding prose if it references the wrong fields.
+
+While in there, also reconcile the prose on agent-activity attribution against what `InlineReactNode` / `IframeComponentNode` actually carry. The current template says "Add `sourcePath` to each `inline-react` Node and `iframe-component` Node" — if the actual attribution field is `filePath` on inline-react and `componentPath` / `sourceFile` on iframe-component, the prose needs to change too.
+
+**Sequencing:** post-1.0. Same first-impression class as the iframe-primitive work just shipped — every fresh install reads this template, and broken examples teach the wrong shape. Pair with any future doc-pass in the next 1.x cycle.
+
+---
+
+## Live-AI hook — dev-port discovery instead of port-range walk
+
+**Why:** The hook script POSTs to `localhost:3000/api/forkshop/agent-activity`. When Next picks an alternate port (3000 already taken), every hook call silently fails — no live indicators, no warning, no recovery. We patched this by walking ports 3000-3009 until one responds, which is robust but burns up to 10 curl invocations per Edit/Write/Read tool call. Acceptable as a stopgap; not what we want long-term.
+
+**The fix:** have the engine's dev-only middleware (or any request handler) write the bound port to a small discovery file on first request — e.g. `~/.forkshop/dev-port.<project-hash>` containing `{ port: 3001, ts: <epoch> }`. The hook reads that file (fast, one fs.read) and POSTs directly. Stale entries auto-prune by checking `ts` freshness. Falls back to port-walk if no file exists yet (first run of the day).
+
+Alternative: write the port file from a Next.js instrumentation hook (`instrumentation.ts`) on dev server boot. Cleaner — runs exactly once per dev session. The engine could ship the instrumentation snippet and the setup skill scaffolds it.
+
+**Sequencing:** 1.x polish. The port-walk works fine for most teams (most stay in 3000-3002 range). Real benefit kicks in when teams routinely run multiple Next projects in parallel and the hook overhead becomes visible in Claude's tool latency.
+
+---
+
+## Setup skill — surface structurally-interesting routes without prescribing Boards
+
+**Why:** The setup skill currently treats every discovered route the same: feeds them into `forkshopConfig.sitemap.routes`, lets them appear under PAGES. That's fine for typical app routes, but flattens the signal on routes that obviously warrant a custom Board — dynamic routes (`/dashboard/[dashboardId]`) iframe blank without a sample ID, high-fanout routes (47 imports, tabs, sidebars) won't show their richness in a thumbnail. Users have to discover the gap themselves and read CLAUDE.md to figure out next steps.
+
+**The fix:** Phase 3's consolidated proposal surfaces observations without scaffolding anything:
+
+- **Dynamic routes:** *"`/dashboard/[dashboardId]` has dynamic params + query strings — won't iframe meaningfully without a sample ID. Want to provide one canonical ID so I can wire a preview, or skip for now?"* If the user provides one, write it as a `previewParams: { dashboardId: "GduBF5JefXZF" }` field on the route entry; the engine's `iframe-route` NodeType uses it to construct the iframe URL.
+- **High-fanout routes (top N by import count):** *"Largest internal component graphs: /dashboard/[id] (47), /admin (12), /my (8). These might benefit from custom Boards beyond the default iframe — see `app/forkshop/CLAUDE.md`."*
+
+No auto-scaffolding. Forkshop describes what's there; the user decides what deserves a custom Board. Stays on the right side of "Forkshop scaffolds, user owns content."
+
+**Sequencing:** post-1.0. Real first-impression polish — every team has a hero screen, and the current scaffold doesn't acknowledge it exists. Ship in the first 1.x cycle alongside the compound-primitive empty-state work.
+
+---
+
+## Compound primitives render empty (Dialog, Popover, DropdownMenu, Skeleton)
+
+**Why:** The default per-primitive scaffold emits `<p.Component />` — fine for atomic primitives (Button, Badge, Input) but produces blank white cards for compound primitives that need composition (`Dialog` + `DialogTrigger` + `DialogContent` + `open` state), or zero-dimension primitives (`Skeleton` with no explicit w/h className). Users see "empty boxes" on UI Components and rightly wonder what's broken. Real-installs first impression problem.
+
+**The fix:** two lighter interventions, kept on the right side of "don't pretend to know the user's API":
+
+1. **Scaffold-time richer stubs.** When the setup skill scans a primitive file and detects a Radix-style compound (multiple PascalCase exports sharing a stem, e.g. `Dialog`, `DialogTrigger`, `DialogContent`), emit a stub with the compound skeleton commented in:
+   ```tsx
+   // Hint: <Dialog open><DialogTrigger>Open</DialogTrigger><DialogContent>...</DialogContent></Dialog>
+   ```
+   Still a stub, but runnable in 90 seconds instead of staring at a blank board.
+
+2. **Runtime honest empty-state.** When a Gallery / Design System entry renders to an effectively-empty DOM (zero bounding box or only whitespace), engine swaps in a placeholder card: *"Stub — open `ui-components/<slug>.tsx` to add variants."* Click → Locator-style jump to the file. Makes the gap legible.
+
+3. **Skeleton exception.** Single-purpose, no API surface — safe to bake in `<Skeleton className="h-10 w-48" />` as the default scaffold for it.
+
+**Sequencing:** post-1.0. First-impression polish but not blocking. Will hit ~every user who installs Forkshop on a shadcn codebase, so worth shipping in the first 1.x cycle.
+
 ---
 
 ## Dedupe `/api/forkshop/edit?path=...` fetches across multi-viewport boards
