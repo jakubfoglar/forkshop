@@ -15,7 +15,7 @@ const DEFAULT_SCHEDULE: EventScheduleRowData[] = [
   { dayCode: "D03", date: "WED 16 MAR", eventName: "ROUND OF 32 CONT.",   fill: "red",    badgeLabel: "COMPETITION", time: "10:00" },
   { dayCode: "D04", date: "THU 17 MAR", eventName: "ROUND OF 16",         fill: "navy",   badgeLabel: "PREMIER",     time: "11:00" },
   { dayCode: "D05", date: "FRI 18 MAR", eventName: "FREESURF SESSION",    fill: "yellow", badgeLabel: "FREESURF",    time: "08:00" },
-  { dayCode: "D06", date: "SAT 21 MAR", eventName: "QUARTERFINALS",       fill: "navy",   badgeLabel: "PREMIER",     time: "10:00" },
+  { dayCode: "D06", date: "SAT 21 MAR", eventName: "QUARTERFINALS",       fill: "red",    badgeLabel: "COMPETITION", time: "10:00" },
   { dayCode: "D07", date: "SUN 23 MAR", eventName: "SEMIFINALS + FINAL",  fill: "black",  badgeLabel: "FINAL",       time: "09:30" },
 ]
 

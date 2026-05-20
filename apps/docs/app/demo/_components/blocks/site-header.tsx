@@ -11,7 +11,7 @@ const DEFAULT_NAV_LINKS = [
   { label: "ATHLETES", href: "#" },
   { label: "SCHEDULE", href: "#" },
   { label: "TICKETS",  href: "#" },
-  { label: "MEDIA",    href: "#" },
+  { label: "JOURNAL",  href: "#" },
 ]
 
 export interface SiteHeaderProps {
@@ -48,15 +48,17 @@ export function SiteHeader({
           WAVECLASH///
         </a>
 
-        {/* LIVE 24/7 pill — graphite fill, red stroke, node: iweyU */}
+        {/* LIVE 24/7 pill — graphite fill, red stroke, red dot, node: iweyU */}
         <span
           className={cn(
+            "flex items-center gap-2",
             "font-demo-mono text-xs font-bold text-waveclash-cream uppercase",
             "tracking-label-wider",
             "bg-waveclash-graphite border border-waveclash-red",
             "px-2 py-1",
           )}
         >
+          <span className="inline-block w-2 h-2 rounded-full bg-waveclash-red" aria-hidden />
           LIVE 24/7
         </span>
       </div>

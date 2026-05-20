@@ -52,7 +52,7 @@ export interface CtaBuyPassProps {
 
 export function CtaBuyPass({
   sectionLabel  = "[ 05 / TICKETS ON SALE ]",
-  sectionHeading = "BE ON\nTHE SAND.",
+  sectionHeading = "BE ON THE\nSAND.",
   sectionSubcopy = "Three tiers. One reef. Zero live streams substitute for the thing itself.",
   tickets       = DEFAULT_TICKETS,
 }: CtaBuyPassProps) {

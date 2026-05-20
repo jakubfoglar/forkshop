@@ -1,4 +1,5 @@
 import { cn } from "@/lib/cn"
+import { SectionHeadingRow } from "../ui/section-heading-row.js"
 import { SurferCard } from "./surfer-card.js"
 import type { SurferCardData } from "./surfer-card.js"
 
@@ -92,36 +93,26 @@ export function SurferGrid({
         <div className="border-t-2 border-waveclash-black" />
       </div>
 
-      {/* Heading block (anKrW): 180px heading left + subcopy right (xk7we, 380px) */}
-      <div className="flex items-end justify-between">
-        {/* Left: 180px display heading, tracking −6, leading 0.88 (dense) */}
-        <div className="flex-1">
-          {sectionHeading.split("\n").map((line, i) => (
-            <div
-              key={i}
-              className={cn(
-                "font-display text-display-sm text-waveclash-black uppercase",
-                "leading-dense",
-              )}
-              style={{ letterSpacing: "-0.03333em" }} // −6px at 180px
-            >
-              {line}
-            </div>
-          ))}
-        </div>
+      {/* Heading block (anKrW): SectionHeadingRow (180px, xl) + subcopy below right-side */}
+      <SectionHeadingRow
+        eyebrow={sectionLabel}
+        title={sectionHeading.replace("\n", " ")}
+        size="xl"
+      />
 
-        {/* Right: subcopy column (xk7we, 380px) — Inter 16px 500 */}
-        <div className="w-[380px] shrink-0 ml-8">
+      {/* Subcopy (xk7we, 380px) — rendered as sibling, aligned right */}
+      {sectionSubcopy && (
+        <div className="flex justify-end">
           <p
             className={cn(
-              "font-body text-2xl text-waveclash-black leading-relaxed",
+              "w-[380px] font-body text-2xl text-waveclash-black leading-relaxed",
             )}
             style={{ fontWeight: 500 }}
           >
             {sectionSubcopy}
           </p>
         </div>
-      </div>
+      )}
 
       {/* Card grid (ZqcnB): 4 cards, gap 20, padding-top 20 */}
       <div className="flex gap-5 pt-5">

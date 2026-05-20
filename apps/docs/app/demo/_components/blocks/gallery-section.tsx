@@ -102,7 +102,7 @@ export function GallerySection({
         {/* Left: 560×560px large image placeholder (gxl0g) + timestamp badge */}
         <div className="relative shrink-0" style={{ width: 560, height: 560 }}>
           {/* Image placeholder */}
-          <div className="bg-waveclash-black w-full h-full border border-waveclash-graphite" />
+          <div className="bg-waveclash-black w-full h-full border border-waveclash-cream/10" />
 
           {/* Timestamp badge: rotated −6°, yellow bg, JetBrains Mono 12px 700 */}
           <div
@@ -123,14 +123,14 @@ export function GallerySection({
         <div className="flex flex-col gap-4 flex-1">
           {/* Top image (E7QL99): 272px tall */}
           <div
-            className="bg-waveclash-black border border-waveclash-graphite w-full"
+            className="bg-waveclash-black border border-waveclash-cream/10 w-full"
             style={{ height: 272 }}
           />
 
           {/* Bottom split (P5Qfn): 272px — surf image left + pull-quote panel right */}
           <div className="flex gap-4" style={{ height: 272 }}>
             {/* Surf image left — half width */}
-            <div className="bg-waveclash-black border border-waveclash-graphite flex-1" />
+            <div className="bg-waveclash-black border border-waveclash-cream/10 flex-1" />
 
             {/* Pull-quote panel (yJ2h6): red fill, justify-between */}
             <div
