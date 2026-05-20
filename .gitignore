@@ -8,3 +8,7 @@ dist/
 .DS_Store
 .envrc
 .superpowers/
+
+# Pencil tool cache (root-level working dir created by the pencil MCP / CLI).
+# Tracked design sources live under docs/design/* instead.
+designs/
