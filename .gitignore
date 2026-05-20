@@ -12,3 +12,8 @@ dist/
 # Pencil tool cache (root-level working dir created by the pencil MCP / CLI).
 # Tracked design sources live under docs/design/* instead.
 designs/
+
+# Defensive: prevent rogue Forkshop positions if FORKSHOP_POSITIONS_PATH is unset.
+# Real positions live per-app under apps/*/app/demo/positions.json (or wherever the
+# app's forkshop.config.tsx points).
+apps/docs/app/forkshop/
