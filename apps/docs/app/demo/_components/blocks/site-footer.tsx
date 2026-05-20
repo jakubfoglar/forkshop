@@ -83,6 +83,7 @@ export function SiteFooter({
       <TickerBelt
         fill="yellow"
         separator="★"
+        size="md"
         items={[
           "WAVECLASH/26 — PIPELINE, HAWAI'I — MAR 14/23",
           "ENTER THE WATER",

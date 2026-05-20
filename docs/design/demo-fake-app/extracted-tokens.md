@@ -640,6 +640,33 @@ Candidate blocks from the task brief that were NOT found as standalone sections:
 
 ---
 
+## Pages
+
+WAVECLASH is a **single landing page**. The pencil file's two top-level
+desktop frames (`opEVO` and `N9wSB2`) are the top half and bottom half of
+the same long landing — split across two frames for canvas-management
+convenience, not because they're separate pages.
+
+### Landing — `/demo/site`
+
+Block composition, top to bottom:
+
+1. SiteHeader
+2. Hero
+3. StatsBelt
+4. AboutCallout
+5. EventSchedule
+6. SurferGrid
+7. GallerySection
+8. SponsorStrip
+9. CtaBuyPass
+10. SiteFooter
+
+Renders standalone (no Forkshop chrome). Phase 2c will mount this content
+inside a ForkshopSidebar + ForkshopCanvas at `/demo`.
+
+---
+
 ## Concerns / Flags for Review
 
 1. **`#00355c` navy is a real brand color** — confirmed on three distinct nodes:

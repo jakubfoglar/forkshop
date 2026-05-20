@@ -1,20 +1,22 @@
 import { cn } from "@/lib/cn"
 
 export type TickerBeltFill = "yellow" | "black"
+export type TickerBeltSize = "md" | "lg"
 
 export interface TickerBeltProps {
   fill?: TickerBeltFill
   items: string[]
   separator: string  // required — both design instances choose explicitly
+  size?: TickerBeltSize  // "lg" = text-6xl (28px, hero default); "md" = text-4xl (22px, footer)
   className?: string
 }
 
 /**
  * Full-width horizontal ticker bar. Static (no animation) — marquee deferred.
- * Source nodes: YmRZq (hero, yellow, ◆ sep), SZ1De (footer, yellow, ★ sep).
+ * Source nodes: YmRZq (hero, yellow, ◆ sep, 28px), SZ1De (footer, yellow, ★ sep, 22px).
  *
  * Design values (pencil):
- *   - Font: Archivo Black, 28px (hero) / 22px (footer) — we use text-6xl as default
+ *   - Font: Archivo Black, 28px (hero/lg) / 22px (footer/md)
  *   - Padding: [16, 0] (hero) / [18, 60] (footer) — we expose via className
  *   - Border: 3px solid black top+bottom
  *   - Gap between items: 32–36px — implemented as gap-8
@@ -24,8 +26,11 @@ export function TickerBelt({
   fill = "yellow",
   items,
   separator,
+  size = "lg",
   className,
 }: TickerBeltProps) {
+  const textClass = size === "md" ? "text-4xl" : "text-6xl"
+
   return (
     <div
       className={cn(
@@ -41,7 +46,8 @@ export function TickerBelt({
         <span key={i} className="flex items-center gap-8 flex-shrink-0">
           <span
             className={cn(
-              "font-display text-6xl tracking-label-wide uppercase",
+              "font-display tracking-label-wide uppercase",
+              textClass,
               fill === "yellow" && "text-waveclash-black",
               fill === "black" && "text-waveclash-cream",
             )}
@@ -50,7 +56,8 @@ export function TickerBelt({
           </span>
           <span
             className={cn(
-              "font-display text-6xl flex-shrink-0",
+              "font-display flex-shrink-0",
+              textClass,
               fill === "yellow" && "text-waveclash-black",
               fill === "black" && "text-waveclash-red",
             )}

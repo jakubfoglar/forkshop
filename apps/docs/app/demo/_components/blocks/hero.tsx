@@ -184,6 +184,7 @@ export function Hero({
       <TickerBelt
         fill="yellow"
         separator="◆"
+        size="lg"
         items={tickerItems}
       />
     </div>
