@@ -5,7 +5,7 @@ import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 
 const raveo = localFont({
-  src: "../../../packages/engine/fonts/raveo/RaveoVF.woff2",
+  src: "../../../../packages/engine/fonts/raveo/RaveoVF.woff2",
   variable: "--font-raveo",
   display: "swap",
 })
