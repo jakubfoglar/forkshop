@@ -87,7 +87,10 @@ function mapAgentSeed(seed: AgentSeed): ActivityEntry {
     sessionId: "demo-seed",
     color: "#3057f0",
     action: "edit",
-    lastSeenAt: Date.now(),
+    // MAX_SAFE_INTEGER keeps the staleness check (Date.now() - lastSeenAt > STALE_MS)
+    // permanently false so URL-seeded entries never get pruned. Workaround until
+    // the engine adds a proper `pinned` flag on ActivityEntry (task #50).
+    lastSeenAt: Number.MAX_SAFE_INTEGER,
   }
 }
 
