@@ -1,0 +1,92 @@
+import { cn } from "@/lib/cn"
+import { Button } from "../ui/button.js"
+
+// Source node: LEYsk (page 1)
+// Layout: full-width 80px, bg-waveclash-black, padding [0,32]
+// Three-column flex: logo+"LIVE 24/7" pill | 5 nav links | GET PASS button
+// Bottom border: 2px solid waveclash-red
+
+const DEFAULT_NAV_LINKS = [
+  { label: "EVENT",    href: "#" },
+  { label: "ATHLETES", href: "#" },
+  { label: "SCHEDULE", href: "#" },
+  { label: "TICKETS",  href: "#" },
+  { label: "MEDIA",    href: "#" },
+]
+
+export interface SiteHeaderProps {
+  currentPath?: string
+  navLinks?: Array<{ label: string; href: string }>
+  ctaLabel?: string
+  ctaHref?: string
+}
+
+export function SiteHeader({
+  currentPath,
+  navLinks = DEFAULT_NAV_LINKS,
+  ctaLabel = "GET PASS",
+  ctaHref = "#",
+}: SiteHeaderProps) {
+  return (
+    <header
+      className={cn(
+        "w-full flex items-center justify-between",
+        "bg-waveclash-black border-b-2 border-waveclash-red",
+        "px-8 h-20",
+      )}
+    >
+      {/* Left: wordmark + LIVE 24/7 pill */}
+      <div className="flex items-center gap-3">
+        <a
+          href="/"
+          className={cn(
+            "font-display text-5xl text-waveclash-cream uppercase",
+            "tracking-[-0.02083em]", // −0.5px @ 24px
+            "leading-none no-underline",
+          )}
+        >
+          WAVECLASH///
+        </a>
+
+        {/* LIVE 24/7 pill — graphite fill, red stroke, node: iweyU */}
+        <span
+          className={cn(
+            "font-demo-mono text-xs font-bold text-waveclash-cream uppercase",
+            "tracking-label-wider",
+            "bg-waveclash-graphite border border-waveclash-red",
+            "px-2 py-1",
+          )}
+        >
+          LIVE 24/7
+        </span>
+      </div>
+
+      {/* Center: nav links */}
+      <nav className="flex items-center gap-8">
+        {navLinks.map(({ label, href }) => {
+          const isActive = currentPath === href
+          return (
+            <a
+              key={label}
+              href={href}
+              className={cn(
+                "font-demo-mono text-base font-bold text-waveclash-cream uppercase",
+                "tracking-label-wider no-underline",
+                isActive && "text-waveclash-red",
+              )}
+            >
+              {label}
+            </a>
+          )
+        })}
+      </nav>
+
+      {/* Right: CTA button */}
+      <a href={ctaHref} className="no-underline">
+        <Button variant="primary" width="compact">
+          {ctaLabel}
+        </Button>
+      </a>
+    </header>
+  )
+}

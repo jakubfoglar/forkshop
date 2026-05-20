@@ -1,0 +1,2 @@
+export { SiteHeader } from "./site-header.js"
+export type { SiteHeaderProps } from "./site-header.js"

@@ -1,4 +1,5 @@
 // Phase 1b: Primitives gallery.
+// Phase 1c: Blocks gallery (appended below primitives).
 // A brief color-swatch row at the top lets us confirm token drift at a glance.
 // The bulk of the page shows every variant/size combination of each primitive.
 
@@ -8,6 +9,8 @@ import { StatCounter } from "./_components/ui/stat-counter.js"
 import { SectionHeadingRow } from "./_components/ui/section-heading-row.js"
 import { ProfileLink } from "./_components/ui/profile-link.js"
 import { TickerBelt } from "./_components/ui/ticker-belt.js"
+
+import { SiteHeader } from "./_components/blocks/index.js"
 
 // ── Swatch data (kept brief — one row per brand primitive) ────────────────────
 const brandColors = [
@@ -231,6 +234,31 @@ export default function DemoPage() {
         </div>
       </section>
 
+      <Divider />
+
+      {/* ── Blocks (Part 1) ───────────────────────────────────────────────────── */}
+      <section>
+        <h2 className="font-demo-mono uppercase text-sm tracking-label-wider mb-4 mt-16 text-waveclash-red font-bold">
+          Blocks (Part 1)
+        </h2>
+
+        <div className="space-y-12">
+          <GalleryItem label="SiteHeader (source: LEYsk)">
+            <SiteHeader />
+          </GalleryItem>
+        </div>
+      </section>
+
     </main>
+  )
+}
+
+// ── Gallery helpers ───────────────────────────────────────────────────────────
+function GalleryItem({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="font-demo-mono uppercase text-xs text-waveclash-graphite mb-2">{label}</div>
+      <div className="border border-waveclash-graphite overflow-hidden">{children}</div>
+    </div>
   )
 }
