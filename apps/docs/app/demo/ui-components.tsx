@@ -16,7 +16,7 @@ export function UIComponentsBoard() {
     () =>
       primitives.map((p) => {
         const node: InlineReactNode = {
-          id: `primitive:${p.slug}`,
+          id: `components:primitive:${p.slug}`,
           kind: "inline-react",
           x: 0,
           y: 0,

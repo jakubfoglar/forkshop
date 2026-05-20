@@ -27,7 +27,7 @@ export default function BlocksBoardView({
     () =>
       blocks.map((b) => {
         const node: IframeComponentNode = {
-          id: `block:${b.slug}`,
+          id: `blocks:block:${b.slug}`,
           kind: "iframe-component",
           x: 0,
           y: 0,

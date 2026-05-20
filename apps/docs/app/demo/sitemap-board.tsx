@@ -36,7 +36,7 @@ export function SitemapBoard({
     () =>
       DEMO_ROUTES.map((r): TreeEntry => {
         const node: IframeRouteNode = {
-          id: `page:${r.path}`,
+          id: `sitemap:page:${r.path}`,
           kind: "iframe-route",
           x: 0,
           y: 0,

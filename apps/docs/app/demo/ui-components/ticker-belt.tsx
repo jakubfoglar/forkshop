@@ -25,7 +25,7 @@ export function TickerBeltBoard() {
     () =>
       INSTANCES.map(({ id, label, fill, size, separator }): GalleryEntry => {
         const node: InlineReactNode = {
-          id: `primitive:${id}`,
+          id: `ticker-belt:${id}`,
           kind: "inline-react",
           x: 0,
           y: 0,

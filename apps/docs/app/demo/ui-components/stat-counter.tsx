@@ -19,7 +19,7 @@ export function StatCounterBoard() {
     () =>
       INSTANCES.map(({ id, label, value, statLabel, highlight }): GalleryEntry => {
         const node: InlineReactNode = {
-          id: `primitive:${id}`,
+          id: `stat-counter:${id}`,
           kind: "inline-react",
           x: 0,
           y: 0,

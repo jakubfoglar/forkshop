@@ -43,7 +43,7 @@ export function DesignSystemBoard({
         id: "ui",
         label: "UI Primitives",
         primitives: discoverPrimitives(forkshopConfig.ui).map<InlineReactNode>((p) => ({
-          id: `primitive:${p.slug}`,
+          id: `design-system:primitive:${p.slug}`,
           kind: "inline-react",
           x: 0,
           y: 0,
@@ -59,7 +59,7 @@ export function DesignSystemBoard({
 
   const typographyNode = useMemo<InlineReactNode>(
     () => ({
-      id: "typography",
+      id: "design-system:typography",
       kind: "inline-react",
       x: 0,
       y: 0,

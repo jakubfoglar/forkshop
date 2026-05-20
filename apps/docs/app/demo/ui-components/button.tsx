@@ -26,7 +26,7 @@ export function ButtonBoard() {
     for (const { variant, width, row, column } of VARIANTS) {
       const id = `button-${variant}-${width}`
       const node: InlineReactNode = {
-        id: `primitive:${id}`,
+        id: `button:${id}`,
         kind: "inline-react",
         x: 0,
         y: 0,

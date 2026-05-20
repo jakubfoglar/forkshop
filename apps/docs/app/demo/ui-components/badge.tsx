@@ -21,7 +21,7 @@ export function BadgeBoard() {
     () =>
       INSTANCES.map(({ id, label, fill, content, size }): GalleryEntry => {
         const node: InlineReactNode = {
-          id: `primitive:${id}`,
+          id: `badge:${id}`,
           kind: "inline-react",
           x: 0,
           y: 0,

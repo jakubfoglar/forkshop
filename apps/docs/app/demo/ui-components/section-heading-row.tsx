@@ -57,7 +57,7 @@ export function SectionHeadingRowBoard() {
     () =>
       INSTANCES.map(({ id, label, title, eyebrow, size, tone, bg, width, height }): GalleryEntry => {
         const node: InlineReactNode = {
-          id: `primitive:${id}`,
+          id: `section-heading-row:${id}`,
           kind: "inline-react",
           x: 0,
           y: 0,
