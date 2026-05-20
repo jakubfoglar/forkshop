@@ -24,9 +24,7 @@ const inter = Inter({
 
 export default function DemoLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      className={`demo-scope ${archivoBlack.variable} ${jetbrainsMono.variable} ${inter.variable}`}
-    >
+    <div className={`${archivoBlack.variable} ${jetbrainsMono.variable} ${inter.variable}`}>
       {children}
     </div>
   )

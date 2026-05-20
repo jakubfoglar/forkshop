@@ -1,5 +1,6 @@
 "use client"
 
+import "@forkshop/engine/forkshop.css"
 import React, { useCallback, useEffect, useMemo, useState } from "react"
 import {
   ForkshopSidebar,

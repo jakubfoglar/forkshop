@@ -13,17 +13,19 @@ import {
 
 export default function WaveclashLandingPage() {
   return (
-    <main>
-      <SiteHeader />
-      <Hero />
-      <StatsBelt />
-      <AboutCallout />
-      <EventSchedule />
-      <SurferGrid />
-      <GallerySection />
-      <SponsorStrip />
-      <CtaBuyPass />
-      <SiteFooter />
-    </main>
+    <div className="demo-scope">
+      <main>
+        <SiteHeader />
+        <Hero />
+        <StatsBelt />
+        <AboutCallout />
+        <EventSchedule />
+        <SurferGrid />
+        <GallerySection />
+        <SponsorStrip />
+        <CtaBuyPass />
+        <SiteFooter />
+      </main>
+    </div>
   )
 }

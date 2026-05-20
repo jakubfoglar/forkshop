@@ -16,7 +16,7 @@ export default async function DemoBlockPreviewPage({
   if (!entry) notFound()
   const Component = entry.Component
   return (
-    <div className="bg-white">
+    <div className="demo-scope">
       <Component />
     </div>
   )
