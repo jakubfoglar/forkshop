@@ -1,0 +1,51 @@
+---
+title: Getting Started
+description: Add Forkshop to an existing Next.js App Router project.
+---
+
+`npx forkshop init` scaffolds the file layer Forkshop needs into an
+existing Next.js project and installs `@forkshop/engine` via your
+package manager. After it finishes, open Claude Code and say "set up
+Forkshop" — that's the only remaining step.
+
+## Prerequisites
+
+- A Next.js App Router project.
+- `tsconfig.json` with a `@/*` path alias (the standard Next scaffold
+  has this).
+- A `globals.css` that gets imported from your root layout.
+
+## Run init
+
+From your project root:
+
+```bash
+npx forkshop init
+```
+
+`init` preflights your project, drops the scaffold layer (API route
+stubs, skill files, the Raveo font), appends the CSS import to your
+`globals.css`, writes `forkshop.json`, and installs `@forkshop/engine`
+via your detected package manager. Pass `--no-install` to skip the
+install step. Aborts if `forkshop.json` already exists — see
+[CLI](/docs/cli) for `update` and `diff`.
+
+## Finish the setup
+
+Open Claude Code in the project and say **"set up Forkshop."** The
+setup skill (dropped by init in step 4) scaffolds your first Board,
+wires the locator loader into `next.config.*`, and detects your
+existing primitives and routes. It's the part init deliberately
+doesn't do.
+
+Then start your dev server and open `/forkshop`.
+
+## Opting in to the Claude Code activity hook
+
+Pass `--install-claude-pack` to `init` (or set
+`FORKSHOP_INSTALL_CLAUDE_PACK=1`) to also drop the post-tool-use
+bash hook into `.claude/hooks/` and register it in
+`.claude/settings.json`. The hook POSTs to your dev server when
+Claude reads or edits files, so the canvas can highlight them. See
+[Live AI agents](/docs/live-ai-agents) for what the activity looks
+like.

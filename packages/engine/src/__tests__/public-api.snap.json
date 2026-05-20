@@ -49,6 +49,7 @@
     "useAllAgentHunks",
     "useDiscoveredBlocks",
     "useDiscoveredPrimitives",
+    "useForkshopPositions",
     "useIframeRegistry",
     "usePageActiveFallback",
     "useRegisterIframe",

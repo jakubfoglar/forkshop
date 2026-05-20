@@ -55,16 +55,26 @@ const STALE_MS = 5500
 
 export function AgentActivityProvider({
   fileMap,
+  initialActivity,
+  subscribeToStream = true,
   children,
 }: {
   fileMap: FileMap
+  initialActivity?: readonly ActivityEntry[]
+  /** When false, skip opening the EventSource SSE connection. Useful for
+   *  static/seeded contexts (e.g. marketing demos) where live updates would
+   *  overwrite the seeded state. Defaults to true. */
+  subscribeToStream?: boolean
   children: ReactNode
 }) {
-  const [entries, setEntries] = useState<readonly ActivityEntry[]>([])
+  const [entries, setEntries] = useState<readonly ActivityEntry[]>(
+    () => initialActivity ?? [],
+  )
   const [seenPagePaths, setSeenPagePaths] = useState<ReadonlySet<string>>(() => new Set())
 
   useEffect(() => {
     if (process.env.NODE_ENV === "production") return
+    if (!subscribeToStream) return
     const eventSource = new EventSource("/api/forkshop/agent-activity/stream")
     const handleActivity = (event: MessageEvent<string>) => {
       try {
@@ -79,7 +89,7 @@ export function AgentActivityProvider({
       eventSource.removeEventListener("activity", handleActivity)
       eventSource.close()
     }
-  }, [])
+  }, [subscribeToStream])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -87,7 +97,7 @@ export function AgentActivityProvider({
       setEntries((current) =>
         current.length === 0
           ? current
-          : current.filter((entry) => now - entry.lastSeenAt < STALE_MS),
+          : current.filter((entry) => entry.pinned === true || now - entry.lastSeenAt < STALE_MS),
       )
     }, 1000)
     return () => clearInterval(interval)

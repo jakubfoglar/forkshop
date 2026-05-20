@@ -70,6 +70,8 @@ function clamp(value: number, min: number, max: number) {
 export function ForkshopCanvas({
   ref,
   initialTransform,
+  initialZoom,
+  initialPan,
   onTransformChange,
   stageWidth: stageWidthProp,
   stageHeight: stageHeightProp,
@@ -82,6 +84,8 @@ export function ForkshopCanvas({
 }: {
   ref?: RefObject<ForkshopCanvasHandle | null>
   initialTransform?: Transform
+  initialZoom?: number
+  initialPan?: { x: number; y: number }
   onTransformChange?: (transform: Transform) => void
   /** Optional. Defaults to 1400 — large enough that the canvas's auto-fit
    *  shrinks-to-fit comfortably on any viewport. Pass a specific value when
@@ -89,7 +93,13 @@ export function ForkshopCanvas({
   stageWidth?: number
   /** Optional. Defaults to 900. Same fit reasoning as `stageWidth`. */
   stageHeight?: number
-  fitMode?: "width" | "both"
+  /** Controls initial auto-fit behaviour:
+   * - `"width"`: fit by width only (default). Vertical overflow scrolls/pans.
+   * - `"both"`: fit both axes (uses the smaller scale). Best for 2-D boards.
+   * - `"none"`: skip auto-fit entirely. The canvas starts at zoom 1 (or the
+   *   supplied `initialZoom`/`initialPan`) and never re-fits on stage-width
+   *   changes. Use this when the stage should render at native 1:1 scale. */
+  fitMode?: "width" | "both" | "none"
   onContainerClick?: (event: React.MouseEvent<HTMLDivElement>) => void
   /** Optional. If omitted, ForkshopCanvas allocates its own internal ref —
    *  matches the "drop it in a Board file and it just works" expectation
@@ -109,8 +119,14 @@ export function ForkshopCanvas({
   const stageRef = stageRefProp ?? internalStageRef
   const stageWidth = stageWidthProp ?? 1400
   const stageHeight = stageHeightProp ?? 900
+  // When fitMode="none" the canvas never auto-fits, so start at 1:1 zoom by
+  // default (rather than the 0.5 used when auto-fit will correct it on mount).
+  const defaultZoom = fitMode === "none" ? 1 : 0.5
   const [transform, setTransformState] = useState<Transform>(
-    initialTransform ?? { zoom: 0.5, panX: 80, panY: 80 },
+    initialTransform ??
+      (initialZoom !== undefined || initialPan !== undefined
+        ? { zoom: initialZoom ?? defaultZoom, panX: initialPan?.x ?? 80, panY: initialPan?.y ?? 80 }
+        : { zoom: defaultZoom, panX: 80, panY: 80 }),
   )
   const transformRef = useRef(transform)
   const [isAnimating, setIsAnimating] = useState(false)
@@ -293,14 +309,17 @@ export function ForkshopCanvas({
   // cause jitter, so we ignore them here. Users can press ⌘0 to refit at any time.
   // fitToView is read through a ref so its identity (which depends on stageHeight)
   // doesn't accidentally re-trigger this effect when only height changes.
+  // When fitMode="none" the auto-fit is skipped entirely — the stage renders at
+  // whatever zoom was set via initialZoom / initialPan (or the 1:1 default).
   const fitToViewRef = useRef(fitToView)
   useEffect(() => {
     fitToViewRef.current = fitToView
   }, [fitToView])
   useEffect(() => {
+    if (fitMode === "none") return
     const timer = setTimeout(() => fitToViewRef.current(), 50)
     return () => clearTimeout(timer)
-  }, [stageWidth])
+  }, [stageWidth, fitMode])
 
   useEffect(
     () => () => {

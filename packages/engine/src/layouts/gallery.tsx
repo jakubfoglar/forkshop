@@ -18,7 +18,6 @@ const DEFAULTS = {
 } as const
 
 export type GalleryEntry = {
-  id: string
   label?: ReactNode
   node: AnyNode
   row?: number
@@ -63,11 +62,11 @@ function buildStackLayout(
   let cursorY = 0
   let maxWidth = 0
   for (const entry of entries) {
-    const height = measuredHeights[entry.id] ?? DEFAULT_INITIAL_HEIGHT
+    const height = measuredHeights[entry.node.id] ?? DEFAULT_INITIAL_HEIGHT
     const width = fitContent
-      ? (measuredWidths[entry.id] ?? viewportWidth)
+      ? (measuredWidths[entry.node.id] ?? viewportWidth)
       : viewportWidth
-    cells.push({ id: entry.id, layoutX: 0, layoutY: cursorY, width, height })
+    cells.push({ id: entry.node.id, layoutX: 0, layoutY: cursorY, width, height })
     maxWidth = Math.max(maxWidth, width)
     cursorY += height + rowGap
   }
@@ -87,7 +86,7 @@ function buildGridLayout(
   const rowMaxHeights = new Map<number, number>()
   for (const entry of entries) {
     const row = entry.row ?? 0
-    const height = measuredHeights[entry.id] ?? DEFAULT_INITIAL_HEIGHT
+    const height = measuredHeights[entry.node.id] ?? DEFAULT_INITIAL_HEIGHT
     rowMaxHeights.set(row, Math.max(rowMaxHeights.get(row) ?? 0, height))
   }
   const sortedRows = [...rowMaxHeights.keys()].sort((a, b) => a - b)
@@ -103,12 +102,12 @@ function buildGridLayout(
     const row = entry.row ?? 0
     const column = entry.column ?? 0
     maxColumn = Math.max(maxColumn, column)
-    const height = measuredHeights[entry.id] ?? DEFAULT_INITIAL_HEIGHT
+    const height = measuredHeights[entry.node.id] ?? DEFAULT_INITIAL_HEIGHT
     const width = fitContent
-      ? (measuredWidths[entry.id] ?? viewportWidth)
+      ? (measuredWidths[entry.node.id] ?? viewportWidth)
       : viewportWidth
     cells.push({
-      id: entry.id,
+      id: entry.node.id,
       layoutX: column * (viewportWidth + columnGap),
       layoutY: rowY.get(row) ?? 0,
       width,
@@ -212,7 +211,7 @@ function GalleryInner({
   return (
     <>
       {cells.map((cell) => {
-        const entry = entries.find((e) => e.id === cell.id)
+        const entry = entries.find((e) => e.node.id === cell.id)
         if (!entry) return null
         const positionedNode: AnyNode = {
           ...entry.node,

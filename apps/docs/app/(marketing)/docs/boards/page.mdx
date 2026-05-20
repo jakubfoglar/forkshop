@@ -1,0 +1,130 @@
+---
+title: Boards
+description: The four Layouts that ship with the engine.
+---
+
+A Board is one entry in your sidebar — a Layout configured with
+data. The engine ships four Layouts. Each is a React component
+exported from `@forkshop/engine`. Compose them in `app/forkshop/`.
+
+## `ResponsiveFrameView`
+
+Renders one route at multiple viewport widths, side-by-side. Edits
+in any frame mirror across the others as you type.
+
+```tsx
+import { ResponsiveFrameView } from "@forkshop/engine"
+
+export default function HeroBoard() {
+  return (
+    <ResponsiveFrameView
+      path="/"
+      source="/"
+      sourceFile="app/page.tsx"
+    />
+  )
+}
+```
+
+| Prop          | Notes                                                                |
+|---------------|----------------------------------------------------------------------|
+| `path`        | Required. Logical identifier — drives agent-activity matching.       |
+| `source`      | Required. The iframe `src` URL.                                      |
+| `viewports`   | Pixel widths. Default `[1440, 768, 375]`.                            |
+| `kind`        | `"page"` or `"block"`. Default `"page"`.                             |
+| `sourceFile`  | Path to the TSX file backing the route. Required for live editing.   |
+
+`path` and `source` are usually the same string — they're separated
+because some Boards point at a generated preview route that doesn't
+match the conceptual identity of the page.
+
+## `Gallery`
+
+A flat collection of Nodes laid out in a grid or stacked column.
+Use for a UI components board, a blocks board, or a comparison
+spread.
+
+```tsx
+import { Gallery } from "@forkshop/engine"
+
+export default function ComponentsBoard({ entries }) {
+  return <Gallery entries={entries} layout="grid" />
+}
+```
+
+| Prop           | Notes                                                  |
+|----------------|--------------------------------------------------------|
+| `entries`      | Required. Array of `{ label?, node, row?, column? }`. The cell key is `node.id`. |
+| `layout`       | Required. `"stack"` or `"grid"`.                       |
+| `viewportWidth`| Pixel width per tile. Default 1200 (stack) / 400 (grid). |
+| `rowGap`       | Default 32 (stack) / 48 (grid).                        |
+| `columnGap`    | Default 0 (stack) / 32 (grid).                         |
+| `fitContent`   | When `true`, tiles shrink to their content height.     |
+
+Each `GalleryEntry` carries an `AnyNode` — typically built from
+`iframeComponentNodeType` or `iframeRouteNodeType`. See
+[Extending Forkshop](/docs/extending) for custom Node kinds.
+
+Pass `nodePositions` and `onPositionChange` from `useForkshopPositions()` to
+enable drag-to-reposition on the canvas:
+
+```tsx
+import { Gallery, useForkshopPositions } from "@forkshop/engine"
+
+export default function ComponentsBoard({ entries }) {
+  const { nodePositions, onPositionChange } = useForkshopPositions({
+    boardId: "components",
+  })
+  return (
+    <Gallery
+      entries={entries}
+      layout="grid"
+      nodePositions={nodePositions}
+      onPositionChange={onPositionChange}
+    />
+  )
+}
+```
+
+`boardId` namespaces positions within the shared `positions.json` file so
+multiple boards with overlapping node IDs don't clobber each other.
+
+## `Tree`
+
+A hierarchical board derived from URL paths. A `TreeEntry` with
+`path: "/about/team"` is rendered as a child of one with
+`path: "/about"`. There is no `children` array — the structure
+falls out of the paths themselves.
+
+```tsx
+import { Tree } from "@forkshop/engine"
+
+export default function SitemapBoard({ entries }) {
+  return <Tree entries={entries} />
+}
+```
+
+Each `TreeEntry` is `{ id, label?, path, node }`. Useful for
+sitemap-shaped Boards and content hierarchies.
+
+## `DesignSystemView`
+
+Tokens plus primitives on one Board.
+
+```tsx
+import { DesignSystemView } from "@forkshop/engine"
+
+export default function FoundationsBoard({ tokens, primitives }) {
+  return <DesignSystemView tokens={tokens} primitives={primitives} />
+}
+```
+
+| Prop          | Notes                                                          |
+|---------------|----------------------------------------------------------------|
+| `tokens`      | A `TokenRegistry` — usually built at runtime from `:root` vars. |
+| `primitives`  | Array of `PrimitiveGroup` — each is `{ id, label, primitives: AnyNode[] }`. |
+| `typography`  | Optional Node for the typography stage.                        |
+
+The init scaffold sets you up to build the `tokens` registry from
+your existing CSS variables via `parseTokenRegistryFromCssVars` —
+no separate token source needed.

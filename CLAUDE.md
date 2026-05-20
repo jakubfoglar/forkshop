@@ -16,8 +16,13 @@ packages/
            Manifest builder. Bundled into a single ESM file via esbuild.
 
 apps/
-  docs/    forkshop.dev. Marketing landing at /, public docs at /docs/*,
-           static registry at /r/* (hardcoded by the CLI — do not move).
+  docs/    forkshop.dev. Route layout:
+           - `(marketing)/` — marketing homepage, public docs at /docs/*, and
+             the static registry at /r/* (hardcoded by the CLI — do not move).
+           - `demo/` — /demo showcase (URL-driven Forkshop chrome over the
+             WAVECLASH demo app). Deployed.
+           - `studio/` — /studio marketing canvas (ForkshopCanvas + iframe
+             boards used for marketing screenshots). Deployed.
   demo/    Internal dev surface mounting a Forkshop installation. Runs under
            `pnpm dev`. Not deployed.
   test/    Pre-init fixture for testing the setup-skill flow end-to-end. Run
@@ -111,22 +116,33 @@ placeholder leaks.
 
 ## Public docs site
 
-The 9 MDX pages live at `apps/docs/app/docs/<slug>/page.mdx`. Edits follow
-[`docs/forkshop-voice.md`](./docs/forkshop-voice.md) — verb-first, no marketing
-superlatives, no meta-narration. When you add or rename a page, update the
-hardcoded nav in `apps/docs/components/docs-sidebar.tsx` (no auto-discovery).
+The MDX pages live at `apps/docs/app/(marketing)/docs/<slug>/page.mdx`. Edits
+follow [`docs/forkshop-voice.md`](./docs/forkshop-voice.md) — verb-first, no
+marketing superlatives, no meta-narration. When you add or rename a page, update
+the hardcoded nav in `apps/docs/components/docs-sidebar.tsx` (no auto-discovery).
 
 Facts on the docs site must match `packages/engine/` source. Common drift
 points worth grepping before claiming anything:
 
 - CSS import: `@forkshop/engine/forkshop.css` (not `styles.css`).
 - 11 `--forkshop-*` CSS vars in `packages/engine/tailwind/forkshop.css`.
+  `--forkshop-surface` defaults to `#fafafa` (gray-50); `--forkshop-surface-2`
+  to `#f3f4f6` (gray-100).
 - NodeType is a plain object `{ id, match, render, agentMatch? }` — no
   `defineNodeType` factory.
 - `init` runs the package manager by default (auto-install — pass `--no-install`
   to skip); the project-aware scaffolding happens in the setup skill.
 - Locator uses `data-locatorjs` attributes, not React's `__source`.
 - Live AI activity is HTTP POST to `/api/forkshop/agent-activity`.
+- `GalleryEntry` has no `id` field — the engine uses `entry.node.id` as the
+  cell key. The prop table in boards.mdx must read `{ label?, node, row?,
+  column? }`.
+- `useForkshopPositions({ mountPath?, boardId? })` is a public hook exported
+  from `@forkshop/engine`. `mountPath` drives the `?mount=` query param on
+  the positions route; `boardId` namespaces keys within the JSON file.
+- Block outlines in page-view iframes require `data-forkshop-block="<slug>"`
+  on the outermost element of each block component. Without the attribute the
+  engine cannot propagate agent outlines into the iframe.
 
 ## Release
 
