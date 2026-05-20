@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import type { AnyNode } from "./node"
-import type { ForkshopIconComponent } from "../components/icon"
-import type { NodePositions } from "../lib/node-positions"
+import type { ForkshopIconComponent } from "@forkshop/components/icon"
+import type { NodePositions } from "@forkshop/lib/node-positions"
 
 export type LayoutEntry = {
   id: string

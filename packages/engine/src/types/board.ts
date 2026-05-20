@@ -1,7 +1,7 @@
 import type { ComponentType } from "react"
 import type { ForkshopSelection } from "./selection"
 import type { Layout } from "./layout"
-import type { ForkshopIconComponent } from "../components/icon"
+import type { ForkshopIconComponent } from "@forkshop/components/icon"
 
 export type SidebarChild = {
   selection: ForkshopSelection
