@@ -1,5 +1,5 @@
 import { cn } from "@/lib/cn"
-import type { ComponentProps } from "react"
+import type { ComponentProps, ReactNode } from "react"
 
 export type BadgeFill = "yellow" | "red" | "navy" | "black"
 export type BadgeSize = "md" | "sm"
@@ -7,6 +7,7 @@ export type BadgeSize = "md" | "sm"
 export interface BadgeProps extends ComponentProps<"span"> {
   fill?: BadgeFill
   size?: BadgeSize
+  children?: ReactNode
 }
 
 /**
@@ -24,7 +25,7 @@ export function Badge({
   fill = "yellow",
   size = "md",
   className,
-  children,
+  children = "BADGE",
   ...props
 }: BadgeProps) {
   return (

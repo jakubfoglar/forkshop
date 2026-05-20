@@ -6,7 +6,7 @@ export type SectionHeadingSize = "lg" | "xl"
 export interface SectionHeadingRowProps {
   /** Optional — omit when the eyebrow is already rendered in a sibling strip */
   eyebrow?: string
-  title: string
+  title?: string
   /** Optional right-side metadata block — two short mono lines, bottom-aligned */
   metadata?: ReactNode
   /** lg = 72px (EVENT / SCHEDULE), xl = 180px (MEET THE SURFERS.) */
@@ -30,7 +30,7 @@ export interface SectionHeadingRowProps {
  */
 export function SectionHeadingRow({
   eyebrow,
-  title,
+  title = "SECTION TITLE",
   metadata,
   size = "lg",
   tone = "dark",

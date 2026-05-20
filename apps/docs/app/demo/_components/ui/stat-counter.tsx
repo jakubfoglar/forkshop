@@ -1,8 +1,8 @@
 import { cn } from "@/lib/cn"
 
 export interface StatCounterProps {
-  value: string
-  label: string
+  value?: string
+  label?: string
   /** highlight=true renders with red background (e.g. COUNTRIES cell) */
   highlight?: boolean
   className?: string
@@ -20,7 +20,7 @@ export interface StatCounterProps {
  *   - Padding: [24, 18]
  *   - Default bg: waveclash-black / Highlight bg: waveclash-red
  */
-export function StatCounter({ value, label, highlight = false, className }: StatCounterProps) {
+export function StatCounter({ value = "42", label = "STAT", highlight = false, className }: StatCounterProps) {
   return (
     <div
       className={cn(

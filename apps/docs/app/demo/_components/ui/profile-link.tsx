@@ -2,7 +2,7 @@ import { cn } from "@/lib/cn"
 import type { ComponentProps } from "react"
 
 export interface ProfileLinkProps extends ComponentProps<"a"> {
-  href: string
+  href?: string
 }
 
 /**
@@ -15,7 +15,7 @@ export interface ProfileLinkProps extends ComponentProps<"a"> {
  *   - Gap: 6px between label and icon
  *   - No background, no border, no padding
  */
-export function ProfileLink({ href, className, children, ...props }: ProfileLinkProps) {
+export function ProfileLink({ href = "#", className, children = "VIEW PROFILE", ...props }: ProfileLinkProps) {
   return (
     <a
       href={href}
