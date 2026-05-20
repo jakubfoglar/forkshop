@@ -12,7 +12,8 @@ export default function HomePage() {
             <ForkshopLogotype className="h-10 w-auto sm:h-16" />
           </h1>
           <p className="mt-6 text-xl text-ink sm:text-2xl">
-            Your real app on a canvas.
+            A local canvas with your real code. For designers, engineers and AI
+            agents.
           </p>
           <p className="mt-4 max-w-2xl text-base text-muted sm:text-lg">
             Forkshop mounts a canvas inside your app&apos;s dev environment.
