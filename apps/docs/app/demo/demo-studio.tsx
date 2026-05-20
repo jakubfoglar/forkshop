@@ -15,6 +15,8 @@ import {
   serializeSelection,
   discoverPrimitives,
   discoverBlocks,
+  useAgentActiveBlocks,
+  useAgentActivePages,
   type ForkshopSelection,
   type ActivityEntry,
 } from "@forkshop/engine"
@@ -99,6 +101,7 @@ function SingleBlockBoard({
   initialPan?: { x: number; y: number }
 }) {
   const block = DISCOVERED_BLOCKS.find((b) => b.slug === slug)
+  const activeBlocks = useAgentActiveBlocks()
   const [measuredHeight, setMeasuredHeight] = useState<number | undefined>(undefined)
   const handleBodyHeightChange = useCallback((_id: string, h: number) => setMeasuredHeight(h), [])
   const { width, height } = useMemo(
@@ -106,6 +109,7 @@ function SingleBlockBoard({
     [measuredHeight],
   )
   if (!block) return null
+  const fileMapEntry = FILE_MAP.blocks.find((b) => b.slug === slug)
   return (
     <PlaygroundBoard stageWidth={width} stageHeight={height} fitMode="width" initialZoom={initialZoom} initialPan={initialPan}>
       {() => (
@@ -116,6 +120,8 @@ function SingleBlockBoard({
           viewports={[1440, 768, 375]}
           measuredHeight={measuredHeight}
           onBodyHeightChange={handleBodyHeightChange}
+          agentActive={activeBlocks.has(slug)}
+          sourceFile={fileMapEntry?.sourcePath}
         />
       )}
     </PlaygroundBoard>
@@ -131,12 +137,15 @@ function SinglePageBoard({
   initialZoom?: number
   initialPan?: { x: number; y: number }
 }) {
+  const activePages = useAgentActivePages()
   const [measuredHeight, setMeasuredHeight] = useState<number | undefined>(undefined)
   const handleBodyHeightChange = useCallback((_id: string, h: number) => setMeasuredHeight(h), [])
   const { width, height } = useMemo(
     () => responsiveFrameStageDimensions(measuredHeight, [1440, 768, 375]),
     [measuredHeight],
   )
+  // Derive sourceFile from the route path — matches mapAgentSeed convention.
+  const sourceFile = `apps/docs/app${path}/page.tsx`
   return (
     <PlaygroundBoard stageWidth={width} stageHeight={height} fitMode="width" initialZoom={initialZoom} initialPan={initialPan}>
       {() => (
@@ -147,6 +156,8 @@ function SinglePageBoard({
           viewports={[1440, 768, 375]}
           measuredHeight={measuredHeight}
           onBodyHeightChange={handleBodyHeightChange}
+          agentActive={activePages.has(path)}
+          sourceFile={sourceFile}
         />
       )}
     </PlaygroundBoard>
