@@ -12,11 +12,38 @@ export {
   type LazyIframeHeightMode,
 } from "@forkshop/components/canvas/lazy-iframe"
 export { ForkshopSidebar } from "@forkshop/components/sidebar/forkshop-sidebar"
-export type { ForkshopSelection } from "@forkshop/types/selection"
 export type {
   SidebarSection,
   SidebarEntry,
 } from "@forkshop/components/sidebar/forkshop-sidebar"
+
+// Board contract
+export { defineConfig, ForkshopConfigError } from "@forkshop/lib/define-config"
+export { defineBoard, BoardConfigError } from "@forkshop/lib/define-board"
+export { BoardRegistry, type BoardRegistryProps } from "@forkshop/components/board-registry"
+export {
+  SelectionProvider,
+  useSelection,
+  useSetSelection,
+} from "@forkshop/hooks/use-selection"
+export type {
+  BoardConfig,
+  BoardComponent,
+  SidebarChild,
+} from "@forkshop/types/board"
+export type {
+  Layout,
+  LayoutEntry,
+  LayoutRenderProps,
+} from "@forkshop/types/layout"
+export type { ForkshopSelection } from "@forkshop/types/selection"
+export {
+  isSectionSelection,
+  isPageSelection,
+  isPrimitiveSelection,
+  isBlockSelection,
+  isCustomSelection,
+} from "@forkshop/types/selection"
 
 // Layouts
 export { Gallery, type GalleryProps, type GalleryEntry } from "@forkshop/layouts/gallery"
