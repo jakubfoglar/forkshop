@@ -112,7 +112,7 @@ export function Hero({
           </div>
 
           {/* Center: display heading "WAVE / CLASH" stacked */}
-          <div className="flex flex-col -mt-4" style={{ lineHeight: 0.85, letterSpacing: "-0.04286em" }}>
+          <div className="flex flex-col mt-12" style={{ lineHeight: 0.85, letterSpacing: "-0.04286em" }}>
             <span
               className="font-display uppercase text-waveclash-cream"
               style={{ fontSize: "clamp(120px, 19.4vw, 280px)", lineHeight: 0.85, letterSpacing: "-0.04286em" }}
