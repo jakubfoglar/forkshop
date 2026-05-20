@@ -389,6 +389,257 @@ Source nodes: `YmRZq` (hero), `SZ1De` (footer top — contains the marquee conte
 
 ---
 
+## Blocks
+
+A block is a section-level composition of primitives + content. The unit a page is assembled from.
+Both pages are part of **one long landing page** — the pencil splits it across two frames
+(`opEVO` 1440×2900 and `N9wSB2` 1440×4318) for canvas management, not because they represent
+different page types. There is no separate inner page / athlete-profile page in this design.
+
+---
+
+### SiteHeader
+
+**Source nodes:** `LEYsk` (page 1 — appears once; would appear on every page in a real app)
+**Pages used:** Landing (universal — would repeat on every route)
+**Primitives used:** Button (`primary` — "GET PASS" nav CTA, node `i9Ino`)
+**Content slots:** logo, navLinks[], ctaLabel, ctaHref
+**Layout notes:** Full-width, 80px tall, `bg-waveclash-black`, `padding: [0, 32]`.
+Three-column flex (`space_between`): left = logo wordmark "WAVECLASH///" (Archivo Black 24px,
+cream, tracking −0.5) + "LIVE 24/7" pill (graphite fill + red stroke, node `iweyU`); center = 5
+mono nav links (JetBrains Mono 12px 700, cream, tracking +1.5); right = GET PASS Button (primary).
+Bottom border: 2px solid `waveclash-red`.
+**Responsive notes:** Mobile layout not inspected in this pass; desktop is the reference.
+
+---
+
+### Hero
+
+**Source nodes:** `sUP7n` (page 1)
+**Pages used:** Landing
+**Primitives used:** Button (`primary` — "GET PASS", node `xm0Gd`), Button (`secondary` — "BUY
+7-DAY PASS", node `y5PC1`), TickerBelt (yellow instance, node `YmRZq`)
+**Content slots:** backgroundImage, editionTag, locationLabel, coordinates, swellData, displayHeading
+("WAVE" / "CLASH"), subtitleBar (championship name, location, date range), worldTourBadge
+(stop number), ctaPrimary, ctaSecondary
+**Layout notes:** 1440×1100px, `layout: none` (absolute). Full-bleed image (`agriR`) + 70%-opacity
+black overlay (`E60T32`). Display type "WAVE" (cream) + "CLASH" (red), Archivo Black 280px,
+tracking −12, leading 0.85, gap −30 (lines overlap). Top-left: edition/location metadata column
+(`Y0kyt`). Top-right: coordinates + swell data column (`Y1jk79`). Bottom-left: two CTA buttons
+stacked vertically, 300px wide (`X720Bm`). Bottom-right: rotated world-tour badge (−15°, yellow
+border 3px, `ZGE9R`). Subtitle bar (full-width, cream stroke top+bottom 2px, `SRayU`) sits at
+y=880, separating the hero body from the ticker. TickerBelt (`YmRZq`) anchored at bottom, y=1010,
+yellow fill, 28px Archivo Black text.
+**Responsive notes:** Mobile reduces display type; CTA layout likely stacks differently.
+
+---
+
+### StatsBelt
+
+**Source nodes:** `fi42O` (page 1)
+**Pages used:** Landing (immediately below Hero)
+**Primitives used:** StatCounter ×5 (nodes `ps1fl`, `oxlpu`, `R9JCb1`, `gSfjv`, `sSCVT`)
+**Content slots:** stats[] — each has a `label` (ATHLETES, COUNTRIES, DAYS, PRIZE POOL, WAVES)
+and a `value` (64, 23, 10, $1.2M, ∞)
+**Layout notes:** Full-width, 140px tall, `bg-waveclash-black`, `justifyContent: space_between`.
+Five equal-width StatCounter cells side by side, each separated by a 2px red right-border.
+Last cell has no right border. Padding per cell: `[24, 32]`.
+**Responsive notes:** Mobile collapses to a 2×2 or 2×3 grid (see mobile frame `ZLDRp`).
+
+---
+
+### AboutCallout
+
+**Source nodes:** `ThXku` (page 1)
+**Pages used:** Landing
+**Primitives used:** _(none from the primitive set — this block's content is bespoke)_
+**Content slots:** displayHeading (3 words, multi-color: "THE OCEAN" black, "DOESN'T" red,
+"NEGOTIATE." navy), manifestoLabel, manifestoBody, infoTable (LOCATION, DATES, FORMAT, BROADCAST)
+**Layout notes:** 1440×600px, `bg-waveclash-sand`, `padding: [80, 32]`, `gap: 48`, two-column flex.
+Left column (`J24RQ`, 908px): stacked display words at 120px Archivo Black, leading 0.9, tracking −5.
+Small black rectangle spacer (8×120px) below words. Right column (`nNbxc`, 420px): "// MANIFESTO"
+red label, 18px Inter body copy, then a bordered info table (`K9ujIn`) with 4 rows (LOCATION, DATES,
+FORMAT, BROADCAST) — each row `justifyContent: space_between`, 2px top border, 1px bottom-border
+dividers, label JetBrains Mono 11px 700 tracking +2, value Archivo Black 13px 900 tracking +0.5.
+**Responsive notes:** Mobile collapses to single column; heading font size reduces.
+
+---
+
+### EventSchedule
+
+**Source nodes:** `WRu0j` (page 1, named "SCHEDULE" in pencil)
+**Pages used:** Landing
+**Primitives used:** SectionHeadingRow (`dmqgc`), Badge (all 4 variants: yellow, red, navy, black —
+in the schedule rows)
+**Content slots:** sectionLabel ("// 003"), sectionHeading ("EVENT / SCHEDULE"), scheduleRows[]
+(each row: dayNumber, date, photo, eventName, badge, time, arrowLink)
+**Layout notes:** 1440×980px, `bg-waveclash-cream`, `padding: [64, 32]`, `gap: 32`, vertical layout.
+Section bordered top+bottom 3px solid black. Heading row (`dmqgc`) is a SectionHeadingRow primitive.
+Schedule table (`m5x5sG`) has 7 rows (`oYcgs`, `Dpio8`, `Og8pX`, `R2cAZ`, `T0EVe`, `DJSDK`,
+`tDi2q`), each row: `alignItems: center`, `gap: 24`, `padding: [18, 16]`, 1px black bottom-border
+divider. Per-row structure: day column (day-code + date, `text-7xl` / `text-base`, Archivo Black /
+JetBrains Mono), photo thumbnail (80×60px image, 2px black border), event name (Archivo Black 32px,
+tracking −1, fill_container), Badge (variant per event type), time (JetBrains Mono 18px right-
+aligned), arrow link (↗ red, Archivo Black 24px).
+**Sub-block — ScheduleRow:** Not documented separately; the row is a direct child of the table, not
+reused outside this block. See row structure above.
+
+---
+
+### SurferGrid
+
+**Source nodes:** `C7T9Cw` (page 2, named "Athletes Section" in pencil)
+**Pages used:** Landing
+**Primitives used:** SectionHeadingRow (section header row `eZ744` + heading `anKrW`)
+**Content slots:** sectionLabel ("[ 02 / ROSTER ]"), sectionMeta ("64 ATHLETES — 23 COUNTRIES"),
+sectionHeading ("MEET THE SURFERS."), sectionSubcopy, cards[] (array of SurferCard)
+**Layout notes:** 1440×1115px, `bg-waveclash-sand`, `padding: [80, 60]`, `gap: 40`, vertical layout.
+Header strip (`eZ744`) contains label/meta row + 2px black rule. Heading block (`anKrW`) is
+two-column: massive display heading left (180px Archivo Black, tracking −6, leading 0.88) + right-
+side subcopy column (`xk7we`, 380px wide). Card grid (`ZqcnB`) is a horizontal flex row of 4 cards
+with `gap: 20`, `padding: [20, 0, 0, 0]`.
+
+**Card sub-block — SurferCard:**
+  **Source nodes:** `qtCVM` (card 1 — Kahanu Makekai), `Zpd8j` (card 2 — Milo Deschamps),
+  `xALo4` (card 3 — Indi Walker), `jwezL` (card 4 — Noa Santos)
+  **Primitives used:** Badge (rank badge, bottom-right of portrait — variants: red `fQCBG`,
+  yellow `YFcHj`, navy `J9FEJ4`) — the number badge (top-left, black fill) is structurally
+  identical to Badge `black` variant
+  **Content slots:** number (01–04), rankLabel (WORLD #N), image (portrait photo), name (2-line
+  Archivo Black 32px), location (city + country), viewLink ("VIEW ↗")
+  **Layout notes:** Vertical flex, `bg-waveclash-cream`, 2px inside black stroke, no border-radius.
+  Portrait area: absolute-positioned image frame (360px tall, fill_container wide) with number
+  badge top-left (black pill, JetBrains Mono 14px 700) and rank badge bottom-right (colored Badge
+  primitive, Archivo Black 11px 900, tracking +1.2, padding [6, 12]). Footer area (`XFxb6`):
+  `bg-waveclash-cream`, `padding: [20, 18, 22, 18]`, `gap: 8`, vertical flex — name text, 1px rule,
+  then location/view-link row (`justifyContent: space_between`). "VIEW ↗" is inline text (JetBrains
+  Mono 11px 700, red) — same function as ProfileLink primitive but rendered as plain text here.
+
+---
+
+### GallerySection
+
+**Source nodes:** `u9A5Q2` (page 2, named "Gallery Section" in pencil)
+**Pages used:** Landing
+**Primitives used:** Button (`primary` — "OPEN ARCHIVE" CTA, node `aNz2W`)
+**Content slots:** sectionLabel ("[ 03 / DISPATCH ]"), sectionHeading ("FROM THE LINEUP."),
+sectionBody, ctaLabel, ctaHref, featuredImage (large, 560×560px), secondaryImage (top-right,
+272px tall), pullQuote (quote text + attribution), pullQuoteBackground
+**Layout notes:** 1440×1099px, `bg-waveclash-black`, `padding: [80, 60]`, `gap: 36`, vertical layout.
+Header row (`u6SjgE`): two-column `justifyContent: space_between` — left = section label + 180px
+"FROM THE LINEUP." heading (Archivo Black, tracking −6, leading 0.88, cream), right = body copy +
+"OPEN ARCHIVE" Button (`aNz2W`, red fill, 360px wide col). Image mosaic (`jmGB2`): horizontal flex,
+gap 16. Left: single large 560×560px image (`gxl0g`) with a rotated yellow timestamp badge ("DAY 03
+/ 06:42", JetBrains Mono 12px 700, −6° rotation) top-left. Right column (`HaLvX`): top image
+(`E7QL99`, 272px) + bottom split (`P5Qfn`, 272px) containing a second surf image left and a
+**PullQuote** panel right (`yJ2h6`, red fill, `justifyContent: space_between`): opening " glyph
+(Archivo Black 80px, leading 0.7), quote body "THIS REEF / EATS / HEROES." (Archivo Black 30px,
+tracking −0.5, leading 0.95), attribution row "— INDI WALKER" / "WC/26" (JetBrains Mono 11px 700).
+**Note on PullQuote:** The pull-quote panel (`yJ2h6`) is embedded within GallerySection and does
+not appear elsewhere as a standalone section. It is a block-internal component, not a separate
+block.
+
+---
+
+### SponsorStrip
+
+**Source nodes:** `u9wUYn` (page 2, named "Sponsors Strip" in pencil)
+**Pages used:** Landing
+**Primitives used:** _(none — sponsor logos are plain text/image nodes)_
+**Content slots:** partnershipLabel ("OFFICIAL PARTNERS — WAVECLASH/26"), sponsorLogos[] (7 slots)
+**Layout notes:** Full-width, 136px total, `bg-waveclash-sand`, vertical layout. Top sub-frame
+(`w7FSUa`, 49px): header bar with a diamond bullet + "OFFICIAL PARTNERS" label on left, "OFFICIAL
+PARTNERS — WAVECLASH/26" mono text right — `bg-waveclash-sand`, `padding: [16, 60]`,
+`justifyContent: space_between`. 2px black rule divider (`sqvVG`). Logo row (`G7ADC`, 85px):
+`bg-waveclash-black`, 7 equal-width cells, each `padding: [28, 16]`, centered, separated by 1px
+cream right-border. Section has 2px black top and bottom borders.
+
+---
+
+### CtaBuyPass
+
+**Source nodes:** `lHnti` (page 2, named "CTA Buy Pass" in pencil)
+**Pages used:** Landing
+**Primitives used:** Button (`ghost` on cream card `rE6Uq`, `primary` on invert card `aPCIW`)
+**Content slots:** sectionLabel ("[ 05 / TICKETS ON SALE ]"), sectionHeading ("BE ON THE SAND."),
+sectionSubcopy, ticketCards[] (3 tiers)
+**Layout notes:** 1440×1002px, `bg-waveclash-red`, `padding: [90, 60]`, `gap: 28`, centered
+vertical layout (`alignItems: center`). Section label (JetBrains Mono 13px 700, black, tracking +2).
+Display heading "BE ON THE SAND." (Archivo Black 220px, tracking −8, leading 0.85, centered).
+Subcopy (Inter 18px 500, centered). Card row (`ZihNf`): 3 ticket cards, `gap: 18`.
+
+**Card sub-block — TicketCard:**
+  **Source nodes:** `D9Ai3` (DAY PASS, cream bg), `y1ImGi` (7-DAY PASS, black bg / invert),
+  `tjjH2` (ALL-IN PASS, cream bg — not fetched but structurally identical to `D9Ai3`)
+  **Primitives used:** Button (`ghost` on cream cards, `primary` on invert card)
+  **Content slots:** tierTitle, tierIndex (01/03, 02/03, 03/03), price, priceUnit ("/DAY",
+  "/WEEK"), description, ctaLabel
+  **Layout notes:** Vertical flex, `padding: [28, 26]`, `gap: 20`, 2px black stroke. Fill:
+  cream (DAY, ALL-IN) or black (7-DAY invert). Header row: tier title (Archivo Black 15px 900,
+  tracking +1.5) + tier index (JetBrains Mono 11px 500, tracking +1), `justifyContent:
+  space_between`. Price row: price figure (Archivo Black 72px, tracking −3, leading 0.9) + unit
+  label (JetBrains Mono 13px 500, tracking +1.2), aligned to baseline. 1px rule divider.
+  Description (Inter 14px 500, leading 1.45). CTA Button full-width, `justifyContent:
+  space_between`.
+
+---
+
+### SiteFooter
+
+**Source nodes:** `wUBEW` (page 2, named "Footer" in pencil)
+**Pages used:** Landing (universal — would repeat on every route)
+**Primitives used:** TickerBelt (yellow instance at footer top, node `SZ1De`), Button
+(`primary` — "SUBSCRIBE" / newsletter CTA, node `aaCxQ`)
+**Content slots:** tickerText, footerHeading ("SEE YOU IN THE WATER."), newsletterLabel,
+newsletterBody, emailInput, socialTags[], navColumns[] (EVENT, TICKETS, ATHLETES, MEDIA,
+CONTACT — each with 4 child links), legalLine, socialLinks (INSTAGRAM ↗, YOUTUBE ↗)
+**Layout notes:** Full-width, 966px tall, `bg-waveclash-black`, vertical layout. Three sub-sections:
+1. TickerBelt (`SZ1De`, 63px) — yellow fill, 22px Archivo Black, tracking +1.5, `★` red separator
+   glyph, `padding: [18, 60]`.
+2. Main footer body (`JjLvR`, 831px) — `bg-waveclash-black`, `padding: [80, 60, 40, 60]`, `gap: 60`.
+   Upper block (`AbA2k`): two-column `justifyContent: space_between`. Left = display heading "SEE
+   YOU IN THE WATER." (Archivo Black 180px, tracking −6, leading 0.85, cream) + an info-table
+   sub-block (LOCATION/DATES/FORMAT/BROADCAST, same structure as AboutCallout's info table,
+   `K9ujIn`). Right = newsletter panel (`v34XF`, 420px wide): section label ("[ DISPATCH /
+   WEEKLY ]", yellow JetBrains Mono), body copy, email input + subscribe Button (`aaCxQ`), social
+   tag pills (4 pills with cream 1px stroke). 1px cream rule (`iSZeI`). Lower nav block (`bEIdb`):
+   5-column link nav, each column headed by a red Archivo Black 13px category name + 4 Inter 14px
+   500 cream links.
+3. Legal bar (`L8Rv2t`, 72px) — `padding: [24, 60]`, 1px cream top-border, `justifyContent:
+   space_between`. Left: logo wordmark (Archivo Black 22px) + copyright mono text. Right: legal
+   links (TERMS, PRIVACY, ACCESSIBILITY) + social links (INSTAGRAM ↗, YOUTUBE ↗), JetBrains
+   Mono 12px 500, tracking +1.
+
+---
+
+## Block count summary
+
+| # | Block | Source frame | Page frame |
+|---|-------|-------------|------------|
+| 1 | SiteHeader | `LEYsk` | `opEVO` |
+| 2 | Hero | `sUP7n` | `opEVO` |
+| 3 | StatsBelt | `fi42O` | `opEVO` |
+| 4 | AboutCallout | `ThXku` | `opEVO` |
+| 5 | EventSchedule | `WRu0j` | `opEVO` |
+| 6 | SurferGrid | `C7T9Cw` | `N9wSB2` |
+| 7 | GallerySection | `u9A5Q2` | `N9wSB2` |
+| 8 | SponsorStrip | `u9wUYn` | `N9wSB2` |
+| 9 | CtaBuyPass | `lHnti` | `N9wSB2` |
+| 10 | SiteFooter | `wUBEW` | `N9wSB2` |
+
+**10 blocks total.** Sub-blocks within blocks: SurferCard (×4 in SurferGrid),
+TicketCard (×3 in CtaBuyPass).
+
+Candidate blocks from the task brief that were NOT found as standalone sections:
+- **TickerStrip** — merged into Hero (hero TickerBelt) and SiteFooter (footer TickerBelt); the
+  TickerBelt primitive handles both. No standalone TickerStrip section exists.
+- **LineupGrid** — does not exist as a grid of video tiles; instead the section is a photo mosaic
+  with an embedded pull-quote. Documented as GallerySection.
+- **AboutCallout / StatsBelt** — confirmed as two separate sections (not merged).
+- **PullQuote** — embedded inside GallerySection, not a standalone section block.
+
+---
+
 ## Concerns / Flags for Review
 
 1. **`#00355c` navy is a real brand color** — confirmed on three distinct nodes:
