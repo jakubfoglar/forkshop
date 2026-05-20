@@ -36,7 +36,7 @@ export interface GallerySectionProps {
 export function GallerySection({
   sectionLabel   = "[ 03 / DISPATCH ]",
   sectionHeading = "FROM THE\nLINEUP.",
-  bodyText       = "Every session documented. Every wipeout archived. Every moment of brilliance catalogued. The WAVECLASH visual library — growing in real time from the water's edge at Pipeline.",
+  bodyText       = "Field notes, water shots, locker room thefts and the questionable decisions of athletes who paddled out before sunrise.",
   ctaLabel       = "OPEN ARCHIVE",
   ctaHref        = "#",
   quote          = "THIS REEF / EATS / HEROES.",
@@ -66,16 +66,17 @@ export function GallerySection({
             {sectionLabel}
           </span>
 
-          {/* "FROM THE LINEUP." — 180px Archivo Black, tracking −6, leading 0.88 */}
-          <div>
+          {/* "FROM THE LINEUP." — 180px Archivo Black, tracking −6, leading 0.88
+               Each \n segment is its own block-span (whiteSpace nowrap) so word-wrap
+               cannot further split "FROM THE" onto a third line. */}
+          <div
+            className="font-display text-wc-display-sm text-waveclash-cream uppercase leading-dense"
+            style={{ letterSpacing: "-0.03333em" }} // −6px at 180px
+          >
             {sectionHeading.split("\n").map((line, i) => (
-              <div
-                key={i}
-                className="font-display text-wc-display-sm text-waveclash-cream uppercase leading-dense"
-                style={{ letterSpacing: "-0.03333em" }} // −6px at 180px
-              >
+              <span key={i} style={{ display: "block", whiteSpace: "nowrap" }}>
                 {line}
-              </div>
+              </span>
             ))}
           </div>
         </div>

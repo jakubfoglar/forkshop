@@ -16,14 +16,15 @@ import { cn } from "@/lib/cn"
 //   1px cream right-border between cells (last cell has none)
 //   Sponsor text: Archivo Black 20px (text-wc-3-5xl), tracking +1, cream fill
 
+// Sponsor names sourced from pencil nodes in G7ADC (u9wUYn)
 const DEFAULT_SPONSORS = [
   "BILLABONG",
-  "RIPCURL",
+  "★ RIPCURL",
   "QUIKSILVER",
-  "HURLEY",
+  "GOPRO",
+  "VOLCOM",
+  "RED BULL",
   "PATAGONIA",
-  "OAKLEY",
-  "GoPro",
 ]
 
 export interface SponsorStripProps {
@@ -33,7 +34,7 @@ export interface SponsorStripProps {
 }
 
 export function SponsorStrip({
-  partnershipLabel = "◆ OFFICIAL PARTNERS",
+  partnershipLabel = "[ 04 / BACKED BY ]",
   partnershipRight = "OFFICIAL PARTNERS — WAVECLASH/26",
   sponsors = DEFAULT_SPONSORS,
 }: SponsorStripProps) {

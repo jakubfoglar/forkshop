@@ -19,7 +19,7 @@ const DEFAULT_TICKETS: TicketCardData[] = [
     tierIndex:   "01/03",
     price:       "$95",
     priceUnit:   "/DAY",
-    description: "Full access to one competition day at Pipeline. Standing room + beach zones included. Valid for one calendar date.",
+    description: "Beach access, food zone, finals coverage on the boardwalk.",
     ctaLabel:    "BUY DAY PASS",
     surface:     "cream",
   },
@@ -28,7 +28,7 @@ const DEFAULT_TICKETS: TicketCardData[] = [
     tierIndex:   "02/03",
     price:       "$420",
     priceUnit:   "/WEEK",
-    description: "The full run. Access every day of competition, all FREESURF sessions, and the ceremonial opening and closing events. Best value for committed watchers.",
+    description: "Full week, VIP deck, athlete autograph sessions, merch drop access.",
     ctaLabel:    "BUY 7-DAY PASS",
     surface:     "black",
   },
@@ -37,7 +37,7 @@ const DEFAULT_TICKETS: TicketCardData[] = [
     tierIndex:   "03/03",
     price:       "$890",
     priceUnit:   "/EVENT",
-    description: "Everything in the 7-Day Pass plus athlete access zones, the official after-beach party series, and a WAVECLASH/26 commemorative print.",
+    description: "Every heat. Every party. Plus a backstage bay with the broadcast team.",
     ctaLabel:    "BUY ALL-IN PASS",
     surface:     "cream",
   },
@@ -53,7 +53,7 @@ export interface CtaBuyPassProps {
 export function CtaBuyPass({
   sectionLabel  = "[ 05 / TICKETS ON SALE ]",
   sectionHeading = "BE ON THE\nSAND.",
-  sectionSubcopy = "Three tiers. One reef. Zero live streams substitute for the thing itself.",
+  sectionSubcopy = "Three pass tiers. One reef. Ten unforgettable days.",
   tickets       = DEFAULT_TICKETS,
 }: CtaBuyPassProps) {
   return (
@@ -75,7 +75,8 @@ export function CtaBuyPass({
         {sectionLabel}
       </span>
 
-      {/* Display heading "BE ON THE SAND." — 220px Archivo Black, tracking −8, leading 0.85, centered */}
+      {/* Display heading "BE ON THE SAND." — 220px Archivo Black, tracking −8, leading 0.85, centered
+           Each \n segment is its own block-span (whiteSpace nowrap) to prevent a third line. */}
       <div className="text-center">
         {sectionHeading.split("\n").map((line, i) => (
           <div
@@ -85,6 +86,7 @@ export function CtaBuyPass({
               fontSize:      "220px",
               letterSpacing: "-0.03636em", // −8px at 220px
               lineHeight:    0.85,
+              whiteSpace:    "nowrap",
             }}
           >
             {line}

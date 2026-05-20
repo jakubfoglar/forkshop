@@ -56,6 +56,7 @@ export function SectionHeadingRow({
             size === "lg" && "text-wc-9xl tracking-display-normal leading-snug",
             size === "xl" && "text-wc-display-sm tracking-[-.03333em] leading-dense",
           )}
+          style={{ color: tone === "dark" ? "var(--waveclash-black)" : undefined }}
         >
           {title}
         </span>

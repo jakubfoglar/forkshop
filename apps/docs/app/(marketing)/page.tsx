@@ -1,20 +1,23 @@
-import Image from "next/image"
-import heroScreenshot from "@/public/homepage-screenshot.png"
+import Image from "next/image";
+import heroScreenshot from "@/public/homepage-screenshot.png";
+
+import { ForkshopLogotype } from "@/components/forkshop-logotype";
 
 export default function HomePage() {
   return (
     <main className="min-h-screen px-6 py-16 sm:px-8 sm:py-24">
       <div className="mx-auto max-w-3xl">
         <header className="mb-20">
-          <h1 className="text-5xl tracking-tight sm:text-7xl">Forkshop</h1>
+          <h1>
+            <ForkshopLogotype className="h-10 w-auto sm:h-16" />
+          </h1>
           <p className="mt-6 text-xl text-ink sm:text-2xl">
             Your real app on a canvas.
           </p>
           <p className="mt-4 max-w-2xl text-base text-muted sm:text-lg">
             Forkshop mounts a canvas inside your app&apos;s dev environment.
-            Open any page at multiple viewports side-by-side, edit text in
-            place to save back to source, and watch your AI agents work in
-            real time.
+            Open any page at multiple viewports side-by-side, edit text in place
+            to save back to source, and watch your AI agents work in real time.
           </p>
 
           <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -28,17 +31,26 @@ export default function HomePage() {
               View on GitHub →
             </a>
           </div>
-          <p className="mt-4 text-xs text-muted">
-            Next.js only for now.
-          </p>
+          <p className="mt-4 text-xs text-muted">Next.js only for now.</p>
         </header>
 
         <div className="mt-14 mb-20 overflow-hidden rounded-md shadow-xl">
           <div className="flex items-center gap-1.5 bg-[#2a2a2a] px-3 py-2">
-            <span aria-hidden="true" className="size-2.5 rounded-full bg-[#ff5f57]" />
-            <span aria-hidden="true" className="size-2.5 rounded-full bg-[#febc2e]" />
-            <span aria-hidden="true" className="size-2.5 rounded-full bg-[#28c840]" />
-            <span className="ml-3 text-xs text-white/40">localhost:3000/forkshop</span>
+            <span
+              aria-hidden="true"
+              className="size-2.5 rounded-full bg-[#ff5f57]"
+            />
+            <span
+              aria-hidden="true"
+              className="size-2.5 rounded-full bg-[#febc2e]"
+            />
+            <span
+              aria-hidden="true"
+              className="size-2.5 rounded-full bg-[#28c840]"
+            />
+            <span className="ml-3 text-xs text-white/40">
+              localhost:3000/forkshop
+            </span>
           </div>
           <Image
             src={heroScreenshot}
@@ -60,20 +72,18 @@ export default function HomePage() {
             <h2 className="text-base font-medium">Edit text in place</h2>
             <p className="mt-2 text-sm text-muted">
               Click any text in the canvas to make it editable. ⌘↵ saves to the
-              underlying TSX file; Esc discards. No round-trip to your editor.
+              underlying TSX file; Esc discards.
             </p>
           </article>
           <article>
             <h2 className="text-base font-medium">See your agent at work</h2>
             <p className="mt-2 text-sm text-muted">
-              When Claude (or another agent) edits a file your canvas is
-              showing, Forkshop highlights the change live, with a per-agent
-              color so you can track multiple sessions at once.
+              When AI agents are editing files, Forkshop highlights it in real
+              time.
             </p>
           </article>
         </section>
-
       </div>
     </main>
-  )
+  );
 }

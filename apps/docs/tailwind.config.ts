@@ -63,19 +63,19 @@ const config: Config = {
         "wc-8xl":          ["64px",  { lineHeight: "0.9" }],
         "wc-9xl":          ["72px",  { lineHeight: "0.9" }],
         "wc-10xl":         ["80px",  { lineHeight: "0.85" }],
-        "wc-11xl":         ["120px", { lineHeight: "0.9" }],
+        "wc-11xl":         ["120px", { lineHeight: "0.87" }],
         "wc-display-xs":   ["30px",  { lineHeight: "1.4" }],
-        "wc-display-sm":   ["180px", { lineHeight: "0.88" }],
-        "wc-display-md":   ["220px", { lineHeight: "0.85" }],
-        "wc-display-lg":   ["280px", { lineHeight: "0.85" }],
+        "wc-display-sm":   ["180px", { lineHeight: "0.85" }],
+        "wc-display-md":   ["220px", { lineHeight: "0.82" }],
+        "wc-display-lg":   ["280px", { lineHeight: "0.82" }],
       },
       letterSpacing: {
         // Demo: WAVECLASH named tracking levels
         // Values are em (relative to element font size) computed from px-at-size design pairs:
         //   em = tracking_px / font_size_px
-        "display-tight":    "-0.04286em", // −12px @ 280px (hero display lg)
-        "display-snug":     "-0.04167em", // −5px @ 120px (about heading)
-        "display-normal":   "-0.03125em", // −2px @ 64px (stats counters)
+        "display-tight":    "-0.05em",     // −12px @ 280px, tightened slightly (was -0.04286em)
+        "display-snug":     "-0.047em",   // −5px @ 120px, tightened slightly (was -0.04167em)
+        "display-normal":   "-0.036em",   // −2px @ 64px, tightened slightly (was -0.03125em)
         "label-tight":      "-0.03125em", // −1px @ 32px (schedule event names)
         "label-normal":     "0.03125em",  // +0.5px @ 16px (info table values — no explicit size in tokens; anchored to 2xl=16px)
         "label-wide":       "0.05556em",  // +1px @ 18px (event subtitle bar — explicit size in tokens)

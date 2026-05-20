@@ -29,20 +29,21 @@ export function EventScheduleRow({ row, isLast = false }: EventScheduleRowProps)
         !isLast && "border-b border-waveclash-black",
       )}
     >
-      {/* Day code + date column */}
-      <div className="flex flex-col gap-0 w-24 shrink-0">
+      {/* Day code + date column
+           Pencil: dayCode = Archivo Black 28px tracking −1; date = JetBrains Mono 10px 700 tracking +1.5 */}
+      <div className="flex flex-col gap-0.5 w-[88px] shrink-0">
         <span
           className={cn(
-            "font-display text-wc-7xl text-waveclash-black uppercase leading-normal",
-            "tracking-label-tight", // −1px @ 32px
+            "font-display text-wc-6xl text-waveclash-black uppercase leading-none",
           )}
+          style={{ letterSpacing: "-0.03571em" }} // −1px @ 28px
         >
           {row.dayCode}
         </span>
         <span
           className={cn(
-            "font-demo-mono text-wc-base font-bold text-waveclash-black uppercase",
-            "tracking-label-wider",
+            "font-demo-mono text-wc-xs font-bold text-waveclash-black uppercase",
+            "tracking-label-widest",
           )}
         >
           {row.date}

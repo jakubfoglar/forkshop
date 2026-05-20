@@ -34,14 +34,14 @@ export function Hero({
   eyebrow = "EDITION N°26",
   editionTag,
   locationLabel = "NORTH SHORE / O'AHU / PACIFIC",
-  coordinates = "21°38'N / 158°03'W",
+  coordinates = "21°39'N / 158°03'W",
   swellData = "SWELL 12-18 FT",
   title = ["WAVE", "CLASH"],
-  subtitleChampionship = "INTERNATIONAL SURF CHAMPIONSHIP",
-  subtitleLocation = "BANZAI PIPELINE, HAWAI'I",
-  subtitleDate = "MAR 14 — 23, 2026",
+  subtitleChampionship: _subtitleChampionship = "INTERNATIONAL SURF CHAMPIONSHIP",
+  subtitleLocation: _subtitleLocation = "BANZAI PIPELINE, HAWAI'I",
+  subtitleDate: _subtitleDate = "MAR 14 — 23, 2026",
   stopNumber = "STOP #07",
-  ctaPrimary = { label: "WATCH LIVE", href: "#" },
+  ctaPrimary = { label: "▶ WATCH LIVE", href: "#" },
   ctaSecondary = { label: "BUY 7-DAY PASS", href: "#" },
   imageSrc = "/demo/hero.jpg",
   tickerItems = ["WAVECLASH/26", "PIPELINE, HAWAI'I", "MAR 14-23", "ENTER THE WATER"],
@@ -150,41 +150,6 @@ export function Hero({
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Subtitle bar — full-width, cream strokes 2px top+bottom (SRayU) */}
-      <div
-        className={cn(
-          "w-full flex items-center justify-between",
-          "border-t-2 border-b-2 border-waveclash-cream",
-          "bg-waveclash-black/60 backdrop-blur-none",
-          "px-8 py-4",
-        )}
-      >
-        <span
-          className={cn(
-            "font-display text-wc-3xl text-waveclash-cream uppercase",
-            "tracking-label-wide",
-          )}
-        >
-          {subtitleChampionship}
-        </span>
-        <span
-          className={cn(
-            "font-display text-wc-3xl text-waveclash-cream uppercase",
-            "tracking-label-wide",
-          )}
-        >
-          {subtitleLocation}
-        </span>
-        <span
-          className={cn(
-            "font-display text-wc-3xl text-waveclash-cream uppercase",
-            "tracking-label-wide",
-          )}
-        >
-          {subtitleDate}
-        </span>
       </div>
 
       {/* TickerBelt — yellow, 28px Archivo Black, ◆ separator (YmRZq) */}

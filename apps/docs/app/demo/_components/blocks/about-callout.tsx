@@ -23,16 +23,16 @@ export interface AboutCalloutProps {
 }
 
 const DEFAULT_INFO_ROWS: InfoRow[] = [
-  { label: "LOCATION",  value: "BANZAI PIPELINE, NORTH SHORE" },
-  { label: "DATES",     value: "MAR 14 — 23, 2026" },
-  { label: "FORMAT",    value: "SINGLE ELIMINATION / SURF RANCH" },
-  { label: "BROADCAST", value: "WAVECLASH.TV / GLOBAL STREAM" },
+  { label: "LOCATION",  value: "BANZAI PIPELINE / O'AHU" },
+  { label: "DATES",     value: "MAR 14 — MAR 23, 2026" },
+  { label: "FORMAT",    value: "4 ROUNDS / DBL ELIM" },
+  { label: "BROADCAST", value: "WSL+ / WAVECLASH.TV" },
 ]
 
 export function AboutCallout({
   headingLines = ["THE OCEAN", "DOESN'T", "NEGOTIATE."],
   manifestoLabel = "// MANIFESTO",
-  manifestoBody = "We don't sell tickets to a contest. We sell entry to a reckoning. Every wave that breaks at Pipeline has broken across centuries of human ambition and natural indifference. The ocean doesn't negotiate. It evaluates.",
+  manifestoBody = "For ten days in March, the world's most fearless surfers gather at the most punishing reef break on earth. No script. No mercy. Just the ocean, the board, and the line between greatness and the rocks.",
   infoRows = DEFAULT_INFO_ROWS,
 }: AboutCalloutProps) {
   return (
@@ -76,8 +76,6 @@ export function AboutCallout({
           {headingLines[2]}
         </span>
 
-        {/* 8×120px black spacer rectangle */}
-        <div className="w-2 h-[120px] bg-waveclash-black mt-3" />
       </div>
 
       {/* Right column: manifesto + info table (nNbxc, ~420px) */}

@@ -9,14 +9,16 @@ import type { EventScheduleRowData } from "./event-schedule-row.js"
 // SectionHeadingRow: eyebrow "// 003", title "EVENT / SCHEDULE", size="lg"
 // Schedule table (m5x5sG): 7 rows (oYcgs, Dpio8, Og8pX, R2cAZ, T0EVe, DJSDK, tDi2q)
 
+// Row data sourced from pencil nodes oYcgs, Dpio8, Og8pX, R2cAZ, T0EVe, DJSDK, tDi2q
+// Date format: "MAR DD" (JetBrains Mono 10px, pencil nodes EDuWL, yhnjK, …)
 const DEFAULT_SCHEDULE: EventScheduleRowData[] = [
-  { dayCode: "D01", date: "MON 14 MAR", eventName: "OPENING CEREMONY",    fill: "yellow", badgeLabel: "CULTURE",     time: "09:00" },
-  { dayCode: "D02", date: "TUE 15 MAR", eventName: "ROUND OF 32",         fill: "red",    badgeLabel: "COMPETITION", time: "10:00" },
-  { dayCode: "D03", date: "WED 16 MAR", eventName: "ROUND OF 32 CONT.",   fill: "red",    badgeLabel: "COMPETITION", time: "10:00" },
-  { dayCode: "D04", date: "THU 17 MAR", eventName: "ROUND OF 16",         fill: "navy",   badgeLabel: "PREMIER",     time: "11:00" },
-  { dayCode: "D05", date: "FRI 18 MAR", eventName: "FREESURF SESSION",    fill: "yellow", badgeLabel: "FREESURF",    time: "08:00" },
-  { dayCode: "D06", date: "SAT 21 MAR", eventName: "QUARTERFINALS",       fill: "red",    badgeLabel: "COMPETITION", time: "10:00" },
-  { dayCode: "D07", date: "SUN 23 MAR", eventName: "SEMIFINALS + FINAL",  fill: "black",  badgeLabel: "FINAL",       time: "09:30" },
+  { dayCode: "D01", date: "MAR 14", eventName: "OPENING CEREMONY",    fill: "yellow", badgeLabel: "CULTURE",     time: "06:30" },
+  { dayCode: "D02", date: "MAR 15", eventName: "MEN'S QUALIFYING",    fill: "red",    badgeLabel: "COMPETITION", time: "07:00" },
+  { dayCode: "D03", date: "MAR 16", eventName: "WOMEN'S QUALIFYING",  fill: "red",    badgeLabel: "COMPETITION", time: "07:00" },
+  { dayCode: "D04", date: "MAR 17", eventName: "BIG WAVE INVITATIONAL", fill: "navy", badgeLabel: "PREMIER",     time: "05:30" },
+  { dayCode: "D05", date: "MAR 18", eventName: "AIRSHOW EXPRESSION",  fill: "yellow", badgeLabel: "CULTURE",     time: "10:00" },
+  { dayCode: "D06", date: "MAR 21", eventName: "SEMIFINALS / BOTH",   fill: "red",    badgeLabel: "COMPETITION", time: "08:00" },
+  { dayCode: "D07", date: "MAR 23", eventName: "GRAND FINAL",         fill: "black",  badgeLabel: "FINAL",       time: "14:00" },
 ]
 
 export interface EventScheduleProps {
@@ -39,11 +41,17 @@ export function EventSchedule({
         "px-8 py-16",
       )}
     >
-      {/* Section heading row (dmqgc): eyebrow + 72px title */}
+      {/* Section heading row (dmqgc): eyebrow + 72px title + right metadata (nXSJR: "TEN DAYS" / "OF CARNAGE") */}
       <SectionHeadingRow
         eyebrow={sectionLabel}
         title={sectionHeading}
         size="lg"
+        metadata={
+          <>
+            <span className="text-waveclash-black">TEN DAYS</span>
+            <span className="text-waveclash-red">OF CARNAGE</span>
+          </>
+        }
       />
 
       {/* Schedule table (m5x5sG) */}

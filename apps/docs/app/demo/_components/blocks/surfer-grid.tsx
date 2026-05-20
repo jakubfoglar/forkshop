@@ -57,7 +57,7 @@ export function SurferGrid({
   sectionLabel  = "[ 02 / ROSTER ]",
   sectionMeta   = "64 ATHLETES — 23 COUNTRIES",
   sectionHeading = "MEET THE\nSURFERS.",
-  sectionSubcopy = "The world's 64 best surfers compete for surf supremacy at the most unforgiving break on the planet. One reef, zero mercy.",
+  sectionSubcopy = "Twenty-three nations. Sixty-four bodies. One stretch of reef on the North Shore that decides who lives this season as a name and who returns home as a number.",
   surfers       = DEFAULT_SURFERS,
 }: SurferGridProps) {
   return (

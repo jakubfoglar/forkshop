@@ -28,10 +28,10 @@ import { Button } from "../ui/button.js"
 //    Right: legal links + social links (INSTAGRAM ↗, YOUTUBE ↗), JetBrains Mono 12px 500 tracking +1
 
 const DEFAULT_INFO_ROWS = [
-  { label: "LOCATION",  value: "BANZAI PIPELINE, NORTH SHORE" },
-  { label: "DATES",     value: "MAR 14 — 23, 2026" },
-  { label: "FORMAT",    value: "SINGLE ELIMINATION" },
-  { label: "BROADCAST", value: "WAVECLASH.TV / GLOBAL STREAM" },
+  { label: "LOCATION",  value: "BANZAI PIPELINE / O'AHU" },
+  { label: "DATES",     value: "MAR 14 — MAR 23, 2026" },
+  { label: "FORMAT",    value: "4 ROUNDS / DBL ELIM" },
+  { label: "BROADCAST", value: "WSL+ / WAVECLASH.TV" },
 ]
 
 const DEFAULT_NAV_COLUMNS = [
@@ -72,7 +72,7 @@ export interface SiteFooterProps {
 }
 
 export function SiteFooter({
-  footerHeading = "SEE YOU IN\nTHE WATER.",
+  footerHeading = "SEE YOU\nIN THE\nWATER.",
   navLinks = DEFAULT_LEGAL_LINKS,
   socialLinks = DEFAULT_SOCIAL_LINKS,
 }: SiteFooterProps) {
@@ -272,7 +272,7 @@ export function SiteFooter({
             )}
             style={{ fontSize: "12px", fontWeight: 500 }}
           >
-            © 2026 WAVECLASH. ALL RIGHTS RESERVED.
+            © 2026 — ALL RIGHTS / NO RESERVES
           </span>
         </div>
 
