@@ -110,6 +110,7 @@ export {
   type NodePosition,
   type NodePositions,
 } from "@forkshop/lib/node-positions"
+export { useForkshopPositions } from "@forkshop/hooks/use-forkshop-positions"
 
 // Barrel reflection (public — user code wires discovery hooks)
 export {
