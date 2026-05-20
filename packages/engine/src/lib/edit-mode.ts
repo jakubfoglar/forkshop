@@ -58,13 +58,14 @@ export const PREVIEW_EDIT_CSS = `
 // This block intentionally does NOT declare --forkshop-agent-color on :root
 // — colors are always per-event from agent identity.
 export const PREVIEW_AGENT_CSS = `
-[data-forkshop-block][data-forkshop-agent-active] > * {
-  outline: calc(2px / var(--canvas-zoom, 1)) solid var(--forkshop-agent-color, oklch(0.62 0.22 280)) !important;
-  outline-offset: calc(4px / var(--canvas-zoom, 1)) !important;
-  border-radius: calc(2px / var(--canvas-zoom, 1));
+[data-forkshop-block][data-forkshop-agent-active] {
+  box-shadow: 0 0 0 calc(3px / var(--canvas-zoom, 1)) var(--forkshop-agent-color, oklch(0.62 0.22 280)),
+              0 0 calc(16px / var(--canvas-zoom, 1)) calc(4px / var(--canvas-zoom, 1)) color-mix(in oklch, var(--forkshop-agent-color, oklch(0.62 0.22 280)) 40%, transparent) !important;
+  position: relative;
+  z-index: 1;
 }
 @media (prefers-reduced-motion: no-preference) {
-  [data-forkshop-agent-page-active] [data-forkshop-block] > * {
+  [data-forkshop-agent-page-active] [data-forkshop-block] {
     animation: forkshop-agent-page-block-pulse 2.4s ease-in-out infinite !important;
     animation-duration: 2.4s !important;
   }
