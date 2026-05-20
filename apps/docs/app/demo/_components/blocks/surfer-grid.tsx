@@ -1,5 +1,4 @@
 import { cn } from "@/lib/cn"
-import { SectionHeadingRow } from "../ui/section-heading-row.js"
 import { SurferCard } from "./surfer-card.js"
 import type { SurferCardData } from "./surfer-card.js"
 

@@ -1,5 +1,4 @@
 import { cn } from "@/lib/cn"
-import { Badge } from "../ui/badge.js"
 
 // Sub-block: one athlete card inside SurferGrid
 // Source nodes: qtCVM (Kahanu Makekai), Zpd8j (Milo Deschamps),
