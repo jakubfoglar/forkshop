@@ -36,7 +36,7 @@ export function TickerBeltBoard() {
             <TickerBelt fill={fill} size={size} separator={separator} />
           ),
         }
-        return { id, label, node }
+        return { id: node.id, label, node }
       }),
     [],
   )

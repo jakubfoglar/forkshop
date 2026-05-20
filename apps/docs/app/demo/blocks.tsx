@@ -39,7 +39,7 @@ export default function BlocksBoardView({
           // docs app serves block previews at /demo/block/<slug>
           previewSrc: `/demo/block/${b.slug}`,
         }
-        return { id: b.slug, label: b.name, node }
+        return { id: node.id, label: b.name, node }
       }),
     [blocks, viewport],
   )

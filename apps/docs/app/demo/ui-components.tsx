@@ -25,7 +25,7 @@ export function UIComponentsBoard() {
           label: p.name,
           render: () => <p.Component />,
         }
-        return { id: p.slug, label: p.name, node }
+        return { id: node.id, label: p.name, node }
       }),
     [primitives],
   )

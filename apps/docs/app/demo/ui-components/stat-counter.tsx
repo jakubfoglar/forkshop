@@ -30,7 +30,7 @@ export function StatCounterBoard() {
             <StatCounter value={value} label={statLabel} highlight={highlight} />
           ),
         }
-        return { id, label, node }
+        return { id: node.id, label, node }
       }),
     [],
   )

@@ -36,7 +36,7 @@ export function ProfileLinkBoard() {
             </div>
           ),
         }
-        return { id, label, node }
+        return { id: node.id, label, node }
       }),
     [],
   )
