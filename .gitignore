@@ -17,3 +17,6 @@ designs/
 # Real positions live per-app under apps/*/app/demo/positions.json (or wherever the
 # app's forkshop.config.tsx points).
 apps/docs/app/forkshop/
+
+# Per-environment Forkshop drag positions — not source.
+apps/*/app/*/positions.json
