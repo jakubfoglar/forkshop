@@ -5,13 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "next dev --port 3001",
-    "build": "pnpm validate-registry && next build",
+    "build": "pnpm validate-registry && pnpm gen-icons && next build",
     "start": "next start --port 3001",
     "typecheck": "tsc --noEmit",
     "lint": "eslint app components",
-    "validate-registry": "tsx scripts/validate-registry.ts"
+    "validate-registry": "tsx scripts/validate-registry.ts",
+    "gen-icons": "tsx scripts/generate-icons.ts",
+    "test": "vitest"
   },
   "dependencies": {
+    "@forkshop/engine": "workspace:*",
     "@mdx-js/loader": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
     "@next/mdx": "^14.2.0",
@@ -31,9 +34,12 @@
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.5.0",
+    "png-to-ico": "^3.0.1",
     "postcss": "^8.5.14",
+    "sharp": "^0.34.5",
     "tailwindcss": "^3.4.19",
     "tsx": "^4.19.0",
-    "typescript": "^5.5.0"
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
   }
 }

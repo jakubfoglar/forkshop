@@ -11,7 +11,7 @@ const withMDX = createMDX({
 /** @type {import('next').NextConfig} */
 const config = {
   pageExtensions: ["ts", "tsx", "md", "mdx"],
-  transpilePackages: ["forkshop"],
+  transpilePackages: ["forkshop", "@forkshop/engine"],
   webpack(config) {
     config.resolve.extensionAlias = {
       ...(config.resolve.extensionAlias ?? {}),
