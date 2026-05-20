@@ -85,17 +85,17 @@ function ActiveBoard({
   if (!layout) {
     return (
       <div className="p-4 text-sm text-red-600">
-        Board &quot;{cfg.id}&quot; references layout &quot;{String(cfg.layout)}&quot; but it isn&apos;t registered.
-        Add it to forkshopConfig.layouts or use a built-in id (&quot;gallery&quot; | &quot;tree&quot;).
+        {`Board "${cfg.id}" references layout "${String(cfg.layout)}" but it isn't registered. `}
+        {`Add it to forkshopConfig.layouts or use a built-in id ("gallery" | "tree").`}
       </div>
     )
   }
 
   // layout.defaultOptions is typed `unknown` (Layout<unknown> invariance —
-   // see BUILTIN_LAYOUTS cast). The contract is that defaultOptions is always
-   // a plain options object, so coerce to a record before spreading.
-   const defaults = (layout.defaultOptions ?? {}) as Record<string, unknown>
-   const options = { ...defaults, ...(cfg.layoutOptions ?? {}) } as Record<string, unknown>
+  // see BUILTIN_LAYOUTS cast). The contract is that defaultOptions is always
+  // a plain options object, so coerce to a record before spreading.
+  const defaults = (layout.defaultOptions ?? {}) as Record<string, unknown>
+  const options = { ...defaults, ...(cfg.layoutOptions ?? {}) } as Record<string, unknown>
   return (
     <ForkshopCanvas>
       {layout.render({
@@ -127,7 +127,7 @@ function BoardSidebar({ boards }: { boards: ReadonlyArray<BoardComponent> }) {
 function EmptyBoardState() {
   return (
     <div className="p-4 text-sm text-neutral-500">
-      No Board matched this selection. Check each Board&apos;s match() function.
+      {`No Board matched this selection. Check each Board's match() function.`}
     </div>
   )
 }
