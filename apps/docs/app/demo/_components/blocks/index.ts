@@ -20,3 +20,6 @@ export type { SurferCardData } from "./surfer-card.js"
 
 export { GallerySection } from "./gallery-section.js"
 export type { GallerySectionProps } from "./gallery-section.js"
+
+export { SponsorStrip } from "./sponsor-strip.js"
+export type { SponsorStripProps } from "./sponsor-strip.js"

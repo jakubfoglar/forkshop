@@ -10,7 +10,7 @@ import { SectionHeadingRow } from "./_components/ui/section-heading-row.js"
 import { ProfileLink } from "./_components/ui/profile-link.js"
 import { TickerBelt } from "./_components/ui/ticker-belt.js"
 
-import { SiteHeader, Hero, StatsBelt, AboutCallout, EventSchedule, SurferGrid, GallerySection } from "./_components/blocks/index.js"
+import { SiteHeader, Hero, StatsBelt, AboutCallout, EventSchedule, SurferGrid, GallerySection, SponsorStrip } from "./_components/blocks/index.js"
 
 // ── Swatch data (kept brief — one row per brand primitive) ────────────────────
 const brandColors = [
@@ -278,6 +278,10 @@ export default function DemoPage() {
 
           <GalleryItem label="GallerySection (source: u9A5Q2)">
             <GallerySection />
+          </GalleryItem>
+
+          <GalleryItem label="SponsorStrip (source: u9wUYn)">
+            <SponsorStrip />
           </GalleryItem>
         </div>
       </section>
