@@ -57,7 +57,7 @@ export function CtaBuyPass({
   tickets       = DEFAULT_TICKETS,
 }: CtaBuyPassProps) {
   return (
-    <section className="w-full">
+    <section className="w-full" data-forkshop-block="cta-buy-pass">
       {/* ── Mobile / Tablet layout (< lg): condensed tickets banner ──────────────────────
           bg-waveclash-yellow, stacked display heading + 2-option horizontal bar.
           Pencil source: SZ6LH (390×391px). */}

@@ -40,6 +40,7 @@ export function SponsorStrip({
 }: SponsorStripProps) {
   return (
     <section
+      data-forkshop-block="sponsor-strip"
       className={cn(
         "w-full flex flex-col",
         "bg-waveclash-sand",

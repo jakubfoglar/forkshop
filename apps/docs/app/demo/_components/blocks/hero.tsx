@@ -47,7 +47,7 @@ export function Hero({
   tickerItems = ["WAVECLASH/26", "PIPELINE, HAWAI'I", "MAR 14-23", "ENTER THE WATER"],
 }: HeroProps) {
   return (
-    <div className="relative w-full overflow-hidden bg-waveclash-black">
+    <div className="relative w-full overflow-hidden bg-waveclash-black" data-forkshop-block="hero">
       {/* Background image / overlay
           Mobile min-h 687px → tablet ~500px → desktop 1100px */}
       <div className="relative w-full min-h-[687px] md:min-h-[500px] lg:min-h-[1100px]">

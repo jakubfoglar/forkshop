@@ -37,6 +37,7 @@ export function AboutCallout({
 }: AboutCalloutProps) {
   return (
     <section
+      data-forkshop-block="about-callout"
       className={cn(
         "w-full",
         // Mobile: single column (flex-col); lg: two-column side-by-side (flex-row)

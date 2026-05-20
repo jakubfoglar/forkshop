@@ -31,7 +31,7 @@ export function StatsBelt({ stats = DEFAULT_STATS }: StatsBeltProps) {
   const mobileStats = stats.slice(0, 4)
 
   return (
-    <div className="w-full bg-waveclash-black">
+    <div className="w-full bg-waveclash-black" data-forkshop-block="stats-belt">
       {/* Mobile/tablet: 2×2 grid */}
       <div className="grid grid-cols-2 lg:hidden">
         {mobileStats.map((stat, i) => {

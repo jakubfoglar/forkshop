@@ -47,6 +47,7 @@ export function GallerySection({
 }: GallerySectionProps) {
   return (
     <section
+      data-forkshop-block="gallery-section"
       className={cn(
         // Hidden on mobile and tablet — mosaic requires lg (1024px+) to be readable
         "hidden lg:flex flex-col gap-9",

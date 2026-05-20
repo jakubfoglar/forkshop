@@ -77,7 +77,7 @@ export function SiteFooter({
   socialLinks = DEFAULT_SOCIAL_LINKS,
 }: SiteFooterProps) {
   return (
-    <footer className="w-full bg-waveclash-black flex flex-col">
+    <footer className="w-full bg-waveclash-black flex flex-col" data-forkshop-block="site-footer">
 
       {/* 1. TickerBelt (SZ1De): absent on mobile, present from md+ */}
       <div className="hidden md:block">

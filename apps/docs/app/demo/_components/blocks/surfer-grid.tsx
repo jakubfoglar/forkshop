@@ -55,13 +55,14 @@ export interface SurferGridProps {
 
 export function SurferGrid({
   sectionLabel  = "[ 02 / ROSTER ]",
-  sectionMeta   = "64 ATHLETES — 23 COUNTRIES",
+  sectionMeta   = "64 ATHLETES — 12 COUNTRIES",
   sectionHeading = "MEET THE\nSURFERS.",
   sectionSubcopy = "Twenty-three nations. Sixty-four bodies. One stretch of reef on the North Shore that decides who lives this season as a name and who returns home as a number.",
   surfers       = DEFAULT_SURFERS,
 }: SurferGridProps) {
   return (
     <section
+      data-forkshop-block="surfer-grid"
       className={cn(
         "w-full flex flex-col gap-10",
         "bg-waveclash-sand",

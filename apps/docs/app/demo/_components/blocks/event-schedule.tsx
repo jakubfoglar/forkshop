@@ -34,6 +34,7 @@ export function EventSchedule({
 }: EventScheduleProps) {
   return (
     <section
+      data-forkshop-block="event-schedule"
       className={cn(
         "w-full flex flex-col gap-8",
         "bg-waveclash-cream",

@@ -34,6 +34,7 @@ export function SiteHeader({
 }: SiteHeaderProps) {
   return (
     <header
+      data-forkshop-block="site-header"
       className={cn(
         "w-full flex items-center justify-between",
         "bg-waveclash-black border-b-2 border-waveclash-red",
