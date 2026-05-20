@@ -54,7 +54,7 @@ export default function ComponentsBoard({ entries }) {
 
 | Prop           | Notes                                                  |
 |----------------|--------------------------------------------------------|
-| `entries`      | Required. Array of `{ id, label?, node, row?, column? }`. |
+| `entries`      | Required. Array of `{ label?, node, row?, column? }`. The cell key is `node.id`. |
 | `layout`       | Required. `"stack"` or `"grid"`.                       |
 | `viewportWidth`| Pixel width per tile. Default 1200 (stack) / 400 (grid). |
 | `rowGap`       | Default 32 (stack) / 48 (grid).                        |
@@ -64,6 +64,30 @@ export default function ComponentsBoard({ entries }) {
 Each `GalleryEntry` carries an `AnyNode` — typically built from
 `iframeComponentNodeType` or `iframeRouteNodeType`. See
 [Extending Forkshop](/docs/extending) for custom Node kinds.
+
+Pass `nodePositions` and `onPositionChange` from `useForkshopPositions()` to
+enable drag-to-reposition on the canvas:
+
+```tsx
+import { Gallery, useForkshopPositions } from "@forkshop/engine"
+
+export default function ComponentsBoard({ entries }) {
+  const { nodePositions, onPositionChange } = useForkshopPositions({
+    boardId: "components",
+  })
+  return (
+    <Gallery
+      entries={entries}
+      layout="grid"
+      nodePositions={nodePositions}
+      onPositionChange={onPositionChange}
+    />
+  )
+}
+```
+
+`boardId` namespaces positions within the shared `positions.json` file so
+multiple boards with overlapping node IDs don't clobber each other.
 
 ## `Tree`
 

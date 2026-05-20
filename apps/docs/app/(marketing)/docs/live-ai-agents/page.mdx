@@ -65,9 +65,48 @@ files.
 
 Any agent runtime can produce activity by hitting the POST endpoint
 with the shape above. A producer is small — typically a hook that
-observes the agent's tool calls and converts each to one POST. The
-protocol is documented in
-[`docs/specs/2026-05-18-live-ai-protocol-design.md`](https://github.com/jakubfoglar/forkshop/blob/main/docs/specs/2026-05-18-live-ai-protocol-design.md).
+observes the agent's tool calls and converts each to one POST.
+
+## Block outlines in page iframes
+
+When an agent edits a page file, the engine propagates an outline
+into any page-view iframe to highlight which block was touched. This
+requires each block component to have `data-forkshop-block="<slug>"`
+on its outermost element — without it the engine can't identify the
+block inside the iframe:
+
+```tsx
+export function HeroBlock(props: HeroBlockProps) {
+  return (
+    <section data-forkshop-block="hero">
+      {/* ... */}
+    </section>
+  )
+}
+```
+
+The setup skill adds this attribute for you when it detects block
+components. Check that existing blocks have it if outlines aren't
+showing in page-view iframes.
+
+## Static / seeded activity
+
+`AgentActivityProvider` accepts two props for seeding activity
+without opening the live SSE stream — useful for static showcases
+or marketing demos:
+
+```tsx
+<AgentActivityProvider
+  fileMap={fileMap}
+  initialActivity={[/* pre-built ActivityEntry objects */]}
+  subscribeToStream={false}  // skip the SSE connection
+>
+  {children}
+</AgentActivityProvider>
+```
+
+Entries in `initialActivity` age out after ~5 seconds by default.
+Set `pinned: true` on an entry to prevent it from expiring.
 
 ## Disabling
 

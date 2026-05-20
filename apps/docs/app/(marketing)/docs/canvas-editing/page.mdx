@@ -28,20 +28,13 @@ component directly.
 
 ## Save flow
 
-1. You click editable text. The element becomes `contentEditable`,
-   and a Save / Discard popover floats next to it.
-2. You type.
-3. **⌘↵** (or click Save) POSTs `{ pagePath, originalText, newText }`
-   to `/api/forkshop/edit`.
-4. The route requires `originalText` to occur exactly once in the
-   source file. If unique, it splices `newText` in and writes the
-   file.
-5. Next.js HMR picks up the file change and updates the iframe's
-   React tree in place — no reload.
+Click editable text, type, then **⌘↵** to save. The engine POSTs the
+original and new text to `/api/forkshop/edit`, which splices the change
+into the source file in place. Next.js HMR picks up the file write and
+updates the iframe without a reload.
 
-If `originalText` matches multiple lines in the source, the save
-fails with a clear error. The fix is to disambiguate by editing a
-larger surrounding span.
+If the original text appears more than once in the source file, the
+save is rejected. Edit a larger surrounding span to disambiguate.
 
 ## Multi-viewport sync
 
@@ -56,12 +49,6 @@ On a `ResponsiveFrameView` with several iframes of the same route:
 
 ## Production behavior
 
-Two gates:
-
-- `iframe-edit-overlay.tsx` returns `null` when `process.env.NODE_ENV
-  === "production"` or when `sourceFile` is unset.
-- `/api/forkshop/edit` returns `403 Forbidden` for both GET and POST
-  in production.
-
-There is no "edit mode in production." Dev is for editing; production
-ships static.
+The edit overlay and `/api/forkshop/edit` are both dev-only. In
+production the overlay is a no-op and the route returns 403. Nothing
+to configure — it's off by default in any non-development build.

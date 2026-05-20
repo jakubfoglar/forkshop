@@ -109,9 +109,19 @@ shot.
 
 ```tsx
 import { ForkshopCanvas } from "@forkshop/engine"
+
+<ForkshopCanvas
+  fitMode="none"       // render at native 1:1 scale, no auto-fit
+  initialZoom={0.75}   // optional starting zoom
+  initialPan={{ x: 40, y: 40 }}
+>
+  {/* boards */}
+</ForkshopCanvas>
 ```
 
-Each tile is a real iframe, so a handful per page is fine and a
-gallery of twenty is too many. The exact mounting pattern (sidebar,
-node-type registry, board picker) lives in your scaffolded
-`app/forkshop/page.tsx` — copy from there.
+`fitMode` accepts `"width"` (default), `"both"`, or `"none"`. Pass
+`"none"` when the stage should render at its natural scale without
+auto-fitting to the viewport. Each tile is a real iframe, so a
+handful per page is fine and a gallery of twenty is too many. The
+full mounting pattern (sidebar, node-type registry, board picker)
+lives in your scaffolded `app/forkshop/page.tsx` — copy from there.

@@ -23,28 +23,12 @@ From your project root:
 npx forkshop init
 ```
 
-What it does, in order:
-
-1. Preflights — refuses to run if `app/` isn't found or `@/*` isn't
-   in `tsconfig.json`.
-2. Aborts if `forkshop.json` already exists. Re-running an install
-   isn't the right command — see [CLI](/docs/cli) for `update` and
-   `diff`.
-3. Fetches the registry manifest from `forkshop.dev/r/`.
-4. Drops the scaffold layer:
-   - Route stubs in `app/api/forkshop/` (the dev-only edit API and
-     the agent activity routes).
-   - Skill files in `.claude/skills/forkshop-*.md` (read by Claude
-     Code when you're working in the project).
-   - `app/forkshop/CLAUDE.md` (the on-project agent reference).
-   - The Raveo font in `public/fonts/forkshop/`.
-5. Appends `@import "@forkshop/engine/forkshop.css";` to your
-   `globals.css` if it isn't already there.
-6. Writes `forkshop.json` — engine version, scaffold checksums,
-   installed bundles.
-7. Merges `@forkshop/engine` into your `package.json` `dependencies`
-   and runs your detected package manager's install. Pass
-   `--no-install` to skip this step.
+`init` preflights your project, drops the scaffold layer (API route
+stubs, skill files, the Raveo font), appends the CSS import to your
+`globals.css`, writes `forkshop.json`, and installs `@forkshop/engine`
+via your detected package manager. Pass `--no-install` to skip the
+install step. Aborts if `forkshop.json` already exists — see
+[CLI](/docs/cli) for `update` and `diff`.
 
 ## Finish the setup
 
