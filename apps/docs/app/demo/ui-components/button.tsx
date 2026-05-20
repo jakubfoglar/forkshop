@@ -6,18 +6,24 @@ import { Gallery, type GalleryEntry, type InlineReactNode } from "@forkshop/engi
 import { PlaygroundBoard } from "../playground-board"
 
 const VARIANTS = [
-  { variant: "primary", width: "compact" },
-  { variant: "secondary", width: "compact" },
-  { variant: "ghost", width: "compact" },
-  { variant: "primary", width: "wide" },
-  { variant: "secondary", width: "wide" },
-  { variant: "ghost", width: "wide" },
+  { variant: "primary",   width: "compact", row: 0, column: 0 },
+  { variant: "secondary", width: "compact", row: 0, column: 1 },
+  { variant: "ghost",     width: "compact", row: 0, column: 2 },
+  { variant: "primary",   width: "wide",    row: 1, column: 0 },
+  { variant: "secondary", width: "wide",    row: 1, column: 1 },
+  { variant: "ghost",     width: "wide",    row: 1, column: 2 },
 ] as const
+
+const VARIANT_LABELS: Record<string, string> = {
+  primary: "GET PASS",
+  secondary: "BUY 7-DAY PASS",
+  ghost: "ALL ATHLETES",
+}
 
 export function ButtonBoard() {
   const entries = useMemo<GalleryEntry[]>(() => {
     const out: GalleryEntry[] = []
-    for (const { variant, width } of VARIANTS) {
+    for (const { variant, width, row, column } of VARIANTS) {
       const id = `button-${variant}-${width}`
       const node: InlineReactNode = {
         id: `primitive:${id}`,
@@ -30,18 +36,18 @@ export function ButtonBoard() {
         render: () => (
           <div className="inline-flex items-center justify-center bg-waveclash-black p-6 w-full">
             <Button variant={variant} width={width}>
-              {variant === "primary" ? "GET PASS" : variant === "secondary" ? "BUY 7-DAY PASS" : "ALL ATHLETES"}
+              {VARIANT_LABELS[variant]}
             </Button>
           </div>
         ),
       }
-      out.push({ id, label: `${variant} / ${width}`, node })
+      out.push({ id, label: `${variant} / ${width}`, node, row, column })
     }
     return out
   }, [])
 
   return (
-    <PlaygroundBoard stageWidth={1200} stageHeight={600} fitMode="both">
+    <PlaygroundBoard stageWidth={1200} stageHeight={400} fitMode="both">
       {({ nodePositions: pos, onPositionChange: onPosChange }) => (
         <Gallery
           entries={entries}
