@@ -1,223 +1,233 @@
-// Token swatch gallery — Phase 1a review surface.
-// Phase 1b will replace this with the primitives gallery.
+// Phase 1b: Primitives gallery.
+// A brief color-swatch row at the top lets us confirm token drift at a glance.
+// The bulk of the page shows every variant/size combination of each primitive.
 
+import { Button } from "./_components/ui/button.js"
+import { Badge } from "./_components/ui/badge.js"
+import { StatCounter } from "./_components/ui/stat-counter.js"
+import { SectionHeadingRow } from "./_components/ui/section-heading-row.js"
+import { ProfileLink } from "./_components/ui/profile-link.js"
+import { TickerBelt } from "./_components/ui/ticker-belt.js"
+
+// ── Swatch data (kept brief — one row per brand primitive) ────────────────────
 const brandColors = [
-  { token: "waveclash-black",   hex: "#0a0a0a", usage: "Nav bg, hero overlay, footer bg, primary text on light",  textClass: "text-waveclash-cream" },
-  { token: "waveclash-graphite",hex: "#1a1a1a", usage: "'LIVE 24/7' nav pill — near-black, used nowhere else",    textClass: "text-waveclash-cream" },
-  { token: "waveclash-cream",   hex: "#faf7ef", usage: "Primary text on dark, card / athlete surfaces",            textClass: "text-waveclash-black" },
-  { token: "waveclash-red",     hex: "#ff4a1c", usage: "Accent / CTA fills, COMPETITION badge, nav border, arrows",textClass: "text-waveclash-black" },
-  { token: "waveclash-yellow",  hex: "#ffd60a", usage: "Ticker belt, SWELL stat, ★ WORLD TOUR badge, CULTURE badge",textClass: "text-waveclash-black" },
-  { token: "waveclash-sand",    hex: "#f2ede3", usage: "Section backgrounds — About, Athletes, Sponsors Strip",    textClass: "text-waveclash-black" },
-  { token: "waveclash-navy",    hex: "#00355c", usage: "PREMIER badge, athlete WORLD #1 rank badge, 'NEGOTIATE.'", textClass: "text-waveclash-cream" },
+  { token: "waveclash-black",    hex: "#0a0a0a", textClass: "text-waveclash-cream" },
+  { token: "waveclash-graphite", hex: "#1a1a1a", textClass: "text-waveclash-cream" },
+  { token: "waveclash-cream",    hex: "#faf7ef", textClass: "text-waveclash-black" },
+  { token: "waveclash-red",      hex: "#ff4a1c", textClass: "text-waveclash-black" },
+  { token: "waveclash-yellow",   hex: "#ffd60a", textClass: "text-waveclash-black" },
+  { token: "waveclash-sand",     hex: "#f2ede3", textClass: "text-waveclash-black" },
+  { token: "waveclash-navy",     hex: "#00355c", textClass: "text-waveclash-cream" },
 ] as const
 
-const semanticAliases = [
-  { alias: "demo-background",       resolves: "waveclash-black",  role: "Default page background" },
-  { alias: "demo-foreground",       resolves: "waveclash-cream",  role: "Default text on dark" },
-  { alias: "demo-surface",          resolves: "waveclash-sand",   role: "Light section backgrounds" },
-  { alias: "demo-surface-card",     resolves: "waveclash-cream",  role: "Card surfaces" },
-  { alias: "demo-surface-invert",   resolves: "waveclash-black",  role: "Inverted card bg" },
-  { alias: "demo-accent",           resolves: "waveclash-red",    role: "CTAs, badges, highlighted words" },
-  { alias: "demo-accent-secondary", resolves: "waveclash-yellow", role: "Ticker belt, stat highlights, world-tour badge" },
-  { alias: "demo-accent-deep",      resolves: "waveclash-navy",   role: "PREMIER badge family, athlete rank badge" },
-  { alias: "demo-border",           resolves: "waveclash-black",  role: "Stroke on cards, section dividers" },
-  { alias: "demo-border-invert",    resolves: "waveclash-cream",  role: "Stroke on dark-surface cards" },
-  { alias: "demo-muted-foreground", resolves: "waveclash-cream",  role: "Subdued labels on dark (no true gray used)" },
-] as const
+// ── Section label helper ──────────────────────────────────────────────────────
+function GalleryLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="font-demo-mono text-sm font-bold uppercase tracking-label-widest text-waveclash-red mb-4">
+      {children}
+    </h2>
+  )
+}
 
-const sizeLadder = [
-  { token: "xs",         px: 10,  usage: "Location metadata, small mono labels" },
-  { token: "sm",         px: 11,  usage: "Section labels, badge text, nav captions" },
-  { token: "base",       px: 12,  usage: "Nav links (EVENT, ATHLETES, SCHEDULE, …)" },
-  { token: "md",         px: 13,  usage: "Ticket card price unit ('/WEEK'), footer mono, CTA button labels" },
-  { token: "lg",         px: 14,  usage: "Body copy in ticket cards, athlete card footer link" },
-  { token: "xl",         px: 15,  usage: "Ticket tier title ('7-DAY PASS', 'DAY PASS')" },
-  { token: "2xl",        px: 16,  usage: "Body copy in manifesto / CTA sections" },
-  { token: "3xl",        px: 18,  usage: "Event subtitle bar, schedule time display, footer ticker" },
-  { token: "3-5xl",      px: 20,  usage: "Sponsor brand names, hero CTA arrow '→'" },
-  { token: "4xl",        px: 22,  usage: "Footer ticker / marquee text" },
-  { token: "5xl",        px: 24,  usage: "Nav logo wordmark ('WAVECLASH///'), schedule arrow icon" },
-  { token: "6xl",        px: 28,  usage: "Schedule day number ('D01'), hero CTA button label" },
-  { token: "7xl",        px: 32,  usage: "Schedule event name, stop number, athlete name in card" },
-  { token: "display-xs", px: 30,  usage: "Gallery pull-quote body ('THIS REEF / EATS / HEROES.')" },
-  { token: "8xl",        px: 64,  usage: "Stats counter numbers (athletes, countries, prize)" },
-  { token: "9xl",        px: 72,  usage: "Ticket card price figures, 'EVENT / SCHEDULE' heading" },
-  { token: "10xl",       px: 80,  usage: "Gallery pull-quote opening mark, mobile 'DON'T WATCH' heading" },
-  { token: "11xl",       px: 120, usage: "About heading words ('THE OCEAN', 'DOESN'T', 'NEGOTIATE.')" },
-  { token: "display-sm", px: 180, usage: "'MEET THE SURFERS.' section heading, 'FROM THE LINEUP.' heading" },
-  { token: "display-md", px: 220, usage: "'BE ON THE SAND.' CTA heading" },
-  { token: "display-lg", px: 280, usage: "Hero 'WAVE' / 'CLASH' display type" },
-] as const
+function Divider() {
+  return <hr className="border-waveclash-cream/20 my-12" />
+}
 
-const badges = [
-  { label: "CULTURE",     bgClass: "bg-waveclash-yellow", textClass: "text-waveclash-black", note: "Also used for FREESURF — same yellow fill, different label" },
-  { label: "COMPETITION", bgClass: "bg-waveclash-red",    textClass: "text-waveclash-black", note: "" },
-  { label: "PREMIER",     bgClass: "bg-waveclash-navy",   textClass: "text-waveclash-black", note: "Also: athlete WORLD #1 rank badge" },
-  { label: "FINAL",       bgClass: "bg-waveclash-black",  textClass: "text-waveclash-cream", note: "Border: 2px waveclash-cream (inline only — not a token border-radius)" },
-] as const
-
-const trackingSamples = [
-  { label: "Hero display (−12px)", text: "WAVECLASH", trackingClass: "tracking-display-tight", sizeClass: "text-7xl", font: "font-display" },
-  { label: "About heading (−5px)", text: "NEGOTIATE.", trackingClass: "tracking-display-snug",  sizeClass: "text-9xl", font: "font-display" },
-  { label: "Stats counters (−2px)", text: "247",       trackingClass: "tracking-display-normal",sizeClass: "text-8xl", font: "font-display" },
-  { label: "Nav links (+1.5px)",   text: "ATHLETES",   trackingClass: "tracking-label-wider",   sizeClass: "text-base",font: "font-demo-mono" },
-  { label: "Edition tag (+2px)",   text: "EDITION N°26",trackingClass: "tracking-label-widest", sizeClass: "text-sm",  font: "font-demo-mono" },
-] as const
-
+// ── Page ─────────────────────────────────────────────────────────────────────
 export default function DemoPage() {
   return (
-    <main className="min-h-screen p-8 space-y-16">
+    <main className="min-h-screen p-8 space-y-12">
 
-      {/* ── 1. Brand Colors ─────────────────────────────────────────────── */}
+      {/* ── 0. Token sanity: brand color swatches (keep for drift detection) ── */}
       <section>
-        <h2 className="font-display text-7xl text-black mb-6">Brand Colors</h2>
-        <div className="flex flex-wrap gap-4">
-          {brandColors.map(({ token, hex, usage, textClass }) => (
+        <GalleryLabel>Brand Colors — token sanity</GalleryLabel>
+        <div className="flex flex-wrap gap-2">
+          {brandColors.map(({ token, hex, textClass }) => (
             <div
               key={token}
-              className={`bg-${token} ${textClass} p-4 w-56 flex-shrink-0`}
+              className={`bg-${token} ${textClass} px-3 py-2 flex-shrink-0`}
             >
-              <div className="font-demo-mono text-sm font-bold mb-1">{token}</div>
-              <div className="font-demo-mono text-xs mb-2">{hex}</div>
-              <div className="font-body text-xs leading-relaxed">{usage}</div>
+              <div className="font-demo-mono text-xs font-bold">{token}</div>
+              <div className="font-demo-mono text-xs opacity-60">{hex}</div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ── 2. Semantic Aliases ─────────────────────────────────────────── */}
-      <section>
-        <h2 className="font-display text-7xl text-black mb-6">Semantic Aliases</h2>
-        <div className="flex flex-wrap gap-3">
-          {semanticAliases.map(({ alias, resolves, role }) => (
-            <div
-              key={alias}
-              className={`bg-${alias} p-4 w-52 flex-shrink-0 border border-black/10`}
-            >
-              <div className="font-demo-mono text-xs font-bold mb-1 text-black mix-blend-multiply">
-                --{alias}
-              </div>
-              <div className="font-demo-mono text-xs text-black/60 mb-1">→ {resolves}</div>
-              <div className="font-body text-xs text-black/70">{role}</div>
-            </div>
-          ))}
-        </div>
-      </section>
+      <Divider />
 
-      {/* ── 3. Type Families ────────────────────────────────────────────── */}
+      {/* ── 1. TickerBelt ────────────────────────────────────────────────────── */}
       <section>
-        <h2 className="font-display text-7xl text-black mb-6">Type Families</h2>
-        <div className="space-y-8">
-          <div>
-            <div className="font-demo-mono text-sm text-waveclash-yellow bg-waveclash-black inline-block px-2 py-0.5 mb-2">
-              display — Archivo Black / weight 900
-            </div>
-            <div className="font-display text-8xl text-waveclash-cream bg-waveclash-black leading-tight px-4 py-2">
-              WAVECLASH 2026
-            </div>
-          </div>
-          <div>
-            <div className="font-demo-mono text-sm text-waveclash-yellow bg-waveclash-black inline-block px-2 py-0.5 mb-2">
-              mono — JetBrains Mono / weight 400 · 500 · 700
-            </div>
-            <div className="bg-waveclash-sand px-4 py-3 space-y-1">
-              <div className="font-demo-mono text-base font-normal text-waveclash-black">
-                weight 400 — NORTH SHORE / O&apos;AHU / PACIFIC
-              </div>
-              <div className="font-demo-mono text-base font-medium text-waveclash-black">
-                weight 500 — STOP #07 · PRIZE: $1.2M
-              </div>
-              <div className="font-demo-mono text-base font-bold text-waveclash-black tracking-label-wider">
-                weight 700 — ATHLETES · COUNTRIES · DAYS
-              </div>
-            </div>
-          </div>
-          <div>
-            <div className="font-demo-mono text-sm text-waveclash-yellow bg-waveclash-black inline-block px-2 py-0.5 mb-2">
-              body — Inter / weight 500
-            </div>
-            <div className="font-body text-2xl font-medium text-waveclash-black bg-waveclash-sand px-4 py-3 leading-relaxed max-w-xl">
-              Experience the world&apos;s most prestigious surfing championship.
-              Ten stops. One champion. The ocean doesn&apos;t negotiate.
-            </div>
-          </div>
-        </div>
-      </section>
+        <GalleryLabel>TickerBelt</GalleryLabel>
 
-      {/* ── 4. Size Ladder ──────────────────────────────────────────────── */}
-      <section>
-        <h2 className="font-display text-7xl text-black mb-6">Size Ladder</h2>
-        <p className="font-demo-mono text-sm text-waveclash-graphite bg-waveclash-sand px-3 py-1 mb-6 inline-block">
-          Sizes under 40px shown on dark bg · Sizes 64px+ overflow intentionally
-        </p>
         <div className="space-y-2">
-          {sizeLadder.map(({ token, px, usage }) => (
-            <div key={token} className="flex items-baseline gap-4 bg-waveclash-black px-4 py-2">
-              <div className="font-demo-mono text-xs text-waveclash-yellow w-24 flex-shrink-0">
-                {token} · {px}px
-              </div>
-              <div
-                className={`text-${token} font-display text-waveclash-cream leading-tight flex-1 overflow-hidden`}
-              >
-                Aa
-              </div>
-              <div className="font-demo-mono text-xs text-waveclash-cream/50 text-right max-w-xs flex-shrink-0 hidden md:block">
-                {usage}
-              </div>
+          {/* Yellow — hero instance (◆ diamond separator, wider text) */}
+          <div>
+            <div className="font-demo-mono text-xs text-waveclash-cream/50 mb-1">
+              fill=&quot;yellow&quot; — separator=&quot;◆&quot; (hero instance, source: YmRZq)
             </div>
-          ))}
+            <TickerBelt
+              fill="yellow"
+              separator="◆"
+              items={["SURF", "WAVECLASH 26", "PIPELINE", "MAR 14-23", "SURF"]}
+            />
+          </div>
+
+          {/* Black — footer instance (★ star separator, smaller text) */}
+          <div>
+            <div className="font-demo-mono text-xs text-waveclash-cream/50 mb-1">
+              fill=&quot;black&quot; — separator=&quot;★&quot; (footer instance, source: SZ1De)
+            </div>
+            <TickerBelt
+              fill="black"
+              separator="★"
+              items={["WAVECLASH/26 — PIPELINE, HAWAI'I — MAR 14/23 — ENTER THE WATER —"]}
+            />
+          </div>
         </div>
       </section>
 
-      {/* ── 5. Tracking Samples ─────────────────────────────────────────── */}
-      <section>
-        <h2 className="font-display text-7xl text-black mb-6">Tracking Samples</h2>
-        <div className="space-y-4 bg-waveclash-black px-6 py-8">
-          {trackingSamples.map(({ label, text, trackingClass, sizeClass, font }) => (
-            <div key={label}>
-              <div className="font-demo-mono text-xs text-waveclash-yellow mb-1">{label}</div>
-              <div className={`${font} ${sizeClass} ${trackingClass} text-waveclash-cream leading-tight`}>
-                {text}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+      <Divider />
 
-      {/* ── 6. Badge Variants ───────────────────────────────────────────── */}
+      {/* ── 2. Badge ─────────────────────────────────────────────────────────── */}
       <section>
-        <h2 className="font-display text-7xl text-black mb-6">Badge Variants</h2>
-        <p className="font-demo-mono text-xs text-waveclash-graphite mb-4">
-          All badges: JetBrains Mono · 10px · weight 700 · tracking +1.5px · padding 6px 12px · no border-radius
-        </p>
-        <div className="flex flex-wrap gap-4 items-start">
-          {badges.map(({ label, bgClass, textClass, note }) => (
-            <div key={label} className="space-y-2">
-              <div
-                className={`${bgClass} ${textClass} font-demo-mono text-xs font-bold tracking-label-wider inline-block`}
-                style={{ padding: "6px 12px" }}
-              >
-                {label}
-              </div>
-              {note && (
-                <div className="font-demo-mono text-xs text-waveclash-graphite max-w-40 leading-relaxed">
-                  {note}
-                </div>
-              )}
+        <GalleryLabel>Badge</GalleryLabel>
+
+        <div className="space-y-6">
+          {/* Desktop size (default) */}
+          <div>
+            <div className="font-demo-mono text-xs text-waveclash-cream/50 mb-3">
+              size=&quot;md&quot; — 10px, padding [6,12] (source: iIHE3, o70xu, gHqrV, YV0Rp)
             </div>
-          ))}
-          {/* FREESURF — same yellow as CULTURE, distinct label */}
-          <div className="space-y-2">
-            <div
-              className="bg-waveclash-yellow text-waveclash-black font-demo-mono text-xs font-bold tracking-label-wider inline-block"
-              style={{ padding: "6px 12px" }}
-            >
-              FREESURF
-            </div>
-            <div className="font-demo-mono text-xs text-waveclash-graphite max-w-40 leading-relaxed">
-              Same yellow fill as CULTURE — different event type label
+            <div className="flex flex-wrap gap-3">
+              <Badge fill="yellow">CULTURE</Badge>
+              <Badge fill="yellow">FREESURF</Badge>
+              <Badge fill="red">COMPETITION</Badge>
+              <Badge fill="navy">PREMIER</Badge>
+              <Badge fill="black">FINAL</Badge>
             </div>
           </div>
+
+          {/* Mobile size */}
+          <div>
+            <div className="font-demo-mono text-xs text-waveclash-cream/50 mb-3">
+              size=&quot;sm&quot; — 9px, padding [3,6] (source: E4oqDr mobile variants)
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Badge fill="yellow" size="sm">CULTURE</Badge>
+              <Badge fill="yellow" size="sm">FREESURF</Badge>
+              <Badge fill="red" size="sm">COMPETITION</Badge>
+              <Badge fill="navy" size="sm">PREMIER</Badge>
+              <Badge fill="black" size="sm">FINAL</Badge>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <Divider />
+
+      {/* ── 3. ProfileLink ───────────────────────────────────────────────────── */}
+      <section>
+        <GalleryLabel>ProfileLink</GalleryLabel>
+        <div className="font-demo-mono text-xs text-waveclash-cream/50 mb-3">
+          JetBrains Mono 11px bold red, gap 6px, → arrow (source: Y1YAER, yo8d4)
+        </div>
+        <div className="flex flex-wrap gap-6">
+          <ProfileLink href="#">Profile</ProfileLink>
+          <ProfileLink href="#">Gabriel Medina</ProfileLink>
+          <ProfileLink href="#">View All Athletes</ProfileLink>
+        </div>
+      </section>
+
+      <Divider />
+
+      {/* ── 4. StatCounter ───────────────────────────────────────────────────── */}
+      <section>
+        <GalleryLabel>StatCounter</GalleryLabel>
+        <div className="font-demo-mono text-xs text-waveclash-cream/50 mb-3">
+          Archivo Black 64px / JetBrains Mono 11px bold red label (source: Nc0i9, F0N5N)
+        </div>
+
+        {/* Default (black bg) */}
+        <div className="mb-2 font-demo-mono text-xs text-waveclash-cream/50">highlight=false (default)</div>
+        <div className="flex flex-wrap gap-px mb-6">
+          <StatCounter value="64" label="Athletes" />
+          <StatCounter value="23" label="Countries" />
+          <StatCounter value="10" label="Days" />
+          <StatCounter value="$1.2M" label="Prize" />
+        </div>
+
+        {/* Highlight (red bg) */}
+        <div className="mb-2 font-demo-mono text-xs text-waveclash-cream/50">highlight=true (COUNTRIES cell variant, source: F0N5N)</div>
+        <div className="flex flex-wrap gap-px">
+          <StatCounter value="64" label="Athletes" />
+          <StatCounter value="23" label="Countries" highlight />
+          <StatCounter value="10" label="Days" />
+          <StatCounter value="$1.2M" label="Prize" />
+        </div>
+      </section>
+
+      <Divider />
+
+      {/* ── 5. SectionHeadingRow ─────────────────────────────────────────────── */}
+      <section>
+        <GalleryLabel>SectionHeadingRow</GalleryLabel>
+
+        {/* size="lg" — 72px heading (EVENT / SCHEDULE) */}
+        <div className="mb-2 font-demo-mono text-xs text-waveclash-cream/50">
+          size=&quot;lg&quot; — 72px (source: dmqgc)
+        </div>
+        <div className="bg-waveclash-sand px-8 py-6 mb-8">
+          <SectionHeadingRow
+            eyebrow="// 003"
+            title="EVENT / SCHEDULE"
+            size="lg"
+            metadata={
+              <>
+                <span className="text-waveclash-black">TEN DAYS</span>
+                <span className="text-waveclash-red">OF CARNAGE</span>
+              </>
+            }
+          />
+        </div>
+
+        {/* size="xl" — 180px heading (MEET THE SURFERS.) */}
+        <div className="mb-2 font-demo-mono text-xs text-waveclash-cream/50">
+          size=&quot;xl&quot; — 180px (source: anKrW) — overflow intentional at this width
+        </div>
+        <div className="bg-waveclash-sand px-8 py-6 overflow-hidden">
+          <SectionHeadingRow
+            eyebrow="#02 / ROSTER"
+            title="MEET THE SURFERS."
+            size="xl"
+          />
+        </div>
+      </section>
+
+      <Divider />
+
+      {/* ── 6. Button ────────────────────────────────────────────────────────── */}
+      <section>
+        <GalleryLabel>Button</GalleryLabel>
+
+        {/* Compact variants */}
+        <div className="mb-2 font-demo-mono text-xs text-waveclash-cream/50">
+          width=&quot;compact&quot; — intrinsic width (source: i9Ino nav, ff1pZ athletes)
+        </div>
+        <div className="flex flex-wrap gap-3 mb-8">
+          <Button variant="primary" width="compact">GET PASS</Button>
+          <Button variant="secondary" width="compact">BUY 7-DAY PASS</Button>
+          <Button variant="ghost" width="compact">ALL ATHLETES</Button>
+        </div>
+
+        {/* Wide variants — shown in constrained containers to simulate fill_container */}
+        <div className="mb-2 font-demo-mono text-xs text-waveclash-cream/50">
+          width=&quot;wide&quot; — fill container (source: xm0Gd hero, y5PC1 ticket, rE6Uq ticket)
+        </div>
+        <div className="flex flex-col gap-2 max-w-sm">
+          <Button variant="primary" width="wide">WATCH LIVE</Button>
+          <Button variant="secondary" width="wide">BUY 7-DAY PASS</Button>
+          <Button variant="ghost" width="wide">BUY DAY PASS</Button>
         </div>
       </section>
 
