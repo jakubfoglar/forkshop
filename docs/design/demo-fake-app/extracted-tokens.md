@@ -243,6 +243,152 @@ Borders are almost universally solid black or cream (no radius, no shadow observ
 
 ---
 
+## Primitives
+
+Primitives are elements that appear ≥2 times across the design AND are small/contained atoms — not
+section-level compositions. All values below sourced directly from pencil `batch_get` JSON; no
+inference.
+
+---
+
+### Button
+
+**Occurrences:** 10+ across both pages (desktop + mobile)
+
+Three distinct fill/role variants observed. All share the same structural pattern: horizontal flex
+row, `alignItems: center`, label text (Archivo Black) + `→` suffix, `justifyContent:
+space_between`, no border-radius.
+
+| Variant    | Fill                | Text fill           | Label font-size | Padding (T/B, L/R) | Source nodes                        |
+|------------|---------------------|---------------------|-----------------|--------------------|-------------------------------------|
+| `primary`  | `bg-waveclash-red`  | `text-waveclash-black` | `text-md` (13–14px) | `[12–16, 18–22]` | `i9Ino` (nav), `xm0Gd` (hero), `rE6Uq` (ticket DAY), `MpRm9` (ticket ALL-IN), `aaCxQ` (subscribe) |
+| `secondary`| `bg-waveclash-cream`| `text-waveclash-black` | `text-md` (13–16px) | `[16, 20]`       | `y5PC1` (hero 7-day), `aPCIW` (ticket 7-day), `gE8FH` (mobile hero) |
+| `ghost`    | `bg-waveclash-black`| `text-waveclash-cream` | `text-md` (13–14px) | `[14, 18–22]`    | `ff1pZ` (all athletes), `rE6Uq` alt-invert (ticket ALL-IN on cream card) |
+
+**Arrow suffix:** Always present. On desktop: `→` as a plain text glyph (Archivo Black or Inter,
+font-size `text-2xl` / 16–20px, same fill as label). On mobile CTA blocks: a Lucide `arrow-right`
+icon, 22×22px. The arrow fill matches the label fill on primary/ghost; on secondary it matches
+the label.
+
+**Label tracking:** `+1` to `+1.5` letterSpacing (all-caps Archivo Black). Maps to
+`tracking-widened` / `tracking-widest` in the custom token scale.
+
+**Width:** Stretches full container width on all hero/ticket/footer instances (`width:
+fill_container` with `justifyContent: space_between`). Nav button (`i9Ino`) is intrinsic width.
+
+**Notes:** No border-radius anywhere in the design — all buttons are sharp-cornered. The nav GET
+PASS button also has a 1px red stroke (`stroke: { fill: #FF4A1C, thickness: 1 }`).
+
+---
+
+### Badge
+
+**Occurrences:** 9+ (7 schedule rows × 1 badge each on desktop; additional mini-badges on mobile
+schedule rows; world-tour label is a distinct decorated block, not this primitive)
+
+A small flat tag: text label only (no icon), sharp corners, fixed padding, JetBrains Mono 10px
+bold, tracking +1.5.
+
+| Variant       | Fill                 | Text fill              | Label            | Source nodes (desktop) |
+|---------------|----------------------|------------------------|------------------|------------------------|
+| `yellow`      | `bg-waveclash-yellow`| `text-waveclash-black` | CULTURE, FREESURF| `iIHE3`, `o3Sbu`       |
+| `red`         | `bg-waveclash-red`   | `text-waveclash-black` | COMPETITION      | `o70xu`, `KbSRK`, `gvnXK` |
+| `navy`        | `bg-waveclash-navy`  | `text-waveclash-black` | PREMIER          | `gHqrV`                |
+| `black`       | `bg-waveclash-black` | `text-waveclash-cream` | FINAL            | `YV0Rp`                |
+
+Mobile schedule rows use a smaller variant (9px, padding `[3, 6]`, with a 2px black stroke added):
+`E4oqDr`. Same four color fills apply.
+
+**Padding (desktop):** `[6, 12]` — 6px top/bottom, 12px left/right.
+**Padding (mobile):** `[3, 6]` — half scale.
+**Border-radius:** 0 (none observed).
+**Font:** JetBrains Mono, 10px (desktop) / 9px (mobile), weight 700, `tracking-[0.15em]`
+(letterSpacing +1.5 at 10px).
+
+---
+
+### StatCounter
+
+**Occurrences:** 5 cells on desktop stats belt (`fi42O`); 4 cells on mobile stats grid (`ZLDRp`)
+
+A two-line stacked element: large number on top, short all-caps label below.
+
+**Number:** Archivo Black, `text-8xl` (64px desktop), `lineHeight: 0.9` (`leading-snug`),
+`letterSpacing: -2` (`tracking-tighter`), fill = `text-waveclash-cream`.
+**Label:** JetBrains Mono, `text-sm` (11px), weight 700, fill = `text-waveclash-red`
+(accent color — not cream). No explicit letterSpacing on the label node (inherits 0).
+**Container padding:** `[24, 18]` (desktop mobile cell).
+**Container fill:** `bg-waveclash-black`.
+**Separator:** adjacent cells divided by a 2px cream stroke (right or bottom depending on layout).
+
+Source nodes: `Nc0i9` (ATHLETES cell), `F0N5N` (COUNTRIES), `I5mm4` (DAYS), `jIiKX` (PRIZE).
+
+---
+
+### SectionHeadingRow
+
+**Occurrences:** 4 confirmed (desktop "EVENT / SCHEDULE", desktop "MEET THE SURFERS.", mobile
+"ATHLETES" section intro, mobile "FROM THE LINEUP." intro)
+
+A layout row pairing a **section number/label** (small mono, top-left) with a **massive display
+heading** (Archivo Black, display sizes), and optionally a **right-side metadata block** (small
+mono, bottom-aligned).
+
+This is the recurring `[small-label + display-heading] / [metadata-right]` two-column structure:
+
+| Instance               | Heading font-size | Label text         | Source node |
+|------------------------|-------------------|--------------------|-------------|
+| "EVENT / SCHEDULE"     | `text-9xl` (72px) | `// 003`           | `dmqgc`     |
+| "MEET THE SURFERS."    | `text-display-sm` (180px) | `#02 / ROSTER` | `anKrW`  |
+| Mobile "FROM THE LINEUP." | `text-display-sm` (180px) | `#03 / DISPATCH` | `HMmEr` |
+| Mobile "DON'T WATCH…" | `text-10xl` (80px) | `// TICKETS — DROPPING NOW` | `x6kkN` / `lxJMx` |
+
+**Label text style:** JetBrains Mono, 11–13px, weight 700, fill `text-waveclash-red`, tracking +2.
+**Display heading style:** Archivo Black, varies by section (72px–220px), `leading-tight` /
+`leading-dense`, heavy negative tracking (−2 to −8).
+**Right metadata (when present):** JetBrains Mono, 11px, weight 700, two lines, bottom-aligned.
+
+> This is a primitive layout wrapper (atom), not a full block — the heading and label are the
+> repeating atom; the content below (schedule table, athlete cards, etc.) is the block layer.
+
+---
+
+### ProfileLink
+
+**Occurrences:** 6+ (every athlete card in desktop surfers section; every mobile athlete card;
+footer nav column headers use a related but distinct style)
+
+A compact inline link: text label + arrow-right icon, side by side.
+
+**Text:** JetBrains Mono, `text-sm` (11px), weight 700, fill `text-waveclash-red`
+(`letterSpacing` inherits from parent — no explicit value on these nodes).
+**Icon:** Lucide `arrow-right`, 14×14px, fill `text-waveclash-red`.
+**Gap:** 6px between text and icon.
+**No background, no border, no padding** — purely inline.
+
+Source nodes: `Y1YAER` (mobile athlete card 1), `yo8d4` (mobile athlete card 2).
+Desktop equivalent is a text `→` glyph (Inter 700, 16px, red fill) positioned inline next to the
+athlete card's footer text.
+
+---
+
+### TickerBelt
+
+**Occurrences:** 2 (hero bottom stripe `YmRZq`; footer top stripe `SZ1De`)
+
+A full-width horizontal scrolling/marquee bar with uniform background and repeating text nodes.
+
+**Fill:** `bg-waveclash-yellow` (hero instance); `bg-waveclash-black` (footer instance).
+**Text:** Archivo Black, `text-4xl` (22–28px), weight 900, `tracking-[0.0625em]` (+1 letterSpacing),
+fill = `text-waveclash-black` on yellow belt; `text-waveclash-cream` on black belt.
+**Border:** 3px solid `border-waveclash-black` top and bottom on both instances.
+**Separator glyph:** `◆` (black diamond) between repeated text segments.
+**Height:** ~50–63px depending on instance.
+
+Source nodes: `YmRZq` (hero), `SZ1De` (footer top — contains the marquee content frame).
+
+---
+
 ## Concerns / Flags for Review
 
 1. **`#00355c` navy is a real brand color** — confirmed on three distinct nodes:
