@@ -24,7 +24,18 @@ export function DesignSystemBoard({
   initialZoom?: number
   initialPan?: { x: number; y: number }
 }) {
-  const tokens = useMemo(() => buildTokenRegistry(tailwindConfig), [])
+  // Pass a synthetic config with theme.colors set to ONLY our curated tokens
+  // (waveclash-* + demo-*). Using theme.colors (not theme.extend.colors) makes
+  // resolveConfig REPLACE the default palette instead of merging into it, so
+  // the Design System board shows only the WAVECLASH brand palette.
+  const curatedConfig = useMemo(
+    () => ({
+      ...tailwindConfig,
+      theme: { colors: tailwindConfig.theme?.extend?.colors ?? {} },
+    }),
+    [],
+  )
+  const tokens = useMemo(() => buildTokenRegistry(curatedConfig), [curatedConfig])
 
   const primitiveGroups = useMemo<PrimitiveGroup[]>(
     () => [
