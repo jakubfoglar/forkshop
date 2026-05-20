@@ -15,8 +15,8 @@
 
 :root {
   --forkshop-canvas: #f3f4f6;   /* gray-100 — the canvas backdrop */
-  --forkshop-surface: #ffffff;
-  --forkshop-surface-2: #f7f7f8;
+  --forkshop-surface: #fafafa;  /* gray-50 — sidebar / panel surface */
+  --forkshop-surface-2: #f3f4f6;
   --forkshop-fg: #0a0a0a;
   --forkshop-fg-muted: #6b7280;
   --forkshop-border: #e5e7eb;
