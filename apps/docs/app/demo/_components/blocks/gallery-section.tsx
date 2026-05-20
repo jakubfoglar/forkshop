@@ -48,7 +48,9 @@ export function GallerySection({
   return (
     <section
       className={cn(
-        "w-full flex flex-col gap-9",
+        // Hidden on mobile and tablet — mosaic requires lg (1024px+) to be readable
+        "hidden lg:flex flex-col gap-9",
+        "w-full",
         "bg-waveclash-black",
         "px-[60px] py-20",
       )}

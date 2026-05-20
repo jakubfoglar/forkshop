@@ -66,7 +66,8 @@ export function SurferGrid({
         "w-full flex flex-col gap-10",
         "bg-waveclash-sand",
         "border-t-[3px] border-b-[3px] border-waveclash-black",
-        "px-[60px] py-20",
+        // Mobile: tight padding; tablet: medium; desktop: full 60px
+        "px-5 py-10 md:px-8 md:py-12 lg:px-[60px] lg:py-20",
       )}
     >
       {/* Header strip (eZ744): section label + meta, then 2px rule */}
@@ -97,16 +98,18 @@ export function SurferGrid({
         <div className="border-t-2 border-waveclash-black" />
       </div>
 
-      {/* Heading block (anKrW): SectionHeadingRow (180px, xl) + subcopy below right-side.
+      {/* Heading block (anKrW): SectionHeadingRow with responsive heading size.
+          Mobile: 64px (text-wc-8xl), tablet md: 96px (text-wc-11xl), desktop lg: 180px (text-wc-display-sm).
           Eyebrow omitted — already rendered in the sectionMeta strip above. */}
       <SectionHeadingRow
         title={sectionHeading.replace("\n", " ")}
         size="xl"
+        headingClassName="text-wc-8xl md:text-wc-11xl lg:text-wc-display-sm tracking-[-.03333em] leading-dense"
       />
 
-      {/* Subcopy (xk7we, 380px) — rendered as sibling, aligned right */}
+      {/* Subcopy (xk7we, 380px) — desktop only; hidden on mobile/tablet */}
       {sectionSubcopy && (
-        <div className="flex justify-end">
+        <div className="hidden lg:flex justify-end">
           <p
             className={cn(
               "w-[380px] font-body text-wc-2xl text-waveclash-black leading-relaxed",
@@ -118,8 +121,8 @@ export function SurferGrid({
         </div>
       )}
 
-      {/* Card grid (ZqcnB): 4 cards, gap 20, padding-top 20 */}
-      <div className="flex gap-5 pt-5">
+      {/* Card grid (ZqcnB): 1-col mobile, 2-col tablet, 4-col desktop */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 pt-5">
         {surfers.map((surfer) => (
           <SurferCard key={surfer.number} surfer={surfer} />
         ))}

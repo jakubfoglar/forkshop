@@ -51,7 +51,8 @@ export function SponsorStrip({
         className={cn(
           "flex items-center justify-between",
           "bg-waveclash-sand",
-          "px-[60px] py-4",
+          // Mobile: tight padding; desktop: full 60px
+          "px-5 py-4 md:px-8 lg:px-[60px]",
         )}
       >
         {/* Left: ◆ + OFFICIAL PARTNERS — JetBrains Mono 11px 700, black, tracking +2 */}
@@ -65,10 +66,10 @@ export function SponsorStrip({
           {partnershipLabel}
         </span>
 
-        {/* Right: full label — JetBrains Mono 11px 700, black, tracking +1.5 */}
+        {/* Right: full label — hidden on mobile (mobile header is simpler), visible lg+ */}
         <span
           className={cn(
-            "font-demo-mono font-bold text-waveclash-black uppercase",
+            "hidden lg:inline font-demo-mono font-bold text-waveclash-black uppercase",
             "tracking-label-wider",
           )}
           style={{ fontSize: "11px" }}
@@ -80,23 +81,28 @@ export function SponsorStrip({
       {/* 2px black rule divider (sqvVG) */}
       <div className="border-t-2 border-waveclash-black" />
 
-      {/* Logo row (G7ADC): bg-waveclash-black, 7 equal cells */}
-      <div className="flex bg-waveclash-black">
+      {/* Logo row (G7ADC): 3-col grid on mobile/tablet, 7-col flex on desktop.
+          7th sponsor is hidden on mobile/tablet (mobile pencil shows 6 sponsors in 3×2). */}
+      <div className="grid grid-cols-3 lg:flex bg-waveclash-black">
         {sponsors.map((name, i) => {
           const isLast = i === sponsors.length - 1
+          const isSeventhSponsor = i === 6
           return (
             <div
               key={name}
               className={cn(
+                // 7th sponsor hidden on mobile/tablet (3×2 grid shows only 6)
+                isSeventhSponsor && "hidden lg:flex",
                 "flex-1 flex items-center justify-center",
-                "py-7 px-4",
+                // Mobile: tighter padding + smaller text; desktop: full sizing
+                "py-[18px] px-2 lg:py-7 lg:px-4",
                 !isLast && "border-r border-waveclash-cream",
               )}
             >
-              {/* Sponsor name: Archivo Black 20px (text-wc-3-5xl), tracking +1, cream */}
+              {/* Sponsor name: 14px mobile, 20px desktop */}
               <span
                 className={cn(
-                  "font-display text-wc-3-5xl text-waveclash-cream uppercase",
+                  "font-display text-wc-md lg:text-wc-3-5xl text-waveclash-cream uppercase",
                   "tracking-label-wide",
                 )}
               >

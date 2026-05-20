@@ -79,40 +79,47 @@ export function SiteFooter({
   return (
     <footer className="w-full bg-waveclash-black flex flex-col">
 
-      {/* 1. TickerBelt (SZ1De): yellow fill, ★ separator, 22px text, padding [18, 60] */}
-      <TickerBelt
-        fill="yellow"
-        separator="★"
-        size="md"
-        items={[
-          "WAVECLASH/26 — PIPELINE, HAWAI'I — MAR 14/23",
-          "ENTER THE WATER",
-          "WAVECLASH/26 — PIPELINE, HAWAI'I — MAR 14/23",
-          "ENTER THE WATER",
-        ]}
-        className="px-[60px]"
-      />
+      {/* 1. TickerBelt (SZ1De): absent on mobile, present from md+ */}
+      <div className="hidden md:block">
+        <TickerBelt
+          fill="yellow"
+          separator="★"
+          size="md"
+          items={[
+            "WAVECLASH/26 — PIPELINE, HAWAI'I — MAR 14/23",
+            "ENTER THE WATER",
+            "WAVECLASH/26 — PIPELINE, HAWAI'I — MAR 14/23",
+            "ENTER THE WATER",
+          ]}
+          className="px-[60px]"
+        />
+      </div>
 
       {/* 2. Main footer body (JjLvR) */}
       <div
         className={cn(
-          "flex flex-col gap-[60px]",
-          "px-[60px] pt-20 pb-10",
+          "flex flex-col gap-10 lg:gap-[60px]",
+          // Mobile: tight padding; tablet: medium; desktop: full
+          "px-5 pt-10 pb-8 md:px-8 md:pt-12 lg:px-[60px] lg:pt-20 lg:pb-10",
         )}
       >
-        {/* Upper block (AbA2k): left = heading + info table; right = newsletter panel */}
-        <div className="flex justify-between gap-12">
+        {/* Upper block (AbA2k): stacked on mobile/tablet, side-by-side on desktop */}
+        <div className="flex flex-col lg:flex-row lg:justify-between gap-10 lg:gap-12">
 
           {/* Left: "SEE YOU IN THE WATER." + info table */}
           <div className="flex flex-col gap-8 flex-1">
-            {/* Display heading: 180px Archivo Black, cream, tracking −6, leading 0.85 */}
+            {/* Display heading: 64px mobile → 96px tablet → 180px desktop */}
             <div>
               {footerHeading.split("\n").map((line, i) => (
                 <div
                   key={i}
-                  className="font-display text-wc-display-sm text-waveclash-cream uppercase"
+                  className={cn(
+                    "font-display text-wc-8xl md:text-wc-11xl lg:text-wc-display-sm text-waveclash-cream uppercase",
+                    // last line ("WATER.") is red
+                    i === 2 && "text-waveclash-red",
+                  )}
                   style={{
-                    letterSpacing: "-0.03333em", // −6px at 180px
+                    letterSpacing: "-0.03333em",
                     lineHeight:    0.85,
                   }}
                 >
@@ -155,8 +162,8 @@ export function SiteFooter({
             </div>
           </div>
 
-          {/* Right: newsletter panel (v34XF, 420px) */}
-          <div className="w-[420px] shrink-0 flex flex-col gap-5">
+          {/* Right: newsletter panel — full-width mobile/tablet, 420px desktop */}
+          <div className="w-full lg:w-[420px] lg:shrink-0 flex flex-col gap-5">
             {/* "[ DISPATCH / WEEKLY ]" — yellow JetBrains Mono 11px 700 */}
             <span
               className={cn(
@@ -176,7 +183,7 @@ export function SiteFooter({
               Weekly dispatch from the water&apos;s edge. Conditions, competition news, athlete notes, and zero filler.
             </p>
 
-            {/* Email input placeholder (Phase 1e will wire this up) */}
+            {/* Email input placeholder */}
             <div
               className={cn(
                 "border border-waveclash-cream",
@@ -215,44 +222,49 @@ export function SiteFooter({
         {/* 1px cream rule (iSZeI) */}
         <div className="border-t border-waveclash-cream" />
 
-        {/* Lower nav block (bEIdb): 5-column link nav */}
-        <div className="flex justify-between gap-8">
+        {/* Lower nav block (bEIdb):
+            Mobile: 2-col grid, top-level headings only (no child links)
+            Tablet: 3-col grid, top-level headings only
+            Desktop: 5-col flex with child links */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:flex lg:justify-between gap-6 lg:gap-8">
           {DEFAULT_NAV_COLUMNS.map((col) => (
             <div key={col.heading} className="flex flex-col gap-3">
-              {/* Column heading: red Archivo Black 13px */}
+              {/* Column heading: Archivo Black 18px mobile → 13px desktop (red) */}
               <span
                 className={cn(
-                  "font-display text-wc-md text-waveclash-red uppercase",
+                  "font-display text-wc-3xl lg:text-wc-md text-waveclash-red uppercase",
                   "tracking-label-normal",
                 )}
               >
                 {col.heading}
               </span>
 
-              {/* Links: Inter 14px 500, cream */}
-              {col.links.map((link) => (
-                <a
-                  key={link}
-                  href="#"
-                  className={cn(
-                    "font-body text-wc-lg text-waveclash-cream no-underline",
-                  )}
-                  style={{ fontWeight: 500 }}
-                >
-                  {link}
-                </a>
-              ))}
+              {/* Child links — hidden on mobile/tablet, visible on desktop */}
+              <div className="hidden lg:flex flex-col gap-3">
+                {col.links.map((link) => (
+                  <a
+                    key={link}
+                    href="#"
+                    className={cn(
+                      "font-body text-wc-lg text-waveclash-cream no-underline",
+                    )}
+                    style={{ fontWeight: 500 }}
+                  >
+                    {link}
+                  </a>
+                ))}
+              </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* 3. Legal bar (L8Rv2t): 1px cream top-border, padding [24, 60], justify-between */}
+      {/* 3. Legal bar (L8Rv2t): 1px cream top-border, responsive padding */}
       <div
         className={cn(
-          "flex items-center justify-between",
+          "flex flex-col md:flex-row items-start md:items-center justify-between gap-4",
           "border-t border-waveclash-cream",
-          "px-[60px] py-6",
+          "px-5 py-5 md:px-8 md:py-6 lg:px-[60px]",
         )}
       >
         {/* Left: logo wordmark + copyright */}
@@ -277,7 +289,7 @@ export function SiteFooter({
         </div>
 
         {/* Right: legal links + social links — JetBrains Mono 12px 500, tracking +1 */}
-        <div className="flex items-center gap-6">
+        <div className="flex flex-wrap items-center gap-4 md:gap-6">
           {navLinks.map(({ label, href }) => (
             <a
               key={label}
@@ -292,7 +304,7 @@ export function SiteFooter({
             </a>
           ))}
 
-          <div className="w-px h-4 bg-waveclash-cream/30" />
+          <div className="w-px h-4 bg-waveclash-cream/30 hidden md:block" />
 
           {socialLinks.map(({ label, href }) => (
             <a

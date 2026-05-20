@@ -36,8 +36,8 @@ export function SurferCard({ surfer }: SurferCardProps) {
         "bg-waveclash-cream border-2 border-waveclash-black",
       )}
     >
-      {/* Portrait area — 360px tall, position relative for badges */}
-      <div className="relative h-[360px] bg-waveclash-black w-full overflow-hidden">
+      {/* Portrait area — 360px on mobile/desktop; 320px at tablet md */}
+      <div className="relative h-[360px] md:h-80 lg:h-[360px] bg-waveclash-black w-full overflow-hidden">
         {surfer.imageSrc && (
           <Image
             src={surfer.imageSrc}
@@ -81,10 +81,10 @@ export function SurferCard({ surfer }: SurferCardProps) {
 
       {/* Footer (XFxb6): padding [20, 18, 22, 18], gap 8 */}
       <div className="flex flex-col gap-2 px-[18px] pt-5 pb-[22px]">
-        {/* Athlete name: Archivo Black 32px, tracking −1, may be two lines */}
+        {/* Athlete name: 38px mobile (card is full-width), 32px tablet/desktop (narrower columns) */}
         <div
           className={cn(
-            "font-display text-wc-7xl text-waveclash-black uppercase",
+            "font-display text-wc-8xl md:text-wc-7xl text-waveclash-black uppercase",
             "tracking-label-tight leading-tight",
           )}
         >
