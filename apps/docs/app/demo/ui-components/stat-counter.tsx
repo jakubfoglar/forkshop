@@ -19,7 +19,7 @@ export function StatCounterBoard() {
     () =>
       INSTANCES.map(({ id, label, value, statLabel, highlight }): GalleryEntry => {
         const node: InlineReactNode = {
-          id: `stat-counter:${id}`,
+          id,
           kind: "inline-react",
           x: 0,
           y: 0,
@@ -38,7 +38,7 @@ export function StatCounterBoard() {
   )
 
   return (
-    <PlaygroundBoard stageWidth={1000} stageHeight={400} fitMode="both">
+    <PlaygroundBoard stageWidth={1000} stageHeight={400} fitMode="both" boardId="stat-counter">
       {({ nodePositions: pos, onPositionChange: onPosChange }) => (
         <Gallery
           entries={entries}

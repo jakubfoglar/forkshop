@@ -57,7 +57,7 @@ export function SectionHeadingRowBoard() {
     () =>
       INSTANCES.map(({ id, label, title, eyebrow, size, tone, bg, width, height }): GalleryEntry => {
         const node: InlineReactNode = {
-          id: `section-heading-row:${id}`,
+          id,
           kind: "inline-react",
           x: 0,
           y: 0,
@@ -82,7 +82,7 @@ export function SectionHeadingRowBoard() {
   )
 
   return (
-    <PlaygroundBoard stageWidth={1200} stageHeight={700} fitMode="both">
+    <PlaygroundBoard stageWidth={1200} stageHeight={700} fitMode="both" boardId="section-heading-row">
       {({ nodePositions: pos, onPositionChange: onPosChange }) => (
         <Gallery
           entries={entries}

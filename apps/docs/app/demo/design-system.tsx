@@ -43,7 +43,7 @@ export function DesignSystemBoard({
         id: "ui",
         label: "UI Primitives",
         primitives: discoverPrimitives(forkshopConfig.ui).map<InlineReactNode>((p) => ({
-          id: `design-system:primitive:${p.slug}`,
+          id: `primitive:${p.slug}`,
           kind: "inline-react",
           x: 0,
           y: 0,
@@ -59,7 +59,7 @@ export function DesignSystemBoard({
 
   const typographyNode = useMemo<InlineReactNode>(
     () => ({
-      id: "design-system:typography",
+      id: "typography",
       kind: "inline-react",
       x: 0,
       y: 0,
@@ -98,7 +98,7 @@ export function DesignSystemBoard({
   )
 
   return (
-    <PlaygroundBoard stageWidth={stageSize.width} stageHeight={stageSize.height} fitMode="both" initialZoom={initialZoom} initialPan={initialPan}>
+    <PlaygroundBoard stageWidth={stageSize.width} stageHeight={stageSize.height} fitMode="both" boardId="design-system" initialZoom={initialZoom} initialPan={initialPan}>
       {({ nodePositions: pos, onPositionChange: onPosChange }) => (
         <DesignSystemView
           tokens={tokens}

@@ -27,7 +27,7 @@ export default function BlocksBoardView({
     () =>
       blocks.map((b) => {
         const node: IframeComponentNode = {
-          id: `blocks:block:${b.slug}`,
+          id: `block:${b.slug}`,
           kind: "iframe-component",
           x: 0,
           y: 0,
@@ -44,7 +44,7 @@ export default function BlocksBoardView({
     [blocks, viewport],
   )
   return (
-    <PlaygroundBoard stageWidth={1800} stageHeight={6000} fitMode="width" initialZoom={initialZoom} initialPan={initialPan}>
+    <PlaygroundBoard stageWidth={1800} stageHeight={6000} fitMode="width" boardId="blocks" initialZoom={initialZoom} initialPan={initialPan}>
       {({ nodePositions: pos, onPositionChange: onPosChange }) => (
         <Gallery
           entries={entries}

@@ -21,7 +21,7 @@ export function BadgeBoard() {
     () =>
       INSTANCES.map(({ id, label, fill, content, size }): GalleryEntry => {
         const node: InlineReactNode = {
-          id: `badge:${id}`,
+          id,
           kind: "inline-react",
           x: 0,
           y: 0,
@@ -40,7 +40,7 @@ export function BadgeBoard() {
   )
 
   return (
-    <PlaygroundBoard stageWidth={1000} stageHeight={400} fitMode="both">
+    <PlaygroundBoard stageWidth={1000} stageHeight={400} fitMode="both" boardId="badge">
       {({ nodePositions: pos, onPositionChange: onPosChange }) => (
         <Gallery
           entries={entries}

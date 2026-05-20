@@ -36,7 +36,7 @@ export function SitemapBoard({
     () =>
       DEMO_ROUTES.map((r): TreeEntry => {
         const node: IframeRouteNode = {
-          id: `sitemap:page:${r.path}`,
+          id: `page:${r.path}`,
           kind: "iframe-route",
           x: 0,
           y: 0,
@@ -57,6 +57,7 @@ export function SitemapBoard({
       stageWidth={treeW + SITEMAP_STAGE_PADDING}
       stageHeight={treeH + SITEMAP_STAGE_PADDING}
       fitMode="both"
+      boardId="sitemap"
       initialZoom={initialZoom}
       initialPan={initialPan}
     >

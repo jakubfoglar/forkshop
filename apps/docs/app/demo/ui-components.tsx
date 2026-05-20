@@ -16,7 +16,7 @@ export function UIComponentsBoard() {
     () =>
       primitives.map((p) => {
         const node: InlineReactNode = {
-          id: `components:primitive:${p.slug}`,
+          id: `primitive:${p.slug}`,
           kind: "inline-react",
           x: 0,
           y: 0,
@@ -31,7 +31,7 @@ export function UIComponentsBoard() {
   )
 
   return (
-    <PlaygroundBoard stageWidth={1200} stageHeight={700} fitMode="both">
+    <PlaygroundBoard stageWidth={1200} stageHeight={700} fitMode="both" boardId="components">
       {({ nodePositions: pos, onPositionChange: onPosChange }) => (
         <Gallery
           entries={entries}

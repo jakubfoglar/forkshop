@@ -25,7 +25,7 @@ export function TickerBeltBoard() {
     () =>
       INSTANCES.map(({ id, label, fill, size, separator }): GalleryEntry => {
         const node: InlineReactNode = {
-          id: `ticker-belt:${id}`,
+          id,
           kind: "inline-react",
           x: 0,
           y: 0,
@@ -44,7 +44,7 @@ export function TickerBeltBoard() {
   )
 
   return (
-    <PlaygroundBoard stageWidth={1200} stageHeight={500} fitMode="both">
+    <PlaygroundBoard stageWidth={1200} stageHeight={500} fitMode="both" boardId="ticker-belt">
       {({ nodePositions: pos, onPositionChange: onPosChange }) => (
         <Gallery
           entries={entries}

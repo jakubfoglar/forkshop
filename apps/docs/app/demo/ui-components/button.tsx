@@ -26,7 +26,7 @@ export function ButtonBoard() {
     for (const { variant, width, row, column } of VARIANTS) {
       const id = `button-${variant}-${width}`
       const node: InlineReactNode = {
-        id: `button:${id}`,
+        id,
         kind: "inline-react",
         x: 0,
         y: 0,
@@ -47,7 +47,7 @@ export function ButtonBoard() {
   }, [])
 
   return (
-    <PlaygroundBoard stageWidth={1200} stageHeight={400} fitMode="both">
+    <PlaygroundBoard stageWidth={1200} stageHeight={400} fitMode="both" boardId="button">
       {({ nodePositions: pos, onPositionChange: onPosChange }) => (
         <Gallery
           entries={entries}

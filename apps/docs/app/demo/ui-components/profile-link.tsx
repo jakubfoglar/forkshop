@@ -23,7 +23,7 @@ export function ProfileLinkBoard() {
     () =>
       INSTANCES.map(({ id, label, children, bg }): GalleryEntry => {
         const node: InlineReactNode = {
-          id: `profile-link:${id}`,
+          id,
           kind: "inline-react",
           x: 0,
           y: 0,
@@ -42,7 +42,7 @@ export function ProfileLinkBoard() {
   )
 
   return (
-    <PlaygroundBoard stageWidth={800} stageHeight={400} fitMode="both">
+    <PlaygroundBoard stageWidth={800} stageHeight={400} fitMode="both" boardId="profile-link">
       {({ nodePositions: pos, onPositionChange: onPosChange }) => (
         <Gallery
           entries={entries}
