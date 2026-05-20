@@ -1,2 +1,32 @@
-/* Tailwind directives + demo CSS vars get added in Phase 1a */
-.demo-scope { font-family: system-ui, sans-serif; }
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.demo-scope {
+  /* ── Brand primitives ─────────────────────────────────────────────────── */
+  --waveclash-black:   #0a0a0a;
+  --waveclash-graphite:#1a1a1a;
+  --waveclash-cream:   #faf7ef;
+  --waveclash-red:     #ff4a1c;
+  --waveclash-yellow:  #ffd60a;
+  --waveclash-sand:    #f2ede3;
+  --waveclash-navy:    #00355c;
+
+  /* ── Semantic aliases ─────────────────────────────────────────────────── */
+  --demo-background:       var(--waveclash-black);
+  --demo-foreground:       var(--waveclash-cream);
+  --demo-surface:          var(--waveclash-sand);
+  --demo-surface-card:     var(--waveclash-cream);
+  --demo-surface-invert:   var(--waveclash-black);
+  --demo-accent:           var(--waveclash-red);
+  --demo-accent-secondary: var(--waveclash-yellow);
+  --demo-accent-deep:      var(--waveclash-navy);
+  --demo-border:           var(--waveclash-black);
+  --demo-border-invert:    var(--waveclash-cream);
+  --demo-muted-foreground: var(--waveclash-cream);
+
+  /* ── Default body styling for the scope ──────────────────────────────── */
+  background: var(--demo-background);
+  color: var(--demo-foreground);
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
