@@ -5,7 +5,7 @@ export type TickerBeltFill = "yellow" | "black"
 export interface TickerBeltProps {
   fill?: TickerBeltFill
   items: string[]
-  separator?: string
+  separator: string  // required — both design instances choose explicitly
   className?: string
 }
 
@@ -23,7 +23,7 @@ export interface TickerBeltProps {
 export function TickerBelt({
   fill = "yellow",
   items,
-  separator = "◆",
+  separator,
   className,
 }: TickerBeltProps) {
   return (

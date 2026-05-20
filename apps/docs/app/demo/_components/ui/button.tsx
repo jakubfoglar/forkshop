@@ -39,13 +39,14 @@ export function Button({
         "inline-flex items-center font-display uppercase font-black",
         // Width behaviour
         isWide ? "justify-between w-full" : "gap-2",
-        // Padding: wide uses [16,20], compact uses [12,20] (primary) or [14,22] (ghost)
-        isWide && "px-5 py-4",
+        // Padding: wide primary/secondary use [16,20]; ghost wide uses [14,18] (pencil rE6Uq)
+        isWide && variant !== "ghost" && "px-5 py-4",
+        isWide && variant === "ghost" && "px-[18px] py-[14px]",
         !isWide && variant !== "ghost" && "px-5 py-3",
         !isWide && variant === "ghost" && "px-[22px] py-[14px]",
         // Variant fills
         variant === "primary"   && "bg-waveclash-red text-waveclash-black",
-        variant === "secondary" && "bg-waveclash-cream text-waveclash-black",
+        variant === "secondary" && "bg-waveclash-cream text-waveclash-black border-2 border-waveclash-cream",
         variant === "ghost"     && "bg-waveclash-black text-waveclash-cream",
         className,
       )}
@@ -61,7 +62,7 @@ export function Button({
             ? "text-waveclash-red"
             : variant === "ghost"
             ? "text-waveclash-cream"
-            : "inherit",
+            : undefined,
         )}
       >
         →
