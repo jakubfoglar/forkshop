@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import type { BoardComponent } from "@forkshop/types/board"
 import type { ForkshopSelection } from "@forkshop/types/selection"
 import type { ParsedForkshopConfig } from "@forkshop/lib/schemas"
@@ -11,6 +11,7 @@ import { ForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
 import { useForkshopPositions } from "@forkshop/hooks/use-forkshop-positions"
 import { AgentActivityProvider } from "@forkshop/components/agent-activity-context"
 import { ForkshopSidebar } from "@forkshop/components/sidebar/forkshop-sidebar"
+import { parseSelection, serializeSelection } from "@forkshop/components/sidebar/selection-hash"
 import { forkshopIcons } from "@forkshop/lib/icons"
 
 export type BoardRegistryProps = {
@@ -19,14 +20,29 @@ export type BoardRegistryProps = {
   initialSelection?: ForkshopSelection
 }
 
+function useHashSyncedInitial(
+  initialSelection: ForkshopSelection | undefined,
+  fallback: ForkshopSelection,
+): ForkshopSelection {
+  // SSR-safe: on the server `window` is undefined, so we return the deterministic
+  // value used to render the first paint. On the client, the hash takes priority
+  // — accepts a minor hydration mismatch if the server-rendered selection
+  // differs from the URL hash (BoardRegistry is a "use client" component, so
+  // the mismatch resolves on the first client render).
+  if (typeof window === "undefined") return initialSelection ?? fallback
+  const fromHash = parseSelection(window.location.hash)
+  return fromHash ?? initialSelection ?? fallback
+}
+
 export function BoardRegistry({ config, boards, initialSelection }: BoardRegistryProps) {
-  const defaultSelection: ForkshopSelection = initialSelection ?? {
+  const fallback: ForkshopSelection = {
     kind: "section",
     sectionId: boards[0]?.__config.id ?? "default",
   }
+  const hydratedInitial = useHashSyncedInitial(initialSelection, fallback)
   return (
     <AgentActivityProvider fileMap={{ primitives: [], blocks: [] }}>
-      <SelectionProvider initial={defaultSelection}>
+      <SelectionProvider initial={hydratedInitial}>
         <BoardRegistryInner config={config} boards={boards} />
       </SelectionProvider>
     </AgentActivityProvider>
@@ -41,6 +57,10 @@ function BoardRegistryInner({
   boards: ReadonlyArray<BoardComponent>
 }) {
   const selection = useSelection()
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    window.history.replaceState({}, "", serializeSelection(selection))
+  }, [selection])
   // ParsedForkshopConfig.layouts is z.array(z.unknown()).optional() because the
   // schema can't introspect the Layout<TOptions> generic — cast at this
   // registry boundary (mirrors the cast in BUILTIN_LAYOUTS for the same reason).
