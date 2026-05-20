@@ -23,3 +23,7 @@ export type { GallerySectionProps } from "./gallery-section.js"
 
 export { SponsorStrip } from "./sponsor-strip.js"
 export type { SponsorStripProps } from "./sponsor-strip.js"
+
+export { CtaBuyPass } from "./cta-buy-pass.js"
+export type { CtaBuyPassProps } from "./cta-buy-pass.js"
+export type { TicketCardData } from "./ticket-card.js"
