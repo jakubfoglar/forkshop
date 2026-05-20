@@ -52,7 +52,7 @@ const sizeLadder = [
 const badges = [
   { label: "CULTURE",     bgClass: "bg-waveclash-yellow", textClass: "text-waveclash-black", note: "Also used for FREESURF — same yellow fill, different label" },
   { label: "COMPETITION", bgClass: "bg-waveclash-red",    textClass: "text-waveclash-black", note: "" },
-  { label: "PREMIER",     bgClass: "bg-waveclash-navy",   textClass: "text-waveclash-cream", note: "Also: athlete WORLD #1 rank badge" },
+  { label: "PREMIER",     bgClass: "bg-waveclash-navy",   textClass: "text-waveclash-black", note: "Also: athlete WORLD #1 rank badge" },
   { label: "FINAL",       bgClass: "bg-waveclash-black",  textClass: "text-waveclash-cream", note: "Border: 2px waveclash-cream (inline only — not a token border-radius)" },
 ] as const
 
