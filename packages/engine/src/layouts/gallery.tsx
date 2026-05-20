@@ -7,6 +7,7 @@ import { GuideOverlay } from "@forkshop/components/canvas/guide-overlay"
 import type { GetSnapTargets } from "@forkshop/hooks/use-draggable-node"
 import type { NodePositions } from "@forkshop/lib/node-positions"
 import type { SnapGuide, SnapTarget } from "@forkshop/lib/system-snap"
+import type { LayoutEntry } from "@forkshop/types/layout"
 import type { AnyNode } from "@forkshop/types/node"
 import { forkshopIcons } from "@forkshop/lib/icons"
 
@@ -24,9 +25,98 @@ export type GalleryEntry = {
   column?: number
 }
 
+export type GalleryOptions = {
+  columns?: number
+  rowGap?: number
+  columnGap?: number
+  rulers?: boolean
+  rulerUnit?: "px" | "rem"
+}
+
+/**
+ * Pure helper that computes (x, y) placements for each entry given the
+ * Layout protocol's LayoutEntry shape. Used by Gallery's stageSize contract
+ * and downstream Layout protocol consumers. Three modes, detected from input:
+ *
+ * 1. Grid (explicit) — if any entry sets `row` or `column`, place all entries
+ *    on a grid using per-column max-widths and per-row max-heights from
+ *    `node.width` / `node.height`.
+ * 2. Freeform — no explicit row/column, but at least one node has nonzero
+ *    `node.x` or `node.y`. Use the node's own coords directly.
+ * 3. Auto-flow — neither of the above. Walk entries in array order; assign
+ *    `column = i % columns`, `row = floor(i / columns)`; place using per-
+ *    column widths and per-row heights derived from the entries.
+ */
+export function computeGalleryPlacements(
+  entries: LayoutEntry[],
+  options: GalleryOptions,
+): Record<string, { x: number; y: number }> {
+  const columns = Math.max(1, options.columns ?? 1)
+  const rowGap = options.rowGap ?? 24
+  const columnGap = options.columnGap ?? 24
+
+  const hasExplicit = entries.some((e) => e.row !== undefined || e.column !== undefined)
+  const hasFreeform =
+    !hasExplicit && entries.some((e) => e.node.x !== 0 || e.node.y !== 0)
+
+  if (hasFreeform) {
+    const out: Record<string, { x: number; y: number }> = {}
+    for (const e of entries) {
+      out[e.id] = { x: e.node.x, y: e.node.y }
+    }
+    return out
+  }
+
+  // Resolve (row, column) per entry — either explicit or auto-flow.
+  const resolved: { entry: LayoutEntry; r: number; c: number }[] = entries.map(
+    (entry, i) => {
+      if (hasExplicit) {
+        return { entry, r: entry.row ?? 0, c: entry.column ?? 0 }
+      }
+      return { entry, r: Math.floor(i / columns), c: i % columns }
+    },
+  )
+
+  // Per-column max width, per-row max height.
+  const colWidths = new Map<number, number>()
+  const rowHeights = new Map<number, number>()
+  for (const { entry, r, c } of resolved) {
+    colWidths.set(c, Math.max(colWidths.get(c) ?? 0, entry.node.width))
+    rowHeights.set(r, Math.max(rowHeights.get(r) ?? 0, entry.node.height))
+  }
+
+  // Cumulative offsets along each axis (sorted ascending).
+  const sortedCols = [...colWidths.keys()].sort((a, b) => a - b)
+  const sortedRows = [...rowHeights.keys()].sort((a, b) => a - b)
+  const colX = new Map<number, number>()
+  const rowY = new Map<number, number>()
+  let xCursor = 0
+  for (const c of sortedCols) {
+    colX.set(c, xCursor)
+    xCursor += (colWidths.get(c) ?? 0) + columnGap
+  }
+  let yCursor = 0
+  for (const r of sortedRows) {
+    rowY.set(r, yCursor)
+    yCursor += (rowHeights.get(r) ?? 0) + rowGap
+  }
+
+  const out: Record<string, { x: number; y: number }> = {}
+  for (const { entry, r, c } of resolved) {
+    out[entry.id] = { x: colX.get(c) ?? 0, y: rowY.get(r) ?? 0 }
+  }
+  return out
+}
+
 export type GalleryProps = {
   entries: GalleryEntry[]
   layout: "stack" | "grid"
+  /**
+   * Number of columns in grid mode. When entries omit `row`/`column`,
+   * Gallery auto-flows by index using this value. Defaults to 2.
+   * Ignored when any entry sets `row` or `column` explicitly.
+   */
+  columns?: number
   viewportWidth?: number
   rowGap?: number
   columnGap?: number
@@ -82,10 +172,28 @@ function buildGridLayout(
   rowGap: number,
   columnGap: number,
   fitContent: boolean,
+  columnsProp: number | undefined,
 ): { cells: LayoutCell[]; stageWidth: number; stageHeight: number } {
+  const hasExplicit = entries.some(
+    (e) => e.row !== undefined || e.column !== undefined,
+  )
+  const autoColumns = Math.max(1, columnsProp ?? 2)
+
+  // Resolve (row, column) per entry — explicit fields take precedence;
+  // otherwise auto-flow by index across `autoColumns` columns.
+  const resolved = entries.map((entry, i) => {
+    if (hasExplicit) {
+      return { entry, row: entry.row ?? 0, column: entry.column ?? 0 }
+    }
+    return {
+      entry,
+      row: Math.floor(i / autoColumns),
+      column: i % autoColumns,
+    }
+  })
+
   const rowMaxHeights = new Map<number, number>()
-  for (const entry of entries) {
-    const row = entry.row ?? 0
+  for (const { entry, row } of resolved) {
     const height = measuredHeights[entry.node.id] ?? DEFAULT_INITIAL_HEIGHT
     rowMaxHeights.set(row, Math.max(rowMaxHeights.get(row) ?? 0, height))
   }
@@ -98,9 +206,7 @@ function buildGridLayout(
   }
   let maxColumn = 0
   const cells: LayoutCell[] = []
-  for (const entry of entries) {
-    const row = entry.row ?? 0
-    const column = entry.column ?? 0
+  for (const { entry, row, column } of resolved) {
     maxColumn = Math.max(maxColumn, column)
     const height = measuredHeights[entry.node.id] ?? DEFAULT_INITIAL_HEIGHT
     const width = fitContent
@@ -131,6 +237,7 @@ export const Gallery: typeof _Gallery & {
 function GalleryInner({
   entries,
   layout,
+  columns,
   viewportWidth: vpwProp,
   rowGap: rgProp,
   columnGap: cgProp,
@@ -163,8 +270,8 @@ function GalleryInner({
   const { cells, stageWidth, stageHeight } = useMemo(() => {
     return layout === "stack"
       ? buildStackLayout(entries, measuredHeights, measuredWidths, viewportWidth, rowGap, fitContent)
-      : buildGridLayout(entries, measuredHeights, measuredWidths, viewportWidth, rowGap, columnGap, fitContent)
-  }, [entries, layout, measuredHeights, measuredWidths, viewportWidth, rowGap, columnGap, fitContent])
+      : buildGridLayout(entries, measuredHeights, measuredWidths, viewportWidth, rowGap, columnGap, fitContent, columns)
+  }, [entries, layout, measuredHeights, measuredWidths, viewportWidth, rowGap, columnGap, fitContent, columns])
 
   const [activeGuides, setActiveGuides] = useState<readonly SnapGuide[]>([])
   const handleGuidesChange = useCallback((guides: SnapGuide[]) => {
