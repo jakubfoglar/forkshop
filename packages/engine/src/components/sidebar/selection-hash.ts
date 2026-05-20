@@ -1,4 +1,4 @@
-import type { ForkshopSelection } from "@forkshop/components/sidebar/forkshop-sidebar"
+import type { ForkshopSelection } from "@forkshop/types/selection"
 
 // Pure helpers for round-tripping a ForkshopSelection through a URL hash.
 // The hash mirrors what's on screen so /forkshop can be bookmarked/shared:
@@ -24,6 +24,10 @@ export function serializeSelection(selection: ForkshopSelection): string {
     }
     case "primitive": {
       return `#/primitive/${encodeURIComponent(selection.id)}`
+    }
+    case "custom": {
+      // Custom selections are not serializable into a URL hash; fall back to root.
+      return "#"
     }
   }
 }

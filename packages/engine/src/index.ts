@@ -1,8 +1,8 @@
 // Engine shell
 export { ForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
 export { ForkshopSidebar } from "@forkshop/components/sidebar/forkshop-sidebar"
+export type { ForkshopSelection } from "@forkshop/types/selection"
 export type {
-  ForkshopSelection,
   SidebarSection,
   SidebarEntry,
 } from "@forkshop/components/sidebar/forkshop-sidebar"
