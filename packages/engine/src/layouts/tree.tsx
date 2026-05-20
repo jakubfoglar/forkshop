@@ -7,6 +7,7 @@ import { GuideOverlay } from "@forkshop/components/canvas/guide-overlay"
 import type { GetSnapTargets } from "@forkshop/hooks/use-draggable-node"
 import type { NodePositions } from "@forkshop/lib/node-positions"
 import type { SnapGuide, SnapTarget } from "@forkshop/lib/system-snap"
+import type { Layout } from "@forkshop/types/layout"
 import type { AnyNode } from "@forkshop/types/node"
 import { forkshopIcons } from "@forkshop/lib/icons"
 
@@ -325,4 +326,32 @@ function SitemapView({
       <GuideOverlay width={stageWidth} height={stageHeight} guides={activeGuides} />
     </>
   )
+}
+
+export type TreeOptions = {
+  connectors?: "stepped" | "curved" | "straight"
+  rowHeight?: number
+}
+
+export const treeLayoutProtocol: Layout<TreeOptions> = {
+  id: "tree",
+  icon: forkshopIcons.pages,
+  defaultOptions: { connectors: "stepped", rowHeight: 80 },
+  render: ({ entries, nodePositions, onPositionChange, selectedId, onSelectChange }) => {
+    const handleSelect = onSelectChange
+      ? (id: string, selected: boolean) => onSelectChange(selected ? id : undefined)
+      : undefined
+    // Cast: Tree requires TreeEntry shape (with `path`); LayoutEntry has no `path`.
+    // Users wiring a Board to layout="tree" must supply path-bearing entries.
+    return (
+      <Tree
+        entries={entries as unknown as TreeEntry[]}
+        nodePositions={nodePositions}
+        onPositionChange={onPositionChange}
+        selectedId={selectedId}
+        onSelectChange={handleSelect}
+      />
+    )
+  },
+  stageSize: (entries) => getTreeStageSize(entries as unknown as TreeEntry[]),
 }

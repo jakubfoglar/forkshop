@@ -7,7 +7,7 @@ import { GuideOverlay } from "@forkshop/components/canvas/guide-overlay"
 import type { GetSnapTargets } from "@forkshop/hooks/use-draggable-node"
 import type { NodePositions } from "@forkshop/lib/node-positions"
 import type { SnapGuide, SnapTarget } from "@forkshop/lib/system-snap"
-import type { LayoutEntry } from "@forkshop/types/layout"
+import type { Layout, LayoutEntry } from "@forkshop/types/layout"
 import type { AnyNode } from "@forkshop/types/node"
 import { forkshopIcons } from "@forkshop/lib/icons"
 
@@ -347,4 +347,41 @@ function GalleryInner({
       <GuideOverlay width={stageWidth} height={stageHeight} guides={activeGuides} />
     </>
   )
+}
+
+export const galleryLayoutProtocol: Layout<GalleryOptions> = {
+  id: "gallery",
+  icon: forkshopIcons.components,
+  defaultOptions: { columns: 1, rowGap: 24, columnGap: 24, rulers: false },
+  render: ({ entries, options, nodePositions, onPositionChange, selectedId, onSelectChange }) => {
+    const handleSelect = onSelectChange
+      ? (id: string, selected: boolean) => onSelectChange(selected ? id : undefined)
+      : undefined
+    return (
+      <Gallery
+        entries={entries}
+        layout={(options.columns ?? 1) === 1 ? "stack" : "grid"}
+        columns={options.columns}
+        rowGap={options.rowGap}
+        columnGap={options.columnGap}
+        nodePositions={nodePositions}
+        onPositionChange={onPositionChange}
+        selectedId={selectedId}
+        onSelectChange={handleSelect}
+      />
+    )
+  },
+  stageSize: (entries, options) => {
+    if (entries.length === 0) return { width: 0, height: 0 }
+    const placements = computeGalleryPlacements(entries, options)
+    let width = 0
+    let height = 0
+    for (const e of entries) {
+      const p = placements[e.id]
+      if (!p) continue
+      width = Math.max(width, p.x + e.node.width)
+      height = Math.max(height, p.y + e.node.height)
+    }
+    return { width, height }
+  },
 }

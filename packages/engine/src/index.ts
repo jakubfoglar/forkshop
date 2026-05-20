@@ -21,6 +21,20 @@ export type {
 // Layouts
 export { Gallery, type GalleryProps, type GalleryEntry } from "@forkshop/layouts/gallery"
 export { Tree, type TreeProps, type TreeEntry } from "@forkshop/layouts/tree"
+export { defineLayout } from "@forkshop/lib/define-layout"
+export {
+  BUILTIN_LAYOUTS,
+  resolveLayout,
+} from "@forkshop/lib/builtin-layouts"
+export {
+  galleryLayoutProtocol,
+  computeGalleryPlacements,
+  type GalleryOptions,
+} from "@forkshop/layouts/gallery"
+export {
+  treeLayoutProtocol,
+  type TreeOptions,
+} from "@forkshop/layouts/tree"
 export {
   DesignSystemView,
   getDesignSystemStageSize,
