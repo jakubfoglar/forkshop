@@ -1,5 +1,16 @@
 // Engine shell
-export { ForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
+export {
+  ForkshopCanvas,
+  useForkshopCanvas,
+  type ForkshopCanvasHandle,
+  type WheelInput,
+} from "@forkshop/components/canvas/forkshop-canvas"
+export {
+  LazyIframe,
+  clampReportedHeight,
+  type LazyIframeProps,
+  type LazyIframeHeightMode,
+} from "@forkshop/components/canvas/lazy-iframe"
 export { ForkshopSidebar } from "@forkshop/components/sidebar/forkshop-sidebar"
 export type { ForkshopSelection } from "@forkshop/types/selection"
 export type {

@@ -36,7 +36,7 @@ export function buildIframeContentStyle(mode: LazyIframeHeightMode): string {
   ${lockScroll}`
 }
 
-type LazyIframeProps = {
+export type LazyIframeProps = {
   src: string
   title: string
   width: number
