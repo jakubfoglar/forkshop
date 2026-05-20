@@ -71,14 +71,16 @@ const config: Config = {
       },
       letterSpacing: {
         // Demo: WAVECLASH named tracking levels
-        "display-tight":    "-0.75rem",   // −12px (hero display type)
-        "display-snug":     "-0.3125rem", // −5px (about heading 120px)
-        "display-normal":   "-0.125rem",  // −2px (stats counters 64px)
-        "label-tight":      "-0.0625rem", // −1px (schedule names 32px)
-        "label-normal":     "0.03125rem", // +0.5px (info table values)
-        "label-wide":       "0.0625rem",  // +1px (CTA buttons, subtitle bar)
-        "label-wider":      "0.09375rem", // +1.5px (nav links, ticket CTA)
-        "label-widest":     "0.125rem",   // +2px (edition tag, stats labels)
+        // Values are em (relative to element font size) computed from px-at-size design pairs:
+        //   em = tracking_px / font_size_px
+        "display-tight":    "-0.04286em", // −12px @ 280px (hero display lg)
+        "display-snug":     "-0.04167em", // −5px @ 120px (about heading)
+        "display-normal":   "-0.03125em", // −2px @ 64px (stats counters)
+        "label-tight":      "-0.03125em", // −1px @ 32px (schedule event names)
+        "label-normal":     "0.03125em",  // +0.5px @ 16px (info table values — no explicit size in tokens; anchored to 2xl=16px)
+        "label-wide":       "0.05556em",  // +1px @ 18px (event subtitle bar — explicit size in tokens)
+        "label-wider":      "0.125em",    // +1.5px @ 12px (nav links base size)
+        "label-widest":     "0.1818em",   // +2px @ 11px (edition tag sm size)
       },
       lineHeight: {
         // Demo: WAVECLASH named line heights (sub-1.0 intentional for display type)
