@@ -17,6 +17,7 @@ const DEFAULT_SURFERS: SurferCardData[] = [
     location:    "HONOLULU, HAWAII",
     rankLabel:   "WORLD #1",
     rankVariant: "navy",
+    imageSrc:    "/demo/surfer-1.jpg",
   },
   {
     number:      "02",
@@ -24,6 +25,7 @@ const DEFAULT_SURFERS: SurferCardData[] = [
     location:    "BIARRITZ, FRANCE",
     rankLabel:   "WORLD #2",
     rankVariant: "red",
+    imageSrc:    "/demo/surfer-2.jpg",
   },
   {
     number:      "03",
@@ -31,6 +33,7 @@ const DEFAULT_SURFERS: SurferCardData[] = [
     location:    "COOLANGATTA, AUS",
     rankLabel:   "WORLD #3",
     rankVariant: "yellow",
+    imageSrc:    "/demo/surfer-3.jpg",
   },
   {
     number:      "04",
@@ -38,6 +41,7 @@ const DEFAULT_SURFERS: SurferCardData[] = [
     location:    "PORTO, PORTUGAL",
     rankLabel:   "WORLD #4",
     rankVariant: "black",
+    imageSrc:    "/demo/surfer-4.jpg",
   },
 ]
 

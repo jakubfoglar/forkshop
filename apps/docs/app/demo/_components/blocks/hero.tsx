@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { cn } from "@/lib/cn"
 import { Button } from "../ui/button.js"
 import { TickerBelt } from "../ui/ticker-belt.js"
@@ -42,15 +43,21 @@ export function Hero({
   stopNumber = "STOP #07",
   ctaPrimary = { label: "WATCH LIVE", href: "#" },
   ctaSecondary = { label: "BUY 7-DAY PASS", href: "#" },
-  imageSrc: _imageSrc,
+  imageSrc = "/demo/hero.jpg",
   tickerItems = ["WAVECLASH/26", "PIPELINE, HAWAI'I", "MAR 14-23", "ENTER THE WATER"],
 }: HeroProps) {
   return (
     <div className="relative w-full overflow-hidden bg-waveclash-black">
       {/* Background image / overlay */}
       <div className="relative w-full" style={{ minHeight: "600px" }}>
-        {/* Background image placeholder — phase 1d will wire real image via next/image */}
-        <div className="absolute inset-0 bg-waveclash-black" />
+        {/* Background image */}
+        <Image
+          src={imageSrc}
+          alt=""
+          fill
+          className="object-cover"
+          priority
+        />
 
         {/* 70% opacity overlay */}
         <div className="absolute inset-0 bg-waveclash-black/70" />

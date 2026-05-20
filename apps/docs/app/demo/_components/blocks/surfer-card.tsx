@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { cn } from "@/lib/cn"
 
 // Sub-block: one athlete card inside SurferGrid
@@ -36,7 +37,15 @@ export function SurferCard({ surfer }: SurferCardProps) {
       )}
     >
       {/* Portrait area — 360px tall, position relative for badges */}
-      <div className="relative h-[360px] bg-waveclash-black w-full">
+      <div className="relative h-[360px] bg-waveclash-black w-full overflow-hidden">
+        {surfer.imageSrc && (
+          <Image
+            src={surfer.imageSrc}
+            alt={surfer.name.replace("\n", " ")}
+            fill
+            className="object-cover object-top"
+          />
+        )}
         {/* Number badge — top-left, black fill, JetBrains Mono 14px bold */}
         <span
           className={cn(

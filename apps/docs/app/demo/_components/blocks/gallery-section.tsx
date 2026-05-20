@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { cn } from "@/lib/cn"
 import { Button } from "../ui/button.js"
 
@@ -28,6 +29,8 @@ export interface GallerySectionProps {
   quoteAttrib?:    string
   quoteSubAttrib?: string
   timestampLabel?: string
+  /** Paths to the 3 mosaic image slots. Defaults to gallery-1..3 from /demo/ */
+  images?: [string, string, string]
 }
 
 export function GallerySection({
@@ -40,6 +43,7 @@ export function GallerySection({
   quoteAttrib    = "— INDI WALKER",
   quoteSubAttrib = "WC/26",
   timestampLabel = "DAY 03 / 06:42",
+  images         = ["/demo/gallery-1.jpg", "/demo/gallery-2.jpg", "/demo/gallery-3.jpg"],
 }: GallerySectionProps) {
   return (
     <section
@@ -99,10 +103,14 @@ export function GallerySection({
       {/* Image mosaic (jmGB2): horizontal flex, gap 16 */}
       <div className="flex gap-4">
 
-        {/* Left: 560×560px large image placeholder (gxl0g) + timestamp badge */}
-        <div className="relative shrink-0" style={{ width: 560, height: 560 }}>
-          {/* Image placeholder */}
-          <div className="bg-waveclash-black w-full h-full border border-waveclash-cream/10" />
+        {/* Left: 560×560px large image (gxl0g) + timestamp badge */}
+        <div className="relative shrink-0 overflow-hidden" style={{ width: 560, height: 560 }}>
+          <Image
+            src={images[0]}
+            alt=""
+            fill
+            className="object-cover"
+          />
 
           {/* Timestamp badge: rotated −6°, yellow bg, JetBrains Mono 12px 700 */}
           <div
@@ -122,15 +130,26 @@ export function GallerySection({
         {/* Right column (HaLvX): flex-1, two rows stacked */}
         <div className="flex flex-col gap-4 flex-1">
           {/* Top image (E7QL99): 272px tall */}
-          <div
-            className="bg-waveclash-black border border-waveclash-cream/10 w-full"
-            style={{ height: 272 }}
-          />
+          <div className="relative w-full overflow-hidden" style={{ height: 272 }}>
+            <Image
+              src={images[1]}
+              alt=""
+              fill
+              className="object-cover"
+            />
+          </div>
 
           {/* Bottom split (P5Qfn): 272px — surf image left + pull-quote panel right */}
           <div className="flex gap-4" style={{ height: 272 }}>
             {/* Surf image left — half width */}
-            <div className="bg-waveclash-black border border-waveclash-cream/10 flex-1" />
+            <div className="relative flex-1 overflow-hidden">
+              <Image
+                src={images[2]}
+                alt=""
+                fill
+                className="object-cover"
+              />
+            </div>
 
             {/* Pull-quote panel (yJ2h6): red fill, justify-between */}
             <div
