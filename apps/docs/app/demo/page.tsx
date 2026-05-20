@@ -10,7 +10,7 @@ import { SectionHeadingRow } from "./_components/ui/section-heading-row.js"
 import { ProfileLink } from "./_components/ui/profile-link.js"
 import { TickerBelt } from "./_components/ui/ticker-belt.js"
 
-import { SiteHeader, Hero, StatsBelt, AboutCallout, EventSchedule } from "./_components/blocks/index.js"
+import { SiteHeader, Hero, StatsBelt, AboutCallout, EventSchedule, SurferGrid } from "./_components/blocks/index.js"
 
 // ── Swatch data (kept brief — one row per brand primitive) ────────────────────
 const brandColors = [
@@ -261,6 +261,19 @@ export default function DemoPage() {
 
           <GalleryItem label="EventSchedule (source: WRu0j)">
             <EventSchedule />
+          </GalleryItem>
+        </div>
+      </section>
+
+      {/* ── Blocks (Part 2) ───────────────────────────────────────────────────── */}
+      <section>
+        <h2 className="font-demo-mono uppercase text-sm tracking-label-wider mb-4 mt-16 text-waveclash-red font-bold">
+          Blocks (Part 2)
+        </h2>
+
+        <div className="space-y-12">
+          <GalleryItem label="SurferGrid (source: C7T9Cw)">
+            <SurferGrid />
           </GalleryItem>
         </div>
       </section>

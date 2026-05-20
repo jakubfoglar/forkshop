@@ -13,3 +13,7 @@ export type { AboutCalloutProps, InfoRow } from "./about-callout.js"
 export { EventSchedule } from "./event-schedule.js"
 export type { EventScheduleProps } from "./event-schedule.js"
 export type { EventScheduleRowData } from "./event-schedule-row.js"
+
+export { SurferGrid } from "./surfer-grid.js"
+export type { SurferGridProps } from "./surfer-grid.js"
+export type { SurferCardData } from "./surfer-card.js"
