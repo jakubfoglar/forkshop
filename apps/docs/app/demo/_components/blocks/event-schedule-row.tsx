@@ -27,18 +27,22 @@ export function EventScheduleRow({ row, isLast = false }: EventScheduleRowProps)
   return (
     <div
       className={cn(
-        "flex items-center gap-6 px-4 py-[18px]",
+        "flex items-center",
+        // Mobile: tighter gap + padding; desktop: wider
+        "gap-3 md:gap-4 lg:gap-6",
+        "px-4 py-[14px] md:py-[16px] lg:py-[18px]",
         !isLast && "border-b border-waveclash-black",
       )}
     >
       {/* Day code + date column
-           Pencil: dayCode = Archivo Black 28px tracking −1; date = JetBrains Mono 10px 700 tracking +1.5 */}
-      <div className="flex flex-col gap-0.5 w-[88px] shrink-0">
+          Mobile: 62px wide; tablet: 70px; desktop: 88px */}
+      <div className="flex flex-col gap-0.5 w-[62px] md:w-[70px] lg:w-[88px] shrink-0">
         <span
           className={cn(
-            "font-display text-wc-6xl text-waveclash-black uppercase leading-none",
+            // Mobile: Archivo Black 16px; desktop: 28px
+            "font-display text-wc-2xl lg:text-wc-6xl text-waveclash-black uppercase leading-none",
           )}
-          style={{ letterSpacing: "-0.03571em" }} // −1px @ 28px
+          style={{ letterSpacing: "-0.03571em" }}
         >
           {row.dayCode}
         </span>
@@ -52,51 +56,59 @@ export function EventScheduleRow({ row, isLast = false }: EventScheduleRowProps)
         </span>
       </div>
 
-      {/* Photo thumbnail 80×60 */}
+      {/* Photo thumbnail
+          Mobile: 54×54px; tablet: 64×48px; desktop: 80×60px */}
       {row.imageSrc ? (
         <div
-          className="shrink-0 relative overflow-hidden border-2 border-waveclash-black"
-          style={{ width: 80, height: 60 }}
+          className={cn(
+            "shrink-0 relative overflow-hidden border-2 border-waveclash-black",
+            "w-[54px] h-[54px] md:w-16 md:h-12 lg:w-20 lg:h-[60px]",
+          )}
         >
           <Image src={row.imageSrc} alt="" fill className="object-cover" />
         </div>
       ) : (
         <div
-          className="bg-waveclash-black shrink-0 border-2 border-waveclash-black"
-          style={{ width: 80, height: 60 }}
+          className={cn(
+            "bg-waveclash-black shrink-0 border-2 border-waveclash-black",
+            "w-[54px] h-[54px] md:w-16 md:h-12 lg:w-20 lg:h-[60px]",
+          )}
         />
       )}
 
-      {/* Event name — fill container, Archivo Black 32px, tracking −1 */}
+      {/* Event name
+          Mobile: Archivo Black 14px; tablet: 18px; desktop: 32px */}
       <span
         className={cn(
-          "font-display text-wc-7xl text-waveclash-black uppercase flex-1 leading-normal",
+          "font-display text-wc-lg md:text-wc-3xl lg:text-wc-7xl",
+          "text-waveclash-black uppercase flex-1 leading-tight",
           "tracking-label-tight",
         )}
       >
         {row.eventName}
       </span>
 
-      {/* Badge */}
-      <div className="shrink-0">
+      {/* Badge — hidden on mobile to save horizontal space, visible from md */}
+      <div className="hidden md:block shrink-0">
         <Badge fill={row.fill}>{row.badgeLabel}</Badge>
       </div>
 
-      {/* Time — JetBrains Mono 18px, right-aligned */}
+      {/* Time — hidden on mobile; visible from md */}
       <span
         className={cn(
-          "font-demo-mono text-wc-3xl font-bold text-waveclash-black uppercase",
+          "hidden md:block",
+          "font-demo-mono text-wc-base md:text-wc-3xl font-bold text-waveclash-black uppercase",
           "tracking-label-wide",
-          "w-20 text-right shrink-0",
+          "w-16 md:w-20 text-right shrink-0",
         )}
       >
         {row.time}
       </span>
 
-      {/* Arrow link — ↗ red, Archivo Black 24px */}
+      {/* Arrow link — always visible, but smaller on mobile */}
       <span
         className={cn(
-          "font-display text-wc-5xl text-waveclash-red leading-none shrink-0",
+          "font-display text-wc-3xl lg:text-wc-5xl text-waveclash-red leading-none shrink-0",
         )}
         aria-hidden
       >

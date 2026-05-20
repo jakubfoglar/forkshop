@@ -38,14 +38,19 @@ export function EventSchedule({
         "w-full flex flex-col gap-8",
         "bg-waveclash-cream",
         "border-t-[3px] border-b-[3px] border-waveclash-black",
-        "px-8 py-16",
+        // Mobile: [32,20] padding; tablet: [40,24]; desktop: [64,32]
+        "px-5 pt-8 pb-4 md:px-8 md:pt-10 md:pb-6 lg:px-8 lg:pt-16 lg:pb-8",
       )}
     >
-      {/* Section heading row (dmqgc): eyebrow + 72px title + right metadata (nXSJR: "TEN DAYS" / "OF CARNAGE") */}
+      {/* Section heading row (dmqgc): eyebrow + responsive title + right metadata
+          Mobile: 48px; tablet (md): 56px; desktop (lg): 72px */}
       <SectionHeadingRow
         eyebrow={sectionLabel}
         title={sectionHeading}
-        size="lg"
+        headingClassName={cn(
+          "text-wc-8xl md:text-wc-9xl lg:text-wc-9xl",
+          "tracking-display-normal leading-snug",
+        )}
         metadata={
           <>
             <span className="text-waveclash-black">TEN DAYS</span>

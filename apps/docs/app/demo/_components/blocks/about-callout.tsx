@@ -38,48 +38,57 @@ export function AboutCallout({
   return (
     <section
       className={cn(
-        "w-full flex gap-12",
+        "w-full",
+        // Mobile: single column (flex-col); lg: two-column side-by-side (flex-row)
+        "flex flex-col lg:flex-row gap-12",
         "bg-waveclash-sand",
-        "px-8 py-20",
+        // Mobile: [40,20] padding; tablet (md): tighter horizontal grow; desktop: [80,32]
+        "px-5 py-10 md:px-8 md:py-12 lg:px-8 lg:py-20",
       )}
     >
-      {/* Left column: giant stacked display words (J24RQ) */}
+      {/* Left column: giant stacked display words (J24RQ)
+          Mobile: 64px heading; tablet (md): 80px; desktop (lg): 96px; xl: 120px */}
       <div className="flex flex-col flex-1">
         {/* "THE OCEAN" — waveclash-black */}
         <span
-          className={cn(
-            "font-display uppercase text-waveclash-black leading-snug",
-            "tracking-display-snug", // −5px tracking at 120px
-          )}
-          style={{ fontSize: "120px", lineHeight: 0.9, letterSpacing: "-0.04167em" }}
+          className="font-display uppercase text-waveclash-black"
+          style={{
+            fontSize: "clamp(64px, 9.375vw, 120px)",
+            lineHeight: 0.9,
+            letterSpacing: "-0.04167em",
+          }}
         >
           {headingLines[0]}
         </span>
 
         {/* "DOESN'T" — waveclash-red */}
         <span
-          className={cn(
-            "font-display uppercase text-waveclash-red leading-snug",
-          )}
-          style={{ fontSize: "120px", lineHeight: 0.9, letterSpacing: "-0.04167em" }}
+          className="font-display uppercase text-waveclash-red"
+          style={{
+            fontSize: "clamp(64px, 9.375vw, 120px)",
+            lineHeight: 0.9,
+            letterSpacing: "-0.04167em",
+          }}
         >
           {headingLines[1]}
         </span>
 
         {/* "NEGOTIATE." — waveclash-navy */}
         <span
-          className={cn(
-            "font-display uppercase text-waveclash-navy leading-snug",
-          )}
-          style={{ fontSize: "120px", lineHeight: 0.9, letterSpacing: "-0.04167em" }}
+          className="font-display uppercase text-waveclash-navy"
+          style={{
+            fontSize: "clamp(64px, 9.375vw, 120px)",
+            lineHeight: 0.9,
+            letterSpacing: "-0.04167em",
+          }}
         >
           {headingLines[2]}
         </span>
-
       </div>
 
-      {/* Right column: manifesto + info table (nNbxc, ~420px) */}
-      <div className="flex flex-col gap-6 w-[420px] shrink-0 justify-center">
+      {/* Right column: manifesto + info table (nNbxc)
+          Mobile: full-width; desktop: fixed 420px column */}
+      <div className="flex flex-col gap-6 w-full lg:w-[420px] lg:shrink-0 justify-center">
         {/* "// MANIFESTO" label */}
         <span
           className={cn(
@@ -90,10 +99,11 @@ export function AboutCallout({
           {manifestoLabel}
         </span>
 
-        {/* Body copy — Inter 18px weight 500 */}
+        {/* Body copy
+            Mobile: Inter 14px weight 400; tablet: 16px; desktop: 18px weight 500 */}
         <p
           className={cn(
-            "font-body text-wc-2xl text-waveclash-black leading-relaxed",
+            "font-body text-wc-lg md:text-wc-2xl lg:text-wc-3xl text-waveclash-black leading-relaxed",
           )}
           style={{ fontWeight: 500 }}
         >

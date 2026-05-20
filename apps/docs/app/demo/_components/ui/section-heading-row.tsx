@@ -14,6 +14,8 @@ export interface SectionHeadingRowProps {
   /** Title fill color — "dark" = waveclash-black (#0A0A0A), "light" = waveclash-cream. Defaults to "dark". */
   tone?: "dark" | "light"
   className?: string
+  /** Override the heading font-size classes (e.g. responsive ramp). Replaces the size-derived classes when provided. */
+  headingClassName?: string
 }
 
 /**
@@ -33,6 +35,7 @@ export function SectionHeadingRow({
   size = "lg",
   tone = "dark",
   className,
+  headingClassName,
 }: SectionHeadingRowProps) {
   return (
     <div
@@ -53,8 +56,13 @@ export function SectionHeadingRow({
             "font-display uppercase",
             tone === "dark"  && "text-waveclash-black",
             tone === "light" && "text-waveclash-cream",
-            size === "lg" && "text-wc-9xl tracking-display-normal leading-snug",
-            size === "xl" && "text-wc-display-sm tracking-[-.03333em] leading-dense",
+            // headingClassName overrides the size-derived classes when provided
+            headingClassName
+              ? headingClassName
+              : cn(
+                  size === "lg" && "text-wc-9xl tracking-display-normal leading-snug",
+                  size === "xl" && "text-wc-display-sm tracking-[-.03333em] leading-dense",
+                ),
           )}
           style={{ color: tone === "dark" ? "var(--waveclash-black)" : undefined }}
         >
