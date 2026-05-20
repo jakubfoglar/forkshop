@@ -17,3 +17,6 @@ export type { EventScheduleRowData } from "./event-schedule-row.js"
 export { SurferGrid } from "./surfer-grid.js"
 export type { SurferGridProps } from "./surfer-grid.js"
 export type { SurferCardData } from "./surfer-card.js"
+
+export { GallerySection } from "./gallery-section.js"
+export type { GallerySectionProps } from "./gallery-section.js"
