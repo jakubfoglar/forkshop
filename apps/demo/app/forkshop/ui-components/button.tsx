@@ -26,7 +26,7 @@ export function ButtonBoard() {
           </div>
         ),
       }
-      out.push({ id, label: variant, node })
+      out.push({ label: variant, node })
     }
     return out
   }, [])

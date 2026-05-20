@@ -31,7 +31,7 @@ export function InputBoard() {
             </div>
           ),
         }
-        return { id, label, node }
+        return { label, node }
       }),
     [],
   )
