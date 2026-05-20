@@ -5,11 +5,13 @@ import type { BoardComponent } from "@forkshop/types/board"
 import type { ForkshopSelection } from "@forkshop/types/selection"
 import type { ParsedForkshopConfig } from "@forkshop/lib/schemas"
 import type { Layout } from "@forkshop/types/layout"
-import { SelectionProvider, useSelection } from "@forkshop/hooks/use-selection"
+import { SelectionProvider, useSelection, useSetSelection } from "@forkshop/hooks/use-selection"
 import { resolveLayout, BUILTIN_LAYOUTS } from "@forkshop/lib/builtin-layouts"
 import { ForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
 import { useForkshopPositions } from "@forkshop/hooks/use-forkshop-positions"
 import { AgentActivityProvider } from "@forkshop/components/agent-activity-context"
+import { ForkshopSidebar } from "@forkshop/components/sidebar/forkshop-sidebar"
+import { forkshopIcons } from "@forkshop/lib/icons"
 
 export type BoardRegistryProps = {
   config: ParsedForkshopConfig
@@ -62,7 +64,7 @@ function BoardRegistryInner({
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <BoardSidebar boards={boards} />
+      <BoardSidebar boards={boards} config={config} />
       <div className="relative flex flex-1 overflow-hidden">
         {active ? <ActiveBoard board={active} layouts={allLayouts} /> : <EmptyBoardState />}
       </div>
@@ -108,20 +110,58 @@ function ActiveBoard({
   )
 }
 
-/**
- * Stub sidebar — D3 only verifies labels render. D4 replaces this with
- * ForkshopSidebar wired to each Board's __config + useSidebarChildren.
- */
-function BoardSidebar({ boards }: { boards: ReadonlyArray<BoardComponent> }) {
+function BoardSidebar({
+  boards,
+  config,
+}: {
+  boards: ReadonlyArray<BoardComponent>
+  config: ParsedForkshopConfig
+}) {
+  const selection = useSelection()
+  const setSelection = useSetSelection()
+
+  const sections = boards.map((b) => {
+    const cfg = b.__config
+    const childrenHook = cfg.useSidebarChildren
+    // Each Board contributes one sidebar section. useSidebarChildren is
+    // optional — when omitted the section row is non-expandable.
+    const children = childrenHook ? childrenHook() : undefined
+    return {
+      id: cfg.id,
+      title: cfg.label ?? cfg.id,
+      icon: cfg.icon ?? forkshopIcons.components,
+      entries: children?.map((c) => ({
+        slug: childSlug(c.selection),
+        name: c.label,
+        icon: c.icon,
+      })),
+      entryKind: children?.[0] ? inferEntryKind(children[0].selection) : undefined,
+    }
+  })
+
   return (
-    <aside className="w-60 border-r p-2">
-      {boards.map((b) => (
-        <div key={b.__config.id} className="px-2 py-1 text-sm">
-          {b.__config.label ?? b.__config.id}
-        </div>
-      ))}
-    </aside>
+    <ForkshopSidebar
+      selection={selection}
+      onSelect={setSelection}
+      sections={sections}
+      routes={config.sitemap.routes.map((r) => r.path)}
+    />
   )
+}
+
+function childSlug(sel: ForkshopSelection): string {
+  if (sel.kind === "block") return sel.slug
+  if (sel.kind === "primitive") return sel.id
+  if (sel.kind === "page") return sel.path
+  if (sel.kind === "custom") return `${sel.namespace}:${JSON.stringify(sel.data)}`
+  return ""
+}
+
+function inferEntryKind(sel: ForkshopSelection): "primitive" | "block" | "page" | undefined {
+  if (sel.kind === "primitive") return "primitive"
+  if (sel.kind === "block") return "block"
+  if (sel.kind === "page") return "page"
+  return undefined
 }
 
 function EmptyBoardState() {
