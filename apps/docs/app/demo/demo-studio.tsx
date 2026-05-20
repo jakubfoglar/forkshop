@@ -87,10 +87,8 @@ function mapAgentSeed(seed: AgentSeed): ActivityEntry {
     sessionId: "demo-seed",
     color: "#3057f0",
     action: "edit",
-    // MAX_SAFE_INTEGER keeps the staleness check (Date.now() - lastSeenAt > STALE_MS)
-    // permanently false so URL-seeded entries never get pruned. Workaround until
-    // the engine adds a proper `pinned` flag on ActivityEntry (task #50).
-    lastSeenAt: Number.MAX_SAFE_INTEGER,
+    lastSeenAt: Date.now(),
+    pinned: true, // URL-seeded entries are persistent until URL changes
   }
 }
 
@@ -212,7 +210,7 @@ export default function DemoPage() {
   }, [])
 
   return (
-    <AgentActivityProvider fileMap={FILE_MAP} initialActivity={initialActivity}>
+    <AgentActivityProvider fileMap={FILE_MAP} initialActivity={initialActivity} subscribeToStream={false}>
       <div className="flex h-screen overflow-hidden">
         <ForkshopSidebar
           selection={selection}

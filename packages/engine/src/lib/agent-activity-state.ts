@@ -11,6 +11,7 @@ export type ActivityEntry = {
   action: AgentAction
   lastSeenAt: number
   hunks?: ReadonlyArray<Hunk>
+  pinned?: boolean
 }
 
 type Subscriber = (snapshot: ActivityEntry[]) => void
