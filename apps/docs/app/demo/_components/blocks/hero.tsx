@@ -24,6 +24,7 @@ export interface HeroProps {
   stopNumber?: string
   ctaPrimary?: { label: string; href: string }
   ctaSecondary?: { label: string; href: string }
+  /** Reserved for phase 1d — not wired yet; bg placeholder shown */
   imageSrc?: string
   tickerItems?: string[]
 }
@@ -41,24 +42,15 @@ export function Hero({
   stopNumber = "STOP #07",
   ctaPrimary = { label: "WATCH LIVE", href: "#" },
   ctaSecondary = { label: "BUY 7-DAY PASS", href: "#" },
-  imageSrc,
+  imageSrc: _imageSrc,
   tickerItems = ["WAVECLASH/26", "PIPELINE, HAWAI'I", "MAR 14-23", "ENTER THE WATER"],
 }: HeroProps) {
   return (
     <div className="relative w-full overflow-hidden bg-waveclash-black">
       {/* Background image / overlay */}
       <div className="relative w-full" style={{ minHeight: "600px" }}>
-        {imageSrc ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={imageSrc}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-        ) : (
-          /* Placeholder — phase 1d will wire real image */
-          <div className="absolute inset-0 bg-waveclash-black" />
-        )}
+        {/* Background image placeholder — phase 1d will wire real image via next/image */}
+        <div className="absolute inset-0 bg-waveclash-black" />
 
         {/* 70% opacity overlay */}
         <div className="absolute inset-0 bg-waveclash-black/70" />
