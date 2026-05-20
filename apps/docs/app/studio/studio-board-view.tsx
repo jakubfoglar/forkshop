@@ -43,7 +43,7 @@ export function StudioBoardView({ board }: { board: StudioBoard }) {
       boardId={`studio:${board.id}`}
       stageWidth={stageWidth}
       stageHeight={stageHeight}
-      fitMode="both"
+      fitMode="none"
     >
       {({ nodePositions, onPositionChange }) => (
         <>
