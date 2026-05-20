@@ -74,6 +74,26 @@ export {
   responsiveFrameStageDimensions,
 } from "@forkshop/layouts/responsive-frame-view"
 
+// Design System Board building blocks
+export { ColorGraph, type ColorGraphProps } from "@forkshop/components/color-graph"
+export {
+  TypographyShowcase,
+  type TypographyShowcaseProps,
+} from "@forkshop/components/typography-showcase"
+export { PrimitivesGrid, type PrimitivesGridProps } from "@forkshop/components/primitives-grid"
+export {
+  useDesignTokens,
+  type UseDesignTokensOptions,
+} from "@forkshop/lib/use-design-tokens"
+export {
+  enumeratePrimitiveVariants,
+  type DiscoveredPrimitive as PrimitiveVariantInput,
+} from "@forkshop/lib/enumerate-primitive-variants"
+export {
+  responsiveFrameEntries,
+  type ResponsiveFrameOptions,
+} from "@forkshop/lib/responsive-frame-entries"
+
 // NodeType contract + types
 export type {
   BaseNode,
