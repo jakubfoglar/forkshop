@@ -342,7 +342,8 @@ export const treeLayoutProtocol: Layout<TreeOptions> = {
       ? (id: string, selected: boolean) => onSelectChange(selected ? id : undefined)
       : undefined
     // Cast: Tree requires TreeEntry shape (with `path`); LayoutEntry has no `path`.
-    // Users wiring a Board to layout="tree" must supply path-bearing entries.
+    // Users wiring a Board to layout="tree" must supply path-bearing entries —
+    // missing `path` will throw at render time inside buildForest/findParentPath.
     return (
       <Tree
         entries={entries as unknown as TreeEntry[]}
