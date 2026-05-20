@@ -76,7 +76,7 @@ export function SectionHeadingRowBoard() {
             </div>
           ),
         }
-        return { id: node.id, label, node }
+        return { label, node }
       }),
     [],
   )

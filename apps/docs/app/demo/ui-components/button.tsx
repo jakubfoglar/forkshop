@@ -41,7 +41,7 @@ export function ButtonBoard() {
           </div>
         ),
       }
-      out.push({ id: node.id, label: `${variant} / ${width}`, node, row, column })
+      out.push({ label: `${variant} / ${width}`, node, row, column })
     }
     return out
   }, [])

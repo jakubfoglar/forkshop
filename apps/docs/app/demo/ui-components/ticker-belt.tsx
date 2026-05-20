@@ -38,7 +38,7 @@ export function TickerBeltBoard() {
             </div>
           ),
         }
-        return { id: node.id, label, node }
+        return { label, node }
       }),
     [],
   )

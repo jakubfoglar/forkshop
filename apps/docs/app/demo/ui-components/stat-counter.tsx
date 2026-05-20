@@ -32,7 +32,7 @@ export function StatCounterBoard() {
             </div>
           ),
         }
-        return { id: node.id, label, node }
+        return { label, node }
       }),
     [],
   )

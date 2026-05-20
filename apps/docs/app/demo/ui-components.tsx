@@ -25,7 +25,7 @@ export function UIComponentsBoard() {
           label: p.name,
           render: () => <div className="demo-scope"><p.Component /></div>,
         }
-        return { id: node.id, label: p.name, node }
+        return { label: p.name, node }
       }),
     [primitives],
   )

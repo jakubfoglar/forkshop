@@ -34,7 +34,7 @@ export function BadgeBoard() {
             </div>
           ),
         }
-        return { id: node.id, label, node }
+        return { label, node }
       }),
     [],
   )
