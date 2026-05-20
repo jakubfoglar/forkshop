@@ -8,8 +8,8 @@ export const DESIGN_SYSTEM_OVERVIEW: StudioBoard = {
       id: "main",
       x: 0,
       y: 0,
-      width: 1440,
-      height: 900,
+      width: 1200,
+      height: 600,
       demoState: {
         selection: { kind: "section", sectionId: "design-system" },
       },
