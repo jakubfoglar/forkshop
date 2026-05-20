@@ -70,6 +70,8 @@ function clamp(value: number, min: number, max: number) {
 export function ForkshopCanvas({
   ref,
   initialTransform,
+  initialZoom,
+  initialPan,
   onTransformChange,
   stageWidth: stageWidthProp,
   stageHeight: stageHeightProp,
@@ -82,6 +84,8 @@ export function ForkshopCanvas({
 }: {
   ref?: RefObject<ForkshopCanvasHandle | null>
   initialTransform?: Transform
+  initialZoom?: number
+  initialPan?: { x: number; y: number }
   onTransformChange?: (transform: Transform) => void
   /** Optional. Defaults to 1400 — large enough that the canvas's auto-fit
    *  shrinks-to-fit comfortably on any viewport. Pass a specific value when
@@ -110,7 +114,10 @@ export function ForkshopCanvas({
   const stageWidth = stageWidthProp ?? 1400
   const stageHeight = stageHeightProp ?? 900
   const [transform, setTransformState] = useState<Transform>(
-    initialTransform ?? { zoom: 0.5, panX: 80, panY: 80 },
+    initialTransform ??
+      (initialZoom !== undefined || initialPan !== undefined
+        ? { zoom: initialZoom ?? 0.5, panX: initialPan?.x ?? 80, panY: initialPan?.y ?? 80 }
+        : { zoom: 0.5, panX: 80, panY: 80 }),
   )
   const transformRef = useRef(transform)
   const [isAnimating, setIsAnimating] = useState(false)
