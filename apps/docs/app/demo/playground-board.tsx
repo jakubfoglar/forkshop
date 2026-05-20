@@ -20,7 +20,7 @@ export function PlaygroundBoard({
 }: {
   stageWidth: number
   stageHeight: number
-  fitMode?: "width" | "both"
+  fitMode?: "width" | "both" | "none"
   /** Namespace for drag positions. Prevents collision between boards that
    *  share node IDs (e.g. a "badge" primitive appearing in two boards). */
   boardId?: string
