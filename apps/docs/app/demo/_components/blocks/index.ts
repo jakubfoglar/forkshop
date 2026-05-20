@@ -9,3 +9,7 @@ export type { StatsBeltProps, StatsBeltStat } from "./stats-belt.js"
 
 export { AboutCallout } from "./about-callout.js"
 export type { AboutCalloutProps, InfoRow } from "./about-callout.js"
+
+export { EventSchedule } from "./event-schedule.js"
+export type { EventScheduleProps } from "./event-schedule.js"
+export type { EventScheduleRowData } from "./event-schedule-row.js"
