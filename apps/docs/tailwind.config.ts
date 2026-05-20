@@ -14,7 +14,7 @@ const config: Config = {
         raveo: ["var(--font-raveo)", "system-ui", "sans-serif"],
         // Demo: WAVECLASH brand fonts (resolved via CSS vars set by next/font/google)
         display: ["var(--font-archivo-black)", "Arial Black", "system-ui", "sans-serif"],
-        mono: ["var(--font-jetbrains-mono)", "Fira Code", "Courier New", "monospace"],
+        "demo-mono": ["var(--font-jetbrains-mono)", "Fira Code", "Courier New", "monospace"],
         body: ["var(--font-inter)", "system-ui", "-apple-system", "sans-serif"],
       },
       colors: {
@@ -127,6 +127,11 @@ const config: Config = {
       }),
     },
   },
+  safelist: [
+    { pattern: /^bg-waveclash-/ },
+    { pattern: /^bg-demo-/ },
+    { pattern: /^text-(xs|sm|base|md|lg|xl|2xl|3xl|3-5xl|4xl|5xl|6xl|7xl|8xl|9xl|10xl|11xl|display-xs|display-sm|display-md|display-lg)$/ },
+  ],
   plugins: [typography],
 }
 

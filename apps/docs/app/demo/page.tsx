@@ -60,8 +60,8 @@ const trackingSamples = [
   { label: "Hero display (−12px)", text: "WAVECLASH", trackingClass: "tracking-display-tight", sizeClass: "text-7xl", font: "font-display" },
   { label: "About heading (−5px)", text: "NEGOTIATE.", trackingClass: "tracking-display-snug",  sizeClass: "text-9xl", font: "font-display" },
   { label: "Stats counters (−2px)", text: "247",       trackingClass: "tracking-display-normal",sizeClass: "text-8xl", font: "font-display" },
-  { label: "Nav links (+1.5px)",   text: "ATHLETES",   trackingClass: "tracking-label-wider",   sizeClass: "text-base",font: "font-mono" },
-  { label: "Edition tag (+2px)",   text: "EDITION N°26",trackingClass: "tracking-label-widest", sizeClass: "text-sm",  font: "font-mono" },
+  { label: "Nav links (+1.5px)",   text: "ATHLETES",   trackingClass: "tracking-label-wider",   sizeClass: "text-base",font: "font-demo-mono" },
+  { label: "Edition tag (+2px)",   text: "EDITION N°26",trackingClass: "tracking-label-widest", sizeClass: "text-sm",  font: "font-demo-mono" },
 ] as const
 
 export default function DemoPage() {
@@ -77,8 +77,8 @@ export default function DemoPage() {
               key={token}
               className={`bg-${token} ${textClass} p-4 w-56 flex-shrink-0`}
             >
-              <div className="font-mono text-sm font-bold mb-1">{token}</div>
-              <div className="font-mono text-xs mb-2">{hex}</div>
+              <div className="font-demo-mono text-sm font-bold mb-1">{token}</div>
+              <div className="font-demo-mono text-xs mb-2">{hex}</div>
               <div className="font-body text-xs leading-relaxed">{usage}</div>
             </div>
           ))}
@@ -94,10 +94,10 @@ export default function DemoPage() {
               key={alias}
               className={`bg-${alias} p-4 w-52 flex-shrink-0 border border-black/10`}
             >
-              <div className="font-mono text-xs font-bold mb-1 text-black mix-blend-multiply">
+              <div className="font-demo-mono text-xs font-bold mb-1 text-black mix-blend-multiply">
                 --{alias}
               </div>
-              <div className="font-mono text-xs text-black/60 mb-1">→ {resolves}</div>
+              <div className="font-demo-mono text-xs text-black/60 mb-1">→ {resolves}</div>
               <div className="font-body text-xs text-black/70">{role}</div>
             </div>
           ))}
@@ -109,7 +109,7 @@ export default function DemoPage() {
         <h2 className="font-display text-7xl text-black mb-6">Type Families</h2>
         <div className="space-y-8">
           <div>
-            <div className="font-mono text-sm text-waveclash-yellow bg-waveclash-black inline-block px-2 py-0.5 mb-2">
+            <div className="font-demo-mono text-sm text-waveclash-yellow bg-waveclash-black inline-block px-2 py-0.5 mb-2">
               display — Archivo Black / weight 900
             </div>
             <div className="font-display text-8xl text-waveclash-cream bg-waveclash-black leading-tight px-4 py-2">
@@ -117,23 +117,23 @@ export default function DemoPage() {
             </div>
           </div>
           <div>
-            <div className="font-mono text-sm text-waveclash-yellow bg-waveclash-black inline-block px-2 py-0.5 mb-2">
+            <div className="font-demo-mono text-sm text-waveclash-yellow bg-waveclash-black inline-block px-2 py-0.5 mb-2">
               mono — JetBrains Mono / weight 400 · 500 · 700
             </div>
             <div className="bg-waveclash-sand px-4 py-3 space-y-1">
-              <div className="font-mono text-base font-normal text-waveclash-black">
+              <div className="font-demo-mono text-base font-normal text-waveclash-black">
                 weight 400 — NORTH SHORE / O&apos;AHU / PACIFIC
               </div>
-              <div className="font-mono text-base font-medium text-waveclash-black">
+              <div className="font-demo-mono text-base font-medium text-waveclash-black">
                 weight 500 — STOP #07 · PRIZE: $1.2M
               </div>
-              <div className="font-mono text-base font-bold text-waveclash-black tracking-label-wider">
+              <div className="font-demo-mono text-base font-bold text-waveclash-black tracking-label-wider">
                 weight 700 — ATHLETES · COUNTRIES · DAYS
               </div>
             </div>
           </div>
           <div>
-            <div className="font-mono text-sm text-waveclash-yellow bg-waveclash-black inline-block px-2 py-0.5 mb-2">
+            <div className="font-demo-mono text-sm text-waveclash-yellow bg-waveclash-black inline-block px-2 py-0.5 mb-2">
               body — Inter / weight 500
             </div>
             <div className="font-body text-2xl font-medium text-waveclash-black bg-waveclash-sand px-4 py-3 leading-relaxed max-w-xl">
@@ -147,13 +147,13 @@ export default function DemoPage() {
       {/* ── 4. Size Ladder ──────────────────────────────────────────────── */}
       <section>
         <h2 className="font-display text-7xl text-black mb-6">Size Ladder</h2>
-        <p className="font-mono text-sm text-waveclash-graphite bg-waveclash-sand px-3 py-1 mb-6 inline-block">
+        <p className="font-demo-mono text-sm text-waveclash-graphite bg-waveclash-sand px-3 py-1 mb-6 inline-block">
           Sizes under 40px shown on dark bg · Sizes 64px+ overflow intentionally
         </p>
         <div className="space-y-2">
           {sizeLadder.map(({ token, px, usage }) => (
             <div key={token} className="flex items-baseline gap-4 bg-waveclash-black px-4 py-2">
-              <div className="font-mono text-xs text-waveclash-yellow w-24 flex-shrink-0">
+              <div className="font-demo-mono text-xs text-waveclash-yellow w-24 flex-shrink-0">
                 {token} · {px}px
               </div>
               <div
@@ -161,7 +161,7 @@ export default function DemoPage() {
               >
                 Aa
               </div>
-              <div className="font-mono text-xs text-waveclash-cream/50 text-right max-w-xs flex-shrink-0 hidden md:block">
+              <div className="font-demo-mono text-xs text-waveclash-cream/50 text-right max-w-xs flex-shrink-0 hidden md:block">
                 {usage}
               </div>
             </div>
@@ -175,7 +175,7 @@ export default function DemoPage() {
         <div className="space-y-4 bg-waveclash-black px-6 py-8">
           {trackingSamples.map(({ label, text, trackingClass, sizeClass, font }) => (
             <div key={label}>
-              <div className="font-mono text-xs text-waveclash-yellow mb-1">{label}</div>
+              <div className="font-demo-mono text-xs text-waveclash-yellow mb-1">{label}</div>
               <div className={`${font} ${sizeClass} ${trackingClass} text-waveclash-cream leading-tight`}>
                 {text}
               </div>
@@ -187,20 +187,20 @@ export default function DemoPage() {
       {/* ── 6. Badge Variants ───────────────────────────────────────────── */}
       <section>
         <h2 className="font-display text-7xl text-black mb-6">Badge Variants</h2>
-        <p className="font-mono text-xs text-waveclash-graphite mb-4">
+        <p className="font-demo-mono text-xs text-waveclash-graphite mb-4">
           All badges: JetBrains Mono · 10px · weight 700 · tracking +1.5px · padding 6px 12px · no border-radius
         </p>
         <div className="flex flex-wrap gap-4 items-start">
           {badges.map(({ label, bgClass, textClass, note }) => (
             <div key={label} className="space-y-2">
               <div
-                className={`${bgClass} ${textClass} font-mono text-xs font-bold tracking-label-wider inline-block`}
+                className={`${bgClass} ${textClass} font-demo-mono text-xs font-bold tracking-label-wider inline-block`}
                 style={{ padding: "6px 12px" }}
               >
                 {label}
               </div>
               {note && (
-                <div className="font-mono text-xs text-waveclash-graphite max-w-40 leading-relaxed">
+                <div className="font-demo-mono text-xs text-waveclash-graphite max-w-40 leading-relaxed">
                   {note}
                 </div>
               )}
@@ -209,12 +209,12 @@ export default function DemoPage() {
           {/* FREESURF — same yellow as CULTURE, distinct label */}
           <div className="space-y-2">
             <div
-              className="bg-waveclash-yellow text-waveclash-black font-mono text-xs font-bold tracking-label-wider inline-block"
+              className="bg-waveclash-yellow text-waveclash-black font-demo-mono text-xs font-bold tracking-label-wider inline-block"
               style={{ padding: "6px 12px" }}
             >
               FREESURF
             </div>
-            <div className="font-mono text-xs text-waveclash-graphite max-w-40 leading-relaxed">
+            <div className="font-demo-mono text-xs text-waveclash-graphite max-w-40 leading-relaxed">
               Same yellow fill as CULTURE — different event type label
             </div>
           </div>
