@@ -6,8 +6,8 @@ export const forkshopConfig = {
   ui: UIPrimitives,
   blocks: Blocks,
   paths: {
-    primitives: "apps/docs/app/demo/_components/ui",
-    blocks: ["apps/docs/app/demo/_components/blocks"],
+    primitives: "app/demo/_components/ui",
+    blocks: ["app/demo/_components/blocks"],
   },
   sitemap: {
     excludeGroups: [] as string[],

@@ -56,11 +56,11 @@ const DISCOVERED_BLOCKS = discoverBlocks(forkshopConfig.blocks)
 const FILE_MAP = {
   primitives: DISCOVERED_PRIMITIVES.map((p) => ({
     id: p.slug,
-    sourcePath: `apps/docs/app/demo/_components/ui/${p.slug}.tsx`,
+    sourcePath: `app/demo/_components/ui/${p.slug}.tsx`,
   })),
   blocks: DISCOVERED_BLOCKS.map((b) => ({
     slug: b.slug,
-    sourcePath: `apps/docs/app/demo/_components/blocks/${b.slug}.tsx`,
+    sourcePath: `app/demo/_components/blocks/${b.slug}.tsx`,
   })),
 }
 
@@ -74,11 +74,11 @@ function mapAgentSeed(seed: AgentSeed): ActivityEntry {
   if (seed.kind === "file") {
     filePath = seed.path
   } else if (seed.kind === "page") {
-    filePath = `apps/docs/app${seed.path}/page.tsx`
+    filePath = `app${seed.path}/page.tsx`
   } else if (seed.kind === "block") {
-    filePath = `apps/docs/app/demo/_components/blocks/${seed.slug}.tsx`
+    filePath = `app/demo/_components/blocks/${seed.slug}.tsx`
   } else {
-    filePath = `apps/docs/app/demo/_components/ui/${seed.id}.tsx`
+    filePath = `app/demo/_components/ui/${seed.id}.tsx`
   }
   return {
     filePath,
@@ -145,7 +145,7 @@ function SinglePageBoard({
     [measuredHeight],
   )
   // Derive sourceFile from the route path — matches mapAgentSeed convention.
-  const sourceFile = `apps/docs/app${path}/page.tsx`
+  const sourceFile = `app${path}/page.tsx`
   return (
     <PlaygroundBoard stageWidth={width} stageHeight={height} fitMode="width" initialZoom={initialZoom} initialPan={initialPan}>
       {() => (
