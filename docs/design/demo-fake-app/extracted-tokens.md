@@ -667,6 +667,289 @@ inside a ForkshopSidebar + ForkshopCanvas at `/demo`.
 
 ---
 
+## Responsive
+
+Tailwind breakpoint plan:
+- **Base (mobile, < 768px)** — matches pencil mobile frame `K1HcT3` (390px wide, 5400px tall)
+- **`md:` (tablet, ≥ 768px)** — interpolated; no pencil source. Rules below are designed, not extracted.
+- **`lg:` (≥ 1024px) and `xl:` (≥ 1280px)** — approaches desktop pencil frames `opEVO` / `N9wSB2` (1440px wide)
+
+Mobile-first strategy: base classes encode mobile; `md:` overrides for tablet; `lg:`/`xl:` restore
+full desktop values. Do not rely on a single jump from mobile to desktop — every layout-reflow
+property needs the intermediate `md:` step.
+
+**Critical mobile deviation:** GallerySection (`u9A5Q2`) is **absent from the mobile design**.
+The mobile sequence is: SurferGrid → CtaBuyPass → SponsorStrip → SiteFooter. GallerySection
+should be hidden on mobile (`hidden md:block`) unless a design decision is made to include a
+simplified version.
+
+---
+
+### Per-block notes
+
+#### SiteHeader
+
+**Mobile (pencil `QqK3s`, 390×131px):**
+Three stacked sub-rows, `layout: vertical`:
+1. Status bar (`MF3Kg`, 44px) — `bg-waveclash-cream`, padding `[0,20]`, `justifyContent: space_between`. Contains time "9:41" (JetBrains Mono 14px 700) + signal/wifi/battery icons. This is a mobile OS chrome simulation — hide on `md:` and above with `hidden md:hidden` (or just don't render it in the real component; wire as a slot that renders only at base).
+2. Info strip (`uzdz4`, 25px) — `bg-waveclash-cream`, padding `[6,16]`, 2px black bottom border, "EST. 2007 — INT'L FED. SURF" left / "EN / FR / JP" right, JetBrains Mono 10px 700.
+3. Nav bar (`ikhHD`, 62px) — `bg-waveclash-black`, padding `[18,16]`, `justifyContent: space_between`. Left: wordmark "WAVECLASH///" Archivo Black 22px, cream. Right: red "GET PASS" pill (compact, padding `[5,8]`) + a hamburger-icon frame (4px padding, cream fill). Nav links are **hidden** — no center nav column exists on mobile.
+
+Mobile → desktop changes:
+- Wordmark: 22px → 24px
+- Nav links: hidden on mobile → 5 links centered on desktop (`hidden md:flex`)
+- GET PASS button: compact red pill (no label visible in icon area, just icon+label together) → full "GET PASS" button with arrow on desktop
+- Hamburger icon: visible on mobile → hidden on desktop (`flex md:hidden`)
+- Status bar row: mobile-only sim UI → hide entirely on `md:` and above
+- Horizontal padding: 16px mobile → 32px desktop (`px-4 md:px-6 lg:px-8`)
+
+**Tablet (`md:`):** Remove status bar. Show info strip. Nav bar: show wordmark at 22px, show GET PASS pill, keep hamburger. Nav links remain hidden (768px is too narrow for 5 links + logo + CTA). At `lg:` (1024px+) restore the center nav links and switch to full GET PASS button (`hidden lg:flex`).
+
+**Desktop:** Current implementation — 3-column flex with center nav links, full GET PASS arrow button, 80px height, padding `[0,32]`.
+
+---
+
+#### Hero
+
+**Mobile (pencil `zlZw3`, 390×687px):**
+`layout: none` (absolute). Full-bleed surf image + `#0A0A0AAA` (~67% opacity) overlay, both 390×720px (slightly taller than the frame, clipped).
+
+Key type changes:
+- "WAVE" / "CLASH" / "'26": **96px** each (vs 280px desktop), letterSpacing −3 (vs −12), leading 0.92. Stack in `layout: vertical`, gap −8.
+- Location sub-block (`homFr`, y=444, width 360, x=16): "PIPELINE, HAWAI'I" Archivo Black 16px 900 tracking −0.2 (cream); "MAR 14 — MAR 23" JetBrains Mono 13px 700 (yellow). Stacked vertically, gap 2.
+- Edition tag / coordinates columns from desktop: **absent** — no top-left metadata column, no top-right coordinates column on mobile.
+- Live coverage band (`Vwk9n`, 31px, y=0): full-width red strip "// LIVE COVERAGE — DAY 03" / "03:14:22", JetBrains Mono 11px 700, black text, padding `[8,16]`. Replaces the desktop edition-tag column.
+- World-tour badge (`WnwrN`): still present, rotated −8°, yellow fill, 88×84px, positioned x=238 y=64.
+- CTAs (`kyGCY`, y=500, 390×120): **full-width stacked buttons**, two rows each 60px tall — "WATCH LIVE" (red fill, Archivo Black 22px) + "GET 7-DAY PASS" (cream fill, Archivo Black 22px), both with Lucide icons, padding `[18,20]`, 3px black top border on each. Width = fill_container (full bleed).
+- Weather ticker (`nxLQj`, y=660, 27px): `bg-waveclash-black`, horizontal flex, gap 18, padding `[6,16]` — SWELL / WIND / TEMP / "//" labels at 11px JetBrains Mono 700.
+
+Mobile → desktop changes:
+- Hero display heading: 96px → 280px (`text-[6rem] md:text-[10rem] lg:text-[17.5rem]`)
+- CTA buttons: full-width stacked (flex-col, w-full) → two narrow vertically-stacked buttons anchored bottom-left (~300px wide) on desktop
+- Edition/coordinates metadata columns: absent on mobile → absolute-positioned top-left / top-right on desktop
+- Hero height: 687px mobile → 1100px desktop (let content dictate on mobile; set min-h on `lg:`)
+- Horizontal padding on headline: x=14 (14px) mobile → ~60px desktop
+
+**Tablet (`md:`):** Display heading ~140px (`text-[8.75rem]`). Show the live-coverage band. Keep full-width stacked CTAs (still the most usable pattern at 768px). No metadata columns yet. Hero height: roughly 500–600px. Padding on content: `px-4 md:px-6`.
+
+**Desktop (`lg:`):** Full 280px display heading, absolute-positioned layout with metadata columns, bottom-anchored CTA column.
+
+---
+
+#### StatsBelt
+
+**Mobile (pencil `ZLDRp`, 390×254px):**
+`layout: vertical`, `bg-waveclash-black`. Two rows of 2 cells each — **2×2 grid**:
+- Row 1 (`B0Pxz0`, 127px): ATHLETES (black bg) | COUNTRIES (red bg) — each `fill_container` wide, side by side, separated by 2px cream right border + 2px cream bottom border.
+- Row 2 (`L2j21O`, 127px): DAYS (yellow bg) | PRIZE (black bg) — each `fill_container` wide, separated by 2px cream right border.
+
+The desktop 5th stat (WAVES / ∞) is **absent** on mobile — only 4 stats shown.
+
+Cell type sizes:
+- Number: Archivo Black **64px** (same as desktop), letterSpacing −2, leading 0.9. Exception: PRIZE "$1.2M" uses **48px** (letterSpacing −1.5).
+- Label: JetBrains Mono 11px 700 (same as desktop).
+- Cell padding: `[24,18]` per cell.
+
+Mobile → desktop changes:
+- Layout: 2×2 grid (`grid grid-cols-2`) → 5-column single-row flex (`flex flex-row`)
+- 5th stat (WAVES/∞): hidden on mobile → visible on desktop
+- Section height: 254px (2 rows × 127px) → 140px (single row)
+- Number for PRIZE: 48px mobile → 64px desktop
+
+**Tablet (`md:`):** Keep `grid grid-cols-2` (2×2 grid). Show 4 stats. Number size stays 64px. This is identical to mobile layout but will stretch to 768px wide — cells just get wider. At `lg:` switch to `flex flex-row` 5-column layout and reveal the 5th stat.
+
+**Desktop (`lg:`):** 5-column flex, 140px height, 64px numbers throughout.
+
+---
+
+#### AboutCallout
+
+**Mobile (pencil `AMkct`, 390×552px):**
+`layout: vertical`, `bg-waveclash-sand`, padding `[40,20]`, gap 24. **Single column** — no side-by-side layout.
+
+Content order (top to bottom):
+1. Section label (`kekAu`, 15px): red rule (24×2px) + "§ 01 / ABOUT THE EVENT" JetBrains Mono 11px 700. Horizontal flex, gap 8.
+2. Display heading (`NWcJD`, 158px): "THE OCEAN" / "DOESN'T" / "NEGOTIATE." stacked vertically, gap −8. Each word: Archivo Black **64px** (vs 120px desktop), letterSpacing −2, leading 0.9.
+3. Body copy (`GMWpH`, 105px): Inter 14px normal (weight 400), leading 1.5, fixed-width fill_container. (Desktop uses 16–18px Inter 500.)
+4. Info table (`J5C9V6`, 122px): 2×2 grid layout — two rows (`k5hHtK`, `Fj8SY`) each containing 2 cells side by side. Each cell `padding: [12,14]`, fill_container wide, 2px black stroke container. Cell content: label (JetBrains Mono small) + value (Archivo Black small). 2px black bottom border on row 1; right-border divider between cells within each row.
+
+Mobile → desktop changes:
+- Layout: single column (`flex-col`) → two-column side-by-side (`flex-row`) with left col 908px / right col 420px on desktop
+- Heading font size: 64px → 120px (`text-[4rem] md:text-[5rem] lg:text-[7.5rem]`)
+- Body copy font: Inter 14px weight 400 mobile → Inter 18px weight 500 desktop
+- Info table: 2×2 grid (mobile) → 4-row single-column bordered table (desktop)
+- Padding: `[40,20]` → `[80,32]` (`py-10 px-5 md:py-16 md:px-8 lg:py-20 lg:px-8`)
+
+**Tablet (`md:`):** Stay single column. Heading: 80px (`text-[5rem]`). Body copy: Inter 16px. Info table: keep 2×2. Padding: `py-12 px-6`. At `lg:` switch to two-column layout and scale heading to 96px; at `xl:` full 120px.
+
+**Desktop (`lg:`/`xl:`):** Two-column flex, 120px heading, 18px body, 4-row info table. Current implementation.
+
+---
+
+#### EventSchedule
+
+**Mobile (pencil `krWuW`, 390×647px):**
+`layout: vertical`, `bg-waveclash-cream`. Two sub-sections:
+
+1. Header block (`tXTsw`, 155px): `bg-waveclash-cream`, padding `[32,20,18,20]`, 3px black bottom border, gap 8. Contains:
+   - Label row (`TZ6Wx`): red rule + "§ 02 / SCHEDULE" JetBrains Mono 11px 700.
+   - Heading (`yZ2Ef`): "10 DAYS." / "ZERO MERCY." stacked, gap −6. Archivo Black **48px** (vs 72px desktop), letterSpacing −1.5, leading 0.92. "10 DAYS." black, "ZERO MERCY." navy.
+
+2. Schedule rows (`t1lG6`–`v7D20`, 6 rows × 82px each): `alignItems: center`, gap 12, padding `[14,20]`, 2px black bottom border. Per-row structure:
+   - Day column (fixed 62px wide): day code Archivo Black 16px 900 (e.g. "DAY 01") + date JetBrains Mono 10px 700 red, stacked vertically.
+   - Event name column (`fill_container`): event name Archivo Black 14px 900, tracking −0.3, leading 1.05, fixed-width fill; below it a badge row (same Badge primitive but smaller — inferred from pencil `E4oqDr` note in Primitives, 9px, padding `[3,6]`).
+   - Photo thumbnail (54×54px image, 2px black stroke). Present on all 6 rows.
+
+Note: desktop shows 7 rows with 80×60px thumbnails; mobile shows 6 rows with 54×54px thumbnails (Day 03 is omitted).
+
+Mobile → desktop changes:
+- Section heading: 48px → 72px (`text-[3rem] md:text-[3.5rem] lg:text-[4.5rem]`)
+- Heading padding: `[32,20,18,20]` mobile → `[64,32]` desktop (`pt-8 pb-4 px-5 md:pt-12 md:pb-6 md:px-8 lg:pt-16 lg:px-8`)
+- Day column width: 62px fixed → wider (~100px) on desktop
+- Thumbnail: 54×54px → 80×60px (`w-14 h-14 md:w-16 h-14 lg:w-20 h-[60px]`)
+- Event name font: 14px Archivo Black → 32px Archivo Black desktop (`text-sm md:text-xl lg:text-[2rem]`)
+- Row padding: `[14,20]` → `[18,16]` desktop
+
+**Tablet (`md:`):** Section heading 56px. Row structure stays the same (day + name + thumbnail). Day column 70px. Event name 18px Archivo Black. Thumbnail 64×48px. Row padding `[16,20]`. Section padding `pt-10 pb-5 px-6`.
+
+**Desktop (`lg:`):** 72px heading, 32px event names, 80×60px thumbnails, 7 rows visible.
+
+---
+
+#### SurferGrid
+
+**Mobile (pencil `r0HGn`, 390×2007px):**
+`layout: vertical`, `bg-waveclash-sand`. **Single-column stacked cards**.
+
+Header block (`HMmEr`, 195px): padding `[40,20,20,20]`, 3px black bottom border, gap 8. Section label "§ 03 / COMPETITORS" (red rule + JetBrains Mono 11px 700). Heading "MEET THE" / "SURFERS." stacked vertically, gap −6. Each line: Archivo Black **64px** (vs 180px desktop), letterSpacing −2, leading 0.92.
+
+Cards (4 cards stacked, each ~453px tall):
+- Portrait photo: 360px tall, full-width fill_container (vs fixed-width on desktop). Aspect ratio changes from desktop's portrait crop.
+- Name label: Archivo Black **38px** (vs 32px desktop), letterSpacing −1.5, leading 0.95, fill_container fixed-width.
+- Card padding (info area `h7IZU`): `[18,20]`, gap 6.
+- Rank/country row below name: `justifyContent: space_between`, fill_container.
+
+Mobile → desktop changes:
+- Layout: single column (`flex-col`) → 4-column grid (`grid-cols-4`) on desktop
+- Section heading: 64px → 180px (`text-[4rem] md:text-[6rem] lg:text-[11.25rem]`)
+- Card count visible: all 4 (stacked) → all 4 (side by side)
+- Portrait height: 360px → ~400px fixed on desktop (fill_container wide in both)
+- Athlete name: 38px mobile → 32px desktop (mobile is actually larger — this is intentional, names read at full width)
+- Section padding: `[40,20,20,20]` → `[80,60]` desktop
+
+**Tablet (`md:`):** 2-column grid (`grid-cols-2`). Section heading 96px. Cards stack 2×2. Portrait height 320px. Athlete name 32px. Section padding `py-12 px-6`. At `lg:` shift to 4-column.
+
+**Desktop (`lg:`/`xl:`):** 4-column grid, 180px heading with subcopy column right, 32px athlete names.
+
+---
+
+#### GallerySection
+
+**Mobile:** **Not present in pencil mobile frame `K1HcT3`.** Hide on mobile with `hidden md:block` (or `hidden lg:block` if the mosaic layout requires minimum ~900px to be readable).
+
+**Tablet (`md:`):** If shown at 768px, simplify: single-column stack — large image full-width, then pull-quote panel full-width below, then secondary images (or omit secondary images). The multi-column mosaic (`jmGB2`) requires at least `lg:` to work correctly.
+
+Recommendation: `hidden lg:block` — skip GallerySection on both mobile and tablet, show from `lg:` (1024px+) only.
+
+**Desktop (`lg:`):** Current implementation — full mosaic with large image left, right column with two images + pull-quote panel.
+
+---
+
+#### SponsorStrip
+
+**Mobile (pencil `hbDEb`, 390×149px):**
+`layout: vertical`, `bg-waveclash-black`. Three rows:
+1. Header row (`RwyKP`, 47px): `bg-waveclash-black`, padding `[16,20]`, `justifyContent: space_between`. "§ 04 / BACKED BY" (red rule + JetBrains Mono 11px 700, cream) left / "2026" (JetBrains Mono 11px 700 yellow) right. 2px cream bottom border.
+2. Brand row 1 (`xvtZz`, 51px): 3-column flex — BILLABONG | RIPCURL | QUIKSILVER. Each cell: Archivo Black 14px 900 centered, padding `[18,8]`, cream 2px right-border between cells. 2px cream bottom border on row.
+3. Brand row 2 (`WxeX0`, 51px): 3-column flex — GOPRO | RED BULL | VANS. Same cell sizing. 2px cream bottom border.
+
+6 sponsors total in a **3×2 grid** (vs desktop's single horizontal 7-cell row).
+Note: desktop has 7 sponsor cells; mobile has 6 — one sponsor (OAKLEY or similar) is omitted.
+
+Mobile → desktop changes:
+- Layout: 3-column × 2-row grid → 7-column single-row flex
+- Header structure: simplified 2-field label row → desktop has "OFFICIAL PARTNERS" label + "OFFICIAL PARTNERS — WAVECLASH/26" mono right
+- Brand name font: 14px → 20px desktop (`text-sm md:text-base lg:text-[1.25rem]`)
+- Cell padding: `[18,8]` → `[28,16]` desktop
+- Section height: 149px → 136px desktop (single row is shorter)
+- Sponsor count: 6 → 7
+
+**Tablet (`md:`):** Keep 3×2 grid. Brand names 14px. Cell padding `[18,10]`. At `lg:` switch to single-row 7-col flex and scale brand names to 18px. Full desktop at `xl:` (20px, wider padding).
+
+---
+
+#### CtaBuyPass
+
+**Mobile (pencil `SZ6LH`, 390×391px):**
+`layout: vertical`, `bg-waveclash-yellow`. Note: this is a **condensed "tickets banner"** on mobile — not the full 3-ticket-card layout of the desktop CtaBuyPass block.
+
+Sub-sections:
+1. Tickets ticker bar (`x6kkN`, 35px): `bg-waveclash-black`, padding `[10,20]`, "// TICKETS — DROPPING NOW" yellow JetBrains Mono 11px 700 left / "23 LEFT" red JetBrains Mono 11px 700 right.
+2. Heading block (`lxJMx`, 304px): padding `[28,20]`, gap 8, layout vertical:
+   - "DON'T" — Archivo Black **80px**, letterSpacing −3, leading 0.9, black, fixed-width fill_container.
+   - Row: "WATCH" (Archivo Black 80px, red) + rotated sticker badge (padding `[6,10]`, −6° rotation, black stroke 3px).
+   - "FROM A SCREEN." — Archivo Black **48px**, letterSpacing −2, leading 0.92, black, fixed-width fill_container.
+3. Ticket options strip (`DhRRe`, 52px): 2-column flex, 3px black top border. "SINGLE DAY / $45" (black bg, Archivo Black 14px 900 + JetBrains Mono 12px 700 yellow, centered, padding `[18,16]`, 2px black right-border) | "10-DAY PASS / $210" (red bg, same sizing).
+
+The desktop's 3 TicketCard components are **absent** on mobile — replaced by this compact 2-option bar.
+
+Mobile → desktop changes:
+- Layout: single-column stacked text + 2-option bar → full 3-ticket card layout
+- "DON'T": 80px mobile → heading at 220px desktop ("BE ON THE SAND.")
+- Section bg: yellow mobile → red desktop
+- Ticket presentation: 2-option horizontal bar → 3 TicketCard components side by side
+- 3rd ticket tier (ALL-IN PASS): absent on mobile → present on desktop
+
+**Tablet (`md:`):** Keep the mobile "tickets banner" layout (condensed). Heading "DON'T" stays ~80px; "FROM A SCREEN." stays ~48px. At `lg:` switch to full 3-card CtaBuyPass layout. The 3 cards need at least ~900px to sit side by side without crowding.
+
+Alternative tablet approach: show 2 ticket cards side by side at `md:`, add 3rd card at `lg:` (`grid-cols-1 md:grid-cols-2 lg:grid-cols-3` within the card area).
+
+---
+
+#### SiteFooter
+
+**Mobile (pencil `qP0y1`, 390×576px):**
+`layout: vertical`, `bg-waveclash-black`, padding `[40,20,24,20]`, gap 28.
+
+Sub-sections:
+1. Display heading (`ibBOf`, 161px): "SEE YOU" / "IN THE" / "WATER." stacked vertically, gap −8. Archivo Black **64px** each (vs 180px desktop), letterSpacing −2, leading 0.92. "WATER." in red.
+2. Nav columns (`d8EQV`): **2-column flex**, gap 24. Left col (`PRqrx`): EVENT / SCHEDULE / ATHLETES / VENUE — Archivo Black 18px 900, gap 10, vertical. Right col (`s8KY3T`): TICKETS / MEDIA / CONTACT / PRESS — same styling. (Desktop has 5 nav columns using smaller 13px Archivo Black headers + Inter 14px child links.)
+3. Newsletter / email block (`LLVX4`, 67px): layout vertical, gap 8. "// HEAT REPORT — WEEKLY DROPS" label (JetBrains Mono 11px 700, yellow). Email input row (`vnfuu`): 2px cream border, flex row — text input (bg black, padding 14) | "SUBSCRIBE" button (red bg, Lucide arrow-right icon, padding `[14,18]`, 2px cream left-border).
+4. Social icons (`k5DeD`, 38px): row of 4 icon buttons (Instagram, YouTube, Twitter, Facebook — Lucide 18px), each in a 2px cream-bordered square frame, `bg-waveclash-black`, padding 10. Gap 12.
+5. Legal / copyright (`M49Yq9`, 24px): "© WAVECLASH 2026 / ALL RIGHTS RESERVED" JetBrains Mono 9px 700 cream / "v26.03" JetBrains Mono 9px 700 yellow. 2px cream top border, padding `[12,0,0,0]`.
+
+Note: desktop footer has a TickerBelt at top and a full 5-column nav with child links. Mobile collapses to 2 top-level nav columns (no child links visible) and omits the TickerBelt entirely.
+
+Mobile → desktop changes:
+- Footer heading: 64px → 180px (`text-[4rem] md:text-[6rem] lg:text-[11.25rem]`)
+- Nav: 2-col Archivo Black 18px top-level links → 5-col with Archivo Black 13px headers + Inter 14px child links (`grid-cols-2 md:grid-cols-3 lg:grid-cols-5`)
+- TickerBelt: absent on mobile → present at top of desktop footer (`hidden md:flex`)
+- Social icons: row of icon-only buttons → desktop has text links "INSTAGRAM ↗" / "YOUTUBE ↗" inline in legal bar
+- Padding: `[40,20]` → `[80,60]` desktop
+
+**Tablet (`md:`):** Heading 96px. Nav: 3-column (`grid-cols-3`). Show TickerBelt. Social icons keep icon-only format. Padding `py-12 px-6`. Email input keeps 2-part row layout. At `lg:` switch to full 5-col nav and 180px heading.
+
+**Desktop (`lg:`/`xl:`):** Full layout with TickerBelt, 180px heading, 5-col nav with child links, newsletter block right-aligned. Current implementation.
+
+---
+
+### Breakpoint summary table
+
+| Block | Base (mobile) | `md:` (tablet, ≥768) | `lg:` (≥1024) / `xl:` (≥1280) |
+|---|---|---|---|
+| SiteHeader | Status bar + info strip + 1-row nav (wordmark + compact pill + hamburger) | Remove status bar; keep info strip + hamburger | Restore center nav links; full GET PASS button; no hamburger |
+| Hero | 96px display type, full-width stacked CTAs, no metadata cols, 687px height | ~140px display type, stacked CTAs, min-h ~500px | 280px display type, absolute-positioned metadata cols, bottom-anchored CTAs |
+| StatsBelt | 2×2 grid (4 stats, 64px nums) | 2×2 grid (4 stats) | 5-col flex (all 5 stats, 64px nums) |
+| AboutCallout | Single col, 64px heading, 14px body | Single col, 80px heading, 16px body | Two-col, 120px heading, 18px body |
+| EventSchedule | 48px heading, 14px event names, 54px thumbs | 56px heading, 18px event names, 64×48px thumbs | 72px heading, 32px event names, 80×60px thumbs |
+| SurferGrid | 1-col stacked cards, 64px heading, 38px names | 2-col grid, 96px heading, 32px names | 4-col grid, 180px heading |
+| GallerySection | `hidden` | `hidden` | Full mosaic visible |
+| SponsorStrip | 3×2 grid (6 brands), 14px | 3×2 grid (6 brands), 14px | 7-col flex (7 brands), 20px |
+| CtaBuyPass | Condensed banner: 80px "DON'T", 48px "FROM A SCREEN.", 2-option bar | Keep condensed banner | Full 3-card layout, 220px heading |
+| SiteFooter | 64px heading, 2-col nav (top-level only), no TickerBelt | 96px heading, 3-col nav, TickerBelt appears | 180px heading, 5-col nav with child links |
+
+---
+
 ## Concerns / Flags for Review
 
 1. **`#00355c` navy is a real brand color** — confirmed on three distinct nodes:
