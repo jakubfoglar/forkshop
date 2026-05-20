@@ -165,28 +165,29 @@ function SinglePageBoard({
 }
 
 export default function DemoPage() {
-  const [selection, setSelection] = useState<ForkshopSelection>(DEFAULT_SELECTION)
+  // Decode URL state eagerly during the first client render so that
+  // AgentActivityProvider receives the correct initialActivity before its
+  // own useState initializer runs. Reading window.location inside a lazy
+  // useState initializer is safe in "use client" components — Next.js only
+  // calls the initializer on the client, never during SSR.
+  const [urlState] = useState(() =>
+    typeof window !== "undefined"
+      ? decodeUrlState(window.location.search)
+      : { agents: [], zoom: undefined, pan: undefined },
+  )
+
+  const [selection, setSelection] = useState<ForkshopSelection>(() => {
+    if (typeof window === "undefined") return DEFAULT_SELECTION
+    return parseSelection(window.location.hash) ?? DEFAULT_SELECTION
+  })
   const [hasHydrated, setHasHydrated] = useState(false)
-  const [initialActivity, setInitialActivity] = useState<ActivityEntry[]>([])
-  const [initialZoom, setInitialZoom] = useState<number | undefined>(undefined)
-  const [initialPan, setInitialPan] = useState<{ x: number; y: number } | undefined>(undefined)
+  const [initialActivity] = useState<ActivityEntry[]>(() =>
+    urlState.agents.map(mapAgentSeed),
+  )
+  const [initialZoom] = useState<number | undefined>(() => urlState.zoom)
+  const [initialPan] = useState<{ x: number; y: number } | undefined>(() => urlState.pan)
 
   useEffect(() => {
-    const urlState = decodeUrlState(window.location.search)
-
-    // Decode selection from hash
-    const fromHash = parseSelection(window.location.hash)
-    if (fromHash) setSelection(fromHash)
-
-    // Wire zoom + pan from URL
-    if (urlState.zoom !== undefined) setInitialZoom(urlState.zoom)
-    if (urlState.pan !== undefined) setInitialPan(urlState.pan)
-
-    // Wire agents from URL
-    if (urlState.agents.length > 0) {
-      setInitialActivity(urlState.agents.map(mapAgentSeed))
-    }
-
     setHasHydrated(true)
   }, [])
 

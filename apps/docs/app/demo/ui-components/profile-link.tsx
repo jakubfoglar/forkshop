@@ -31,7 +31,7 @@ export function ProfileLinkBoard() {
           height: 64,
           label,
           render: () => (
-            <div className={`inline-flex items-center justify-center ${bg} px-6 py-4`}>
+            <div className={`demo-scope inline-flex items-center justify-center ${bg} px-6 py-4`}>
               <ProfileLink>{children}</ProfileLink>
             </div>
           ),

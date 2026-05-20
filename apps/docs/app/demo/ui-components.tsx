@@ -23,7 +23,7 @@ export function UIComponentsBoard() {
           width: 320,
           height: 120,
           label: p.name,
-          render: () => <p.Component />,
+          render: () => <div className="demo-scope"><p.Component /></div>,
         }
         return { id: node.id, label: p.name, node }
       }),

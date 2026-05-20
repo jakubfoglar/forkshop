@@ -27,7 +27,9 @@ export function StatCounterBoard() {
           height: 120,
           label,
           render: () => (
-            <StatCounter value={value} label={statLabel} highlight={highlight} />
+            <div className="demo-scope">
+              <StatCounter value={value} label={statLabel} highlight={highlight} />
+            </div>
           ),
         }
         return { id: node.id, label, node }

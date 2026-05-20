@@ -65,7 +65,7 @@ export function SectionHeadingRowBoard() {
           height,
           label,
           render: () => (
-            <div className={`flex items-center ${bg} px-8 py-6 w-full`}>
+            <div className={`demo-scope flex items-center ${bg} px-8 py-6 w-full`}>
               <SectionHeadingRow
                 title={title}
                 eyebrow={eyebrow}

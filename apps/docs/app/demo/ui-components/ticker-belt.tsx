@@ -33,7 +33,9 @@ export function TickerBeltBoard() {
           height: size === "lg" ? 80 : 70,
           label,
           render: () => (
-            <TickerBelt fill={fill} size={size} separator={separator} />
+            <div className="demo-scope">
+              <TickerBelt fill={fill} size={size} separator={separator} />
+            </div>
           ),
         }
         return { id: node.id, label, node }

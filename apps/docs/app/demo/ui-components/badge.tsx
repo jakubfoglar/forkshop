@@ -29,7 +29,7 @@ export function BadgeBoard() {
           height: 64,
           label,
           render: () => (
-            <div className="inline-flex items-center justify-center bg-waveclash-black p-4">
+            <div className="demo-scope inline-flex items-center justify-center bg-waveclash-black p-4">
               <Badge fill={fill} size={size}>{content}</Badge>
             </div>
           ),

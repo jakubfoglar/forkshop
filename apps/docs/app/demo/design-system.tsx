@@ -50,7 +50,7 @@ export function DesignSystemBoard({
           width: 320,
           height: 160,
           label: p.name,
-          render: () => <p.Component />,
+          render: () => <div className="demo-scope"><p.Component /></div>,
         })),
       },
     ],

@@ -34,7 +34,7 @@ export function ButtonBoard() {
         height: 80,
         label: `${variant} / ${width}`,
         render: () => (
-          <div className="inline-flex items-center justify-center bg-waveclash-black p-6 w-full">
+          <div className="demo-scope inline-flex items-center justify-center bg-waveclash-black p-6 w-full">
             <Button variant={variant} width={width}>
               {VARIANT_LABELS[variant]}
             </Button>
