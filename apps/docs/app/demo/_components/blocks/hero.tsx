@@ -59,8 +59,11 @@ export function Hero({
           priority
         />
 
-        {/* 70% opacity overlay */}
-        <div className="absolute inset-0 bg-waveclash-black/70" />
+        {/* Gradient overlay: 40% at top → 75% at bottom for text contrast */}
+        <div
+          className="absolute inset-0"
+          style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.75) 100%)" }}
+        />
 
         {/* Inner content — padding matches [32, 32] source */}
         <div className="relative z-10 flex flex-col justify-between h-full px-8 py-8" style={{ minHeight: "600px" }}>

@@ -12,13 +12,13 @@ import type { EventScheduleRowData } from "./event-schedule-row.js"
 // Row data sourced from pencil nodes oYcgs, Dpio8, Og8pX, R2cAZ, T0EVe, DJSDK, tDi2q
 // Date format: "MAR DD" (JetBrains Mono 10px, pencil nodes EDuWL, yhnjK, …)
 const DEFAULT_SCHEDULE: EventScheduleRowData[] = [
-  { dayCode: "D01", date: "MAR 14", eventName: "OPENING CEREMONY",    fill: "yellow", badgeLabel: "CULTURE",     time: "06:30" },
-  { dayCode: "D02", date: "MAR 15", eventName: "MEN'S QUALIFYING",    fill: "red",    badgeLabel: "COMPETITION", time: "07:00" },
-  { dayCode: "D03", date: "MAR 16", eventName: "WOMEN'S QUALIFYING",  fill: "red",    badgeLabel: "COMPETITION", time: "07:00" },
-  { dayCode: "D04", date: "MAR 17", eventName: "BIG WAVE INVITATIONAL", fill: "navy", badgeLabel: "PREMIER",     time: "05:30" },
-  { dayCode: "D05", date: "MAR 18", eventName: "AIRSHOW EXPRESSION",  fill: "yellow", badgeLabel: "CULTURE",     time: "10:00" },
-  { dayCode: "D06", date: "MAR 21", eventName: "SEMIFINALS / BOTH",   fill: "red",    badgeLabel: "COMPETITION", time: "08:00" },
-  { dayCode: "D07", date: "MAR 23", eventName: "GRAND FINAL",         fill: "black",  badgeLabel: "FINAL",       time: "14:00" },
+  { dayCode: "D01", date: "MAR 14", eventName: "OPENING CEREMONY",    fill: "yellow", badgeLabel: "CULTURE",     time: "06:30", imageSrc: "/demo/gallery-1.jpg" },
+  { dayCode: "D02", date: "MAR 15", eventName: "MEN'S QUALIFYING",    fill: "red",    badgeLabel: "COMPETITION", time: "07:00", imageSrc: "/demo/gallery-2.jpg" },
+  { dayCode: "D03", date: "MAR 16", eventName: "WOMEN'S QUALIFYING",  fill: "red",    badgeLabel: "COMPETITION", time: "07:00", imageSrc: "/demo/gallery-4.jpg" },
+  { dayCode: "D04", date: "MAR 17", eventName: "BIG WAVE INVITATIONAL", fill: "navy", badgeLabel: "PREMIER",     time: "05:30", imageSrc: "/demo/gallery-5.jpg" },
+  { dayCode: "D05", date: "MAR 18", eventName: "AIRSHOW EXPRESSION",  fill: "yellow", badgeLabel: "CULTURE",     time: "10:00", imageSrc: "/demo/gallery-6.jpg" },
+  { dayCode: "D06", date: "MAR 21", eventName: "SEMIFINALS / BOTH",   fill: "red",    badgeLabel: "COMPETITION", time: "08:00", imageSrc: "/demo/gallery-7.jpg" },
+  { dayCode: "D07", date: "MAR 23", eventName: "GRAND FINAL",         fill: "black",  badgeLabel: "FINAL",       time: "14:00", imageSrc: "/demo/gallery-3.jpg" },
 ]
 
 export interface EventScheduleProps {

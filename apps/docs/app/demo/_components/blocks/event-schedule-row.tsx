@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { cn } from "@/lib/cn"
 import { Badge } from "../ui/badge.js"
 import type { BadgeFill } from "../ui/badge.js"
@@ -14,6 +15,7 @@ export interface EventScheduleRowData {
   fill: BadgeFill
   badgeLabel: string
   time: string       // "10:00"
+  imageSrc?: string  // optional thumbnail photo
 }
 
 interface EventScheduleRowProps {
@@ -50,11 +52,20 @@ export function EventScheduleRow({ row, isLast = false }: EventScheduleRowProps)
         </span>
       </div>
 
-      {/* Photo thumbnail 80×60 — placeholder, 2px black border */}
-      <div
-        className="bg-waveclash-black shrink-0 border-2 border-waveclash-black"
-        style={{ width: 80, height: 60 }}
-      />
+      {/* Photo thumbnail 80×60 */}
+      {row.imageSrc ? (
+        <div
+          className="shrink-0 relative overflow-hidden border-2 border-waveclash-black"
+          style={{ width: 80, height: 60 }}
+        >
+          <Image src={row.imageSrc} alt="" fill className="object-cover" />
+        </div>
+      ) : (
+        <div
+          className="bg-waveclash-black shrink-0 border-2 border-waveclash-black"
+          style={{ width: 80, height: 60 }}
+        />
+      )}
 
       {/* Event name — fill container, Archivo Black 32px, tracking −1 */}
       <span
