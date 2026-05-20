@@ -5,8 +5,8 @@ export type TickerBeltSize = "md" | "lg"
 
 export interface TickerBeltProps {
   fill?: TickerBeltFill
-  items: string[]
-  separator: string  // required — both design instances choose explicitly
+  items?: string[]   // optional with gallery-safe default
+  separator?: string // optional with gallery-safe default
   size?: TickerBeltSize  // "lg" = text-wc-6xl (28px, hero default); "md" = text-wc-4xl (22px, footer)
   className?: string
 }
@@ -24,8 +24,8 @@ export interface TickerBeltProps {
  */
 export function TickerBelt({
   fill = "yellow",
-  items,
-  separator,
+  items = ["WAVECLASH", "BANZAI PIPELINE", "MAR 2026", "NORTH SHORE"],
+  separator = "◆",
   size = "lg",
   className,
 }: TickerBeltProps) {
