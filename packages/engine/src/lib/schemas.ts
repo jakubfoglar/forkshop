@@ -6,6 +6,8 @@ const baseNodeSchema = z.object({
   y: z.number(),
   width: z.number().nonnegative(),
   height: z.number().nonnegative(),
+  // AnyNode.label is typed ReactNode; this schema validates the string case only.
+  // Non-string labels (e.g., a JSX element) bypass runtime validation harmlessly.
   label: z.string().optional(),
 })
 
@@ -31,6 +33,7 @@ const iframeComponentSchema = baseNodeSchema.extend({
   slug: z.string().min(1),
   previewSrc: z.string().min(1),
   sourceFile: z.string().optional(),
+  componentPath: z.string().optional(),
 })
 
 export const nodeSchema = z.discriminatedUnion("kind", [
