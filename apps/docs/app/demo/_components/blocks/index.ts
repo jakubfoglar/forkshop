@@ -6,3 +6,6 @@ export type { HeroProps } from "./hero.js"
 
 export { StatsBelt } from "./stats-belt.js"
 export type { StatsBeltProps, StatsBeltStat } from "./stats-belt.js"
+
+export { AboutCallout } from "./about-callout.js"
+export type { AboutCalloutProps, InfoRow } from "./about-callout.js"
