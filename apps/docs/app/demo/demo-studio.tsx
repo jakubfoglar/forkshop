@@ -26,6 +26,9 @@ import { SitemapBoard } from "./sitemap-board"
 import { ButtonBoard } from "./ui-components/button"
 import { BadgeBoard } from "./ui-components/badge"
 import { StatCounterBoard } from "./ui-components/stat-counter"
+import { ProfileLinkBoard } from "./ui-components/profile-link"
+import { SectionHeadingRowBoard } from "./ui-components/section-heading-row"
+import { TickerBeltBoard } from "./ui-components/ticker-belt"
 import { forkshopConfig } from "./forkshop.config"
 import { decodeUrlState, type AgentSeed } from "./decode-url-state"
 
@@ -40,6 +43,9 @@ const PRIMITIVE_BOARDS: Record<string, React.ComponentType> = {
   button: ButtonBoard,
   badge: BadgeBoard,
   "stat-counter": StatCounterBoard,
+  "profile-link": ProfileLinkBoard,
+  "section-heading-row": SectionHeadingRowBoard,
+  "ticker-belt": TickerBeltBoard,
 }
 
 const DISCOVERED_PRIMITIVES = discoverPrimitives(forkshopConfig.ui)
