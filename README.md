@@ -1,12 +1,8 @@
 # Forkshop
 
-A Figma-style canvas mounted inside your Next.js dev server.
-
-Forkshop adds a sidebar and an infinite canvas to an existing
-project. Your pages, components, and design tokens render on the
-canvas as iframes — at multiple viewports, side-by-side. Click any
-text to edit it; ⌘↵ saves to source. When a coding agent edits a
-file your canvas is showing, the change lands in real time.
+Forkshop mounts a canvas inside your app's dev environment. Open any
+page at multiple viewports side-by-side, edit text in place to save
+back to source, and watch your AI agents work in real time.
 
 **Docs:** https://forkshop.dev/docs
 
@@ -40,7 +36,7 @@ your first Board.
 
 ## Status
 
-`v0.1.0`. Pre-1.0 — expect breaking changes between minor versions.
+`v0.3.1`. Pre-1.0 — expect breaking changes between minor versions.
 
 ## License
 
