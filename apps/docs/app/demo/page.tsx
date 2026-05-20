@@ -10,7 +10,7 @@ import { SectionHeadingRow } from "./_components/ui/section-heading-row.js"
 import { ProfileLink } from "./_components/ui/profile-link.js"
 import { TickerBelt } from "./_components/ui/ticker-belt.js"
 
-import { SiteHeader } from "./_components/blocks/index.js"
+import { SiteHeader, Hero } from "./_components/blocks/index.js"
 
 // ── Swatch data (kept brief — one row per brand primitive) ────────────────────
 const brandColors = [
@@ -245,6 +245,10 @@ export default function DemoPage() {
         <div className="space-y-12">
           <GalleryItem label="SiteHeader (source: LEYsk)">
             <SiteHeader />
+          </GalleryItem>
+
+          <GalleryItem label="Hero (source: sUP7n)">
+            <Hero />
           </GalleryItem>
         </div>
       </section>
