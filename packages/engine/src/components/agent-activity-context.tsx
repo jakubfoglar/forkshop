@@ -55,12 +55,16 @@ const STALE_MS = 5500
 
 export function AgentActivityProvider({
   fileMap,
+  initialActivity,
   children,
 }: {
   fileMap: FileMap
+  initialActivity?: readonly ActivityEntry[]
   children: ReactNode
 }) {
-  const [entries, setEntries] = useState<readonly ActivityEntry[]>([])
+  const [entries, setEntries] = useState<readonly ActivityEntry[]>(
+    () => initialActivity ?? [],
+  )
   const [seenPagePaths, setSeenPagePaths] = useState<ReadonlySet<string>>(() => new Set())
 
   useEffect(() => {
