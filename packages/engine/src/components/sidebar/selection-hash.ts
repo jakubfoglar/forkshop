@@ -29,6 +29,12 @@ export function serializeSelection(selection: ForkshopSelection): string {
       // Custom selections are not serializable into a URL hash; fall back to root.
       return "#"
     }
+    default: {
+      // Exhaustiveness guard — adding a new kind to ForkshopSelection without a
+      // matching case here will fail to compile, preventing silent regressions.
+      const _exhaustive: never = selection
+      return _exhaustive
+    }
   }
 }
 
