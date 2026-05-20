@@ -84,7 +84,7 @@ export function SurferCard({ surfer }: SurferCardProps) {
         {/* Athlete name: Archivo Black 32px, tracking −1, may be two lines */}
         <div
           className={cn(
-            "font-display text-7xl text-waveclash-black uppercase",
+            "font-display text-wc-7xl text-waveclash-black uppercase",
             "tracking-label-tight leading-tight",
           )}
         >

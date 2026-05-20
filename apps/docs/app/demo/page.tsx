@@ -26,7 +26,7 @@ const brandColors = [
 // ── Section label helper ──────────────────────────────────────────────────────
 function GalleryLabel({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="font-demo-mono text-sm font-bold uppercase tracking-label-widest text-waveclash-red mb-4">
+    <h2 className="font-demo-mono text-wc-sm font-bold uppercase tracking-label-widest text-waveclash-red mb-4">
       {children}
     </h2>
   )
@@ -50,8 +50,8 @@ export default function DemoPage() {
               key={token}
               className={`bg-${token} ${textClass} px-3 py-2 flex-shrink-0`}
             >
-              <div className="font-demo-mono text-xs font-bold">{token}</div>
-              <div className="font-demo-mono text-xs opacity-60">{hex}</div>
+              <div className="font-demo-mono text-wc-xs font-bold">{token}</div>
+              <div className="font-demo-mono text-wc-xs opacity-60">{hex}</div>
             </div>
           ))}
         </div>
@@ -66,7 +66,7 @@ export default function DemoPage() {
         <div className="space-y-2">
           {/* Yellow — hero instance (◆ diamond separator, wider text) */}
           <div>
-            <div className="font-demo-mono text-xs text-waveclash-cream/50 mb-1">
+            <div className="font-demo-mono text-wc-xs text-waveclash-cream/50 mb-1">
               fill=&quot;yellow&quot; — separator=&quot;◆&quot; (hero instance, source: YmRZq)
             </div>
             <TickerBelt
@@ -78,7 +78,7 @@ export default function DemoPage() {
 
           {/* Black — footer instance (★ star separator, smaller text) */}
           <div>
-            <div className="font-demo-mono text-xs text-waveclash-cream/50 mb-1">
+            <div className="font-demo-mono text-wc-xs text-waveclash-cream/50 mb-1">
               fill=&quot;black&quot; — separator=&quot;★&quot; (footer instance, source: SZ1De)
             </div>
             <TickerBelt
@@ -99,7 +99,7 @@ export default function DemoPage() {
         <div className="space-y-6">
           {/* Desktop size (default) */}
           <div>
-            <div className="font-demo-mono text-xs text-waveclash-cream/50 mb-3">
+            <div className="font-demo-mono text-wc-xs text-waveclash-cream/50 mb-3">
               size=&quot;md&quot; — 10px, padding [6,12] (source: iIHE3, o70xu, gHqrV, YV0Rp)
             </div>
             <div className="flex flex-wrap gap-3">
@@ -113,7 +113,7 @@ export default function DemoPage() {
 
           {/* Mobile size */}
           <div>
-            <div className="font-demo-mono text-xs text-waveclash-cream/50 mb-3">
+            <div className="font-demo-mono text-wc-xs text-waveclash-cream/50 mb-3">
               size=&quot;sm&quot; — 9px, padding [3,6] (source: E4oqDr mobile variants)
             </div>
             <div className="flex flex-wrap gap-2">
@@ -132,7 +132,7 @@ export default function DemoPage() {
       {/* ── 3. ProfileLink ───────────────────────────────────────────────────── */}
       <section>
         <GalleryLabel>ProfileLink</GalleryLabel>
-        <div className="font-demo-mono text-xs text-waveclash-cream/50 mb-3">
+        <div className="font-demo-mono text-wc-xs text-waveclash-cream/50 mb-3">
           JetBrains Mono 11px bold red, gap 6px, → arrow (source: Y1YAER, yo8d4)
         </div>
         <div className="flex flex-wrap gap-6">
@@ -147,12 +147,12 @@ export default function DemoPage() {
       {/* ── 4. StatCounter ───────────────────────────────────────────────────── */}
       <section>
         <GalleryLabel>StatCounter</GalleryLabel>
-        <div className="font-demo-mono text-xs text-waveclash-cream/50 mb-3">
+        <div className="font-demo-mono text-wc-xs text-waveclash-cream/50 mb-3">
           Archivo Black 64px / JetBrains Mono 11px bold red label (source: Nc0i9, F0N5N)
         </div>
 
         {/* Default (black bg) */}
-        <div className="mb-2 font-demo-mono text-xs text-waveclash-cream/50">highlight=false (default)</div>
+        <div className="mb-2 font-demo-mono text-wc-xs text-waveclash-cream/50">highlight=false (default)</div>
         <div className="flex flex-wrap gap-px mb-6">
           <StatCounter value="64" label="Athletes" />
           <StatCounter value="23" label="Countries" />
@@ -161,7 +161,7 @@ export default function DemoPage() {
         </div>
 
         {/* Highlight (red bg) */}
-        <div className="mb-2 font-demo-mono text-xs text-waveclash-cream/50">highlight=true (COUNTRIES cell variant, source: F0N5N)</div>
+        <div className="mb-2 font-demo-mono text-wc-xs text-waveclash-cream/50">highlight=true (COUNTRIES cell variant, source: F0N5N)</div>
         <div className="flex flex-wrap gap-px">
           <StatCounter value="64" label="Athletes" />
           <StatCounter value="23" label="Countries" highlight />
@@ -177,7 +177,7 @@ export default function DemoPage() {
         <GalleryLabel>SectionHeadingRow</GalleryLabel>
 
         {/* size="lg" — 72px heading (EVENT / SCHEDULE) */}
-        <div className="mb-2 font-demo-mono text-xs text-waveclash-cream/50">
+        <div className="mb-2 font-demo-mono text-wc-xs text-waveclash-cream/50">
           size=&quot;lg&quot; — 72px (source: dmqgc)
         </div>
         <div className="bg-waveclash-sand px-8 py-6 mb-8">
@@ -195,7 +195,7 @@ export default function DemoPage() {
         </div>
 
         {/* size="xl" — 180px heading (MEET THE SURFERS.) */}
-        <div className="mb-2 font-demo-mono text-xs text-waveclash-cream/50">
+        <div className="mb-2 font-demo-mono text-wc-xs text-waveclash-cream/50">
           size=&quot;xl&quot; — 180px (source: anKrW) — overflow intentional at this width
         </div>
         <div className="bg-waveclash-sand px-8 py-6 overflow-hidden">
@@ -214,7 +214,7 @@ export default function DemoPage() {
         <GalleryLabel>Button</GalleryLabel>
 
         {/* Compact variants */}
-        <div className="mb-2 font-demo-mono text-xs text-waveclash-cream/50">
+        <div className="mb-2 font-demo-mono text-wc-xs text-waveclash-cream/50">
           width=&quot;compact&quot; — intrinsic width (source: i9Ino nav, ff1pZ athletes)
         </div>
         <div className="flex flex-wrap gap-3 mb-8">
@@ -224,7 +224,7 @@ export default function DemoPage() {
         </div>
 
         {/* Wide variants — shown in constrained containers to simulate fill_container */}
-        <div className="mb-2 font-demo-mono text-xs text-waveclash-cream/50">
+        <div className="mb-2 font-demo-mono text-wc-xs text-waveclash-cream/50">
           width=&quot;wide&quot; — fill container (source: xm0Gd hero, y5PC1 ticket, rE6Uq ticket)
         </div>
         <div className="flex flex-col gap-2 max-w-sm">
@@ -238,7 +238,7 @@ export default function DemoPage() {
 
       {/* ── Blocks (Part 1) ───────────────────────────────────────────────────── */}
       <section>
-        <h2 className="font-demo-mono uppercase text-sm tracking-label-wider mb-4 mt-16 text-waveclash-red font-bold">
+        <h2 className="font-demo-mono uppercase text-wc-sm tracking-label-wider mb-4 mt-16 text-waveclash-red font-bold">
           Blocks (Part 1)
         </h2>
 
@@ -267,7 +267,7 @@ export default function DemoPage() {
 
       {/* ── Blocks (Part 2) ───────────────────────────────────────────────────── */}
       <section>
-        <h2 className="font-demo-mono uppercase text-sm tracking-label-wider mb-4 mt-16 text-waveclash-red font-bold">
+        <h2 className="font-demo-mono uppercase text-wc-sm tracking-label-wider mb-4 mt-16 text-waveclash-red font-bold">
           Blocks (Part 2)
         </h2>
 
@@ -302,7 +302,7 @@ export default function DemoPage() {
 function GalleryItem({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <div className="font-demo-mono uppercase text-xs text-waveclash-graphite mb-2">{label}</div>
+      <div className="font-demo-mono uppercase text-wc-xs text-waveclash-graphite mb-2">{label}</div>
       <div className="border border-waveclash-graphite overflow-hidden">{children}</div>
     </div>
   )

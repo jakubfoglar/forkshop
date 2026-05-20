@@ -71,7 +71,7 @@ export function Hero({
             <div className="flex flex-col gap-1">
               <span
                 className={cn(
-                  "font-demo-mono text-sm font-bold text-waveclash-cream uppercase",
+                  "font-demo-mono text-wc-sm font-bold text-waveclash-cream uppercase",
                   "tracking-label-widest",
                 )}
               >
@@ -79,7 +79,7 @@ export function Hero({
               </span>
               <span
                 className={cn(
-                  "font-demo-mono text-xs font-bold text-waveclash-cream/60 uppercase",
+                  "font-demo-mono text-wc-xs font-bold text-waveclash-cream/60 uppercase",
                   "tracking-label-wider",
                 )}
               >
@@ -91,7 +91,7 @@ export function Hero({
             <div className="flex flex-col items-end gap-1">
               <span
                 className={cn(
-                  "font-demo-mono text-sm font-bold text-waveclash-cream uppercase",
+                  "font-demo-mono text-wc-sm font-bold text-waveclash-cream uppercase",
                   "tracking-label-wider",
                 )}
               >
@@ -99,7 +99,7 @@ export function Hero({
               </span>
               <span
                 className={cn(
-                  "font-demo-mono text-sm font-bold text-waveclash-yellow uppercase",
+                  "font-demo-mono text-wc-sm font-bold text-waveclash-yellow uppercase",
                   "tracking-label-wider",
                 )}
               >
@@ -139,7 +139,7 @@ export function Hero({
             {/* Bottom-right: world-tour badge rotated −15° (ZGE9R) */}
             <div
               className={cn(
-                "font-demo-mono text-sm font-bold text-waveclash-cream uppercase",
+                "font-demo-mono text-wc-sm font-bold text-waveclash-cream uppercase",
                 "tracking-label-widest",
                 "border-[3px] border-waveclash-yellow px-4 py-2",
               )}
@@ -163,7 +163,7 @@ export function Hero({
       >
         <span
           className={cn(
-            "font-display text-3xl text-waveclash-cream uppercase",
+            "font-display text-wc-3xl text-waveclash-cream uppercase",
             "tracking-label-wide",
           )}
         >
@@ -171,7 +171,7 @@ export function Hero({
         </span>
         <span
           className={cn(
-            "font-display text-3xl text-waveclash-cream uppercase",
+            "font-display text-wc-3xl text-waveclash-cream uppercase",
             "tracking-label-wide",
           )}
         >
@@ -179,7 +179,7 @@ export function Hero({
         </span>
         <span
           className={cn(
-            "font-display text-3xl text-waveclash-cream uppercase",
+            "font-display text-wc-3xl text-waveclash-cream uppercase",
             "tracking-label-wide",
           )}
         >

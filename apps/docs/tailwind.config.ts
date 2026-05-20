@@ -44,30 +44,30 @@ const config: Config = {
         "demo-muted-foreground": "var(--demo-muted-foreground)",
       },
       fontSize: {
-        // Demo: WAVECLASH custom type scale (10–280px)
-        // Format: [fontSize, { lineHeight, letterSpacing }]
-        // Line heights and letter spacings are representative defaults for each size bucket.
-        xs:           ["10px",  { lineHeight: "1.0" }],
-        sm:           ["11px",  { lineHeight: "1.0" }],
-        base:         ["12px",  { lineHeight: "1.0" }],
-        md:           ["13px",  { lineHeight: "1.0" }],
-        lg:           ["14px",  { lineHeight: "1.4" }],
-        xl:           ["15px",  { lineHeight: "1.0" }],
-        "2xl":        ["16px",  { lineHeight: "1.4" }],
-        "3xl":        ["18px",  { lineHeight: "1.0" }],
-        "3-5xl":      ["20px",  { lineHeight: "1.0" }],
-        "4xl":        ["22px",  { lineHeight: "1.0" }],
-        "5xl":        ["24px",  { lineHeight: "1.0" }],
-        "6xl":        ["28px",  { lineHeight: "1.0" }],
-        "7xl":        ["32px",  { lineHeight: "1.0" }],
-        "8xl":        ["64px",  { lineHeight: "0.9" }],
-        "9xl":        ["72px",  { lineHeight: "0.9" }],
-        "10xl":       ["80px",  { lineHeight: "0.85" }],
-        "11xl":       ["120px", { lineHeight: "0.9" }],
-        "display-xs": ["30px",  { lineHeight: "1.4" }],
-        "display-sm": ["180px", { lineHeight: "0.88" }],
-        "display-md": ["220px", { lineHeight: "0.85" }],
-        "display-lg": ["280px", { lineHeight: "0.85" }],
+        // Demo: WAVECLASH custom type scale (10–280px), namespaced with wc- prefix
+        // to avoid overriding Tailwind defaults on marketing/docs routes.
+        // Format: [fontSize, { lineHeight }]
+        "wc-xs":           ["10px",  { lineHeight: "1.0" }],
+        "wc-sm":           ["11px",  { lineHeight: "1.0" }],
+        "wc-base":         ["12px",  { lineHeight: "1.0" }],
+        "wc-md":           ["13px",  { lineHeight: "1.0" }],
+        "wc-lg":           ["14px",  { lineHeight: "1.4" }],
+        "wc-xl":           ["15px",  { lineHeight: "1.0" }],
+        "wc-2xl":          ["16px",  { lineHeight: "1.4" }],
+        "wc-3xl":          ["18px",  { lineHeight: "1.0" }],
+        "wc-3-5xl":        ["20px",  { lineHeight: "1.0" }],
+        "wc-4xl":          ["22px",  { lineHeight: "1.0" }],
+        "wc-5xl":          ["24px",  { lineHeight: "1.0" }],
+        "wc-6xl":          ["28px",  { lineHeight: "1.0" }],
+        "wc-7xl":          ["32px",  { lineHeight: "1.0" }],
+        "wc-8xl":          ["64px",  { lineHeight: "0.9" }],
+        "wc-9xl":          ["72px",  { lineHeight: "0.9" }],
+        "wc-10xl":         ["80px",  { lineHeight: "0.85" }],
+        "wc-11xl":         ["120px", { lineHeight: "0.9" }],
+        "wc-display-xs":   ["30px",  { lineHeight: "1.4" }],
+        "wc-display-sm":   ["180px", { lineHeight: "0.88" }],
+        "wc-display-md":   ["220px", { lineHeight: "0.85" }],
+        "wc-display-lg":   ["280px", { lineHeight: "0.85" }],
       },
       letterSpacing: {
         // Demo: WAVECLASH named tracking levels
@@ -132,7 +132,7 @@ const config: Config = {
   safelist: [
     { pattern: /^bg-waveclash-/ },
     { pattern: /^bg-demo-/ },
-    { pattern: /^text-(xs|sm|base|md|lg|xl|2xl|3xl|3-5xl|4xl|5xl|6xl|7xl|8xl|9xl|10xl|11xl|display-xs|display-sm|display-md|display-lg)$/ },
+    { pattern: /^text-wc-(xs|sm|base|md|lg|xl|2xl|3xl|3-5xl|4xl|5xl|6xl|7xl|8xl|9xl|10xl|11xl|display-xs|display-sm|display-md|display-lg)$/ },
   ],
   plugins: [typography],
 }

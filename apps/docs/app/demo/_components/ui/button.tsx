@@ -52,11 +52,11 @@ export function Button({
       )}
       {...props}
     >
-      <span className="text-md tracking-label-wide">{children}</span>
+      <span className="text-wc-md tracking-label-wide">{children}</span>
       <span
         aria-hidden
         className={cn(
-          "text-3-5xl leading-none",
+          "text-wc-3-5xl leading-none",
           // Ghost compact arrow is red; ghost wide and all others match label
           variant === "ghost" && !isWide
             ? "text-waveclash-red"

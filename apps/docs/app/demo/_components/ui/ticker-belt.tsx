@@ -7,7 +7,7 @@ export interface TickerBeltProps {
   fill?: TickerBeltFill
   items: string[]
   separator: string  // required — both design instances choose explicitly
-  size?: TickerBeltSize  // "lg" = text-6xl (28px, hero default); "md" = text-4xl (22px, footer)
+  size?: TickerBeltSize  // "lg" = text-wc-6xl (28px, hero default); "md" = text-wc-4xl (22px, footer)
   className?: string
 }
 
@@ -29,7 +29,7 @@ export function TickerBelt({
   size = "lg",
   className,
 }: TickerBeltProps) {
-  const textClass = size === "md" ? "text-4xl" : "text-6xl"
+  const textClass = size === "md" ? "text-wc-4xl" : "text-wc-6xl"
 
   return (
     <div

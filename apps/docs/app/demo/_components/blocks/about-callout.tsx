@@ -85,7 +85,7 @@ export function AboutCallout({
         {/* "// MANIFESTO" label */}
         <span
           className={cn(
-            "font-demo-mono text-sm font-bold text-waveclash-red uppercase",
+            "font-demo-mono text-wc-sm font-bold text-waveclash-red uppercase",
             "tracking-label-widest",
           )}
         >
@@ -95,7 +95,7 @@ export function AboutCallout({
         {/* Body copy — Inter 18px weight 500 */}
         <p
           className={cn(
-            "font-body text-2xl text-waveclash-black leading-relaxed",
+            "font-body text-wc-2xl text-waveclash-black leading-relaxed",
           )}
           style={{ fontWeight: 500 }}
         >
@@ -116,7 +116,7 @@ export function AboutCallout({
               >
                 <span
                   className={cn(
-                    "font-demo-mono text-sm font-bold text-waveclash-black uppercase",
+                    "font-demo-mono text-wc-sm font-bold text-waveclash-black uppercase",
                     "tracking-label-widest",
                   )}
                 >
@@ -124,7 +124,7 @@ export function AboutCallout({
                 </span>
                 <span
                   className={cn(
-                    "font-display text-md text-waveclash-black uppercase",
+                    "font-display text-wc-md text-waveclash-black uppercase",
                     "tracking-label-normal",
                   )}
                 >

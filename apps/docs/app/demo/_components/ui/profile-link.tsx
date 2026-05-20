@@ -21,14 +21,14 @@ export function ProfileLink({ href, className, children, ...props }: ProfileLink
       href={href}
       className={cn(
         "inline-flex items-center gap-1.5",
-        "font-demo-mono text-sm font-bold text-waveclash-red uppercase",
+        "font-demo-mono text-wc-sm font-bold text-waveclash-red uppercase",
         "no-underline",
         className,
       )}
       {...props}
     >
       <span>{children}</span>
-      <span aria-hidden className="text-sm leading-none">→</span>
+      <span aria-hidden className="text-wc-sm leading-none">→</span>
     </a>
   )
 }

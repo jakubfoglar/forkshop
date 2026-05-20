@@ -59,7 +59,7 @@ export function GallerySection({
         <div className="flex flex-col gap-2 flex-1">
           <span
             className={cn(
-              "font-demo-mono text-sm font-bold text-waveclash-red uppercase",
+              "font-demo-mono text-wc-sm font-bold text-waveclash-red uppercase",
               "tracking-label-widest",
             )}
           >
@@ -71,7 +71,7 @@ export function GallerySection({
             {sectionHeading.split("\n").map((line, i) => (
               <div
                 key={i}
-                className="font-display text-display-sm text-waveclash-cream uppercase leading-dense"
+                className="font-display text-wc-display-sm text-waveclash-cream uppercase leading-dense"
                 style={{ letterSpacing: "-0.03333em" }} // −6px at 180px
               >
                 {line}
@@ -84,7 +84,7 @@ export function GallerySection({
         <div className="w-[360px] shrink-0 flex flex-col gap-5 justify-end">
           <p
             className={cn(
-              "font-body text-2xl text-waveclash-cream leading-relaxed",
+              "font-body text-wc-2xl text-waveclash-cream leading-relaxed",
             )}
             style={{ fontWeight: 500 }}
           >
@@ -117,7 +117,7 @@ export function GallerySection({
             className={cn(
               "absolute top-4 left-4",
               "bg-waveclash-yellow text-waveclash-black",
-              "font-demo-mono text-base font-bold uppercase",
+              "font-demo-mono text-wc-base font-bold uppercase",
               "tracking-label-wide",
               "px-2 py-1",
             )}

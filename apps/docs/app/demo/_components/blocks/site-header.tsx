@@ -40,7 +40,7 @@ export function SiteHeader({
         <a
           href="/"
           className={cn(
-            "font-display text-5xl text-waveclash-cream uppercase",
+            "font-display text-wc-5xl text-waveclash-cream uppercase",
             "tracking-[-0.02083em]", // −0.5px @ 24px
             "leading-none no-underline",
           )}
@@ -52,7 +52,7 @@ export function SiteHeader({
         <span
           className={cn(
             "flex items-center gap-2",
-            "font-demo-mono text-xs font-bold text-waveclash-cream uppercase",
+            "font-demo-mono text-wc-xs font-bold text-waveclash-cream uppercase",
             "tracking-label-wider",
             "bg-waveclash-graphite border border-waveclash-red",
             "px-2 py-1",
@@ -72,7 +72,7 @@ export function SiteHeader({
               key={label}
               href={href}
               className={cn(
-                "font-demo-mono text-base font-bold text-waveclash-cream uppercase",
+                "font-demo-mono text-wc-base font-bold text-waveclash-cream uppercase",
                 "tracking-label-wider no-underline",
                 isActive && "text-waveclash-red",
               )}

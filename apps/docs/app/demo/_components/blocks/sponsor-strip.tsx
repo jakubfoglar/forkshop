@@ -14,7 +14,7 @@ import { cn } from "@/lib/cn"
 // Sub-frame 2 — logo row (G7ADC, 85px):
 //   bg-waveclash-black, 7 equal-width cells, padding [28, 16] each, centered
 //   1px cream right-border between cells (last cell has none)
-//   Sponsor text: Archivo Black 20px (text-3-5xl), tracking +1, cream fill
+//   Sponsor text: Archivo Black 20px (text-wc-3-5xl), tracking +1, cream fill
 
 const DEFAULT_SPONSORS = [
   "BILLABONG",
@@ -92,10 +92,10 @@ export function SponsorStrip({
                 !isLast && "border-r border-waveclash-cream",
               )}
             >
-              {/* Sponsor name: Archivo Black 20px (text-3-5xl), tracking +1, cream */}
+              {/* Sponsor name: Archivo Black 20px (text-wc-3-5xl), tracking +1, cream */}
               <span
                 className={cn(
-                  "font-display text-3-5xl text-waveclash-cream uppercase",
+                  "font-display text-wc-3-5xl text-waveclash-cream uppercase",
                   "tracking-label-wide",
                 )}
               >

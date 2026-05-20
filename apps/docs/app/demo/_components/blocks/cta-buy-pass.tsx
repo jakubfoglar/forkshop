@@ -94,7 +94,7 @@ export function CtaBuyPass({
 
       {/* Subcopy — Inter 18px 500, centered, black */}
       <p
-        className="font-body text-3xl text-waveclash-black text-center"
+        className="font-body text-wc-3xl text-waveclash-black text-center"
         style={{ fontWeight: 500 }}
       >
         {sectionSubcopy}

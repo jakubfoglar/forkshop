@@ -110,7 +110,7 @@ export function SiteFooter({
               {footerHeading.split("\n").map((line, i) => (
                 <div
                   key={i}
-                  className="font-display text-display-sm text-waveclash-cream uppercase"
+                  className="font-display text-wc-display-sm text-waveclash-cream uppercase"
                   style={{
                     letterSpacing: "-0.03333em", // −6px at 180px
                     lineHeight:    0.85,
@@ -135,7 +135,7 @@ export function SiteFooter({
                   >
                     <span
                       className={cn(
-                        "font-demo-mono text-sm font-bold text-waveclash-cream uppercase",
+                        "font-demo-mono text-wc-sm font-bold text-waveclash-cream uppercase",
                         "tracking-label-widest",
                       )}
                     >
@@ -143,7 +143,7 @@ export function SiteFooter({
                     </span>
                     <span
                       className={cn(
-                        "font-display text-md text-waveclash-cream uppercase",
+                        "font-display text-wc-md text-waveclash-cream uppercase",
                         "tracking-label-normal",
                       )}
                     >
@@ -170,7 +170,7 @@ export function SiteFooter({
 
             {/* Body copy — Inter 16px 500, cream */}
             <p
-              className="font-body text-2xl text-waveclash-cream leading-relaxed"
+              className="font-body text-wc-2xl text-waveclash-cream leading-relaxed"
               style={{ fontWeight: 500 }}
             >
               Weekly dispatch from the water&apos;s edge. Conditions, competition news, athlete notes, and zero filler.
@@ -181,7 +181,7 @@ export function SiteFooter({
               className={cn(
                 "border border-waveclash-cream",
                 "px-4 py-3",
-                "font-demo-mono text-sm text-waveclash-cream/40 font-bold uppercase tracking-label-wide",
+                "font-demo-mono text-wc-sm text-waveclash-cream/40 font-bold uppercase tracking-label-wide",
               )}
             >
               YOUR@EMAIL.COM
@@ -222,7 +222,7 @@ export function SiteFooter({
               {/* Column heading: red Archivo Black 13px */}
               <span
                 className={cn(
-                  "font-display text-md text-waveclash-red uppercase",
+                  "font-display text-wc-md text-waveclash-red uppercase",
                   "tracking-label-normal",
                 )}
               >
@@ -235,7 +235,7 @@ export function SiteFooter({
                   key={link}
                   href="#"
                   className={cn(
-                    "font-body text-lg text-waveclash-cream no-underline",
+                    "font-body text-wc-lg text-waveclash-cream no-underline",
                   )}
                   style={{ fontWeight: 500 }}
                 >
@@ -259,7 +259,7 @@ export function SiteFooter({
         <div className="flex items-center gap-4">
           <span
             className={cn(
-              "font-display text-4xl text-waveclash-cream uppercase",
+              "font-display text-wc-4xl text-waveclash-cream uppercase",
               "tracking-label-normal",
             )}
           >
@@ -267,7 +267,7 @@ export function SiteFooter({
           </span>
           <span
             className={cn(
-              "font-demo-mono text-base font-bold text-waveclash-cream/60 uppercase",
+              "font-demo-mono text-wc-base font-bold text-waveclash-cream/60 uppercase",
               "tracking-label-wide",
             )}
             style={{ fontSize: "12px", fontWeight: 500 }}

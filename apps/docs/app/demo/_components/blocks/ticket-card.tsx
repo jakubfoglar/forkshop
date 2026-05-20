@@ -46,7 +46,7 @@ export function TicketCard({ ticket }: TicketCardProps) {
     >
       {/* Header row: tier title + tier index */}
       <div className="flex items-start justify-between">
-        {/* Tier title: Archivo Black 15px (text-xl), tracking +1.5 */}
+        {/* Tier title: Archivo Black 15px (text-wc-xl), tracking +1.5 */}
         <span
           className={cn(
             "font-display uppercase",
@@ -73,10 +73,10 @@ export function TicketCard({ ticket }: TicketCardProps) {
 
       {/* Price row: price figure + unit label, baseline-aligned */}
       <div className="flex items-baseline gap-2">
-        {/* Price: Archivo Black 72px (text-9xl), tracking −3, leading 0.9 */}
+        {/* Price: Archivo Black 72px (text-wc-9xl), tracking −3, leading 0.9 */}
         <span
           className={cn(
-            "font-display text-9xl uppercase",
+            "font-display text-wc-9xl uppercase",
             isInvert ? "text-waveclash-cream" : "text-waveclash-black",
           )}
           style={{ letterSpacing: "-0.04167em", lineHeight: 0.9 }} // −3px at 72px
@@ -107,7 +107,7 @@ export function TicketCard({ ticket }: TicketCardProps) {
       {/* Description: Inter 14px 500, leading 1.45 */}
       <p
         className={cn(
-          "font-body text-lg leading-loose flex-1",
+          "font-body text-wc-lg leading-loose flex-1",
           isInvert ? "text-waveclash-cream" : "text-waveclash-black",
         )}
         style={{ fontWeight: 500, lineHeight: 1.45 }}

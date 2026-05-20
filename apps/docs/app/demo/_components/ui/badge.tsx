@@ -31,8 +31,8 @@ export function Badge({
     <span
       className={cn(
         "inline-block font-demo-mono font-bold tracking-label-wider uppercase",
-        size === "md" && "text-xs px-3 py-1.5",
-        size === "sm" && "text-xs px-1.5 py-0.5",
+        size === "md" && "text-wc-xs px-3 py-1.5",
+        size === "sm" && "text-wc-xs px-1.5 py-0.5",
         fill === "yellow" && "bg-waveclash-yellow text-waveclash-black",
         fill === "red"    && "bg-waveclash-red text-waveclash-black",
         fill === "navy"   && "bg-waveclash-navy text-waveclash-black",

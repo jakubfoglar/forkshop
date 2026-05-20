@@ -31,7 +31,7 @@ export function StatCounter({ value, label, highlight = false, className }: Stat
     >
       <span
         className={cn(
-          "font-display text-8xl tracking-display-normal leading-snug",
+          "font-display text-wc-8xl tracking-display-normal leading-snug",
           highlight ? "text-waveclash-black" : "text-waveclash-cream",
         )}
       >
@@ -39,7 +39,7 @@ export function StatCounter({ value, label, highlight = false, className }: Stat
       </span>
       <span
         className={cn(
-          "font-demo-mono text-sm font-bold uppercase",
+          "font-demo-mono text-wc-sm font-bold uppercase",
           highlight ? "text-waveclash-black" : "text-waveclash-red",
         )}
       >

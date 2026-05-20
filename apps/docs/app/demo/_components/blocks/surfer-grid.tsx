@@ -75,7 +75,7 @@ export function SurferGrid({
           {/* Section label — JetBrains Mono 11px 700 red */}
           <span
             className={cn(
-              "font-demo-mono text-sm font-bold text-waveclash-red uppercase",
+              "font-demo-mono text-wc-sm font-bold text-waveclash-red uppercase",
               "tracking-label-widest",
             )}
           >
@@ -85,7 +85,7 @@ export function SurferGrid({
           {/* Section meta — JetBrains Mono 11px 700 black */}
           <span
             className={cn(
-              "font-demo-mono text-sm font-bold text-waveclash-black uppercase",
+              "font-demo-mono text-wc-sm font-bold text-waveclash-black uppercase",
               "tracking-label-widest",
             )}
           >
@@ -97,9 +97,9 @@ export function SurferGrid({
         <div className="border-t-2 border-waveclash-black" />
       </div>
 
-      {/* Heading block (anKrW): SectionHeadingRow (180px, xl) + subcopy below right-side */}
+      {/* Heading block (anKrW): SectionHeadingRow (180px, xl) + subcopy below right-side.
+          Eyebrow omitted — already rendered in the sectionMeta strip above. */}
       <SectionHeadingRow
-        eyebrow={sectionLabel}
         title={sectionHeading.replace("\n", " ")}
         size="xl"
       />
@@ -109,7 +109,7 @@ export function SurferGrid({
         <div className="flex justify-end">
           <p
             className={cn(
-              "w-[380px] font-body text-2xl text-waveclash-black leading-relaxed",
+              "w-[380px] font-body text-wc-2xl text-waveclash-black leading-relaxed",
             )}
             style={{ fontWeight: 500 }}
           >
