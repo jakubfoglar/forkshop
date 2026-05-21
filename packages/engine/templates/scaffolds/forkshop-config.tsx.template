@@ -1,0 +1,20 @@
+import { defineConfig, BUILTIN_NODE_TYPES, BUILTIN_LAYOUTS } from "@forkshop/engine"
+{{ui_import}}
+{{blocks_import}}
+
+export const forkshopConfig = defineConfig({
+  mount: "{{mount}}",
+{{ui_field}}
+{{blocks_field}}
+  nodeTypes: [...BUILTIN_NODE_TYPES],
+  layouts: [...BUILTIN_LAYOUTS],
+  sitemap: {
+    routes: [
+{{sitemap_routes}}
+    ],
+  },
+{{reference_field}}
+  viewportProfile: "{{viewport_profile}}" as "responsive" | "mobile",
+})
+
+export type ForkshopConfig = typeof forkshopConfig

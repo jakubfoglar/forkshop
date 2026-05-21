@@ -1,0 +1,61 @@
+"use client"
+
+import {
+  defineBoard,
+  ColorGraph,
+  TypographyShowcase,
+  PrimitivesGrid,
+  useDesignTokens,
+  forkshopIcons,
+} from "@forkshop/engine"
+import { forkshopConfig } from "./forkshop.config"
+
+export default defineBoard({
+  id: "design-system",
+  label: "Design System",
+  icon: forkshopIcons.components,
+  match: (s) => s.kind === "section" && s.sectionId === "design-system",
+  layout: "gallery",
+  layoutOptions: { columns: 1, rowGap: 32 },
+  useEntries: () => {
+    const tokens = useDesignTokens()
+    return [
+      {
+        id: "colors",
+        node: {
+          id: "ds:colors",
+          kind: "inline-react" as const,
+          x: 0,
+          y: 0,
+          width: 1200,
+          height: 600,
+          render: () => <ColorGraph tokens={tokens} />,
+        },
+      },
+      {
+        id: "typography",
+        node: {
+          id: "ds:typography",
+          kind: "inline-react" as const,
+          x: 0,
+          y: 0,
+          width: 1200,
+          height: 400,
+          render: () => <TypographyShowcase tokens={tokens} />,
+        },
+      },
+      {
+        id: "primitives",
+        node: {
+          id: "ds:primitives",
+          kind: "inline-react" as const,
+          x: 0,
+          y: 0,
+          width: 1200,
+          height: 800,
+          render: () => <PrimitivesGrid ui={forkshopConfig.ui ?? {}} />,
+        },
+      },
+    ]
+  },
+})

@@ -1,0 +1,24 @@
+"use client"
+
+import {
+  defineBoard,
+  useSelection,
+  useDiscoveredPrimitives,
+  enumeratePrimitiveVariants,
+  isPrimitiveSelection,
+} from "@forkshop/engine"
+import { forkshopConfig } from "./forkshop.config"
+
+export default defineBoard({
+  id: "primitive-detail",
+  match: isPrimitiveSelection,
+  layout: "gallery",
+  layoutOptions: { columns: 4, rowGap: 16, columnGap: 16 },
+  useEntries: () => {
+    const selection = useSelection()
+    const primitives = useDiscoveredPrimitives(forkshopConfig.ui ?? {})
+    if (!isPrimitiveSelection(selection)) return []
+    const p = primitives.find((x) => x.slug === selection.id)
+    return p ? enumeratePrimitiveVariants(p) : []
+  },
+})

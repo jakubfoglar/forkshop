@@ -1,0 +1,39 @@
+"use client"
+
+import { defineBoard, useDiscoveredBlocks, forkshopIcons } from "@forkshop/engine"
+import { forkshopConfig } from "./forkshop.config"
+
+export default defineBoard({
+  id: "blocks",
+  label: "Blocks",
+  icon: forkshopIcons.components,
+  match: (s) => s.kind === "section" && s.sectionId === "blocks",
+  layout: "gallery",
+  layoutOptions: { columns: 1, rowGap: 24 },
+  useEntries: () => {
+    const blocks = useDiscoveredBlocks(forkshopConfig.blocks ?? {})
+    const viewport = forkshopConfig.viewportProfile === "mobile" ? 375 : 1440
+    return blocks.map((b) => ({
+      id: b.slug,
+      label: b.name,
+      node: {
+        id: `block:${b.slug}`,
+        kind: "iframe-component" as const,
+        x: 0,
+        y: 0,
+        width: viewport,
+        height: 600,
+        slug: b.slug,
+        previewSrc: b.previewSrc,
+        sourceFile: b.sourcePath,
+      },
+    }))
+  },
+  useSidebarChildren: () => {
+    const blocks = useDiscoveredBlocks(forkshopConfig.blocks ?? {})
+    return blocks.map((b) => ({
+      selection: { kind: "block" as const, slug: b.slug },
+      label: b.name,
+    }))
+  },
+})
