@@ -33,19 +33,31 @@ export default function HomePage() {
               npx forkshop init
             </code>
             <a
-              href="https://github.com/jakubfoglar/forkshop"
+              href="https://x.com/forkshop_dev"
+              target="_blank"
+              rel="noreferrer"
+              data-umami-event="cta-follow-x"
               className="inline-flex items-center justify-center rounded-md bg-ink px-4 py-3 text-sm text-canvas hover:bg-ink/90"
             >
-              View on GitHub →
+              Follow on X →
             </a>
           </div>
           <p className="mt-4 text-xs text-muted">
-            Next.js only for now. Pre-1.0 — expect breaking changes.
+            Next.js only for now. Pre-1.0 — expect breaking changes. Source on{" "}
+            <a
+              href="https://github.com/jakubfoglar/forkshop"
+              data-umami-event="cta-source-github"
+              className="underline decoration-ink/20 underline-offset-2 hover:decoration-ink/50"
+            >
+              GitHub
+            </a>
+            .
           </p>
           <p className="mt-1 text-xs text-muted">
             Feedback:{" "}
             <a
               href="mailto:jakub@forkshop.dev"
+              data-umami-event="cta-feedback-email"
               className="underline decoration-ink/20 underline-offset-2 hover:decoration-ink/50"
             >
               jakub@forkshop.dev
@@ -102,23 +114,6 @@ export default function HomePage() {
             </p>
           </article>
         </section>
-
-        <footer className="mt-20 border-t border-ink/10 pt-6 text-xs text-muted">
-          Questions?{" "}
-          <a
-            href="mailto:jakub@forkshop.dev"
-            className="underline decoration-ink/20 underline-offset-2 hover:decoration-ink/50"
-          >
-            jakub@forkshop.dev
-          </a>{" "}
-          ·{" "}
-          <a
-            href="https://github.com/jakubfoglar/forkshop"
-            className="underline decoration-ink/20 underline-offset-2 hover:decoration-ink/50"
-          >
-            GitHub
-          </a>
-        </footer>
       </div>
     </main>
   );

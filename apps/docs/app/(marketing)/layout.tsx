@@ -12,9 +12,9 @@ const raveo = localFont({
 })
 
 const siteUrl = "https://forkshop.dev"
-const siteTitle = "Forkshop — An infinite canvas for your Next.js project"
+const siteTitle = "Forkshop — A local canvas with your real code"
 const siteDescription =
-  "Mount a sidebar and canvas in your Next.js app. See pages at multiple viewports, edit text in iframes, and watch AI agents work — all in your dev environment."
+  "Forkshop mounts a canvas inside your app's dev environment. Open any page at multiple viewports side-by-side, edit text in place to save back to source, and watch your AI agents work in real time."
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
