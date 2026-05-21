@@ -44,16 +44,41 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
   const pre = await preflightInit(projectRoot, {})
   if (!pre.ok) return pre
 
-  // 2. Refuse re-install
+  // 2. Refuse re-install — UNLESS this invocation is purely to install the
+  // Claude Code producer pack onto an existing install. The setup skill
+  // calls `init --install-claude-pack` after the main install when the user
+  // opts in, and that path should be a no-op for everything except the pack
+  // itself.
+  const wantsClaudePack =
+    cliFlag === true || process.env.FORKSHOP_INSTALL_CLAUDE_PACK === "1"
+  let forkshopJsonExists = false
   try {
     await fs.access(path.join(projectRoot, "forkshop.json"))
+    forkshopJsonExists = true
+  } catch {
+    /* OK — fresh install */
+  }
+  if (forkshopJsonExists && !wantsClaudePack) {
     return {
       ok: false,
       reason:
         "Forkshop is already installed. Use `forkshop diff <file>` or `forkshop update`.",
     }
-  } catch {
-    /* OK */
+  }
+
+  // 2a. Claude-pack-only branch: skip everything else, just install the pack.
+  if (forkshopJsonExists && wantsClaudePack) {
+    const pack = await maybeInstallClaudeCodePack({
+      projectRoot,
+      manifest: options.manifest ?? (await fetchManifest(options.registryUrl ?? DEFAULT_REGISTRY_URL)),
+      consent: true,
+    })
+    if (pack.installed) {
+      console.log(pc.green("\nClaude Code live-AI hook installed to .claude/hooks/forkshop-post-tool-use.sh"))
+    } else {
+      console.log(pc.dim("\nClaude Code pack was already installed — no change."))
+    }
+    return { ok: true }
   }
 
   // 3. Fetch manifest

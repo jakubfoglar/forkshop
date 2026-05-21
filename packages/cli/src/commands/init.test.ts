@@ -175,6 +175,20 @@ describe("runInit (v2)", () => {
     if (!result.ok) expect(result.reason).toMatch(/already installed/i)
   })
 
+  it("allows --install-claude-pack on existing install (claude-pack-only mode)", async () => {
+    const root = await setupProject()
+    dirs.push(root)
+    await fs.writeFile(path.join(root, "forkshop.json"), "{}")
+    // Setup skill calls `init --install-claude-pack` after the main install
+    // when the user opts in. The refuse-re-install guard must let this through.
+    const result = await runInit({
+      projectRoot: root,
+      manifest: fakeManifest(),
+      installClaudePack: true,
+    })
+    expect(result.ok).toBe(true)
+  })
+
   it("refuses on collision with an existing scaffold file (no --force)", async () => {
     const root = await setupProject()
     dirs.push(root)
