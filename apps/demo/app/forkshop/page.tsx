@@ -90,11 +90,21 @@ function SingleBlockBoard({ slug }: { slug: string }) {
   )
 }
 
+// Inline path→sourceFile lookup. The Phase H setup skill scaffolds the
+// canonical pattern (forkshopConfig.sitemap.routes provides this); apps/demo
+// keeps the small hardcoded list since its sitemap is hand-maintained.
+const PAGE_SOURCE_FILES: Record<string, string> = {
+  "/": "app/page.tsx",
+  "/about": "app/about/page.tsx",
+  "/pricing": "app/pricing/page.tsx",
+}
+
 function SinglePageBoard({ path }: { path: string }) {
   const entries = useMemo<GalleryEntry[]>(
     () =>
       responsiveFrameEntries(path, {
         viewports: RESPONSIVE_VIEWPORTS,
+        sourceFile: PAGE_SOURCE_FILES[path],
       }),
     [path],
   )
