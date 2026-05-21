@@ -1,15 +1,7 @@
 "use client"
 
 import { useMemo } from "react"
-import {
-  DesignSystemView,
-  getDesignSystemStageSize,
-  buildTokenRegistry,
-  discoverPrimitives,
-  type InlineReactNode,
-  type PrimitiveGroup,
-} from "@forkshop/engine"
-import { PlaygroundBoard } from "./playground-board"
+import { ColorGraph, PrimitivesGrid, buildTokenRegistry } from "@forkshop/engine"
 import { forkshopConfig } from "./forkshop.config"
 import tailwindConfig from "../../tailwind.config"
 
@@ -67,65 +59,22 @@ function TypographySamples() {
   )
 }
 
-export function DesignSystemBoard({
-  nodePositions: _nodePositions,
-  onPositionChange: _onPositionChange,
-}: {
-  nodePositions: Record<string, { x: number; y: number }>
-  onPositionChange: (id: string, x: number, y: number) => void
-}) {
+export function DesignSystemBoard() {
   const tokens = useMemo(() => buildTokenRegistry(tailwindConfig), [])
 
-  const primitiveGroups = useMemo<PrimitiveGroup[]>(
-    () => [
-      {
-        id: "ui",
-        label: "UI Primitives",
-        primitives: discoverPrimitives(forkshopConfig.ui).map<InlineReactNode>((p) => ({
-          id: `primitive:${p.slug}`,
-          kind: "inline-react",
-          x: 0,
-          y: 0,
-          width: 320,
-          height: 160,
-          label: p.name,
-          render: () => <p.Component />,
-        })),
-      },
-    ],
-    [],
-  )
-
-  const typographyNode = useMemo<InlineReactNode>(
-    () => ({
-      id: "typography",
-      kind: "inline-react",
-      x: 0,
-      y: 0,
-      width: 360,
-      height: 600,
-      label: "Typography",
-      render: () => <TypographySamples />,
-    }),
-    [],
-  )
-
-  const stageSize = useMemo(
-    () => getDesignSystemStageSize({ tokens, primitives: primitiveGroups, typography: typographyNode }),
-    [tokens, primitiveGroups, typographyNode],
-  )
-
   return (
-    <PlaygroundBoard stageWidth={stageSize.width} stageHeight={stageSize.height} fitMode="both">
-      {({ nodePositions: pos, onPositionChange: onPosChange }) => (
-        <DesignSystemView
-          tokens={tokens}
-          primitives={primitiveGroups}
-          typography={typographyNode}
-          nodePositions={pos}
-          onPositionChange={onPosChange}
-        />
-      )}
-    </PlaygroundBoard>
+    <div className="h-full w-full overflow-auto bg-forkshop-surface p-forkshop-4">
+      <div className="flex flex-col gap-forkshop-6">
+        <section>
+          <ColorGraph tokens={tokens} />
+        </section>
+        <section className="max-w-xl">
+          <TypographySamples />
+        </section>
+        <section>
+          <PrimitivesGrid ui={forkshopConfig.ui} />
+        </section>
+      </div>
+    </div>
   )
 }
