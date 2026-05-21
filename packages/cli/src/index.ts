@@ -5,6 +5,7 @@ import { runAdd } from "./commands/add.js"
 import { runDiff } from "./commands/diff.js"
 import { runInit } from "./commands/init.js"
 import { runUpdate } from "./commands/update.js"
+import { runVerify } from "./commands/verify.js"
 
 async function askYesNo(prompt: string): Promise<boolean> {
   const rl = createInterface({ input: process.stdin, output: process.stdout })
@@ -130,6 +131,14 @@ program
       console.error(pc.dim(result.message))
     }
     process.exit(result.exitCode)
+  })
+
+program
+  .command("verify")
+  .description("Verify the local Forkshop install is consistent with the engine contract")
+  .action(async () => {
+    const result = await runVerify({})
+    process.exit(result.ok ? 0 : 1)
   })
 
 program.parseAsync().catch((error) => {
