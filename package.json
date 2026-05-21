@@ -11,7 +11,8 @@
     "test": "pnpm -r test",
     "check": "pnpm typecheck && pnpm lint",
     "regen-api-snap": "pnpm --filter @forkshop/engine build && cd packages/engine && pnpm exec tsx scripts/generate-public-api-snap.ts",
-    "reset-test": "./apps/test/scripts/reset.sh"
+    "reset-test": "./apps/test/scripts/reset.sh",
+    "test-release": "pnpm reset-test && node scripts/bump-test-pins.mjs && cd apps/test && pnpm install"
   },
   "devDependencies": {
     "typescript": "^5.5.0",
