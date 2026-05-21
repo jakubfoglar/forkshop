@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises"
 import { resolve } from "node:path"
 import pc from "picocolors"
 import { checkBoards } from "../verify/check-boards.js"
+import { checkClaudeMdExamples } from "../verify/check-claude-md-examples.js"
 import { checkConfig } from "../verify/check-config.js"
 import { checkReferences } from "../verify/check-references.js"
 import { checkTokenClasses } from "../verify/check-token-classes.js"
@@ -30,6 +31,7 @@ export async function runVerify(options: VerifyOptions = {}): Promise<VerifyResu
   issues.push(...(await checkBoards({ cwd })))
   issues.push(...(await checkReferences({ cwd })))
   issues.push(...(await checkTokenClasses({ cwd })))
+  issues.push(...(await checkClaudeMdExamples({ cwd })))
 
   if (issues.length === 0) {
     console.log(pc.green("✓ Forkshop install is consistent."))
