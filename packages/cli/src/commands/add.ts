@@ -9,17 +9,17 @@ export interface AddOptions {
 export type AddResult = { ok: true } | { ok: false; reason: string }
 
 /**
- * Placeholder for 1.0. The kits rewrite spec (#4) re-enables real bundle
- * resolution. The command stays in the binary so muscle memory survives;
- * exits 0 with a pointer at the roadmap.
+ * Placeholder. The command stays in the binary so muscle memory survives;
+ * exits 0 with a pointer at the actual install flow. Add-on bundles are
+ * not on the roadmap for 0.x — Forkshop ships as one engine + one setup
+ * skill, configured from `forkshop.config.tsx`.
  */
 export async function runAdd(_options: AddOptions): Promise<AddResult> {
-  console.log(pc.bold("\nNo add-on bundles ship in 1.0.\n"))
+  console.log(pc.bold("\nNo add-on bundles in 0.x.\n"))
   console.log(
-    "The three starter kits (marketing, saas, default) arrive in the kits rewrite\n" +
-      "(https://forkshop.dev/roadmap). Use `forkshop init` to install the base; run\n" +
-      "the setup skill (open Claude Code, say 'set up Forkshop') to scaffold\n" +
-      "app/forkshop/ for now."
+    "`forkshop init` installs the base. Then open Claude Code in this project\n" +
+      "and say \"set up Forkshop\" — the setup skill scaffolds app/forkshop/\n" +
+      "based on what it finds in your codebase (components, routes, tokens)."
   )
   return { ok: true }
 }

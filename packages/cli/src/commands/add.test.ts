@@ -1,14 +1,14 @@
 import { describe, expect, it, vi } from "vitest"
 import { runAdd } from "./add.js"
 
-describe("runAdd (placeholder for 1.0)", () => {
-  it("prints the deferred-kits message and returns ok", async () => {
+describe("runAdd (placeholder)", () => {
+  it("prints the no-add-on-bundles message and returns ok", async () => {
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => {})
     const result = await runAdd({ projectRoot: "/tmp", bundleName: "marketing" })
     expect(result.ok).toBe(true)
     const output = logSpy.mock.calls.map((c) => c.join(" ")).join("\n")
-    expect(output).toMatch(/No add-on bundles ship in 1\.0/)
-    expect(output).toMatch(/kits rewrite/)
+    expect(output).toMatch(/No add-on bundles in 0\.x/)
+    expect(output).toMatch(/set up Forkshop/)
     logSpy.mockRestore()
   })
 
