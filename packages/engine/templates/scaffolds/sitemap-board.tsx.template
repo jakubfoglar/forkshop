@@ -22,6 +22,9 @@ export default defineBoard({
         height: 280,
         routePath: r.path,
         sourceFile: r.sourceFile,
+        // Render the full desktop layout scaled to 400px — the tile reads
+        // like a thumbnail instead of mobile-collapsed.
+        desktopWidth: 1440,
       },
     })),
 })

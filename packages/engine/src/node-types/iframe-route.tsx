@@ -44,7 +44,7 @@ function IframeRouteRender({
         title={node.routePath}
         width={node.width}
         heightMode={node.heightMode ?? "cap"} height={node.height}
-        desktopWidth={1440}
+        desktopWidth={node.desktopWidth}
         hostFileLabel={node.sourceFile ?? ""}
         onIframeWheel={handleIframeWheel}
         onBodyHeightSync={onBodyHeightChange}

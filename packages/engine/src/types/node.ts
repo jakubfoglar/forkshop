@@ -28,6 +28,12 @@ export type IframeRouteNode = BaseNode & {
    *  - "auto" — grow to the body's natural height; suitable for
    *    full-fidelity views like responsive-frame Boards. */
   heightMode?: "auto" | "cap"
+  /** When set, the iframe loads at this intrinsic width and CSS-scales down to
+   *  `width`. Useful for sitemap-style thumbnails that want a desktop layout
+   *  rendered into a small tile. When omitted, the iframe loads at `width`
+   *  directly so the page's media queries fire at the real viewport width
+   *  (the right choice for responsive-frame Boards). */
+  desktopWidth?: number
 }
 
 export type IframeComponentNode = BaseNode & {

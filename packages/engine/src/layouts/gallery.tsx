@@ -192,11 +192,27 @@ function buildGridLayout(
     }
   })
 
+  // Resolve each cell's width: node.width is the source of truth (it lets
+  // responsive-frame Boards put 1440 / 768 / 375 in a single row), with
+  // `viewportWidth` as a fallback when node.width is 0/unset. For fitContent
+  // boards, measured width wins.
+  function cellWidth(id: string, declared: number): number {
+    if (fitContent) {
+      const measured = measuredWidths[id]
+      if (measured !== undefined) return measured
+    }
+    return declared > 0 ? declared : viewportWidth
+  }
+
   const rowMaxHeights = new Map<number, number>()
-  for (const { entry, row } of resolved) {
+  const colMaxWidths = new Map<number, number>()
+  for (const { entry, row, column } of resolved) {
     const height = measuredHeights[entry.node.id] ?? DEFAULT_INITIAL_HEIGHT
     rowMaxHeights.set(row, Math.max(rowMaxHeights.get(row) ?? 0, height))
+    const w = cellWidth(entry.node.id, entry.node.width)
+    colMaxWidths.set(column, Math.max(colMaxWidths.get(column) ?? 0, w))
   }
+
   const sortedRows = [...rowMaxHeights.keys()].sort((a, b) => a - b)
   const rowY = new Map<number, number>()
   let cursorY = 0
@@ -204,23 +220,28 @@ function buildGridLayout(
     rowY.set(row, cursorY)
     cursorY += (rowMaxHeights.get(row) ?? DEFAULT_INITIAL_HEIGHT) + rowGap
   }
-  let maxColumn = 0
+
+  const sortedCols = [...colMaxWidths.keys()].sort((a, b) => a - b)
+  const colX = new Map<number, number>()
+  let cursorX = 0
+  for (const col of sortedCols) {
+    colX.set(col, cursorX)
+    cursorX += (colMaxWidths.get(col) ?? viewportWidth) + columnGap
+  }
+  const stageWidth = Math.max(0, cursorX - columnGap)
+
   const cells: LayoutCell[] = []
   for (const { entry, row, column } of resolved) {
-    maxColumn = Math.max(maxColumn, column)
     const height = measuredHeights[entry.node.id] ?? DEFAULT_INITIAL_HEIGHT
-    const width = fitContent
-      ? (measuredWidths[entry.node.id] ?? viewportWidth)
-      : viewportWidth
+    const width = cellWidth(entry.node.id, entry.node.width)
     cells.push({
       id: entry.node.id,
-      layoutX: column * (viewportWidth + columnGap),
+      layoutX: colX.get(column) ?? 0,
       layoutY: rowY.get(row) ?? 0,
       width,
       height,
     })
   }
-  const stageWidth = (maxColumn + 1) * viewportWidth + maxColumn * columnGap
   const stageHeight = Math.max(0, cursorY - rowGap)
   return { cells, stageWidth, stageHeight }
 }
