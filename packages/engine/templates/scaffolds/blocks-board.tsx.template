@@ -25,7 +25,6 @@ export default defineBoard({
         height: 600,
         slug: b.slug,
         previewSrc: b.previewSrc,
-        sourceFile: b.sourcePath,
       },
     }))
   },

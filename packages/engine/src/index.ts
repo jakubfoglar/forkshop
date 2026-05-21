@@ -30,6 +30,7 @@ export {
 export type {
   BoardConfig,
   BoardComponent,
+  AnyBoardComponent,
   SidebarChild,
 } from "@forkshop/types/board"
 export type {

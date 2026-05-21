@@ -27,3 +27,12 @@ export type BoardComponent<TLayoutOptions = unknown> = ComponentType<Record<stri
   // directly (it owns its canvas) instead of running useEntries through a layout.
   readonly __rawRender?: true
 }
+
+// Use at API boundaries that collect Boards from user code. defineBoard infers
+// BoardComponent<{ specific-options }> from its caller; the layout/options
+// generic is invariant in TS, so a plain BoardComponent<unknown> rejects them.
+// Internally the registry dispatches every Board through Layout<unknown>, so
+// erasing the generic here is contract-preserving.
+//
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AnyBoardComponent = BoardComponent<any>

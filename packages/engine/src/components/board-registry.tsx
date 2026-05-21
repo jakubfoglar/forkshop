@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo } from "react"
-import type { BoardComponent } from "@forkshop/types/board"
+import type { AnyBoardComponent } from "@forkshop/types/board"
 import type { ForkshopSelection } from "@forkshop/types/selection"
 import type { ParsedForkshopConfig } from "@forkshop/lib/schemas"
 import type { Layout } from "@forkshop/types/layout"
@@ -16,7 +16,8 @@ import { forkshopIcons } from "@forkshop/lib/icons"
 
 export type BoardRegistryProps = {
   config: ParsedForkshopConfig
-  boards: ReadonlyArray<BoardComponent>
+  // AnyBoardComponent erases the layoutOptions generic — see types/board.ts for why.
+  boards: ReadonlyArray<AnyBoardComponent>
   initialSelection?: ForkshopSelection
 }
 
@@ -54,7 +55,7 @@ function BoardRegistryInner({
   boards,
 }: {
   config: ParsedForkshopConfig
-  boards: ReadonlyArray<BoardComponent>
+  boards: ReadonlyArray<AnyBoardComponent>
 }) {
   const selection = useSelection()
   useEffect(() => {
@@ -100,7 +101,7 @@ function BoardRegistryInner({
   )
 }
 
-function RawBoard({ board }: { board: BoardComponent }) {
+function RawBoard({ board }: { board: AnyBoardComponent }) {
   // Escape hatch (withBoardMeta): the Component owns its canvas and is rendered
   // directly. Hooks on __config (useEntries / useSidebarChildren) are not invoked.
   const Component = board
@@ -111,7 +112,7 @@ function ActiveBoard({
   board,
   layouts,
 }: {
-  board: BoardComponent
+  board: AnyBoardComponent
   layouts: ReadonlyArray<Layout<unknown>>
 }) {
   const cfg = board.__config
@@ -149,7 +150,7 @@ function BoardSidebar({
   boards,
   config,
 }: {
-  boards: ReadonlyArray<BoardComponent>
+  boards: ReadonlyArray<AnyBoardComponent>
   config: ParsedForkshopConfig
 }) {
   const selection = useSelection()
