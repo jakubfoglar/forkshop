@@ -157,7 +157,10 @@ export default function ForkshopPage() {
 
   return (
     <AgentActivityProvider fileMap={FILE_MAP}>
-      <div className="flex h-screen overflow-hidden">
+      <div
+        className="fixed inset-0 z-[9999] flex overflow-hidden bg-forkshop-surface text-forkshop-fg"
+        data-forkshop-mount
+      >
         <ForkshopSidebar
           selection={selection}
           onSelect={setSelection}
