@@ -36,4 +36,13 @@ describe("responsiveFrameEntries", () => {
     expect(entries[1]?.column).toBe(1)
     expect(entries[2]?.column).toBe(2)
   })
+
+  it('sets heightMode: "auto" so frames grow to body content', () => {
+    const entries = responsiveFrameEntries("/about", {})
+    for (const e of entries) {
+      if (e.node.kind === "iframe-route") {
+        expect(e.node.heightMode).toBe("auto")
+      }
+    }
+  })
 })

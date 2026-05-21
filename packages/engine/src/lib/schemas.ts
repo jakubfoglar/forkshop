@@ -26,6 +26,7 @@ const iframeRouteSchema = baseNodeSchema.extend({
   kind: z.literal("iframe-route"),
   routePath: z.string().regex(/^\//, "routePath must start with /"),
   sourceFile: z.string().optional(),
+  heightMode: z.enum(["auto", "cap"]).optional(),
 })
 
 const iframeComponentSchema = baseNodeSchema.extend({

@@ -25,9 +25,11 @@ export function responsiveFrameEntries(
       x: 0,
       y: 0,
       width,
-      // 4:3 ratio is a reasonable default — Boards can override by passing
-      // explicit Layout options or by setting node.height per entry.
+      // 4:3 initial height — `heightMode: "auto"` lets the iframe grow to its
+      // body's natural height once loaded, so the frame shows the full page.
+      // The initial value is only used between mount and first measurement.
       height: Math.round(width * (3 / 4)),
+      heightMode: "auto" as const,
       routePath: path,
       sourceFile: options.sourceFile,
     },

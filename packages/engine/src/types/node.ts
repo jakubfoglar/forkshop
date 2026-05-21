@@ -22,6 +22,12 @@ export type IframeRouteNode = BaseNode & {
   /** Path (from project root) of the TSX file authoring this page.
    *  Required for live text editing — omit to opt out. */
   sourceFile?: string
+  /** How the iframe wrapper sizes vertically:
+   *  - "cap" (default) — clip the iframe at `height`; suitable for tiles
+   *    where you don't want a single tall route to dominate a board.
+   *  - "auto" — grow to the body's natural height; suitable for
+   *    full-fidelity views like responsive-frame Boards. */
+  heightMode?: "auto" | "cap"
 }
 
 export type IframeComponentNode = BaseNode & {
