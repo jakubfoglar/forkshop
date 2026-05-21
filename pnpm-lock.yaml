@@ -146,8 +146,8 @@ importers:
   apps/test:
     dependencies:
       '@forkshop/engine':
-        specifier: workspace:*
-        version: link:../../packages/engine
+        specifier: ^0.4.0
+        version: 0.4.0(next@14.2.35(@babel/core@7.29.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       class-variance-authority:
         specifier: ^0.7.0
         version: 0.7.1
@@ -180,8 +180,8 @@ importers:
         specifier: ^10.4.0
         version: 10.5.0(postcss@8.5.14)
       forkshop:
-        specifier: file:../../packages/cli
-        version: link:../../packages/cli
+        specifier: ^0.4.0
+        version: 0.4.0
       postcss:
         specifier: ^8.4.0
         version: 8.5.14
@@ -1376,6 +1376,14 @@ packages:
 
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
+
+  '@forkshop/engine@0.4.0':
+    resolution: {integrity: sha512-yfG7c/QmG7vHfqFOiRQO/3DPBP/Me3sbVzylEofpByAY4KzIpmR/Ps0bvXAX17un+5DdVxXS6OgwIgKarnwG6Q==}
+    engines: {node: '>=18.18.0'}
+    peerDependencies:
+      next: '>=14'
+      react: '>=18'
+      react-dom: '>=18'
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -2653,6 +2661,11 @@ packages:
   for-each@0.3.5:
     resolution: {integrity: sha512-dKx12eRCVIzqCxFGplyFKJMPvLEWgmNtUrpTiJIR5u97zEhRG8ySrtboPHZXx7daLxQVrl643cTzbab2tkQjxg==}
     engines: {node: '>= 0.4'}
+
+  forkshop@0.4.0:
+    resolution: {integrity: sha512-HIXdWx9TsPHorA5DQEJbSN1sSiofSyK/7TLriXSmfKzSTGXdKg6I7aiYlsiw6xsp1KhIHBkfOFC6Bg/Acf8ddg==}
+    engines: {node: '>=20'}
+    hasBin: true
 
   form-data@4.0.5:
     resolution: {integrity: sha512-8RipRLol37bNs2bhoV67fiTEvdTrbMUYcFTiy3+wuuOnUog2QBHCZWXDRijWQfAkhBj2Uf5UnVaiWwA5vdd82w==}
@@ -5146,6 +5159,15 @@ snapshots:
 
   '@floating-ui/utils@0.2.11': {}
 
+  '@forkshop/engine@0.4.0(next@14.2.35(@babel/core@7.29.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      clsx: 2.1.1
+      diff: 5.2.2
+      next: 14.2.35(@babel/core@7.29.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      zod: 3.25.76
+
   '@humanfs/core@0.19.2':
     dependencies:
       '@humanfs/types': 0.15.0
@@ -6562,6 +6584,12 @@ snapshots:
   for-each@0.3.5:
     dependencies:
       is-callable: 1.2.7
+
+  forkshop@0.4.0:
+    dependencies:
+      commander: 12.1.0
+      picocolors: 1.1.1
+      prompts: 2.4.2
 
   form-data@4.0.5:
     dependencies:
