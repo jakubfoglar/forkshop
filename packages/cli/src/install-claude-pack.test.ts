@@ -21,7 +21,7 @@ afterEach(async () => {
 })
 
 const manifest: Manifest = {
-  version: "2.0.0",
+  version: "2.1.0",
   generatedAt: new Date().toISOString(),
   registryBaseUrl: "https://forkshop.dev/r/",
   engineVersion: "0.0.0",

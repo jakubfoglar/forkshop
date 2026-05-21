@@ -7,7 +7,7 @@ import type { ForkshopJson, Manifest } from "../manifest-schema.js"
 
 function manifestWithSetupContent(content: string, engineVersion = "0.3.0"): Manifest {
   return {
-    version: "2.0.0",
+    version: "2.1.0",
     generatedAt: "2026-05-17T00:00:00Z",
     registryBaseUrl: "https://example.test/r/",
     engineVersion,
@@ -39,7 +39,7 @@ async function setupInstalled(opts: {
     opts.setupContentOnDisk
   )
   const lock: ForkshopJson = {
-    schemaVersion: "2.0.0",
+    schemaVersion: "2.1.0",
     installedAt: "2026-05-17T00:00:00Z",
     registryUrl: "https://example.test/r/",
     engineVersion: opts.engineVersion ?? "0.3.0",

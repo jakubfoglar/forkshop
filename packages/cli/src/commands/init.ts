@@ -11,6 +11,8 @@ import { appendForkshopCssImport } from "../globals-css-append.js"
 import { fetchFontTo } from "../font-fetch.js"
 import {
   DEFAULT_ALIASES,
+  MANIFEST_SCHEMA_VERSION,
+  SUPPORTED_SCHEMA_VERSIONS,
   type ForkshopJson,
   type Manifest,
   type ResolvedAliases,
@@ -57,12 +59,20 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
   // 3. Fetch manifest
   const manifest = options.manifest ?? (await fetchManifest(registryUrl))
 
-  // 3a. Schema gate
-  if (manifest.version !== "2.0.0") {
+  // 3a. Schema gate — accept any supported version, soft-warn on 2.0.0.
+  if (!SUPPORTED_SCHEMA_VERSIONS.has(manifest.version)) {
     return {
       ok: false,
-      reason: `Registry returned manifest schema ${manifest.version}; this CLI expects 2.0.0. Update your CLI or registry.`,
+      reason: `Registry returned manifest schema ${manifest.version}; this CLI expects ${MANIFEST_SCHEMA_VERSION}. Update your CLI or registry.`,
     }
+  }
+  if (manifest.version === "2.0.0" && MANIFEST_SCHEMA_VERSION === "2.1.0") {
+    console.warn(
+      pc.yellow(
+        `forkshop: manifest version 2.0.0 detected (current is 2.1.0). ` +
+          `The install will still work; re-run \`npx forkshop init\` to upgrade.`
+      )
+    )
   }
 
   // 4. Detect src/
@@ -161,7 +171,7 @@ export async function runInit(options: InitOptions): Promise<InitResult> {
   const allPlan = [...textPlan, ...(fontPlanEntry ? [fontPlanEntry] : [])]
   const lock: ForkshopJson = {
     $schema: "https://forkshop.dev/schema/forkshop.json",
-    schemaVersion: "2.0.0",
+    schemaVersion: "2.1.0",
     installedAt: new Date().toISOString(),
     registryUrl,
     engineVersion: manifest.engineVersion,

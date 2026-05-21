@@ -2,7 +2,12 @@ import { promises as fs } from "node:fs"
 import path from "node:path"
 import { fetchManifest } from "../fetch-manifest.js"
 import { readForkshopJson } from "../forkshop-json.js"
-import type { Manifest, ResolvedAliases } from "../manifest-schema.js"
+import {
+  MANIFEST_SCHEMA_VERSION,
+  SUPPORTED_SCHEMA_VERSIONS,
+  type Manifest,
+  type ResolvedAliases,
+} from "../manifest-schema.js"
 import { applyTemplatePlaceholders } from "../rewrite.js"
 import { unifiedDiff } from "../unified-diff.js"
 
@@ -24,11 +29,17 @@ export async function runDiff(options: DiffOptions): Promise<DiffResult> {
   if (!lock) {
     return { exitCode: 2, message: "Run `forkshop init` first." }
   }
-  if (lock.schemaVersion !== "2.0.0") {
+  if (!SUPPORTED_SCHEMA_VERSIONS.has(lock.schemaVersion)) {
     return {
       exitCode: 2,
       message: "Your installation predates the v2 schema. Run `forkshop init` against a fresh layout.",
     }
+  }
+  if (lock.schemaVersion === "2.0.0" && MANIFEST_SCHEMA_VERSION === "2.1.0") {
+    console.warn(
+      `forkshop: forkshop.json schemaVersion 2.0.0 detected (current is 2.1.0). ` +
+        `Diff will still work; re-run \`npx forkshop init\` to upgrade.`
+    )
   }
 
   // Find the address that maps to this path

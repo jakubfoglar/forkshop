@@ -16,7 +16,7 @@ async function setupInstalled(opts: {
     opts.setupOnDisk
   )
   const lock: ForkshopJson = {
-    schemaVersion: "2.0.0",
+    schemaVersion: "2.1.0",
     installedAt: "2026-05-17T00:00:00Z",
     registryUrl: "https://example.test/r/",
     engineVersion: "0.3.0",
@@ -32,7 +32,7 @@ async function setupInstalled(opts: {
   }
   await fs.writeFile(path.join(root, "forkshop.json"), JSON.stringify(lock, null, 2))
   const manifest: Manifest = {
-    version: "2.0.0",
+    version: "2.1.0",
     generatedAt: "2026-05-17T00:00:00Z",
     registryBaseUrl: "https://example.test/r/",
     engineVersion: "0.3.0",
@@ -88,7 +88,7 @@ describe("runDiff", () => {
       projectRoot: root,
       path: "anything",
       manifest: {
-        version: "2.0.0",
+        version: "2.1.0",
         generatedAt: "x",
         registryBaseUrl: "x",
         engineVersion: "0.3.0",

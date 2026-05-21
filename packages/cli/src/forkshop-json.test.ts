@@ -20,7 +20,7 @@ describe("forkshop.json", () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), "forkshop-json-"))
     tempDirs.push(root)
     const written: ForkshopJson = {
-      schemaVersion: "2.0.0",
+      schemaVersion: "2.1.0",
       installedAt: "2026-05-17T10:00:00Z",
       registryUrl: "https://forkshop.dev/r/",
       engineVersion: "0.3.0",
@@ -43,7 +43,7 @@ describe("forkshop.json", () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), "forkshop-json-"))
     tempDirs.push(root)
     const written: ForkshopJson = {
-      schemaVersion: "2.0.0",
+      schemaVersion: "2.1.0",
       installedAt: "2026-05-17T10:00:00Z",
       registryUrl: "https://forkshop.dev/r/",
       engineVersion: "0.3.0",

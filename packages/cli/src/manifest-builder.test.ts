@@ -55,7 +55,7 @@ describe("buildManifest (v2)", () => {
     dirs.push(engineRoot)
     const manifest = await buildManifest({ registryRoot: engineRoot })
 
-    expect(manifest.version).toBe("2.0.0")
+    expect(manifest.version).toBe("2.1.0")
     expect(manifest.engineVersion).toBe("0.3.0")
 
     // Bundles exist
