@@ -23,4 +23,7 @@ export type BoardConfig<TLayoutOptions = unknown> = {
 export type BoardComponent<TLayoutOptions = unknown> = ComponentType<Record<string, never>> & {
   readonly __config: BoardConfig<TLayoutOptions>
   readonly __isBoard: true
+  // Set by withBoardMeta — when true, BoardRegistry renders the Component
+  // directly (it owns its canvas) instead of running useEntries through a layout.
+  readonly __rawRender?: true
 }

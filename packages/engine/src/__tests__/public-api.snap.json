@@ -74,7 +74,8 @@
     "useRegisterIframe",
     "useSelection",
     "useSetSelection",
-    "useSiteWideActivity"
+    "useSiteWideActivity",
+    "withBoardMeta"
   ],
   "@forkshop/engine/api/edit/route": [
     "GET",

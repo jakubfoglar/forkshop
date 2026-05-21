@@ -20,6 +20,7 @@ export type {
 // Board contract
 export { defineConfig, ForkshopConfigError } from "@forkshop/lib/define-config"
 export { defineBoard, BoardConfigError } from "@forkshop/lib/define-board"
+export { withBoardMeta, type WithBoardMetaInput } from "@forkshop/lib/with-board-meta"
 export { BoardRegistry, type BoardRegistryProps } from "@forkshop/components/board-registry"
 export {
   SelectionProvider,

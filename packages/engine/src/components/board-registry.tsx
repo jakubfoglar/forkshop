@@ -86,10 +86,25 @@ function BoardRegistryInner({
     <div className="flex h-screen overflow-hidden">
       <BoardSidebar boards={boards} config={config} />
       <div className="relative flex flex-1 overflow-hidden">
-        {active ? <ActiveBoard board={active} layouts={allLayouts} /> : <EmptyBoardState />}
+        {active ? (
+          active.__rawRender ? (
+            <RawBoard board={active} />
+          ) : (
+            <ActiveBoard board={active} layouts={allLayouts} />
+          )
+        ) : (
+          <EmptyBoardState />
+        )}
       </div>
     </div>
   )
+}
+
+function RawBoard({ board }: { board: BoardComponent }) {
+  // Escape hatch (withBoardMeta): the Component owns its canvas and is rendered
+  // directly. Hooks on __config (useEntries / useSidebarChildren) are not invoked.
+  const Component = board
+  return <Component />
 }
 
 function ActiveBoard({
