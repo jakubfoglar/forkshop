@@ -26,6 +26,12 @@ export type UseDesignTokensOptions = {
    *   from the resolved theme.
    */
   source?: "auto" | { tailwindConfig: Config }
+  /**
+   * Convenience shorthand for `{ source: { tailwindConfig } }`. Either form
+   * works; this matches what the setup skill scaffolds for Tailwind v3
+   * projects and is the natural way to write it.
+   */
+  tailwindConfig?: Config
 }
 
 export function useDesignTokens(
@@ -34,6 +40,11 @@ export function useDesignTokens(
   const [registry, setRegistry] = useState<TokenRegistry>(EMPTY_REGISTRY)
 
   useEffect(() => {
+    // Top-level tailwindConfig (shorthand) wins over source.
+    if (options.tailwindConfig) {
+      setRegistry(buildTokenRegistry(options.tailwindConfig))
+      return
+    }
     if (
       typeof options.source === "object" &&
       "tailwindConfig" in options.source
@@ -51,8 +62,9 @@ export function useDesignTokens(
       }
     }
     setRegistry(parseTokenRegistryFromCssVars(pairs))
-    // We deliberately exclude `options.source` from deps — changing source
-    // mid-mount is not a supported operation. Re-mount the hook instead.
+    // We deliberately exclude `options.source` and `options.tailwindConfig`
+    // from deps — changing source mid-mount is not a supported operation.
+    // Re-mount the hook instead.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
