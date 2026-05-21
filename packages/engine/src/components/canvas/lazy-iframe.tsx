@@ -96,6 +96,13 @@ export function LazyIframe({
   const [shouldLoad, setShouldLoad] = useState(false)
   const [measuredBodyHeight, setMeasuredBodyHeight] = useState<number | undefined>(undefined)
   const localRef = useRef<HTMLIFrameElement | null>(null)
+  // Stable ref callback. Without this, a new closure on every render causes
+  // React to detach/reattach the iframe — consumers that setState in their
+  // own iframeRef callback then loop infinitely.
+  const setRefs = useCallback((element: HTMLIFrameElement | null) => {
+    localRef.current = element
+    iframeRef?.(element ?? undefined)
+  }, [iframeRef])
 
   useEffect(() => {
     if (typeof document === "undefined") return
@@ -226,10 +233,7 @@ export function LazyIframe({
       data-forkshop-iframe-host={hostFileLabel ?? ""}
     >
       <iframe
-        ref={(element) => {
-          localRef.current = element
-          iframeRef?.(element ?? undefined)
-        }}
+        ref={setRefs}
         src={shouldLoad ? src : undefined}
         title={title}
         scrolling="no"

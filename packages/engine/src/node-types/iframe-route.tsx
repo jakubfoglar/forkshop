@@ -37,6 +37,13 @@ function IframeRouteRender({
     [applyWheelInput, transformRef],
   )
 
+  // Stable across renders — see iframe-component.tsx for the same fix.
+  const handleIframeRef = useCallback((el: HTMLIFrameElement | null | undefined) => {
+    const next = el ?? null
+    iframeRef.current = next
+    setIframeEl(next)
+  }, [])
+
   return (
     <>
       <LazyIframe
@@ -48,10 +55,7 @@ function IframeRouteRender({
         hostFileLabel={node.sourceFile ?? ""}
         onIframeWheel={handleIframeWheel}
         onBodyHeightSync={onBodyHeightChange}
-        iframeRef={(el) => {
-          iframeRef.current = el ?? null
-          setIframeEl(el ?? null)
-        }}
+        iframeRef={handleIframeRef}
         className="bg-white shadow-md"
       />
       {node.sourceFile !== undefined && <AgentReadIndicator hostFileLabel={node.sourceFile} />}

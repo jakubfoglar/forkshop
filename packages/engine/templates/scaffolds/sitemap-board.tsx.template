@@ -13,6 +13,7 @@ export default defineBoard({
     forkshopConfig.sitemap.routes.map((r) => ({
       id: `page:${r.path}`,
       label: r.path,
+      path: r.path,
       node: {
         id: `page:${r.path}`,
         kind: "iframe-route" as const,

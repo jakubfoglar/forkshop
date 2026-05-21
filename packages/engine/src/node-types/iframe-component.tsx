@@ -38,6 +38,15 @@ function IframeComponentRender({
     [applyWheelInput, transformRef],
   )
 
+  // Stable across renders — React calls callback refs whenever the callback
+  // identity changes, which combined with setIframeEl inside the body would
+  // re-trigger on every render and cause "Maximum update depth exceeded".
+  const handleIframeRef = useCallback((el: HTMLIFrameElement | null | undefined) => {
+    const next = el ?? null
+    iframeRef.current = next
+    setIframeEl(next)
+  }, [])
+
   return (
     <>
       <LazyIframe
@@ -48,10 +57,7 @@ function IframeComponentRender({
         hostFileLabel={sourceFile}
         onIframeWheel={handleIframeWheel}
         onBodyHeightSync={onBodyHeightChange}
-        iframeRef={(el) => {
-          iframeRef.current = el ?? null
-          setIframeEl(el ?? null)
-        }}
+        iframeRef={handleIframeRef}
         className="bg-white shadow-md"
       />
       {sourceFile !== undefined && <AgentReadIndicator hostFileLabel={sourceFile} />}

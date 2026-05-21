@@ -84,7 +84,7 @@ function BoardRegistryInner({
   const active = matches[0]
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div data-forkshop-mount="" className="flex h-screen overflow-hidden">
       <BoardSidebar boards={boards} config={config} />
       <div className="relative flex flex-1 overflow-hidden">
         {active ? (
@@ -156,24 +156,27 @@ function BoardSidebar({
   const selection = useSelection()
   const setSelection = useSetSelection()
 
-  const sections = boards.map((b) => {
-    const cfg = b.__config
-    const childrenHook = cfg.useSidebarChildren
-    // Each Board contributes one sidebar section. useSidebarChildren is
-    // optional — when omitted the section row is non-expandable.
-    const children = childrenHook ? childrenHook() : undefined
-    return {
-      id: cfg.id,
-      title: cfg.label ?? cfg.id,
-      icon: cfg.icon ?? forkshopIcons.components,
-      entries: children?.map((c) => ({
-        slug: childSlug(c.selection),
-        name: c.label,
-        icon: c.icon,
-      })),
-      entryKind: children?.[0] ? inferEntryKind(children[0].selection) : undefined,
-    }
-  })
+  // Boards without a `label` are treated as detail/selection-only Boards (e.g.
+  // a primitive-detail Board that activates when a primitive is selected, but
+  // has no sidebar entry of its own). Filter them out of the sidebar.
+  const sections = boards
+    .filter((b) => b.__config.label !== undefined)
+    .map((b) => {
+      const cfg = b.__config
+      const childrenHook = cfg.useSidebarChildren
+      const children = childrenHook ? childrenHook() : undefined
+      return {
+        id: cfg.id,
+        title: cfg.label ?? cfg.id,
+        icon: cfg.icon ?? forkshopIcons.components,
+        entries: children?.map((c) => ({
+          slug: childSlug(c.selection),
+          name: c.label,
+          icon: c.icon,
+        })),
+        entryKind: children?.[0] ? inferEntryKind(children[0].selection) : undefined,
+      }
+    })
 
   return (
     <ForkshopSidebar
