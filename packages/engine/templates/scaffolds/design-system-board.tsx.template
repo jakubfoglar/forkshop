@@ -22,6 +22,7 @@ export default defineBoard({
     return [
       {
         id: "colors",
+        label: "Colors",
         node: {
           id: "ds:colors",
           kind: "inline-react" as const,
@@ -34,6 +35,7 @@ export default defineBoard({
       },
       {
         id: "typography",
+        label: "Typography",
         node: {
           id: "ds:typography",
           kind: "inline-react" as const,
@@ -46,6 +48,7 @@ export default defineBoard({
       },
       {
         id: "primitives",
+        label: "Primitives",
         node: {
           id: "ds:primitives",
           kind: "inline-react" as const,

@@ -155,15 +155,24 @@ export function ColorGraph({ tokens, mode = "semantic-aliases-as-edges" }: Color
   }, [hoveredId, connections])
   const isDimming = !!hoveredId
 
+  // Wrap the absolute-positioning playground in an overflow:hidden outer so
+  // ColorGraph respects the width the parent (a Gallery cell, a Board, etc.)
+  // gives it. Without this, layout.colorsWidth can be huge (150+ default
+  // Tailwind colors) and push past any parent. Anything inside an
+  // overflow-hidden parent stays inside the parent — and crucially, doesn't
+  // trip the Forkshop canvas's overflow handling, which would otherwise fall
+  // back to native browser scroll and capture wheel events before the canvas
+  // can zoom.
   return (
-    <div
-      style={{
-        position: "relative",
-        width: layout.colorsWidth,
-        height: layout.colorsHeight,
-      }}
-    >
-      {edges.length > 0 && (
+    <div style={{ overflow: "hidden", width: "100%", height: layout.colorsHeight }}>
+      <div
+        style={{
+          position: "relative",
+          width: layout.colorsWidth,
+          height: layout.colorsHeight,
+        }}
+      >
+        {edges.length > 0 && (
         <svg
           width={layout.colorsWidth}
           height={layout.colorsHeight}
@@ -195,17 +204,18 @@ export function ColorGraph({ tokens, mode = "semantic-aliases-as-edges" }: Color
           })}
         </svg>
       )}
-      {allCards.map((positioned) => (
-        <ColorCard
-          key={positioned.id}
-          positioned={positioned}
-          isDimmed={isDimming && !(highlightedNodes?.has(positioned.id) ?? false)}
-          onHoverIn={() => setHoveredId(positioned.id)}
-          onHoverOut={() =>
-            setHoveredId((current) => (current === positioned.id ? undefined : current))
-          }
-        />
-      ))}
+        {allCards.map((positioned) => (
+          <ColorCard
+            key={positioned.id}
+            positioned={positioned}
+            isDimmed={isDimming && !(highlightedNodes?.has(positioned.id) ?? false)}
+            onHoverIn={() => setHoveredId(positioned.id)}
+            onHoverOut={() =>
+              setHoveredId((current) => (current === positioned.id ? undefined : current))
+            }
+          />
+        ))}
+      </div>
     </div>
   )
 }
