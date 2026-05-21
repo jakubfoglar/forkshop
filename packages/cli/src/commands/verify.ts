@@ -4,6 +4,7 @@ import pc from "picocolors"
 import { checkBoards } from "../verify/check-boards.js"
 import { checkConfig } from "../verify/check-config.js"
 import { checkReferences } from "../verify/check-references.js"
+import { checkTokenClasses } from "../verify/check-token-classes.js"
 
 export type VerifyOptions = {
   cwd?: string
@@ -28,6 +29,7 @@ export async function runVerify(options: VerifyOptions = {}): Promise<VerifyResu
   issues.push(...(await checkConfig({ cwd })))
   issues.push(...(await checkBoards({ cwd })))
   issues.push(...(await checkReferences({ cwd })))
+  issues.push(...(await checkTokenClasses({ cwd })))
 
   if (issues.length === 0) {
     console.log(pc.green("✓ Forkshop install is consistent."))
