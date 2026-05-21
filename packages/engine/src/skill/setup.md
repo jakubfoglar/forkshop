@@ -237,7 +237,7 @@ The CLI dropped this file with placeholders. Fill them based on which recipes fi
 
 | Placeholder | Substitution |
 | --- | --- |
-| `{{mount}}` | The resolved mount path, e.g. `app/forkshop`. |
+| `{{mount}}` | The resolved mount path as a filesystem path, **without the `@/` prefix**. Read `mount` from `forkshop.json` and strip a leading `@/` if present. `forkshop.json` stores the alias form (`"@/app/forkshop"`) for the CLI's internal placeholder substitution, but `defineConfig.mount` expects the bare filesystem path (e.g. `"app/forkshop"`). |
 | `{{ui_import}}` | UI Components fired → `import * as UIPrimitives from "@/components/ui"`. Else empty. |
 | `{{blocks_import}}` | Blocks fired → `import * as Blocks from "@/components/blocks"`. Else empty. |
 | `{{ui_field}}` | UI Components fired → `  ui: UIPrimitives,`. Else empty. |
