@@ -28,15 +28,17 @@ your first Board.
   the canvas in the agent's color.
 - Option-click any element to open it in your editor at the exact
   line.
-- Four engine-shipped Layouts: `Gallery`, `Tree`, `DesignSystemView`,
-  `ResponsiveFrameView`. Build your own NodeTypes and Layouts when
-  you need to.
+- Two engine-shipped Layouts: `Gallery` (grid / stack / freeform /
+  auto-flow) and `Tree` (hierarchical). Compose design-system content
+  with `ColorGraph` + `TypographyShowcase` + `PrimitivesGrid`; do
+  responsive frames with `responsiveFrameEntries`. Custom NodeTypes
+  and Layouts via `defineLayout()` when you need to.
 - Dev-only. Production tree-shakes the editing overlay; dev routes
   return 403.
 
 ## Status
 
-`v0.3.1`. Pre-1.0 — expect breaking changes between minor versions.
+`v0.4.0`. Pre-1.0 — expect breaking changes between minor versions.
 
 ## License
 
