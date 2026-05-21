@@ -146,8 +146,8 @@ importers:
   apps/test:
     dependencies:
       '@forkshop/engine':
-        specifier: ^0.4.0
-        version: 0.4.0(next@14.2.35(@babel/core@7.29.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^0.4.2
+        version: 0.4.2(next@14.2.35(@babel/core@7.29.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       class-variance-authority:
         specifier: ^0.7.0
         version: 0.7.1
@@ -180,8 +180,8 @@ importers:
         specifier: ^10.4.0
         version: 10.5.0(postcss@8.5.14)
       forkshop:
-        specifier: ^0.4.0
-        version: 0.4.0
+        specifier: ^0.4.2
+        version: 0.4.2
       postcss:
         specifier: ^8.4.0
         version: 8.5.14
@@ -1377,8 +1377,8 @@ packages:
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
 
-  '@forkshop/engine@0.4.0':
-    resolution: {integrity: sha512-yfG7c/QmG7vHfqFOiRQO/3DPBP/Me3sbVzylEofpByAY4KzIpmR/Ps0bvXAX17un+5DdVxXS6OgwIgKarnwG6Q==}
+  '@forkshop/engine@0.4.2':
+    resolution: {integrity: sha512-yL3tI43X8u1CupKfoMC2ZLJVeIHHgHYZrB1Z6ea8B4GaXCH28BG7jNF43hF4kD2HvI4dS8aIyp7oRdhA63hTxw==}
     engines: {node: '>=18.18.0'}
     peerDependencies:
       next: '>=14'
@@ -2662,8 +2662,8 @@ packages:
     resolution: {integrity: sha512-dKx12eRCVIzqCxFGplyFKJMPvLEWgmNtUrpTiJIR5u97zEhRG8ySrtboPHZXx7daLxQVrl643cTzbab2tkQjxg==}
     engines: {node: '>= 0.4'}
 
-  forkshop@0.4.0:
-    resolution: {integrity: sha512-HIXdWx9TsPHorA5DQEJbSN1sSiofSyK/7TLriXSmfKzSTGXdKg6I7aiYlsiw6xsp1KhIHBkfOFC6Bg/Acf8ddg==}
+  forkshop@0.4.2:
+    resolution: {integrity: sha512-1E+lkVFC03Q29fHOvuKrugQiMr87hijIDXBluzBWp6Ab4ANzeaTfiYui6vFWDsWwtp/JlO/Ji3NkcUENp6UCLg==}
     engines: {node: '>=20'}
     hasBin: true
 
@@ -5159,7 +5159,7 @@ snapshots:
 
   '@floating-ui/utils@0.2.11': {}
 
-  '@forkshop/engine@0.4.0(next@14.2.35(@babel/core@7.29.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@forkshop/engine@0.4.2(next@14.2.35(@babel/core@7.29.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       clsx: 2.1.1
       diff: 5.2.2
@@ -6585,7 +6585,7 @@ snapshots:
     dependencies:
       is-callable: 1.2.7
 
-  forkshop@0.4.0:
+  forkshop@0.4.2:
     dependencies:
       commander: 12.1.0
       picocolors: 1.1.1
