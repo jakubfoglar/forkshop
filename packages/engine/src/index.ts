@@ -63,12 +63,6 @@ export {
   type TreeOptions,
 } from "@forkshop/layouts/tree"
 export {
-  DesignSystemView,
-  getDesignSystemStageSize,
-  type DesignSystemViewProps,
-  type PrimitiveGroup,
-} from "@forkshop/layouts/design-system-view"
-export {
   ResponsiveFrameView,
   type ResponsiveFrameViewProps,
   responsiveFrameStageDimensions,
