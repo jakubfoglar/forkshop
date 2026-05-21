@@ -1,0 +1,40 @@
+"use client"
+
+import {
+  defineBoard,
+  useDiscoveredPrimitives,
+  forkshopIcons,
+} from "@forkshop/engine"
+import { forkshopConfig } from "./forkshop.config"
+
+export default defineBoard({
+  id: "ui-components",
+  label: "UI Components",
+  icon: forkshopIcons.components,
+  match: (s) => s.kind === "section" && s.sectionId === "ui-components",
+  layout: "gallery",
+  layoutOptions: { columns: 3, rowGap: 24, columnGap: 24 },
+  useEntries: () => {
+    const primitives = useDiscoveredPrimitives(forkshopConfig.ui ?? {})
+    return primitives.map((p) => ({
+      id: p.slug,
+      label: p.name,
+      node: {
+        id: `primitive:${p.slug}`,
+        kind: "inline-react" as const,
+        x: 0,
+        y: 0,
+        width: 320,
+        height: 200,
+        render: () => <p.Component />,
+      },
+    }))
+  },
+  useSidebarChildren: () => {
+    const primitives = useDiscoveredPrimitives(forkshopConfig.ui ?? {})
+    return primitives.map((p) => ({
+      selection: { kind: "primitive" as const, id: p.slug },
+      label: p.name,
+    }))
+  },
+})

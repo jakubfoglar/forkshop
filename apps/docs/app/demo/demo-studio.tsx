@@ -1,24 +1,22 @@
 "use client"
 
 import "@forkshop/engine/forkshop.css"
-import React, { useCallback, useEffect, useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import {
   ForkshopSidebar,
   AgentActivityProvider,
   AgentSelectionChip,
-  DesignSystemView,
   Gallery,
   Tree,
-  ResponsiveFrameView,
-  responsiveFrameStageDimensions,
+  responsiveFrameEntries,
   parseSelection,
   serializeSelection,
   discoverPrimitives,
   discoverBlocks,
-  useAgentActiveBlocks,
-  useAgentActivePages,
+  forkshopIcons,
   type ForkshopSelection,
   type ActivityEntry,
+  type GalleryEntry,
 } from "@forkshop/engine"
 import { PlaygroundBoard } from "./playground-board"
 import { DesignSystemBoard } from "./design-system"
@@ -92,6 +90,11 @@ function mapAgentSeed(seed: AgentSeed): ActivityEntry {
   }
 }
 
+const RESPONSIVE_VIEWPORTS = [1440, 768, 375]
+// Generous static stage; `fitMode="width"` rescales to container.
+const RESPONSIVE_STAGE_WIDTH = 3200
+const RESPONSIVE_STAGE_HEIGHT = 1200
+
 function SingleBlockBoard({
   slug,
   initialZoom,
@@ -102,27 +105,31 @@ function SingleBlockBoard({
   initialPan?: { x: number; y: number }
 }) {
   const block = DISCOVERED_BLOCKS.find((b) => b.slug === slug)
-  const activeBlocks = useAgentActiveBlocks()
-  const [measuredHeight, setMeasuredHeight] = useState<number | undefined>(undefined)
-  const handleBodyHeightChange = useCallback((_id: string, h: number) => setMeasuredHeight(h), [])
-  const { width, height } = useMemo(
-    () => responsiveFrameStageDimensions(measuredHeight, [1440, 768, 375]),
-    [measuredHeight],
-  )
-  if (!block) return null
   const fileMapEntry = FILE_MAP.blocks.find((b) => b.slug === slug)
+  const entries = useMemo<GalleryEntry[]>(() => {
+    if (!block) return []
+    // For blocks, the iframe loads the component-preview URL (/demo/block/<slug>).
+    return responsiveFrameEntries(`/demo/block/${block.slug}`, {
+      viewports: RESPONSIVE_VIEWPORTS,
+      sourceFile: fileMapEntry?.sourcePath,
+    })
+  }, [block, fileMapEntry])
+  if (!block) return null
   return (
-    <PlaygroundBoard stageWidth={width} stageHeight={height} fitMode="width" initialZoom={initialZoom} initialPan={initialPan}>
-      {() => (
-        <ResponsiveFrameView
-          kind="block"
-          path={block.slug}
-          source={`/demo/block/${block.slug}`}
-          viewports={[1440, 768, 375]}
-          measuredHeight={measuredHeight}
-          onBodyHeightChange={handleBodyHeightChange}
-          agentActive={activeBlocks.has(slug)}
-          sourceFile={fileMapEntry?.sourcePath}
+    <PlaygroundBoard
+      stageWidth={RESPONSIVE_STAGE_WIDTH}
+      stageHeight={RESPONSIVE_STAGE_HEIGHT}
+      fitMode="width"
+      initialZoom={initialZoom}
+      initialPan={initialPan}
+    >
+      {({ nodePositions: pos, onPositionChange: onPosChange }) => (
+        <Gallery
+          entries={entries}
+          layout="grid"
+          viewportWidth={Math.max(...RESPONSIVE_VIEWPORTS)}
+          nodePositions={pos}
+          onPositionChange={onPosChange}
         />
       )}
     </PlaygroundBoard>
@@ -138,27 +145,31 @@ function SinglePageBoard({
   initialZoom?: number
   initialPan?: { x: number; y: number }
 }) {
-  const activePages = useAgentActivePages()
-  const [measuredHeight, setMeasuredHeight] = useState<number | undefined>(undefined)
-  const handleBodyHeightChange = useCallback((_id: string, h: number) => setMeasuredHeight(h), [])
-  const { width, height } = useMemo(
-    () => responsiveFrameStageDimensions(measuredHeight, [1440, 768, 375]),
-    [measuredHeight],
-  )
   // Derive sourceFile from the route path — matches mapAgentSeed convention.
   const sourceFile = `app${path}/page.tsx`
+  const entries = useMemo<GalleryEntry[]>(
+    () =>
+      responsiveFrameEntries(path, {
+        viewports: RESPONSIVE_VIEWPORTS,
+        sourceFile,
+      }),
+    [path, sourceFile],
+  )
   return (
-    <PlaygroundBoard stageWidth={width} stageHeight={height} fitMode="width" initialZoom={initialZoom} initialPan={initialPan}>
-      {() => (
-        <ResponsiveFrameView
-          kind="page"
-          path={path}
-          source={path}
-          viewports={[1440, 768, 375]}
-          measuredHeight={measuredHeight}
-          onBodyHeightChange={handleBodyHeightChange}
-          agentActive={activePages.has(path)}
-          sourceFile={sourceFile}
+    <PlaygroundBoard
+      stageWidth={RESPONSIVE_STAGE_WIDTH}
+      stageHeight={RESPONSIVE_STAGE_HEIGHT}
+      fitMode="width"
+      initialZoom={initialZoom}
+      initialPan={initialPan}
+    >
+      {({ nodePositions: pos, onPositionChange: onPosChange }) => (
+        <Gallery
+          entries={entries}
+          layout="grid"
+          viewportWidth={Math.max(...RESPONSIVE_VIEWPORTS)}
+          nodePositions={pos}
+          onPositionChange={onPosChange}
         />
       )}
     </PlaygroundBoard>
@@ -218,8 +229,8 @@ export default function DemoPage() {
           sections={[
             {
               id: "design-system",
-              title: DesignSystemView.defaultTitle,
-              icon: DesignSystemView.icon,
+              title: "Design System",
+              icon: forkshopIcons.designSystem,
             },
             {
               id: "ui-components",

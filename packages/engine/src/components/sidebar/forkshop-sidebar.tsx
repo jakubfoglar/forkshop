@@ -16,16 +16,13 @@ import {
   useAgentActiveBlocks,
   useAgentActivePrimitives,
 } from "@forkshop/components/agent-activity-context";
+import type { ForkshopSelection } from "@forkshop/types/selection";
 
 // ---------------------------------------------------------------------------
 // Public types
 // ---------------------------------------------------------------------------
 
-export type ForkshopSelection =
-  | { kind: "section"; sectionId: string }
-  | { kind: "page"; path: string }
-  | { kind: "block"; slug: string }
-  | { kind: "primitive"; id: string };
+export type { ForkshopSelection };
 
 /**
  * A single entry in a custom sidebar section (e.g. a block, a design token

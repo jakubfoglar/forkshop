@@ -9,6 +9,8 @@ import {
   readEnginePin,
 } from "../engine-version.js"
 import {
+  MANIFEST_SCHEMA_VERSION,
+  SUPPORTED_SCHEMA_VERSIONS,
   type Manifest,
   type ResolvedAliases,
 } from "../manifest-schema.js"
@@ -45,21 +47,37 @@ export async function runUpdate(options: UpdateOptions): Promise<UpdateResult> {
   if (!lock) {
     return { ok: false, reason: "Run `forkshop init` first." }
   }
-  if (lock.schemaVersion !== "2.0.0") {
+  if (!SUPPORTED_SCHEMA_VERSIONS.has(lock.schemaVersion)) {
     return {
       ok: false,
       reason:
         "Your installation predates this CLI's manifest schema. Back up `app/forkshop/` and rerun `forkshop init`.",
     }
   }
+  if (lock.schemaVersion === "2.0.0" && MANIFEST_SCHEMA_VERSION === "2.1.0") {
+    console.warn(
+      pc.yellow(
+        `forkshop: forkshop.json schemaVersion 2.0.0 detected (current is 2.1.0). ` +
+          `Update will still work; re-run \`npx forkshop init\` to upgrade.`
+      )
+    )
+  }
 
   const registryUrl = options.registryUrl ?? lock.registryUrl
   const manifest = options.manifest ?? (await fetchManifest(registryUrl))
-  if (manifest.version !== "2.0.0") {
+  if (!SUPPORTED_SCHEMA_VERSIONS.has(manifest.version)) {
     return {
       ok: false,
-      reason: `Registry returned manifest schema ${manifest.version}; this CLI expects 2.0.0.`,
+      reason: `Registry returned manifest schema ${manifest.version}; this CLI expects ${MANIFEST_SCHEMA_VERSION}.`,
     }
+  }
+  if (manifest.version === "2.0.0" && MANIFEST_SCHEMA_VERSION === "2.1.0") {
+    console.warn(
+      pc.yellow(
+        `forkshop: manifest version 2.0.0 detected (current is 2.1.0). ` +
+          `Update will still work; re-run \`npx forkshop init\` to upgrade.`
+      )
+    )
   }
 
   const aliases: ResolvedAliases = {

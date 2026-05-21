@@ -42,6 +42,8 @@ export function SitemapBoard({
           height: 280,
           routePath: r.path,
           sourceFile: r.sourceFile,
+          // Tile renders the full desktop layout scaled down to 400px wide.
+          desktopWidth: 1440,
         }
         return { id: node.id, label: humanizePagePath(r.path), path: r.path, node }
       }),

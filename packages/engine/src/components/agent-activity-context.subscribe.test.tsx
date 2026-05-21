@@ -26,7 +26,6 @@ beforeEach(() => {
   global.EventSource = makeEventSourceMock()
 })
 afterEach(() => {
-  // @ts-expect-error — restore
   global.EventSource = originalEventSource
 })
 

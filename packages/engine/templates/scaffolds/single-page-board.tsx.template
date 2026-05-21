@@ -1,0 +1,25 @@
+"use client"
+
+import {
+  defineBoard,
+  responsiveFrameEntries,
+  useSelection,
+  isPageSelection,
+} from "@forkshop/engine"
+import { forkshopConfig } from "./forkshop.config"
+
+export default defineBoard({
+  id: "single-page",
+  match: isPageSelection,
+  layout: "gallery",
+  layoutOptions: { columns: 3, rowGap: 24, columnGap: 24 },
+  useEntries: () => {
+    const selection = useSelection()
+    if (!isPageSelection(selection)) return []
+    const route = forkshopConfig.sitemap.routes.find((r) => r.path === selection.path)
+    return responsiveFrameEntries(selection.path, {
+      viewports: [1440, 768, 375],
+      sourceFile: route?.sourceFile,
+    })
+  },
+})

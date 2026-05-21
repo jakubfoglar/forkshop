@@ -4,7 +4,7 @@ import type { Manifest } from "./manifest-schema.js"
 
 function mkManifest(): Manifest {
   return {
-    version: "2.0.0",
+    version: "2.1.0",
     generatedAt: "2026-05-17T00:00:00Z",
     registryBaseUrl: "https://example.test/r/",
     engineVersion: "0.3.0",

@@ -1,0 +1,27 @@
+"use client"
+
+import { defineBoard, forkshopIcons } from "@forkshop/engine"
+import { forkshopConfig } from "./forkshop.config"
+
+export default defineBoard({
+  id: "reference",
+  label: "Reference",
+  icon: forkshopIcons.pages,
+  match: (s) => s.kind === "section" && s.sectionId === "reference",
+  layout: "tree",
+  useEntries: () =>
+    (forkshopConfig.reference?.contentPaths ?? []).map((p) => ({
+      id: `ref:${p}`,
+      label: p,
+      node: {
+        id: `ref:${p}`,
+        kind: "iframe-route" as const,
+        x: 0,
+        y: 0,
+        width: 400,
+        height: 280,
+        routePath: `/${p.replace(/\.mdx$/, "")}`,
+        sourceFile: p,
+      },
+    })),
+})

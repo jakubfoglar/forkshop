@@ -1,26 +1,88 @@
 // Engine shell
-export { ForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
+export {
+  ForkshopCanvas,
+  useForkshopCanvas,
+  type ForkshopCanvasHandle,
+  type WheelInput,
+} from "@forkshop/components/canvas/forkshop-canvas"
+export {
+  LazyIframe,
+  clampReportedHeight,
+  type LazyIframeProps,
+  type LazyIframeHeightMode,
+} from "@forkshop/components/canvas/lazy-iframe"
 export { ForkshopSidebar } from "@forkshop/components/sidebar/forkshop-sidebar"
 export type {
-  ForkshopSelection,
   SidebarSection,
   SidebarEntry,
 } from "@forkshop/components/sidebar/forkshop-sidebar"
 
+// Board contract
+export { defineConfig, ForkshopConfigError } from "@forkshop/lib/define-config"
+export { defineBoard, BoardConfigError } from "@forkshop/lib/define-board"
+export { withBoardMeta, type WithBoardMetaInput } from "@forkshop/lib/with-board-meta"
+export { BoardRegistry, type BoardRegistryProps } from "@forkshop/components/board-registry"
+export {
+  SelectionProvider,
+  useSelection,
+  useSetSelection,
+} from "@forkshop/hooks/use-selection"
+export type {
+  BoardConfig,
+  BoardComponent,
+  AnyBoardComponent,
+  SidebarChild,
+} from "@forkshop/types/board"
+export type {
+  Layout,
+  LayoutEntry,
+  LayoutRenderProps,
+} from "@forkshop/types/layout"
+export type { ForkshopSelection } from "@forkshop/types/selection"
+export {
+  isSectionSelection,
+  isPageSelection,
+  isPrimitiveSelection,
+  isBlockSelection,
+  isCustomSelection,
+} from "@forkshop/types/selection"
+
 // Layouts
 export { Gallery, type GalleryProps, type GalleryEntry } from "@forkshop/layouts/gallery"
 export { Tree, type TreeProps, type TreeEntry } from "@forkshop/layouts/tree"
+export { defineLayout } from "@forkshop/lib/define-layout"
 export {
-  DesignSystemView,
-  getDesignSystemStageSize,
-  type DesignSystemViewProps,
-  type PrimitiveGroup,
-} from "@forkshop/layouts/design-system-view"
+  BUILTIN_LAYOUTS,
+  resolveLayout,
+} from "@forkshop/lib/builtin-layouts"
 export {
-  ResponsiveFrameView,
-  type ResponsiveFrameViewProps,
-  responsiveFrameStageDimensions,
-} from "@forkshop/layouts/responsive-frame-view"
+  galleryLayoutProtocol,
+  computeGalleryPlacements,
+  type GalleryOptions,
+} from "@forkshop/layouts/gallery"
+export {
+  treeLayoutProtocol,
+  type TreeOptions,
+} from "@forkshop/layouts/tree"
+// Design System Board building blocks
+export { ColorGraph, type ColorGraphProps } from "@forkshop/components/color-graph"
+export {
+  TypographyShowcase,
+  type TypographyShowcaseProps,
+} from "@forkshop/components/typography-showcase"
+export { PrimitivesGrid, type PrimitivesGridProps } from "@forkshop/components/primitives-grid"
+export {
+  useDesignTokens,
+  type UseDesignTokensOptions,
+} from "@forkshop/lib/use-design-tokens"
+export {
+  enumeratePrimitiveVariants,
+  type DiscoveredPrimitive as PrimitiveVariantInput,
+} from "@forkshop/lib/enumerate-primitive-variants"
+export {
+  responsiveFrameEntries,
+  type ResponsiveFrameOptions,
+} from "@forkshop/lib/responsive-frame-entries"
 
 // NodeType contract + types
 export type {
@@ -87,9 +149,6 @@ export {
 // Token registry (public — user code references tokens)
 export {
   buildTokenRegistry,
-  setActiveTokenRegistry,
-  getActiveTokenRegistry,
-  findTokenForClass,
   type TokenEntry,
   type TokenRegistry,
   type ClassLookupEntry,

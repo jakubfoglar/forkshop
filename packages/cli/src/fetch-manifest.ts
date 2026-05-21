@@ -1,4 +1,8 @@
-import { MANIFEST_SCHEMA_VERSION, type Manifest } from "./manifest-schema.js"
+import {
+  MANIFEST_SCHEMA_VERSION,
+  SUPPORTED_SCHEMA_VERSIONS,
+  type Manifest,
+} from "./manifest-schema.js"
 
 export async function fetchManifest(registryUrl: string): Promise<Manifest> {
   const url = registryUrl.endsWith("/") ? `${registryUrl}registry.json` : `${registryUrl}/registry.json`
@@ -18,10 +22,16 @@ export async function fetchManifest(registryUrl: string): Promise<Manifest> {
     )
   }
   const manifest = (await response.json()) as Manifest
-  if (manifest.version !== MANIFEST_SCHEMA_VERSION) {
+  if (!SUPPORTED_SCHEMA_VERSIONS.has(manifest.version)) {
     throw new Error(
       `Your forkshop CLI is incompatible with this registry (CLI: ${MANIFEST_SCHEMA_VERSION}, manifest: ${manifest.version}). ` +
-        `Update with npm i -g forkshop@latest.`
+        `Run \`npx forkshop@latest\` to update.`
+    )
+  }
+  if (manifest.version === "2.0.0" && MANIFEST_SCHEMA_VERSION === "2.1.0") {
+    console.warn(
+      `forkshop: manifest version 2.0.0 detected (current is 2.1.0). ` +
+        `The install will still work; re-run \`npx forkshop init\` to upgrade.`
     )
   }
   // Bind binary URLs to the host we just fetched from. The manifest's stored

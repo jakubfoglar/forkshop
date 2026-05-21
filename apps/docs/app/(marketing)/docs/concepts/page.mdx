@@ -19,8 +19,8 @@ kinds ship in the engine:
 - `iframe-component` — renders a single component preview inside an
   iframe via a generated preview route.
 
-Nodes are plain data. You compose them into Boards; the engine
-positions them on the canvas.
+Nodes are plain data. Boards return them; the engine positions and
+renders them.
 
 ## NodeType
 
@@ -48,23 +48,41 @@ object satisfying the interface. The engine ships three built-ins
 
 ## Layout
 
-A **Layout** is a React component that arranges Nodes on the canvas.
-The engine ships four:
+A **Layout** arranges Nodes on the canvas. The engine ships two:
 
-- `Gallery` — flat grid or stacked column of Nodes.
+- `Gallery` — flat grid or stack. Auto-flows entries when they
+  omit `row`/`column`; honors explicit coordinates when set.
 - `Tree` — hierarchical view derived from URL paths.
-- `DesignSystemView` — tokens + primitives on one board.
-- `ResponsiveFrameView` — one route at three viewport widths,
-  side-by-side, with live sync.
+
+Boards reference a built-in by string id (`layout: "gallery"` or
+`layout: "tree"`) inside `defineBoard()`. Custom Layouts are
+authored with `defineLayout()` and registered in
+`forkshopConfig.layouts`; a Board then references the Layout
+object directly (`layout: chartsLayout`).
 
 Layouts decide where Nodes sit. NodeTypes decide what each tile
 renders. The two are independent.
 
 ## Board
 
-A **Board** is one entry in your sidebar. It's a Layout configured
-with data — `<ResponsiveFrameView path="/pricing" source="/pricing" />`
-is a Board.
+A **Board** is one entry in your sidebar. Create one with
+`defineBoard()` — a typed config that becomes a React component the
+engine mounts inside `<BoardRegistry>`. The engine owns canvas,
+sidebar, selection routing, and positions wiring.
 
-Boards live in `app/forkshop/` in your project. You compose them as
-plain React; you don't register them anywhere.
+```tsx
+import { defineBoard, forkshopIcons } from "@forkshop/engine"
+
+export default defineBoard({
+  id: "charts",
+  label: "Charts",
+  icon: forkshopIcons.flows,
+  match: (s) => s.kind === "section" && s.sectionId === "charts",
+  layout: "gallery",
+  useEntries: () => [/* … */],
+})
+```
+
+Boards live in `app/forkshop/` in your project. Drop them into the
+`boards` prop on `<BoardRegistry>`; no switch statement, no canvas
+wiring. See [Boards](/docs/boards) for the full anatomy.

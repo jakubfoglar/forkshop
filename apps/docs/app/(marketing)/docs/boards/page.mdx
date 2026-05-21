@@ -1,95 +1,103 @@
 ---
 title: Boards
-description: The four Layouts that ship with the engine.
+description: defineBoard, the two built-in Layouts, and BoardRegistry.
 ---
 
-A Board is one entry in your sidebar — a Layout configured with
-data. The engine ships four Layouts. Each is a React component
-exported from `@forkshop/engine`. Compose them in `app/forkshop/`.
+A Board is a typed config created with `defineBoard()`. The default
+export is a React component the engine mounts inside
+`<BoardRegistry>`. The engine ships two Layouts — `gallery` and
+`tree` — and a `defineLayout()` escape hatch for custom
+arrangements. Boards live in `app/forkshop/` in your project.
 
-## `ResponsiveFrameView`
-
-Renders one route at multiple viewport widths, side-by-side. Edits
-in any frame mirror across the others as you type.
+## `defineBoard()`
 
 ```tsx
-import { ResponsiveFrameView } from "@forkshop/engine"
+import { defineBoard, forkshopIcons } from "@forkshop/engine"
 
-export default function HeroBoard() {
-  return (
-    <ResponsiveFrameView
-      path="/"
-      source="/"
-      sourceFile="app/page.tsx"
-    />
-  )
-}
+export default defineBoard({
+  id: "ui-components",
+  label: "UI Components",
+  icon: forkshopIcons.components,
+  match: (s) => s.kind === "section" && s.sectionId === "ui-components",
+  layout: "gallery",
+  layoutOptions: { columns: 3, rowGap: 24, columnGap: 24 },
+  useEntries: () => {
+    const primitives = useDiscoveredPrimitives(forkshopConfig.ui ?? {})
+    return primitives.map((p) => ({
+      id: p.slug,
+      label: p.name,
+      node: {
+        id: `primitive:${p.slug}`,
+        kind: "inline-react" as const,
+        x: 0, y: 0, width: 320, height: 200,
+        render: () => <p.Component />,
+      },
+    }))
+  },
+})
 ```
 
-| Prop          | Notes                                                                |
-|---------------|----------------------------------------------------------------------|
-| `path`        | Required. Logical identifier — drives agent-activity matching.       |
-| `source`      | Required. The iframe `src` URL.                                      |
-| `viewports`   | Pixel widths. Default `[1440, 768, 375]`.                            |
-| `kind`        | `"page"` or `"block"`. Default `"page"`.                             |
-| `sourceFile`  | Path to the TSX file backing the route. Required for live editing.   |
+| Field                | Notes                                                                          |
+|----------------------|--------------------------------------------------------------------------------|
+| `id`                 | Required. Unique across the registry.                                          |
+| `label`              | Sidebar header text. Omit for detail Boards that match by selection guard.     |
+| `icon`               | Sidebar icon. Use `forkshopIcons.<name>` or any `ForkshopIconComponent`.       |
+| `match`              | Required. `(s: ForkshopSelection) => boolean` — when the Board activates.      |
+| `layout`             | Required. `"gallery"`, `"tree"`, or a custom `Layout` object from `defineLayout()`. |
+| `layoutOptions`      | Options passed to the Layout. Typed against the Layout's `TOptions`.           |
+| `useEntries`         | Required. Hook returning the entries the Layout renders.                       |
+| `useSidebarChildren` | Hook returning sidebar entries shown under the Board's header.                 |
 
-`path` and `source` are usually the same string — they're separated
-because some Boards point at a generated preview route that doesn't
-match the conceptual identity of the page.
+`match` is the engine's selection router. Combine it with the typed
+guards — `isPrimitiveSelection`, `isBlockSelection`,
+`isPageSelection`, `isSectionSelection`, `isCustomSelection` —
+instead of hand-rolled discriminator checks.
 
-## `Gallery`
+## `Gallery` layout
 
-A flat collection of Nodes laid out in a grid or stacked column.
-Use for a UI components board, a blocks board, or a comparison
-spread.
+A flat collection of Nodes laid out in a grid or stack. Entries
+auto-flow across the column count when they omit `row`/`column`;
+explicit coordinates override.
 
 ```tsx
 import { Gallery } from "@forkshop/engine"
 
-export default function ComponentsBoard({ entries }) {
-  return <Gallery entries={entries} layout="grid" />
-}
+<Gallery entries={entries} columns={3} rowGap={24} columnGap={24} />
 ```
 
-| Prop           | Notes                                                  |
-|----------------|--------------------------------------------------------|
-| `entries`      | Required. Array of `{ label?, node, row?, column? }`. The cell key is `node.id`. |
-| `layout`       | Required. `"stack"` or `"grid"`.                       |
-| `viewportWidth`| Pixel width per tile. Default 1200 (stack) / 400 (grid). |
-| `rowGap`       | Default 32 (stack) / 48 (grid).                        |
-| `columnGap`    | Default 0 (stack) / 32 (grid).                         |
-| `fitContent`   | When `true`, tiles shrink to their content height.     |
+| Prop               | Notes                                                                          |
+|--------------------|--------------------------------------------------------------------------------|
+| `entries`          | Required. Array of `{ label?, node, row?, column? }`. Cell key is `node.id`.   |
+| `layout`           | `"grid"` or `"stack"`. Hint for default gaps and viewport width.               |
+| `columns`          | Column count for auto-flow. Default 2.                                         |
+| `rowGap`           | Pixels between rows. Default 24 (or layout-specific).                          |
+| `columnGap`        | Pixels between columns. Default 24 (or layout-specific).                       |
+| `rulers`           | Show pixel rulers along the canvas edges.                                      |
+| `rulerUnit`        | `"px"` or `"rem"`. Default `"px"`.                                             |
+| `fitContent`       | When `true`, tiles shrink to their content height.                             |
+| `nodePositions`    | From `useForkshopPositions()` — enables drag-to-reposition.                    |
+| `onPositionChange` | Companion setter from `useForkshopPositions()`.                                |
+| `selectedId`       | Currently selected Node id; the engine wires this in `BoardRegistry`.          |
+| `onSelectChange`   | Called on tile selection.                                                      |
 
-Each `GalleryEntry` carries an `AnyNode` — typically built from
-`iframeComponentNodeType` or `iframeRouteNodeType`. See
-[Extending Forkshop](/docs/extending) for custom Node kinds.
+Inside `defineBoard()` you pass these via `layoutOptions`. Reach for
+the raw `<Gallery>` only when you need to compose the Layout
+yourself — e.g. inside a `withBoardMeta` escape hatch.
 
-Pass `nodePositions` and `onPositionChange` from `useForkshopPositions()` to
-enable drag-to-reposition on the canvas:
+Pair with `useForkshopPositions({ boardId })` to persist drag
+positions across sessions:
 
 ```tsx
-import { Gallery, useForkshopPositions } from "@forkshop/engine"
-
-export default function ComponentsBoard({ entries }) {
-  const { nodePositions, onPositionChange } = useForkshopPositions({
-    boardId: "components",
-  })
-  return (
-    <Gallery
-      entries={entries}
-      layout="grid"
-      nodePositions={nodePositions}
-      onPositionChange={onPositionChange}
-    />
-  )
-}
+const { nodePositions, onPositionChange } = useForkshopPositions({
+  boardId: "ui-components",
+})
 ```
 
-`boardId` namespaces positions within the shared `positions.json` file so
-multiple boards with overlapping node IDs don't clobber each other.
+`boardId` namespaces positions within the shared `positions.json`
+file so multiple Boards with overlapping Node ids don't clobber each
+other.
 
-## `Tree`
+## `Tree` layout
 
 A hierarchical board derived from URL paths. A `TreeEntry` with
 `path: "/about/team"` is rendered as a child of one with
@@ -99,32 +107,175 @@ falls out of the paths themselves.
 ```tsx
 import { Tree } from "@forkshop/engine"
 
-export default function SitemapBoard({ entries }) {
-  return <Tree entries={entries} />
-}
+<Tree entries={entries} />
 ```
 
 Each `TreeEntry` is `{ id, label?, path, node }`. Useful for
 sitemap-shaped Boards and content hierarchies.
 
-## `DesignSystemView`
+## Design system Board
 
-Tokens plus primitives on one Board.
+Compose `ColorGraph`, `TypographyShowcase`, and `PrimitivesGrid`
+inside a `gallery` Board with `columns: 1`. `useDesignTokens()`
+reads `:root` CSS vars at runtime by default.
 
 ```tsx
-import { DesignSystemView } from "@forkshop/engine"
+"use client"
+import {
+  defineBoard,
+  ColorGraph,
+  TypographyShowcase,
+  PrimitivesGrid,
+  useDesignTokens,
+  forkshopIcons,
+} from "@forkshop/engine"
+import { forkshopConfig } from "./forkshop.config"
 
-export default function FoundationsBoard({ tokens, primitives }) {
-  return <DesignSystemView tokens={tokens} primitives={primitives} />
+export default defineBoard({
+  id: "design-system",
+  label: "Design System",
+  icon: forkshopIcons.components,
+  match: (s) => s.kind === "section" && s.sectionId === "design-system",
+  layout: "gallery",
+  layoutOptions: { columns: 1, rowGap: 32 },
+  useEntries: () => {
+    const tokens = useDesignTokens()
+    return [
+      {
+        id: "colors",
+        node: {
+          id: "ds:colors",
+          kind: "inline-react" as const,
+          x: 0, y: 0, width: 1200, height: 600,
+          render: () => <ColorGraph tokens={tokens} />,
+        },
+      },
+      {
+        id: "typography",
+        node: {
+          id: "ds:typography",
+          kind: "inline-react" as const,
+          x: 0, y: 0, width: 1200, height: 400,
+          render: () => <TypographyShowcase tokens={tokens} />,
+        },
+      },
+      {
+        id: "primitives",
+        node: {
+          id: "ds:primitives",
+          kind: "inline-react" as const,
+          x: 0, y: 0, width: 1200, height: 800,
+          render: () => <PrimitivesGrid ui={forkshopConfig.ui ?? {}} />,
+        },
+      },
+    ]
+  },
+})
+```
+
+`useDesignTokens({ source })` accepts `"auto"` (default — reads
+`:root` CSS vars after mount) or `{ tailwindConfig }` for Tailwind
+v3 projects whose tokens aren't emitted as CSS variables.
+
+## Responsive-frames Board
+
+`responsiveFrameEntries(path, options)` returns `LayoutEntry[]` of
+`iframe-route` Nodes — one per viewport width. Drop them into a
+`gallery` Board with `columns: 3` to render the frames side-by-side.
+
+```tsx
+"use client"
+import {
+  defineBoard,
+  responsiveFrameEntries,
+  useSelection,
+  isPageSelection,
+} from "@forkshop/engine"
+import { forkshopConfig } from "./forkshop.config"
+
+export default defineBoard({
+  id: "single-page",
+  match: isPageSelection,
+  layout: "gallery",
+  layoutOptions: { columns: 3, rowGap: 24, columnGap: 24 },
+  useEntries: () => {
+    const selection = useSelection()
+    if (!isPageSelection(selection)) return []
+    const route = forkshopConfig.sitemap.routes.find(
+      (r) => r.path === selection.path,
+    )
+    return responsiveFrameEntries(selection.path, {
+      viewports: [1440, 768, 375],
+      sourceFile: route?.sourceFile,
+    })
+  },
+})
+```
+
+| Option       | Notes                                                          |
+|--------------|----------------------------------------------------------------|
+| `viewports`  | Pixel widths. Default `[1440, 768, 375]`.                      |
+| `sourceFile` | Path to the TSX file backing the route. Required for live editing. |
+
+Live text edits in one frame mirror to its siblings as you type;
+**⌘↵** writes the change to `sourceFile`. See
+[Canvas editing](/docs/canvas-editing).
+
+## `<BoardRegistry>`
+
+Mount every Board through one registry in `app/forkshop/page.tsx`.
+The engine handles selection routing, sidebar rendering, canvas, and
+positions wiring — no per-selection switch statement.
+
+```tsx
+"use client"
+import { BoardRegistry } from "@forkshop/engine"
+import { forkshopConfig } from "./forkshop.config"
+import DesignSystemBoard from "./design-system-board"
+import UIComponentsBoard from "./ui-components-board"
+import SinglePageBoard from "./single-page-board"
+
+export default function ForkshopPage() {
+  return (
+    <BoardRegistry
+      config={forkshopConfig}
+      boards={[DesignSystemBoard, UIComponentsBoard, SinglePageBoard]}
+    />
+  )
 }
 ```
 
-| Prop          | Notes                                                          |
-|---------------|----------------------------------------------------------------|
-| `tokens`      | A `TokenRegistry` — usually built at runtime from `:root` vars. |
-| `primitives`  | Array of `PrimitiveGroup` — each is `{ id, label, primitives: AnyNode[] }`. |
-| `typography`  | Optional Node for the typography stage.                        |
+Order in `boards={[…]}` controls sidebar header order. Detail
+Boards that match by selection guard (e.g. `isPageSelection`,
+`isPrimitiveSelection`) have no sidebar header — their position is
+cosmetic.
 
-The init scaffold sets you up to build the `tokens` registry from
-your existing CSS variables via `parseTokenRegistryFromCssVars` —
-no separate token source needed.
+## Custom Layouts
+
+Author one with `defineLayout()` and register it in
+`forkshopConfig.layouts`. Boards then reference the Layout object
+directly via `layout: <layout>`. See
+[Extending Forkshop](/docs/extending) for the full API.
+
+## Raw-component escape hatch
+
+When `defineBoard()` doesn't fit — e.g. a Board that owns its own
+canvas — wrap a raw React component with `withBoardMeta`:
+
+```tsx
+import { withBoardMeta, ForkshopCanvas, Gallery } from "@forkshop/engine"
+
+function ExoticBoard() {
+  return <ForkshopCanvas>{/* … */}</ForkshopCanvas>
+}
+
+export default withBoardMeta(ExoticBoard, {
+  id: "exotic",
+  label: "Exotic",
+  match: (s) => s.kind === "section" && s.sectionId === "exotic",
+})
+```
+
+`withBoardMeta` skips the engine's layout machinery — you own
+canvas and positions wiring. Reach for it when the
+`useEntries`/`Layout` model doesn't fit.

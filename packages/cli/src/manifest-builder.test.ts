@@ -55,7 +55,7 @@ describe("buildManifest (v2)", () => {
     dirs.push(engineRoot)
     const manifest = await buildManifest({ registryRoot: engineRoot })
 
-    expect(manifest.version).toBe("2.0.0")
+    expect(manifest.version).toBe("2.1.0")
     expect(manifest.engineVersion).toBe("0.3.0")
 
     // Bundles exist
@@ -101,6 +101,39 @@ describe("buildManifest (v2)", () => {
       kind: "composite",
       includes: expect.arrayContaining(["route-stubs", "skill", "claude-md", "font"]),
     })
+  })
+
+  it("indexes scaffold templates into the 'scaffolds' bundle (included in init)", async () => {
+    const root = await makeEngineFixture()
+    dirs.push(root)
+    await fs.mkdir(path.join(root, "templates/scaffolds"), { recursive: true })
+    await fs.writeFile(
+      path.join(root, "templates/scaffolds/forkshop-config.tsx.template"),
+      'import { defineConfig } from "@forkshop/engine"\nexport const forkshopConfig = defineConfig({})\n',
+    )
+    await fs.writeFile(
+      path.join(root, "templates/scaffolds/design-system-board.tsx.template"),
+      'import { defineBoard } from "@forkshop/engine"\nexport default defineBoard({})\n',
+    )
+    const manifest = await buildManifest({ registryRoot: root })
+
+    const scaffoldsBundle = manifest.bundles["scaffolds"]!
+    expect(scaffoldsBundle.kind).toBe("scaffold")
+    const items = (scaffoldsBundle as { kind: "scaffold"; items: string[] }).items
+    expect(items).toContain("@forkshop/scaffolds/forkshop-config")
+    expect(items).toContain("@forkshop/scaffolds/design-system-board")
+
+    expect(manifest.files["@forkshop/scaffolds/forkshop-config"]).toMatchObject({
+      kind: "text",
+      ext: "tsx",
+      destOverride: "{aliases.mount}/forkshop-config.tsx",
+    })
+
+    // scaffolds is included in init
+    const initBundle = manifest.bundles["init"]!
+    expect((initBundle as { kind: "composite"; includes: string[] }).includes).toContain(
+      "scaffolds",
+    )
   })
 
   it("includes the claude-code hook in a 'hooks' bundle (not in init)", async () => {

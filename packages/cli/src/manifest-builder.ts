@@ -70,6 +70,19 @@ function hookAddress(rel: string): { address: string; dest: string } | undefined
   }
 }
 
+function scaffoldAddress(rel: string): { address: string; dest: string } | undefined {
+  // templates/scaffolds/<name>.tsx.template → {aliases.mount}/<name>.tsx
+  // Also handles .ts.template for non-JSX scaffolds (e.g., forkshop.config.ts).
+  const m = rel.match(/^templates\/scaffolds\/(.+)\.(tsx|ts)\.template$/)
+  if (!m) return undefined
+  const name = m[1]!
+  const ext = m[2]!
+  return {
+    address: `@forkshop/scaffolds/${name}`,
+    dest: `{aliases.mount}/${name}.${ext}`,
+  }
+}
+
 function fontAddress(rel: string): { address: string; basename: string } | undefined {
   const m = rel.match(/^fonts\/(.+)\.woff2?$/)
   if (!m) return undefined
@@ -87,6 +100,7 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
   const skillItems: string[] = []
   const routeStubItems: string[] = []
   const hookItems: string[] = []
+  const scaffoldItems: string[] = []
 
   for (const abs of skillFiles) {
     const rel = path.relative(registryRoot, abs).split(path.sep).join("/")
@@ -140,6 +154,18 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
       hookItems.push(hook.address)
       continue
     }
+    const scaffold = scaffoldAddress(rel)
+    if (scaffold) {
+      const content = await fs.readFile(abs, "utf8")
+      files[scaffold.address] = {
+        kind: "text",
+        ext: extOf(abs),
+        content,
+        destOverride: scaffold.dest,
+      }
+      scaffoldItems.push(scaffold.address)
+      continue
+    }
   }
 
   for (const abs of fontFiles) {
@@ -160,12 +186,13 @@ export async function buildManifest(options: BuildManifestOptions): Promise<Mani
     skill: { kind: "scaffold", items: skillItems.sort() },
     "claude-md": { kind: "scaffold", items: ["@forkshop/templates/claude-md"] },
     hooks: { kind: "scaffold", items: hookItems.sort() },
+    scaffolds: { kind: "scaffold", items: scaffoldItems.sort() },
     font: { kind: "asset", items: fontItems },
     init: {
       kind: "composite",
       // Note: hooks is intentionally NOT in `init` — installed only when the
       // user opts into the Claude Code pack during Phase 5 of setup.md.
-      includes: ["route-stubs", "skill", "claude-md", "font"],
+      includes: ["route-stubs", "skill", "claude-md", "scaffolds", "font"],
     },
   }
 

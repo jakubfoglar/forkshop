@@ -17,7 +17,7 @@ vi.mock("node:child_process", async () => {
 
 function fakeManifest(): Manifest {
   return {
-    version: "2.0.0",
+    version: "2.1.0",
     generatedAt: "2026-05-17T00:00:00Z",
     registryBaseUrl: "https://example.test/r/",
     engineVersion: "0.3.0",
@@ -130,7 +130,7 @@ describe("runInit (v2)", () => {
     expect(pkg.dependencies["@forkshop/engine"]).toBeDefined()
 
     const lock = JSON.parse(await fs.readFile(path.join(root, "forkshop.json"), "utf8"))
-    expect(lock.schemaVersion).toBe("2.0.0")
+    expect(lock.schemaVersion).toBe("2.1.0")
     expect(lock.engineVersion).toBe("0.3.0")
     expect(lock.mount).toBe("@/app/forkshop")
     expect(lock.srcPrefix).toBe("")

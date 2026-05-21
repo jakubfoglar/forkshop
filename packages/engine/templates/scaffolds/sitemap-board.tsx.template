@@ -1,0 +1,30 @@
+"use client"
+
+import { defineBoard, forkshopIcons } from "@forkshop/engine"
+import { forkshopConfig } from "./forkshop.config"
+
+export default defineBoard({
+  id: "sitemap",
+  label: "Sitemap",
+  icon: forkshopIcons.pages,
+  match: (s) => s.kind === "section" && s.sectionId === "sitemap",
+  layout: "tree",
+  useEntries: () =>
+    forkshopConfig.sitemap.routes.map((r) => ({
+      id: `page:${r.path}`,
+      label: r.path,
+      node: {
+        id: `page:${r.path}`,
+        kind: "iframe-route" as const,
+        x: 0,
+        y: 0,
+        width: 400,
+        height: 280,
+        routePath: r.path,
+        sourceFile: r.sourceFile,
+        // Render the full desktop layout scaled to 400px — the tile reads
+        // like a thumbnail instead of mobile-collapsed.
+        desktopWidth: 1440,
+      },
+    })),
+})

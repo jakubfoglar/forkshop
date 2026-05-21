@@ -1,20 +1,20 @@
 "use client"
 
-import React, { useCallback, useEffect, useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import {
   ForkshopSidebar,
   AgentActivityProvider,
   AgentSelectionChip,
-  DesignSystemView,
   Gallery,
   Tree,
-  ResponsiveFrameView,
-  responsiveFrameStageDimensions,
+  responsiveFrameEntries,
   parseSelection,
   serializeSelection,
   discoverPrimitives,
   discoverBlocks,
+  forkshopIcons,
   type ForkshopSelection,
+  type GalleryEntry,
 } from "@forkshop/engine"
 import { PlaygroundBoard } from "./playground-board"
 import { DesignSystemBoard } from "./design-system"
@@ -55,48 +55,72 @@ const FILE_MAP = {
   })),
 }
 
+const RESPONSIVE_VIEWPORTS = [1440, 768, 375]
+// Generous static stage; `fitMode="width"` rescales to container.
+const RESPONSIVE_STAGE_WIDTH = 3200
+const RESPONSIVE_STAGE_HEIGHT = 1200
+
 function SingleBlockBoard({ slug }: { slug: string }) {
   const block = DISCOVERED_BLOCKS.find((b) => b.slug === slug)
-  const [measuredHeight, setMeasuredHeight] = useState<number | undefined>(undefined)
-  const handleBodyHeightChange = useCallback((_id: string, h: number) => setMeasuredHeight(h), [])
-  const { width, height } = useMemo(
-    () => responsiveFrameStageDimensions(measuredHeight, [1440, 768, 375]),
-    [measuredHeight],
-  )
+  const entries = useMemo<GalleryEntry[]>(() => {
+    if (!block) return []
+    // For blocks, the iframe loads the component-preview URL (previewSrc).
+    return responsiveFrameEntries(block.previewSrc, {
+      viewports: RESPONSIVE_VIEWPORTS,
+      sourceFile: `components/blocks/${block.slug}.tsx`,
+    })
+  }, [block])
   if (!block) return null
   return (
-    <PlaygroundBoard stageWidth={width} stageHeight={height} fitMode="width">
-      {() => (
-        <ResponsiveFrameView
-          kind="block"
-          path={block.slug}
-          source={block.previewSrc}
-          viewports={[1440, 768, 375]}
-          measuredHeight={measuredHeight}
-          onBodyHeightChange={handleBodyHeightChange}
+    <PlaygroundBoard
+      stageWidth={RESPONSIVE_STAGE_WIDTH}
+      stageHeight={RESPONSIVE_STAGE_HEIGHT}
+      fitMode="width"
+    >
+      {({ nodePositions: pos, onPositionChange: onPosChange }) => (
+        <Gallery
+          entries={entries}
+          layout="grid"
+          viewportWidth={Math.max(...RESPONSIVE_VIEWPORTS)}
+          nodePositions={pos}
+          onPositionChange={onPosChange}
         />
       )}
     </PlaygroundBoard>
   )
 }
 
+// Inline path→sourceFile lookup. The Phase H setup skill scaffolds the
+// canonical pattern (forkshopConfig.sitemap.routes provides this); apps/demo
+// keeps the small hardcoded list since its sitemap is hand-maintained.
+const PAGE_SOURCE_FILES: Record<string, string> = {
+  "/": "app/page.tsx",
+  "/about": "app/about/page.tsx",
+  "/pricing": "app/pricing/page.tsx",
+}
+
 function SinglePageBoard({ path }: { path: string }) {
-  const [measuredHeight, setMeasuredHeight] = useState<number | undefined>(undefined)
-  const handleBodyHeightChange = useCallback((_id: string, h: number) => setMeasuredHeight(h), [])
-  const { width, height } = useMemo(
-    () => responsiveFrameStageDimensions(measuredHeight, [1440, 768, 375]),
-    [measuredHeight],
+  const entries = useMemo<GalleryEntry[]>(
+    () =>
+      responsiveFrameEntries(path, {
+        viewports: RESPONSIVE_VIEWPORTS,
+        sourceFile: PAGE_SOURCE_FILES[path],
+      }),
+    [path],
   )
   return (
-    <PlaygroundBoard stageWidth={width} stageHeight={height} fitMode="width">
-      {() => (
-        <ResponsiveFrameView
-          kind="page"
-          path={path}
-          source={path}
-          viewports={[1440, 768, 375]}
-          measuredHeight={measuredHeight}
-          onBodyHeightChange={handleBodyHeightChange}
+    <PlaygroundBoard
+      stageWidth={RESPONSIVE_STAGE_WIDTH}
+      stageHeight={RESPONSIVE_STAGE_HEIGHT}
+      fitMode="width"
+    >
+      {({ nodePositions: pos, onPositionChange: onPosChange }) => (
+        <Gallery
+          entries={entries}
+          layout="grid"
+          viewportWidth={Math.max(...RESPONSIVE_VIEWPORTS)}
+          nodePositions={pos}
+          onPositionChange={onPosChange}
         />
       )}
     </PlaygroundBoard>
@@ -133,15 +157,18 @@ export default function ForkshopPage() {
 
   return (
     <AgentActivityProvider fileMap={FILE_MAP}>
-      <div className="flex h-screen overflow-hidden">
+      <div
+        className="fixed inset-0 z-[9999] flex overflow-hidden bg-forkshop-surface text-forkshop-fg"
+        data-forkshop-mount
+      >
         <ForkshopSidebar
           selection={selection}
           onSelect={setSelection}
           sections={[
             {
               id: "design-system",
-              title: DesignSystemView.defaultTitle,
-              icon: DesignSystemView.icon,
+              title: "Design System",
+              icon: forkshopIcons.designSystem,
             },
             {
               id: "ui-components",
@@ -174,10 +201,7 @@ export default function ForkshopPage() {
             primitiveSelectionId={selection.kind === "primitive" ? selection.id : undefined}
           />
           {selection.kind === "section" && selection.sectionId === "design-system" && (
-            <DesignSystemBoard
-              nodePositions={positions.nodePositions}
-              onPositionChange={positions.onPositionChange}
-            />
+            <DesignSystemBoard />
           )}
           {selection.kind === "section" && selection.sectionId === "ui-components" && (
             <UIComponentsBoard />

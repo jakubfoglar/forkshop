@@ -4,10 +4,21 @@
  * is fully retired.
  */
 
-export const MANIFEST_SCHEMA_VERSION = "2.0.0"
+export const MANIFEST_SCHEMA_VERSION = "2.1.0"
+
+/**
+ * Versions the reader will accept. Anything outside this set is a hard
+ * incompatibility. 2.0.0 is accepted with a soft warning so users with stale
+ * forkshop.json files can keep using `diff` / `update` until they re-run
+ * `npx forkshop init` to upgrade.
+ */
+export const SUPPORTED_SCHEMA_VERSIONS: ReadonlySet<string> = new Set([
+  "2.0.0",
+  "2.1.0",
+])
 
 export interface Manifest {
-  version: string                  // "2.0.0"
+  version: string                  // "2.1.0"
   generatedAt: string
   registryBaseUrl: string
   engineVersion: string            // engine version this manifest was built against
@@ -52,7 +63,7 @@ export const DEFAULT_ALIASES: ResolvedAliases = {
  */
 export interface ForkshopJson {
   $schema?: string
-  schemaVersion: "2.0.0"
+  schemaVersion: "2.0.0" | "2.1.0"
   installedAt: string
   registryUrl: string
   engineVersion: string               // pinned `@forkshop/engine` version at install time

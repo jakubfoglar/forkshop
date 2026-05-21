@@ -33,10 +33,19 @@ export function buildIframeContentStyle(mode: LazyIframeHeightMode): string {
   [class*="min-h-dvh"],
   [class*="min-h-svh"],
   [class*="min-h-lvh"] { min-height: 0 !important; }
+  /* Fixed viewport-height classes (h-screen / h-svh / h-dvh / h-lvh) pin the
+   * element to the iframe's intrinsic viewport, which starts at the browser's
+   * default 150px. That collapses any Board-rendered page to ~150 tall and
+   * the measured body.scrollHeight gets stuck there. Force height: auto so
+   * the page grows to its natural content height instead. */
+  [class*="h-screen"],
+  [class*="h-dvh"],
+  [class*="h-svh"],
+  [class*="h-lvh"] { height: auto !important; }
   ${lockScroll}`
 }
 
-type LazyIframeProps = {
+export type LazyIframeProps = {
   src: string
   title: string
   width: number

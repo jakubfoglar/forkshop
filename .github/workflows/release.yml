@@ -10,6 +10,12 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      # Required for npm OIDC trusted publishing. Without this, pnpm logs
+      # `[WARN] Skipped OIDC: ... INCORRECT_PERMISSIONS` and falls back to
+      # NPM_TOKEN. With trusted publishers configured per-package on
+      # registry.npmjs.org, OIDC issues a short-lived token per publish
+      # and the long-lived NPM_TOKEN secret becomes unnecessary.
+      id-token: write
     env:
       CENTRAL_LICENSE_KEY: ${{ secrets.CENTRAL_LICENSE_KEY }}
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -30,12 +36,14 @@ jobs:
         run: pnpm --filter forkshop build
 
       - name: Publish engine
-        run: pnpm --filter @forkshop/engine publish --no-git-checks --access public
+        # --provenance signs and attests the package via GitHub Actions OIDC,
+        # which npm displays as a verified-provenance badge on the package page.
+        run: pnpm --filter @forkshop/engine publish --no-git-checks --access public --provenance
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish CLI
-        run: pnpm --filter forkshop publish --no-git-checks --access public
+        run: pnpm --filter forkshop publish --no-git-checks --access public --provenance
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 

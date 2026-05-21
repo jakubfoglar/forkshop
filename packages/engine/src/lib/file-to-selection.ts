@@ -1,4 +1,4 @@
-import type { ForkshopSelection } from "@forkshop/components/sidebar/forkshop-sidebar"
+import type { ForkshopSelection } from "@forkshop/types/selection"
 import type { FileMap } from "@forkshop/components/agent-activity-context"
 
 // ---------------------------------------------------------------------------
