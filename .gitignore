@@ -20,3 +20,13 @@ apps/docs/app/forkshop/
 
 # Per-environment Forkshop drag positions — not source.
 apps/*/app/*/positions.json
+
+# Private docs — strategy + user-testing feedback + persona analyses.
+# These contain opinionated business thinking or named participants and
+# are intentionally kept out of new commits. Note: gitignoring does NOT
+# remove the files from prior commits — for true privacy, move them to
+# a separate private location and accept that history retains a copy.
+docs/strategy/
+docs/feedback/
+docs/2026-05-17-multi-persona-audit.md
+docs/analytics-umami.md
