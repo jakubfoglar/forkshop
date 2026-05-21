@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises"
 import { resolve } from "node:path"
 import pc from "picocolors"
+import { checkConfig } from "../verify/check-config.js"
 
 export type VerifyOptions = {
   cwd?: string
@@ -21,6 +22,8 @@ export async function runVerify(options: VerifyOptions = {}): Promise<VerifyResu
   } catch {
     issues.push({ file: "forkshop.json", message: "missing — run `npx forkshop init` first" })
   }
+
+  issues.push(...(await checkConfig({ cwd })))
 
   if (issues.length === 0) {
     console.log(pc.green("✓ Forkshop install is consistent."))
