@@ -62,12 +62,6 @@ export {
   treeLayoutProtocol,
   type TreeOptions,
 } from "@forkshop/layouts/tree"
-export {
-  ResponsiveFrameView,
-  type ResponsiveFrameViewProps,
-  responsiveFrameStageDimensions,
-} from "@forkshop/layouts/responsive-frame-view"
-
 // Design System Board building blocks
 export { ColorGraph, type ColorGraphProps } from "@forkshop/components/color-graph"
 export {
