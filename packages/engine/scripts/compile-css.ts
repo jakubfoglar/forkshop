@@ -31,7 +31,9 @@ export async function compileCss() {
   const content = await fs.readFile(distCss, "utf8")
   const errors: string[] = []
   if (!content.includes("@font-face")) errors.push("missing @font-face block")
-  if (!content.includes(":root")) errors.push("missing :root block")
+  if (!content.includes("data-forkshop-mount") && !content.includes(".forkshop-scope")) {
+    errors.push("missing scoped token block ([data-forkshop-mount], .forkshop-scope)")
+  }
   if (!content.includes("/fonts/forkshop/RaveoVF.woff2")) errors.push("missing font URL")
   const sizeKB = Buffer.byteLength(content) / 1024
   if (sizeKB > 30) errors.push(`dist/forkshop.css ${sizeKB.toFixed(1)}KB > 30KB budget`)

@@ -31,7 +31,7 @@ export function SpacingBodyMenu({
 
   const isBlock = containingBlock !== undefined
   return createPortal(
-    <>
+    <div className="forkshop-scope">
       <div className="fixed inset-forkshop-0 z-[99]" onClick={onClose} />
       <div
         className={cn(
@@ -65,7 +65,7 @@ export function SpacingBodyMenu({
           </button>
         ))}
       </div>
-    </>,
+    </div>,
     document.body,
   )
 }

@@ -13,7 +13,7 @@
   font-display: swap;
 }
 
-:root {
+[data-forkshop-mount], .forkshop-scope {
   --forkshop-canvas: #f3f4f6;   /* gray-100 — the canvas backdrop */
   --forkshop-surface: #fafafa;  /* gray-50 — sidebar / panel surface */
   --forkshop-surface-2: #f3f4f6;
@@ -28,7 +28,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  [data-forkshop-mount], .forkshop-scope {
     --forkshop-canvas: #0a0a0a;
     --forkshop-surface: #171717;
     --forkshop-surface-2: #1f1f1f;

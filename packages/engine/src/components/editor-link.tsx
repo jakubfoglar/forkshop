@@ -106,7 +106,7 @@ export function EditorLink({ mountPath = "/forkshop" }: { mountPath?: string } =
 
   const tagTop = Math.min(hover.rect.bottom + 4, globalThis.window.innerHeight - 24)
   return createPortal(
-    <>
+    <div className="forkshop-scope">
       <div
         aria-hidden
         style={{
@@ -141,7 +141,7 @@ export function EditorLink({ mountPath = "/forkshop" }: { mountPath?: string } =
       >
         {formatPath(hover.source.fileName)}:{hover.source.lineNumber}
       </div>
-    </>,
+    </div>,
     document.body,
   )
 }

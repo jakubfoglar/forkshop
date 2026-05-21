@@ -47,7 +47,7 @@ export function SpacingPicker({
 
   const isBlock = containingBlock !== undefined
   return createPortal(
-    <>
+    <div className="forkshop-scope">
       <div className="fixed inset-forkshop-0 z-[99]" onClick={onClose} />
       <div
         className={cn(
@@ -103,7 +103,7 @@ export function SpacingPicker({
           })}
         </div>
       </div>
-    </>,
+    </div>,
     document.body,
   )
 }
