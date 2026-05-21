@@ -387,37 +387,6 @@ export function buildTokenRegistry(
   return { ...partial, classLookup: buildClassLookup(partial) }
 }
 
-// ---------------------------------------------------------------------------
-// Active-catalog singleton (for consumers that can't thread the registry)
-// ---------------------------------------------------------------------------
-
-let _activeCatalog: TokenRegistry | null = null
-
-/**
- * Set the active token catalog. Call this once during your app's forkshop setup
- * (e.g., from `forkshop.config.ts`) so consumers can retrieve it via
- * `getActiveTokenRegistry()` without threading it through every prop.
- */
-export function setActiveTokenRegistry(registry: TokenRegistry): void {
-  _activeCatalog = registry
-}
-
-/**
- * Get the active token catalog previously set by `setActiveTokenRegistry`.
- * Throws if no catalog has been set.
- */
-export function getActiveTokenRegistry(): TokenRegistry {
-  if (!_activeCatalog) {
-    throw new Error(
-      "No token registry set. Call setActiveTokenRegistry(buildTokenRegistry(yourConfig)) during your forkshop setup.",
-    )
-  }
-  return _activeCatalog
-}
-
-/**
- * Look up a token entry by Tailwind utility class name using the active catalog.
- */
-export function findTokenForClass(className: string): TokenEntry | undefined {
-  return getActiveTokenRegistry().classLookup[className]?.entry
-}
+// `buildTokenRegistry` is the public entry point. Consumers thread the
+// returned `TokenRegistry` through props or React context (see
+// `useDesignTokens`) — there is no global registry singleton.

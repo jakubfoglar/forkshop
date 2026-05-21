@@ -147,9 +147,6 @@ export {
 // Token registry (public — user code references tokens)
 export {
   buildTokenRegistry,
-  setActiveTokenRegistry,
-  getActiveTokenRegistry,
-  findTokenForClass,
   type TokenEntry,
   type TokenRegistry,
   type ClassLookupEntry,

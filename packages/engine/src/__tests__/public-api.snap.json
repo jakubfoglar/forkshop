@@ -35,10 +35,8 @@
     "enumeratePrimitiveVariants",
     "filePathToRoute",
     "fileToSelection",
-    "findTokenForClass",
     "forkshopIcons",
     "galleryLayoutProtocol",
-    "getActiveTokenRegistry",
     "iframeComponentNodeType",
     "iframeRouteNodeType",
     "inlineReactNodeType",
@@ -54,7 +52,6 @@
     "resolveLayout",
     "responsiveFrameEntries",
     "serializeSelection",
-    "setActiveTokenRegistry",
     "subscribe",
     "treeLayoutProtocol",
     "useAgentActiveBlocks",
@@ -105,10 +102,7 @@
     "fileToSelection"
   ],
   "@forkshop/engine/lib/token-registry": [
-    "buildTokenRegistry",
-    "findTokenForClass",
-    "getActiveTokenRegistry",
-    "setActiveTokenRegistry"
+    "buildTokenRegistry"
   ],
   "@forkshop/engine/lib/parse-token-registry-from-css-vars": [
     "parseTokenRegistryFromCssVars"
