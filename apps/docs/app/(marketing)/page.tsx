@@ -23,35 +23,32 @@ export default function HomePage() {
             For designers, engineers and AI agents.
           </p>
           <p className="mt-4 max-w-2xl text-pretty text-base text-muted sm:text-lg">
-            Forkshop mounts a canvas inside your app&apos;s dev environment.
-            Open any page at multiple viewports side-by-side, edit text in place
-            to save back to source, and watch your AI agents work in real time.
+            Let Claude set up a canvas inside your app&apos;s dev environment.
+            Open any page at multiple viewports, edit text straight to source,
+            and watch agents work live. Build your own boards — any React
+            component is a valid node.
           </p>
 
           <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <code className="rounded-md border border-ink/10 bg-white px-4 py-3 text-sm">
-              npx forkshop init
-            </code>
+            <a
+              href="mailto:jakub@forkshop.dev?subject=Forkshop%20early%20access"
+              data-umami-event="cta-request-access"
+              className="inline-flex items-center justify-center rounded-md bg-ink px-4 py-3 text-sm text-canvas hover:bg-ink/90"
+            >
+              Request early access →
+            </a>
             <a
               href="https://x.com/forkshop_dev"
               target="_blank"
               rel="noreferrer"
               data-umami-event="cta-follow-x"
-              className="inline-flex items-center justify-center rounded-md bg-ink px-4 py-3 text-sm text-canvas hover:bg-ink/90"
+              className="inline-flex items-center justify-center rounded-md border border-ink/15 px-4 py-3 text-sm text-ink hover:bg-ink/5"
             >
               Follow on X →
             </a>
           </div>
           <p className="mt-4 text-xs text-muted">
-            Next.js only for now. Pre-1.0 — expect breaking changes. Source on{" "}
-            <a
-              href="https://github.com/jakubfoglar/forkshop"
-              data-umami-event="cta-source-github"
-              className="underline decoration-ink/20 underline-offset-2 hover:decoration-ink/50"
-            >
-              GitHub
-            </a>
-            .
+            Next.js only for now. Pre-1.0 — expect breaking changes.
           </p>
           <p className="mt-1 text-xs text-muted">
             Feedback:{" "}
@@ -91,7 +88,7 @@ export default function HomePage() {
           />
         </div>
 
-        <section className="grid gap-8 sm:grid-cols-3">
+        <section className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           <article>
             <h2 className="text-base font-medium">Side-by-side viewports</h2>
             <p className="mt-2 text-sm text-muted">
@@ -111,6 +108,30 @@ export default function HomePage() {
             <p className="mt-2 text-sm text-muted">
               When AI agents are editing files, Forkshop highlights it in real
               time.
+            </p>
+          </article>
+          <article>
+            <h2 className="text-base font-medium">Auto-discovered sitemap</h2>
+            <p className="mt-2 text-sm text-muted">
+              Forkshop reads your route tree and assembles a sitemap board —
+              every page as a live iframe, every section as a click target. No
+              JSON, no enumeration.
+            </p>
+          </article>
+          <article>
+            <h2 className="text-base font-medium">Every component variant</h2>
+            <p className="mt-2 text-sm text-muted">
+              Render real buttons, navbars, modals in a grid. Compare light
+              and dark, open and collapsed, default and hover — your full
+              design system in one view.
+            </p>
+          </article>
+          <article>
+            <h2 className="text-base font-medium">Build your own boards</h2>
+            <p className="mt-2 text-sm text-muted">
+              Anything you can render in React is a valid canvas node — design
+              refs, dashboards, internal tools. Compose boards and workflows
+              around the work you actually do.
             </p>
           </article>
         </section>
