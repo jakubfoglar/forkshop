@@ -5,26 +5,42 @@ Topic: Dev surface for iterating on Forkshop engine chrome
 
 ## Goal
 
-A dedicated surface inside apps/demo for visual iteration on Forkshop engine
-chrome — sidebar, canvas frame, agent indicators, edit popover — and the
-engine's own design tokens. Optimized for "see all states side-by-side"
-comparison with HMR-driven feedback. Not deployed; a dev tool only.
+A dedicated Next.js app — `apps/engine-workshop` — that hosts a Forkshop
+instance whose only purpose is iterating on Forkshop engine internals:
+sidebar, canvas frame, agent indicators, edit popover, and the engine's own
+design tokens. Optimized for "see all states side-by-side" comparison with
+HMR-driven feedback. Not deployed; a dev tool only.
 
-## Why apps/demo, why inside the Forkshop mount
+## Why a new app, not a route in apps/demo or apps/docs
 
-apps/demo is already a real Forkshop installation against a real Next.js
-skeleton. The engine is workspace-linked, so edits to packages/engine/src
-trigger HMR in apps/demo automatically. Living inside the existing Forkshop
-mount also means we reuse the real canvas (zoom, pan, position persistence),
-the real sidebar nav, and the real AgentActivityProvider — no parallel
-infrastructure.
+apps/demo exists to dogfood a Forkshop install on a generic SaaS skeleton —
+it tests the *user-facing scaffold*. Mixing engine-internal boards into it
+would muddy that purpose: which "design system" board is the user app's,
+which is the engine's? Why does the dev surface have iteration-only chrome
+right next to scaffold tests?
 
-The trade-off: workshop boards render *inside* the chrome being iterated on,
-which is unavoidably meta. We accept this because (a) the chrome iteration
-loop still works — HMR updates both the outer chrome and the inner variants,
-(b) for components that can only be exercised through real canvas interaction
-(canvas frame, edit popover), being inside a real canvas is the *only* way to
-see them at all.
+apps/docs ships forkshop.dev. Adding a hidden internal route there means
+building deployment-aware route gating and increases the surface area of the
+public site.
+
+A dedicated app is the cleanest separation. The whole app *is* the workshop:
+one Forkshop mount, all boards are engine-iteration boards, nothing else
+competes for attention. It costs one more workspace package; the
+maintenance cost is low because the app has no business logic — just board
+definitions, mock data, and a mount shell.
+
+## Why "Forkshop within Forkshop" actually works
+
+The workshop is itself a Forkshop installation. Its outer chrome (sidebar,
+canvas, frames, edit popover) is rendered by `@forkshop/engine` — the same
+package whose internals it exists to iterate on. HMR updates the outer
+chrome in real time as engine source changes, and the workshop boards
+inside the canvas show the same chrome posed in specific states for
+side-by-side comparison. The meta-mirror is the feature.
+
+For chrome that *can only* be rendered by a real canvas (NodeFrame,
+EditPopover, FloatingControls), the workshop's own outer canvas is that
+canvas — boards 4 and 5 just curate the nodes that exercise those states.
 
 ## What gets shown, and how
 
@@ -49,24 +65,24 @@ content designed to surface the chrome states naturally.
 
 ## v1 Boards
 
-Five boards, surfaced as five top-level sidebar sections at the bottom of
-apps/demo's existing sidebar (after "Sitemap"). Each is its own
-`SidebarSection` with `{ id, title, icon }` and a render branch in
-apps/demo/app/forkshop/page.tsx, matching how "design-system" is wired today.
+Five boards. Each is its own `SidebarSection` in the workshop's sidebar
+config: `{ id, title, icon }` plus a render branch in the workshop's
+`page.tsx`. There are *only* workshop sections — no user-app sections
+competing for space.
 
 ### 1. `engine-design-system` — Engine's own tokens
 
-Title: "Engine design system". Sibling to the user-app design system board.
+Title: "Engine design system".
 
 - ColorGraph for the 11 `--forkshop-*` CSS vars defined in
-  packages/engine/tailwind/forkshop.css
+  `packages/engine/tailwind/forkshop.css`
 - TypographyShowcase for engine type rules (Raveo font, sidebar/canvas type
   scales)
 - Icon grid: every entry in `forkshopIcons` rendered via `<ForkshopIcon />`
 
 Uses existing public exports (ColorGraph, TypographyShowcase, ForkshopIcon,
 forkshopIcons). Reads engine CSS vars via getComputedStyle on
-document.documentElement — apps/demo already imports
+`document.documentElement` — the workshop's globals.css imports
 `@forkshop/engine/forkshop.css`, so the vars are present.
 
 ### 2. `engine-sidebar` — Mock sidebar variants
@@ -80,25 +96,40 @@ SidebarEntry arrays. Variants:
 - with-active-page (selection points into the mock tree)
 - with-hover-state (one entry surfaces hover styling — exact mechanism TBD
   during impl; may need a forced-class wrapper)
-- with-agent-reading-page (paired with a mock AgentActivityProvider entry
-  so an indicator appears on one entry)
+- with-single-agent-reading (one agent on one entry, single-color
+  indicator)
+- with-multi-agent-activity (3-5 mock agents fanned out across different
+  entries, so each agent's distinct color is visible on the sidebar
+  simultaneously)
 - deeply-nested-tree (stress test for indentation / collapse chrome)
 
-These mock sidebars are visible alongside the *real* sidebar driving
-navigation on the left of the canvas. Each variant card has a clear label
-("Active page", "Agent reading", etc.) so the user can tell variants from
-the real one.
+These mock sidebars are visible alongside the *real* sidebar driving the
+workshop's own navigation on the left of the canvas. Each variant card has
+a clear label ("Active page", "Agent reading", etc.) so the user can tell
+variants from the real one.
 
-### 3. `engine-agent-indicators` — Standalone agent UI
+### 3. `engine-agent-indicators` — Standalone agent UI and multi-agent colors
 
 Title: "Agent indicators".
 
 Gallery of inline-react nodes rendering AgentReadIndicator and
-AgentSelectionChip across sizes, colors, positions. Wrapped in a local
-AgentActivityProvider with curated mock ActivityEntry data so each variant
-has the right "reading" / "selecting" state without depending on a real
-agent. Uses the public `recordActivity` / `subscribe` API or direct mock
-state.
+AgentSelectionChip across sizes, positions, and — critically — across
+multiple distinct mock agents so the engine's per-agent color assignment is
+visible side-by-side.
+
+Variants include:
+- Single-agent: one agent reading / selecting (baseline)
+- Multi-agent fan-out: 3-5 mock agents each tagged on a different file or
+  block, showing every agent's assigned color in one frame
+- Same-target collision: two agents tagged on the *same* file/block, so
+  the indicator's collision/stacking behavior (whatever the engine does
+  today) is visible
+- Size / position variants of a single indicator for spacing iteration
+
+Wrapped in a local AgentActivityProvider with curated mock ActivityEntry
+data per variant. Uses the public `recordActivity` / `subscribe` API plus
+the color hooks (`useAgentColorByFile` / `…ByPage` / `…ByBlock` /
+`…ByPrimitive`) to verify each entry point assigns colors consistently.
 
 ### 4. `engine-canvas-frame` — Natural-state playground
 
@@ -112,9 +143,12 @@ set of nodes exercises every frame feature:
 - big content / small content
 - one node permanently tagged with mock agent attention (so the
   agent-attention frame styling is always visible)
+- two or three additional nodes each tagged with a *different* mock agent,
+  so the per-agent frame color assignment is visible across nodes
+  simultaneously (mirrors the multi-agent variant on board 2 and 3)
 
 Iteration: click / hover nodes to surface selection and hover chrome; edit
-packages/engine/src/components/canvas/* and let HMR update the rendering.
+`packages/engine/src/components/canvas/*` and let HMR update the rendering.
 
 ### 5. `engine-edit-popover` — Trigger-and-iterate playground
 
@@ -125,56 +159,76 @@ only appears once a node is selected and edit mode is entered. A handful of
 representative nodes; user selects one to surface the popover and floating
 controls. Not a gallery — a station.
 
-## File layout
+## App layout
 
 ```
-apps/demo/app/forkshop/
-  engine-workshop/
-    design-system.tsx       # Board 1
-    sidebar.tsx             # Board 2
-    agent-indicators.tsx    # Board 3
-    canvas-frame.tsx        # Board 4
-    edit-popover.tsx        # Board 5
-    mock-data.ts            # Shared mock SidebarSection/SidebarEntry, mock ActivityEntries
+apps/engine-workshop/
+  package.json                # New workspace package
+  next.config.mjs
+  tsconfig.json               # Extends workspace base
+  tailwind.config.ts          # Pulls @forkshop/engine into content paths
+  app/
+    layout.tsx                # Root layout
+    page.tsx                  # Mount: ForkshopSidebar + canvas dispatch (5 boards)
+    globals.css               # imports @forkshop/engine/forkshop.css
+  src/
+    boards/
+      design-system.tsx       # Board 1
+      sidebar.tsx             # Board 2
+      agent-indicators.tsx    # Board 3
+      canvas-frame.tsx        # Board 4
+      edit-popover.tsx        # Board 5
+    mock-data.ts              # Shared mock SidebarSection/SidebarEntry, mock ActivityEntries
+    positions.json            # Optional, for stable node layout
 ```
 
-apps/demo/app/forkshop/page.tsx gets:
-- 5 new entries appended to the inline `sections` array
-- 5 new render branches in the selection-dispatch JSX
+`package.json` declares dependencies on:
+- `@forkshop/engine` (workspace:*)
+- `next`, `react`, `react-dom` (matching apps/demo versions)
+- `tailwindcss`, `@tailwindcss/postcss` (matching workspace versions)
+
+No `forkshopConfig` UI primitives or blocks — the workshop doesn't host a
+user app, so `forkshopConfig.ui` and `forkshopConfig.blocks` either stay
+empty or `defineConfig` is skipped entirely. The mount in `page.tsx`
+directly defines its sidebar sections inline (same pattern as
+apps/demo/app/forkshop/page.tsx).
 
 No new exports from `@forkshop/engine` — workshop is implemented entirely
 against the existing public API. Internal chrome (NodeFrame, EditPopover,
-FloatingControls) stays internal and is exercised through real
-ForkshopCanvas / ForkshopSidebar mounts, not directly imported.
+FloatingControls) stays internal and is exercised through the real
+ForkshopCanvas / ForkshopSidebar mounts.
+
+## Dev workflow
+
+- `pnpm --filter @forkshop/engine-workshop dev` starts the workshop on its
+  own port (configurable; default :3001 to avoid collision with apps/demo
+  on :3000)
+- Top-level `pnpm dev` keeps booting apps/demo as today (no change)
+- Optional: add `pnpm workshop` as a top-level script alias for
+  `pnpm --filter @forkshop/engine-workshop dev`
 
 ## Mock data strategy
 
 `mock-data.ts` defines:
 - 1-2 mock site trees as SidebarSection arrays (one realistic shape, one
   deeply nested)
-- A small library of mock ActivityEntry arrays representing distinct agent
-  states (reading file X, editing block Y, selecting primitive Z)
+- A roster of mock agent identities (3-5 distinct agents with stable IDs)
+  used across boards 2, 3, and 4 so the same agent colors recur and
+  multi-agent variants reflect a consistent cast
+- Mock ActivityEntry arrays per scenario: single-agent reading,
+  multi-agent fan-out across files / blocks / pages, same-target
+  collisions
 - A small set of mock NodePositions to give workshop boards stable layout
-  without writing through to apps/demo/positions.json
 
 Everything is static — no network, no fs, no live agent feed.
 
-## Sidebar section ordering and icons
+## Sidebar ordering and icons
 
-The 5 workshop sections go *after* the existing user-app sections
-(design-system, ui-components, blocks, sitemap). Order within the workshop
-group: design-system → sidebar → agent-indicators → canvas-frame →
-edit-popover (broad to narrow).
-
-Icon picks (resolved during impl, all from `forkshopIcons`): something that
-visually distinguishes workshop sections from user-app sections so the
-sidebar doesn't read as one undifferentiated list. Candidate: a
-"settings" / "wrench" style icon for all 5, or per-board icons that hint at
-the chrome being iterated on.
-
-If visual separation between user-app sections and workshop sections needs
-to be stronger than icon choice alone, defer to a follow-up — adding a
-visual separator would touch ForkshopSidebar's public API.
+Order within the workshop: design-system → sidebar → agent-indicators →
+canvas-frame → edit-popover (broad to narrow). Icon picks come from
+`forkshopIcons` — chosen during impl. Since the workshop sidebar contains
+*only* workshop sections, there's no user-app/internal distinction to
+visually communicate.
 
 ## Out of scope (v1)
 
@@ -183,7 +237,8 @@ visual separator would touch ForkshopSidebar's public API.
   is a separate question that touches the live-edit mount-path contract.
 - Per-component interactive control panels (state toggles). The "state grid
   + HMR" loop is the iteration model.
-- Deployment. Workshop lives in apps/demo, which is not deployed.
+- Deployment. apps/engine-workshop is a dev tool, never pushed to
+  forkshop.dev or anywhere public.
 - Component documentation, prop tables, or any docs-site presence. This is
   iteration scaffolding, not user-facing reference material.
 - Coverage of every chrome component. Five boards cover what the user
@@ -191,28 +246,36 @@ visual separator would touch ForkshopSidebar's public API.
 
 ## Acceptance
 
-- `pnpm dev` boots apps/demo
-- apps/demo sidebar shows 5 new sections after the existing 4 (8 total
-  selectable items at top level once expanded)
-- Each workshop board renders without console errors
-- Editing CSS in packages/engine/tailwind/forkshop.css or a component file
-  in packages/engine/src/components/ triggers HMR and updates visible
-  variants on at least one workshop board
+- `pnpm install` succeeds with the new workspace package added
+- `pnpm --filter @forkshop/engine-workshop dev` boots the workshop on
+  :3001
+- The workshop sidebar shows 5 sections (design-system, sidebar,
+  agent-indicators, canvas-frame, edit-popover); each renders without
+  console errors
+- Editing CSS in `packages/engine/tailwind/forkshop.css` or a component
+  file in `packages/engine/src/components/` triggers HMR and updates
+  visible variants on at least one workshop board
 - `pnpm check` passes (canonical-alias convention preserved; engine
-  internals not deep-imported from apps/demo)
+  internals not deep-imported from apps/engine-workshop)
+- `pnpm build` succeeds for the new app (build is not strictly necessary
+  since it's dev-only, but breaking the build means something's wrong)
 
 ## Open questions to resolve during implementation
 
 - Hover-state variant for the sidebar mock: ForkshopSidebar doesn't take a
   "forced hover" prop. Options: wrap with a CSS class that forces `:hover`,
-  use `data-attribute` if one exists, or skip the hover variant and rely on
-  manually hovering. Decide when wiring board 2.
+  use a data-attribute if one exists, or skip the hover variant and rely
+  on manually hovering. Decide when wiring board 2.
 - Agent-attention frame state for board 4 needs a mock ActivityEntry that
   tags a *specific* node ID. Confirm the engine's color-by-X hooks
   (`useAgentColorByFile`, `…ByPage`, `…ByBlock`, `…ByPrimitive`) can drive
   the frame styling we want to surface, or whether we need a different
   trigger path.
-- Whether to use `Gallery` layout (uniform grid) or `PlaygroundBoard` with
+- Whether to use `Gallery` layout (uniform grid) or a custom layout with
   manual positions for each workshop board. Gallery is simpler; manual
   positions let you cluster related variants. Default to Gallery; switch
   per-board if the layout feels constrained.
+- Whether to seed the workshop with `defineConfig` at all. Boards inside
+  the workshop don't need `forkshopConfig.ui` / `.blocks`. Probably skip
+  `defineConfig` and define sidebar sections inline in `page.tsx`. Confirm
+  during impl.
