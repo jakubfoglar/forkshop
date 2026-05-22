@@ -1,5 +1,6 @@
+import { useState } from "react"
 import { beforeEach, describe, it, expect, vi } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 import { defineBoard } from "@forkshop/lib/define-board"
 import { defineConfig } from "@forkshop/lib/define-config"
 import { BoardRegistry } from "@forkshop/components/board-registry"
@@ -125,6 +126,63 @@ describe("BoardRegistry hash sync", () => {
       />,
     )
     expect(window.location.hash).toBe("#/section/a")
+  })
+
+  it("switches between boards whose useEntries hooks differ in count", () => {
+    // Regression for v0.4.4 — Rules of Hooks violation when ActiveBoard's fiber
+    // was reused across boards with differing internal hook counts. Without a
+    // key on ActiveBoard, going from a hook-using board to a hook-less board
+    // shifts the hook indices and React throws (e.g. "Rendered fewer hooks
+    // than during the previous render", surfaced in v0.4.3 as a downstream
+    // TypeError from useForkshopPositions).
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+
+    const FirstBoard = defineBoard({
+      id: "first",
+      label: "First Board",
+      match: (s) => s.kind === "section" && s.sectionId === "first",
+      layout: "gallery",
+      useEntries: () => {
+        // Two internal hooks — mirrors useDesignTokens's footprint.
+        const [, setX] = useState(0)
+        const [, setY] = useState(0)
+        void setX
+        void setY
+        return []
+      },
+    })
+    const SecondBoard = defineBoard({
+      id: "second",
+      label: "Second Board",
+      match: (s) => s.kind === "section" && s.sectionId === "second",
+      layout: "gallery",
+      useEntries: () => [],
+    })
+    const config = defineConfig({
+      mount: "app/forkshop",
+      sitemap: { routes: [{ path: "/", sourceFile: "app/page.tsx" }] },
+    })
+
+    render(
+      <BoardRegistry
+        config={config}
+        boards={[FirstBoard, SecondBoard]}
+        initialSelection={{ kind: "section", sectionId: "first" }}
+      />,
+    )
+
+    fireEvent.click(screen.getByText("Second Board"))
+
+    const hookOrderViolations = errorSpy.mock.calls.filter((args) => {
+      const msg = String(args[0] ?? "")
+      return (
+        msg.includes("Rendered fewer hooks") ||
+        msg.includes("Rendered more hooks") ||
+        msg.includes("change in the order of Hooks")
+      )
+    })
+    expect(hookOrderViolations).toHaveLength(0)
+    errorSpy.mockRestore()
   })
 
   it("reads initial selection from window.location.hash when present", () => {

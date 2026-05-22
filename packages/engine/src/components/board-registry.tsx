@@ -88,10 +88,15 @@ function BoardRegistryInner({
       <BoardSidebar boards={boards} config={config} />
       <div className="relative flex flex-1 overflow-hidden">
         {active ? (
+          // Key by board id so React mounts a fresh fiber per board. Each board's
+          // useEntries can call a different number of hooks (e.g. useDesignTokens
+          // adds two, while a static useEntries adds zero), and without the key
+          // a fiber switch between them violates Rules of Hooks — manifests as
+          // a TypeError from React's areHookInputsEqual on the next render.
           active.__rawRender ? (
-            <RawBoard board={active} />
+            <RawBoard key={active.__config.id} board={active} />
           ) : (
-            <ActiveBoard board={active} layouts={allLayouts} />
+            <ActiveBoard key={active.__config.id} board={active} layouts={allLayouts} />
           )
         ) : (
           <EmptyBoardState />
