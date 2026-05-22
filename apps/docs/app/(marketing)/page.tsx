@@ -30,25 +30,29 @@ export default function HomePage() {
           </p>
 
           <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <a
-              href="mailto:jakub@forkshop.dev?subject=Forkshop%20early%20access"
-              data-umami-event="cta-request-access"
-              className="inline-flex items-center justify-center rounded-md bg-ink px-4 py-3 text-sm text-canvas hover:bg-ink/90"
-            >
-              Request early access →
-            </a>
+            <code className="rounded-md border border-ink/10 bg-white px-4 py-3 text-sm">
+              npx forkshop init
+            </code>
             <a
               href="https://x.com/forkshop_dev"
               target="_blank"
               rel="noreferrer"
               data-umami-event="cta-follow-x"
-              className="inline-flex items-center justify-center rounded-md border border-ink/15 px-4 py-3 text-sm text-ink hover:bg-ink/5"
+              className="inline-flex items-center justify-center rounded-md bg-ink px-4 py-3 text-sm text-canvas hover:bg-ink/90"
             >
               Follow on X →
             </a>
           </div>
           <p className="mt-4 text-xs text-muted">
-            Next.js only for now. Pre-1.0 — expect breaking changes.
+            Next.js only for now. Pre-1.0 — expect breaking changes. Source on{" "}
+            <a
+              href="https://github.com/jakubfoglar/forkshop"
+              data-umami-event="cta-source-github"
+              className="underline decoration-ink/20 underline-offset-2 hover:decoration-ink/50"
+            >
+              GitHub
+            </a>
+            .
           </p>
           <p className="mt-1 text-xs text-muted">
             Feedback:{" "}
