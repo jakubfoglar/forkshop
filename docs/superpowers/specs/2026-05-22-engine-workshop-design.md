@@ -200,9 +200,12 @@ ForkshopCanvas / ForkshopSidebar mounts.
 
 ## Dev workflow
 
-- `pnpm --filter @forkshop/engine-workshop dev` starts the workshop on its
-  own port (configurable; default :3001 to avoid collision with apps/demo
-  on :3000)
+- `pnpm --filter @forkshop/engine-workshop dev` starts the workshop.
+  Port is not hardcoded — Next.js defaults to 3000 and auto-increments if
+  taken, so the workshop naturally falls onto a free port when apps/demo
+  or any other project is already running. Override with
+  `pnpm --filter @forkshop/engine-workshop dev -- -p <port>` when you want
+  a specific one.
 - Top-level `pnpm dev` keeps booting apps/demo as today (no change)
 - Optional: add `pnpm workshop` as a top-level script alias for
   `pnpm --filter @forkshop/engine-workshop dev`
@@ -247,8 +250,9 @@ visually communicate.
 ## Acceptance
 
 - `pnpm install` succeeds with the new workspace package added
-- `pnpm --filter @forkshop/engine-workshop dev` boots the workshop on
-  :3001
+- `pnpm --filter @forkshop/engine-workshop dev` boots the workshop (on
+  whatever port Next.js picks — 3000 if free, otherwise the next free
+  port)
 - The workshop sidebar shows 5 sections (design-system, sidebar,
   agent-indicators, canvas-frame, edit-popover); each renders without
   console errors
