@@ -247,15 +247,18 @@ A Board references the same object (not its id): `layout: chartsLayout`.
 Dev-only. Production builds tree-shake the overlay and the edit API returns
 403.
 
-- **Live text.** Hover text inside any iframe → blue ring if it lives in the
-  Node's `sourceFile`, gray dashed ring if it's locked in a sub-component.
-  Click → `contenteditable`. `⌘↵` saves; `Esc` discards. Quoted literals and
-  JSX text children both work.
+- **Live text.** Hover text inside any iframe → solid blue ring if it lives
+  in the Node's `sourceFile`, gray dashed ring if it's locked in a
+  sub-component. Click → `contenteditable`. `⌘↵` saves; `Esc` discards.
+  Quoted literals and JSX text children both work. Holding Option suspends
+  this overlay so the open-in-editor click takes precedence.
 - **Spacing picker.** Click any padding/margin ring → picker → POSTs to
   `/api/forkshop/edit`.
 - **Open in editor.** Option-click → `vscode://file/…` opens at the source
-  line (Cursor / VS Code). Powered by `@locator/webpack-loader` wired by the
-  setup skill.
+  line (Cursor / VS Code). Held-Option draws a dashed blue outline + a
+  filename:line caption rendered at canvas level (no clipping at any zoom).
+  Powered by `@locator/webpack-loader` plus an `<EditorLink />` mount in
+  `app/layout.tsx`, both wired by the setup skill.
 
 Block outlines in page-view iframes require `data-forkshop-block="<slug>"` on
 the outermost element of each block component — without that attribute the

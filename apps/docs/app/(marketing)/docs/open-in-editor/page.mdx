@@ -3,9 +3,15 @@ title: Open in editor
 description: Hold Option and click any element on the canvas to open its source file in your editor.
 ---
 
-Hold **Option** (`⌥`) over a Forkshop tile. Elements get a blue
-ring as you hover. Click one — your editor opens at the exact file
-and line that rendered it.
+Hold **Option** (`⌥`) over a Forkshop tile. Elements get a dashed
+blue outline, the cursor changes to a pointer, and a small caption
+shows the filename and line that produced the element. Click — your
+editor opens there.
+
+The dashed outline distinguishes opt-click from
+[click-to-edit text](/docs/canvas-editing), which uses a solid blue
+outline. Holding Option suspends the text-edit affordance, so opt-click
+takes precedence even on elements you could normally edit in place.
 
 ## How it works
 
@@ -17,6 +23,13 @@ Forkshop shell. When the modifier is held, `EditorLink` listens for
 clicks, reads the `data-locatorjs` attribute, and points
 `window.top` at `vscode://file/<abs-path>:<line>:<col>`. Your OS
 hands the URL to whichever app registered the `vscode://` scheme.
+
+The hover outline and filename caption are drawn by the canvas, not
+by `EditorLink` itself — the iframe posts the hovered element's rect
+and source location to the canvas via `postMessage`, and the canvas
+renders the overlay at viewport level. This keeps the outline at a
+constant on-screen thickness as you zoom and avoids the iframe's
+overflow clipping when the caption extends past the tile edge.
 
 `EditorLink` activates only when:
 
@@ -47,13 +60,29 @@ not something Forkshop can paper over.
 
 The setup skill — run from Claude Code after `forkshop init`, when
 you say "set up Forkshop" — adds `@locator/webpack-loader` to your
-devDependencies and merges the loader rule into `next.config.*`.
-`EditorLink` lands in your root layout at the same time.
+devDependencies, merges the loader rule into `next.config.*`
+(including `app/**` so route pages get attribution), and mounts
+`<EditorLink />` in your root `app/layout.tsx`.
 
 `forkshop init` itself does **not** wire this up. If you want it
 without running the setup skill, add the loader to `next.config.*`
 yourself and mount `<EditorLink />` from `@forkshop/engine` in your
-root layout.
+root layout:
+
+```tsx
+import { EditorLink } from "@forkshop/engine"
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        {children}
+        <EditorLink mountPath="/forkshop" />
+      </body>
+    </html>
+  )
+}
+```
 
 ## Disabling
 

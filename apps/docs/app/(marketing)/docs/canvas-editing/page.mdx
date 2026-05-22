@@ -3,9 +3,14 @@ title: Canvas editing
 description: Click text in the canvas to edit it. ⌘↵ writes the change to your source file.
 ---
 
-Hover any text in a Forkshop tile. A blue outline means the engine
-can trace it back to a string in your source — click it and the
-text becomes editable in place. Type. **⌘↵** saves. **Esc** discards.
+Hover any text in a Forkshop tile. A solid blue outline means the
+engine can trace it back to a string in your source — click it and
+the text becomes editable in place. Type. **⌘↵** saves. **Esc** discards.
+
+The solid outline distinguishes click-to-edit from
+[Option-click → open in editor](/docs/open-in-editor), which uses a
+dashed outline. Holding Option suspends this overlay, so opt-click
+takes precedence even on editable text.
 
 The overlay runs in dev only. Production builds tree-shake the
 wiring entirely, and the `/api/forkshop/edit` route returns 403.

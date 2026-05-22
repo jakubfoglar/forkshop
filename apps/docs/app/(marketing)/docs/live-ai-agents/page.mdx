@@ -46,6 +46,14 @@ When two agents work at once on different files, you see two colors
 on the canvas. When they touch the same file, the most recent
 agent wins the outline.
 
+The agent color flows through every surface that reflects activity:
+the iframe outline on the canvas, the badge above each tile, **and
+the sidebar** — the activity dot and trailing filename next to a
+page, block, or primitive entry are tinted with whichever agent
+most recently edited it. So a Claude edit lights up the sidebar
+row in orange; a second agent on a different file paints its own
+row in its own color.
+
 ## Claude Code producer
 
 Pass `--install-claude-pack` to `forkshop init` (or set
