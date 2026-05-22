@@ -1,7 +1,7 @@
 "use client"
 
 import { useIframeEditController } from "@forkshop/lib/use-iframe-edit-controller"
-import { useForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
+import { useCanvasZoom, useForkshopCanvas } from "@forkshop/components/canvas/forkshop-canvas"
 import { EditPopover } from "@forkshop/components/canvas/edit-popover"
 
 export type IframeEditOverlayProps = {
@@ -46,7 +46,7 @@ function IframeEditOverlayInner({
   editApiPath: string
 }) {
   const { transformRef } = useForkshopCanvas()
-  const zoom = transformRef.current?.zoom ?? 1
+  const zoom = useCanvasZoom()
   const panX = transformRef.current?.panX ?? 0
   const panY = transformRef.current?.panY ?? 0
   const ctl = useIframeEditController({

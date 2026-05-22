@@ -303,7 +303,7 @@ export function useIframeEditController({
     onSaveEdit: save,
     onSwitchEdit: handleSwitchEdit,
     onDiscardEdit: discard,
-    getCanvasZoom: () => canvasZoom,
+    canvasZoom,
     editableSet,
   })
 

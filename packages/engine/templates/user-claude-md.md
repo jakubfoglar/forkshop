@@ -25,9 +25,10 @@ Every file Forkshop creates lives under a `forkshop` namespace:
 - `forkshop.json` — lock file
 
 Modifications to your existing files: one import line in `app/globals.css`,
-optionally a `@locator/webpack-loader` rule in `next.config.*`, and
-`@forkshop/engine` (always) + `@locator/webpack-loader` (if Locator opt-in
-accepted) in `package.json`. Nothing else.
+optionally a `@locator/webpack-loader` rule in `next.config.*` plus an
+`<EditorLink />` mount in `app/layout.tsx`, and `@forkshop/engine` (always) +
+`@locator/webpack-loader` (if Locator opt-in accepted) in `package.json`.
+Nothing else.
 
 ---
 

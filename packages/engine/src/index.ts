@@ -2,6 +2,7 @@
 export {
   ForkshopCanvas,
   useForkshopCanvas,
+  useCanvasZoom,
   type ForkshopCanvasHandle,
   type WheelInput,
 } from "@forkshop/components/canvas/forkshop-canvas"
@@ -127,6 +128,9 @@ export {
   useAgentSubstringsForBlock,
   useAllAgentHunks,
   useAgentColorByFile,
+  useAgentColorByPage,
+  useAgentColorByBlock,
+  useAgentColorByPrimitive,
   useAgentReadingByFile,
   useAgentEditEpoch,
   deriveAffectedBlocks,

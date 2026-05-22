@@ -205,6 +205,84 @@ export function useAgentActivePrimitives(): ReadonlySet<string> {
   }, [entries, fileMap])
 }
 
+// Per-identity color projections. Mirror the active-set hooks above but
+// return the agent color of the most-recent edit that touched the page /
+// block / primitive. Sidebar consumers use these alongside the active-set
+// hooks to render the in-edit dot in the agent's actual color (orange for
+// Claude, etc.) instead of the static brand accent.
+function pickByLatest<K>(
+  pairs: Iterable<{ key: K; color: string; ts: number }>,
+): Map<K, string> {
+  const out = new Map<K, string>()
+  const seenAt = new Map<K, number>()
+  for (const { key, color, ts } of pairs) {
+    const prev = seenAt.get(key) ?? 0
+    if (ts >= prev) {
+      out.set(key, color)
+      seenAt.set(key, ts)
+    }
+  }
+  return out
+}
+
+export function useAgentColorByPage(): ReadonlyMap<string, string> {
+  const { entries, fileMap } = useAgentActivity()
+  return useMemo(() => {
+    const pairs: { key: string; color: string; ts: number }[] = []
+    for (const entry of entries) {
+      if (!isEditish(entry.action)) continue
+      const selection = fileToSelection(entry.filePath, fileMap)
+      if (selection && selection !== "site-wide" && selection.kind === "page") {
+        pairs.push({ key: selection.path, color: entry.color, ts: entry.lastSeenAt })
+      }
+    }
+    return pickByLatest(pairs)
+  }, [entries, fileMap])
+}
+
+export function useAgentColorByBlock(): ReadonlyMap<string, string> {
+  const { entries, fileMap } = useAgentActivity()
+  return useMemo(() => {
+    const pairs: { key: string; color: string; ts: number }[] = []
+    const blockSlugs = fileMap.blocks.map((b) => b.slug)
+    for (const entry of entries) {
+      if (!isEditish(entry.action)) continue
+      const selection = fileToSelection(entry.filePath, fileMap)
+      if (selection === undefined || selection === "site-wide") continue
+      if (selection.kind === "block") {
+        pairs.push({ key: selection.slug, color: entry.color, ts: entry.lastSeenAt })
+        continue
+      }
+      if (selection.kind === "page") {
+        for (const hunk of entry.hunks ?? []) {
+          for (const slug of deriveAffectedBlocks(hunk.oldString, blockSlugs)) {
+            pairs.push({ key: slug, color: entry.color, ts: entry.lastSeenAt })
+          }
+          for (const slug of deriveAffectedBlocks(hunk.newString, blockSlugs)) {
+            pairs.push({ key: slug, color: entry.color, ts: entry.lastSeenAt })
+          }
+        }
+      }
+    }
+    return pickByLatest(pairs)
+  }, [entries, fileMap])
+}
+
+export function useAgentColorByPrimitive(): ReadonlyMap<string, string> {
+  const { entries, fileMap } = useAgentActivity()
+  return useMemo(() => {
+    const pairs: { key: string; color: string; ts: number }[] = []
+    for (const entry of entries) {
+      if (!isEditish(entry.action)) continue
+      const selection = fileToSelection(entry.filePath, fileMap)
+      if (selection && selection !== "site-wide" && selection.kind === "primitive") {
+        pairs.push({ key: selection.id, color: entry.color, ts: entry.lastSeenAt })
+      }
+    }
+    return pickByLatest(pairs)
+  }, [entries, fileMap])
+}
+
 // True when the given page is being edited AND no specific block was identified
 // from any of its hunks. Used by the iframe relay to decide whether to fall back
 // to the diffuse "all blocks softly pulse" treatment.

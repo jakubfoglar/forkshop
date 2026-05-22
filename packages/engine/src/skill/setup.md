@@ -153,7 +153,7 @@ Also touching automatically:
   • {{mount}}/page.tsx — registers the Boards above
 
 Two opt-ins (I'll confirm after you accept):
-  [1] Option-click → editor — @locator/webpack-loader devDep + next.config rule
+  [1] Option-click → editor — @locator/webpack-loader devDep + next.config rule + <EditorLink /> mount in app/layout.tsx
   [2] Live-AI hook for Claude Code — .claude/hooks/forkshop-post-tool-use.sh + .claude/settings.json entry
 ````
 
@@ -204,7 +204,7 @@ Glue text:
 ````
 Two things need your call before I touch anything outside Forkshop's namespace:
 
-  [1] Option-click → editor — add @locator/webpack-loader devDep + a webpack/turbopack rule in next.config.*
+  [1] Option-click → editor — add @locator/webpack-loader devDep + a webpack/turbopack rule in next.config.* + <EditorLink /> mount in app/layout.tsx
   [2] Live-AI hook for Claude Code — adds .claude/hooks/forkshop-post-tool-use.sh + one entry in .claude/settings.json. Forwards file paths to your dev server so Nodes light up as you work. Reversible.
 
 Glance at the diffs first with "Show me" on either, or pick yes/no.
@@ -215,9 +215,9 @@ Call `AskUserQuestion` twice in sequence (one per opt-in). Each question has opt
 ```ts
 // Question 1 — Option-click
 { question: "Enable Option-click → editor (recommended)?", header: "Option-click", options: [
-  { label: "Yes, install", description: "Adds @locator/webpack-loader devDep + a webpack/turbopack rule in next.config.*" },
+  { label: "Yes, install", description: "Adds @locator/webpack-loader devDep, a webpack/turbopack rule in next.config.*, and an <EditorLink /> mount in app/layout.tsx" },
   { label: "No, skip",     description: "Skip Locator wiring — install manually later" },
-  { label: "Show me",      description: "Print the planned dep + next.config diff first, then re-ask" },
+  { label: "Show me",      description: "Print the planned dep + next.config + layout.tsx diff first, then re-ask" },
 ]}
 // Question 2 — Live-AI hook
 { question: "Install Claude Code live-AI hook (recommended)?", header: "Live-AI hook", options: [
@@ -327,7 +327,7 @@ After this step, `page.tsx` is `<BoardRegistry config={forkshopConfig} boards={[
 webpack(config) {
   config.module.rules.push({
     test: /\.(js|jsx|ts|tsx)$/,
-    include: [/components\//, /lib\//, /src\/components\//, /src\/lib\//],
+    include: [/app\//, /components\//, /lib\//, /src\/app\//, /src\/components\//, /src\/lib\//],
     use: ["@locator/webpack-loader"],
   })
   return config
@@ -338,15 +338,23 @@ webpack(config) {
 // Next 15/16 — additionally:
 turbopack: {
   rules: {
-    "components/**/*.{js,jsx,ts,tsx}": { loaders: ["@locator/webpack-loader"] },
-    "lib/**/*.{js,jsx,ts,tsx}":        { loaders: ["@locator/webpack-loader"] },
+    "app/**/*.{js,jsx,ts,tsx}":            { loaders: ["@locator/webpack-loader"] },
+    "components/**/*.{js,jsx,ts,tsx}":     { loaders: ["@locator/webpack-loader"] },
+    "lib/**/*.{js,jsx,ts,tsx}":            { loaders: ["@locator/webpack-loader"] },
+    "src/app/**/*.{js,jsx,ts,tsx}":        { loaders: ["@locator/webpack-loader"] },
     "src/components/**/*.{js,jsx,ts,tsx}": { loaders: ["@locator/webpack-loader"] },
-    "src/lib/**/*.{js,jsx,ts,tsx}":    { loaders: ["@locator/webpack-loader"] },
+    "src/lib/**/*.{js,jsx,ts,tsx}":        { loaders: ["@locator/webpack-loader"] },
   },
 },
 ```
 
 Append to existing `webpack(config)` rather than adding a second key. Merge globs into existing `turbopack.rules`. If the shape can't be merged cleanly (functional config importing elsewhere), print the snippet for manual paste with a `!` warning.
+
+3. Mount `<EditorLink />` in the user's root `app/layout.tsx` (or `src/app/layout.tsx`). Without this, the loader stamps `data-locatorjs` attributes but no runtime listens — opt-click silently does nothing.
+
+   Add `import { EditorLink } from "@forkshop/engine"` to the layout's import block, then insert `<EditorLink mountPath="<mount-route>" />` as a child of the layout's `<body>` (typically near `<Analytics />`, after the user's main providers). `mountPath` is the route the canvas lives at — for the default mount it's `"/forkshop"`. If the user moved the mount (e.g. `app/(tools)/forkshop/`), pass the matching pathname (`"/forkshop"` still works because route groups are URL-invisible).
+
+   If `app/layout.tsx` can't be parsed cleanly (e.g. exports a higher-order wrapper or imports from a different convention), print the planned import + JSX snippet for manual paste with a `!` warning. The opt-click runtime is no-op outside the iframe and dev-only, so an orphan mount in a non-Forkshop layout is harmless.
 
 End of Phase 6 reminder: `Run pnpm install before pnpm dev — Locator dep was just added.` Declined → Phase 7 surfaces `Option-click: skipped (re-run setup to enable)`.
 

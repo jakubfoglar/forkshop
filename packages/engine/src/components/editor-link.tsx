@@ -5,7 +5,9 @@
  * in the editor (VS Code, Cursor — anything registered for the vscode:// scheme).
  *
  * Hold the Option (Alt) key to preview: every element you mouse over gets a
- * subtle outline + a small filename:line caption. Release Option to dismiss.
+ * subtle outline + a small filename:line caption rendered by the canvas
+ * (EditorLinkOverlay), not inside the iframe — so the overlay never clips at
+ * the iframe edge and isn't subject to in-iframe overflow contexts.
  *
  * Mount once at the root of an iframed page (typically inside the host's
  * `app/layout.tsx`). Does nothing in production, does nothing when the page
@@ -16,13 +18,16 @@
  * the runtime here only needs to read a DOM attribute — no React internals,
  * no SWC quirks, works in any framework that runs the loader.
  *
+ * This component renders no visible chrome itself. It posts hover state to the
+ * parent canvas via window.postMessage; EditorLinkOverlay receives those
+ * messages and draws the overlay at canvas level.
+ *
  * Inspired by Locator.js (https://github.com/infi-pc/locatorjs, MIT). The
  * runtime here is an independent Forkshop implementation; no code shared.
  * The compile-time loader is `@locator/webpack-loader` (still upstream).
  */
 
 import { useEffect, useState } from "react"
-import { createPortal } from "react-dom"
 
 interface SourceLocation {
   fileName: string
@@ -30,17 +35,16 @@ interface SourceLocation {
   columnNumber: number
 }
 
-interface HoverState {
-  rect: DOMRect
-  source: SourceLocation
-}
-
 const LOCATOR_ATTR = "data-locatorjs"
-const Z_TOP = 2147483647
+
+// Pointer cursor on every locatorjs-stamped element while Option is held.
+// Lives in a sibling <style> we inject once per iframe document.
+const EDITOR_LINK_CSS = `
+[data-forkshop-opt-down] [${LOCATOR_ATTR}] { cursor: pointer !important; }
+`
 
 export function EditorLink({ mountPath = "/forkshop" }: { mountPath?: string } = {}) {
   const [active, setActive] = useState(false)
-  const [hover, setHover] = useState<HoverState | null>(null)
 
   // Activation: dev only, inside an iframe, parent path matches mountPath.
   useEffect(() => {
@@ -56,25 +60,92 @@ export function EditorLink({ mountPath = "/forkshop" }: { mountPath?: string } =
     setActive(true)
   }, [mountPath])
 
+  // Inject the cursor stylesheet once. Cleanup on unmount.
+  useEffect(() => {
+    if (!active) return
+    const existing = document.head.querySelector("style[data-forkshop-editor-link]")
+    if (existing) return
+    const style = document.createElement("style")
+    style.dataset.forkshopEditorLink = "true"
+    style.textContent = EDITOR_LINK_CSS
+    document.head.append(style)
+    return () => {
+      style.remove()
+    }
+  }, [active])
+
   // Wire DOM listeners while active.
   useEffect(() => {
     if (!active) return
 
+    function postHover(rect: DOMRect, source: SourceLocation) {
+      try {
+        globalThis.window.parent.postMessage(
+          {
+            type: "forkshop:opt-hover",
+            rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
+            source,
+          },
+          "*",
+        )
+      } catch {
+        // Cross-origin or detached parent — silently ignore.
+      }
+    }
+
+    function postClear() {
+      try {
+        globalThis.window.parent.postMessage({ type: "forkshop:opt-hover-clear" }, "*")
+      } catch {
+        // Cross-origin or detached parent — silently ignore.
+      }
+    }
+
+    function setOptDown(value: boolean) {
+      if (value) {
+        document.documentElement.dataset.forkshopOptDown = ""
+      } else {
+        delete document.documentElement.dataset.forkshopOptDown
+      }
+    }
+
+    function clearOptState() {
+      setOptDown(false)
+      postClear()
+    }
+
     function onMouseOver(event: MouseEvent) {
-      if (!event.altKey) return
+      // Option held tracks on every mouse event — most reliable signal we
+      // have, since keyup may fire in a different window (parent canvas)
+      // when keyboard focus isn't in the iframe.
+      if (!event.altKey) {
+        clearOptState()
+        return
+      }
+      setOptDown(true)
       const el = event.target
-      if (!(el instanceof HTMLElement)) return
+      if (!(el instanceof HTMLElement)) {
+        postClear()
+        return
+      }
       const result = findElementWithSource(el)
-      if (!result) return
-      setHover({ rect: result.el.getBoundingClientRect(), source: result.source })
+      if (!result) {
+        postClear()
+        return
+      }
+      postHover(result.el.getBoundingClientRect(), result.source)
+    }
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.altKey) setOptDown(true)
     }
 
     function onKeyUp(event: KeyboardEvent) {
-      if (!event.altKey) setHover(null)
+      if (!event.altKey) clearOptState()
     }
 
     function onBlur() {
-      setHover(null)
+      clearOptState()
     }
 
     function onClick(event: MouseEvent) {
@@ -86,64 +157,53 @@ export function EditorLink({ mountPath = "/forkshop" }: { mountPath?: string } =
       event.preventDefault()
       event.stopPropagation()
       navigateToSource(result.source)
-      setHover(null)
+      clearOptState()
     }
 
     document.addEventListener("mouseover", onMouseOver)
+    document.addEventListener("keydown", onKeyDown)
     document.addEventListener("keyup", onKeyUp)
     document.addEventListener("click", onClick, /* capture */ true)
     globalThis.window.addEventListener("blur", onBlur)
 
+    // Keyboard focus often lives in the parent canvas, not inside the iframe.
+    // Without listening on the parent, releasing Option there never reaches
+    // the iframe and the hover sticks. The parent is same-origin (Forkshop
+    // serves both), so cross-document listeners are allowed; if they aren't,
+    // bail silently — the mouseover fallback still cleans up on next move.
+    let parentWindow: Window | undefined
+    let parentDocument: Document | undefined
+    try {
+      const candidate = globalThis.window.parent
+      const candidateDocument = candidate?.document
+      if (candidate && candidateDocument) {
+        parentWindow = candidate
+        parentDocument = candidateDocument
+        parentDocument.addEventListener("keyup", onKeyUp)
+        parentDocument.addEventListener("keydown", onKeyDown)
+        parentWindow.addEventListener("blur", onBlur)
+      }
+    } catch {
+      // Cross-origin parent — relying on mouseover fallback alone.
+    }
+
     return () => {
       document.removeEventListener("mouseover", onMouseOver)
+      document.removeEventListener("keydown", onKeyDown)
       document.removeEventListener("keyup", onKeyUp)
       document.removeEventListener("click", onClick, true)
       globalThis.window.removeEventListener("blur", onBlur)
+      if (parentDocument) {
+        parentDocument.removeEventListener("keyup", onKeyUp)
+        parentDocument.removeEventListener("keydown", onKeyDown)
+      }
+      if (parentWindow) parentWindow.removeEventListener("blur", onBlur)
+      setOptDown(false)
+      postClear()
     }
   }, [active])
 
-  if (!active || !hover) return null
-
-  const tagTop = Math.min(hover.rect.bottom + 4, globalThis.window.innerHeight - 24)
-  return createPortal(
-    <div className="forkshop-scope">
-      <div
-        aria-hidden
-        style={{
-          position: "fixed",
-          left: hover.rect.left,
-          top: hover.rect.top,
-          width: hover.rect.width,
-          height: hover.rect.height,
-          outline: "1px solid var(--forkshop-accent, #5b6cff)",
-          outlineOffset: 0,
-          pointerEvents: "none",
-          zIndex: Z_TOP,
-        }}
-      />
-      <div
-        aria-hidden
-        style={{
-          position: "fixed",
-          left: hover.rect.left,
-          top: tagTop,
-          padding: "2px 6px",
-          fontSize: 11,
-          lineHeight: "16px",
-          fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-          background: "var(--forkshop-accent, #5b6cff)",
-          color: "var(--forkshop-accent-fg, #ffffff)",
-          borderRadius: 3,
-          pointerEvents: "none",
-          zIndex: Z_TOP,
-          whiteSpace: "nowrap",
-        }}
-      >
-        {formatPath(hover.source.fileName)}:{hover.source.lineNumber}
-      </div>
-    </div>,
-    document.body,
-  )
+  return null
 }
 
 /**
@@ -186,11 +246,6 @@ function parseLocatorValue(raw: string): SourceLocation | null {
     lineNumber: lineNumber || 1,
     columnNumber: Number.isNaN(columnNumber) ? 1 : columnNumber,
   }
-}
-
-function formatPath(absPath: string): string {
-  const parts = absPath.split("/")
-  return parts.slice(-3).join("/")
 }
 
 function navigateToSource(source: SourceLocation) {

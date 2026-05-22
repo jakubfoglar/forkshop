@@ -9,6 +9,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type CSSProperties,
   type ReactNode,
   type RefObject,
@@ -18,6 +19,7 @@ import type { NodeType } from "@forkshop/types/node-type"
 import type { AnyNode } from "@forkshop/types/node"
 import { IframeRegistryProvider } from "@forkshop/components/iframe-registry"
 import { AgentIframeRelay } from "@forkshop/components/agent-iframe-relay"
+import { EditorLinkOverlay } from "@forkshop/components/canvas/editor-link-overlay"
 import { BUILTIN_NODE_TYPES } from "@forkshop/node-types"
 
 export type WheelInput = {
@@ -47,6 +49,9 @@ type ForkshopCanvasContextValue = {
   applyWheelInput: (input: WheelInput) => void
   containerRef: RefObject<HTMLDivElement | null>
   nodeTypes: ReadonlyArray<NodeType<AnyNode>>
+  /** Subscribe to canvas zoom changes. Returns an unsubscribe function. The
+   *  callback fires after each transform state update with the new zoom. */
+  subscribeZoom: (callback: (zoom: number) => void) => () => void
 }
 
 const ForkshopCanvasContext = createContext<ForkshopCanvasContextValue | undefined>(undefined)
@@ -55,6 +60,19 @@ export function useForkshopCanvas(): ForkshopCanvasContextValue {
   const value = useContext(ForkshopCanvasContext)
   if (!value) throw new Error("useForkshopCanvas must be used inside <ForkshopCanvas>")
   return value
+}
+
+/** Reactive canvas zoom — re-renders the consumer on each zoom change.
+ *  Use this when a piece of state derived from zoom needs to flow to a
+ *  child document (e.g., setProperty inside an iframe). Most consumers
+ *  should keep reading transformRef.current.zoom for one-shot lookups. */
+export function useCanvasZoom(): number {
+  const { transformRef, subscribeZoom } = useForkshopCanvas()
+  return useSyncExternalStore(
+    subscribeZoom,
+    () => transformRef.current?.zoom ?? 1,
+    () => 1,
+  )
 }
 
 const MIN_ZOOM = 0.02
@@ -133,9 +151,24 @@ export function ForkshopCanvas({
   const [isSpaceHeld, setIsSpaceHeld] = useState(false)
   const [isPanning, setIsPanning] = useState(false)
 
+  const zoomListenersRef = useRef<Set<(zoom: number) => void>>(new Set())
+  const subscribeZoom = useCallback((callback: (zoom: number) => void) => {
+    zoomListenersRef.current.add(callback)
+    return () => {
+      zoomListenersRef.current.delete(callback)
+    }
+  }, [])
+
   useEffect(() => {
     transformRef.current = transform
     onTransformChange?.(transform)
+    for (const listener of zoomListenersRef.current) {
+      try {
+        listener(transform.zoom)
+      } catch (error) {
+        console.error("[forkshop canvas] zoom listener threw:", error)
+      }
+    }
   }, [transform, onTransformChange])
 
   // oxlint-disable-next-line no-useless-undefined
@@ -448,8 +481,9 @@ export function ForkshopCanvas({
       applyWheelInput: applyWheel,
       containerRef,
       nodeTypes,
+      subscribeZoom,
     }),
-    [fitToView, resetZoom, animateToBox, setTransform, applyWheel, containerRef, nodeTypes],
+    [fitToView, resetZoom, animateToBox, setTransform, applyWheel, containerRef, nodeTypes, subscribeZoom],
   )
 
   const blockStageInteraction = isSpaceHeld || isPanning
@@ -478,6 +512,7 @@ export function ForkshopCanvas({
     <ForkshopCanvasContext.Provider value={contextValue}>
       <IframeRegistryProvider>
         <AgentIframeRelay />
+        <EditorLinkOverlay />
         <div
           ref={containerRef as React.RefObject<HTMLDivElement>}
           className="relative flex-1 select-none overflow-hidden overscroll-contain bg-forkshop-canvas font-forkshop-sans"

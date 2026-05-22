@@ -4,6 +4,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  type CSSProperties,
 } from "react";
 import { cn } from "@forkshop/lib/cn";
 import { ForkshopIcon, type ForkshopIconComponent } from "@forkshop/components/icon";
@@ -15,6 +16,9 @@ import {
   useAgentActivePages,
   useAgentActiveBlocks,
   useAgentActivePrimitives,
+  useAgentColorByPage,
+  useAgentColorByBlock,
+  useAgentColorByPrimitive,
 } from "@forkshop/components/agent-activity-context";
 import type { ForkshopSelection } from "@forkshop/types/selection";
 
@@ -167,6 +171,9 @@ export function ForkshopSidebar({
   const activePages = useAgentActivePages();
   const activeBlocks = useAgentActiveBlocks();
   const activePrimitives = useAgentActivePrimitives();
+  const pageColors = useAgentColorByPage();
+  const blockColors = useAgentColorByBlock();
+  const primitiveColors = useAgentColorByPrimitive();
 
   // Auto-expand a section when the active selection is one of its entries.
   useEffect(() => {
@@ -254,22 +261,29 @@ export function ForkshopSidebar({
                   />
                   {hasChildren &&
                     isExpanded &&
-                    entriesSorted.map((entry) => (
-                      <SidebarRow
-                        key={entry.slug}
-                        label={entry.name}
-                        depth={2}
-                        icon={entry.icon}
-                        active={isEntryActive(entryKind, selection, entry.slug)}
-                        agentActive={
-                          entryKind === "page"
-                            ? activePages.has(entry.slug)
-                            : activeBlocks.has(entry.slug) || activePrimitives.has(entry.slug)
-                        }
-                        agentFileLabel={`${entry.slug}.tsx`}
-                        onClick={() => onSelect(deriveEntrySelection(entryKind, entry.slug))}
-                      />
-                    ))}
+                    entriesSorted.map((entry) => {
+                      const entryAgentActive =
+                        entryKind === "page"
+                          ? activePages.has(entry.slug)
+                          : activeBlocks.has(entry.slug) || activePrimitives.has(entry.slug)
+                      const entryAgentColor =
+                        entryKind === "page"
+                          ? pageColors.get(entry.slug)
+                          : blockColors.get(entry.slug) ?? primitiveColors.get(entry.slug)
+                      return (
+                        <SidebarRow
+                          key={entry.slug}
+                          label={entry.name}
+                          depth={2}
+                          icon={entry.icon}
+                          active={isEntryActive(entryKind, selection, entry.slug)}
+                          agentActive={entryAgentActive}
+                          agentColor={entryAgentColor}
+                          agentFileLabel={`${entry.slug}.tsx`}
+                          onClick={() => onSelect(deriveEntrySelection(entryKind, entry.slug))}
+                        />
+                      )
+                    })}
                 </div>
               );
             })}
@@ -288,6 +302,7 @@ export function ForkshopSidebar({
                 selection={selection}
                 onSelect={onSelect}
                 activePages={activePages}
+                pageColors={pageColors}
               />
             ))}
           </>
@@ -305,6 +320,7 @@ export function ForkshopSidebar({
                 selection={selection}
                 onSelect={onSelect}
                 activePages={activePages}
+                pageColors={pageColors}
               />
             ))}
           </>
@@ -335,6 +351,7 @@ function SidebarRow({
   expanded = false,
   draft = false,
   agentActive = false,
+  agentColor,
   agentFileLabel,
   onClick,
   onToggleExpand,
@@ -347,18 +364,29 @@ function SidebarRow({
   expanded?: boolean;
   draft?: boolean;
   agentActive?: boolean;
+  agentColor?: string;
   agentFileLabel?: string;
   onClick: () => void;
   onToggleExpand?: () => void;
 }) {
+  // When an agent color is known, apply it to the row's text via a CSS
+  // variable. The dot, the label, and the trailing filename label all read
+  // from the same var so a Claude edit lights up the row in orange where the
+  // pre-color version always used the brand accent (blue/violet).
+  const rowStyle: CSSProperties = {
+    paddingLeft: `${Math.max(0, depth - 1) * 0.75}rem`,
+  }
+  if (agentActive && agentColor) {
+    ;(rowStyle as Record<string, string>)["color"] = agentColor
+  }
   return (
     <div className="shrink-0">
       <div
         className={cn(
           "flex items-center rounded-forkshop-md text-forkshop-xs",
-          rowVariant(agentActive, active),
+          rowVariant(agentActive, active, agentColor !== undefined),
         )}
-        style={{ paddingLeft: `${Math.max(0, depth - 1) * 0.75}rem` }}
+        style={rowStyle}
       >
         {/* chevron column */}
         {hasChildren && onToggleExpand ? (
@@ -384,8 +412,11 @@ function SidebarRow({
         {agentActive && (
           <span
             aria-hidden="true"
-            className="mr-forkshop-1 inline-block size-forkshop-1.5 shrink-0 rounded-forkshop-full bg-forkshop-accent"
-            style={{ animation: "forkshop-agent-pulse 1.2s infinite" }}
+            className="mr-forkshop-1 inline-block size-forkshop-1.5 shrink-0 rounded-forkshop-full"
+            style={{
+              animation: "forkshop-agent-pulse 1.2s infinite",
+              background: agentColor ?? "var(--forkshop-accent, #5b6cff)",
+            }}
           />
         )}
         {/* label */}
@@ -397,7 +428,10 @@ function SidebarRow({
           {label}
         </button>
         {agentActive && agentFileLabel !== undefined && (
-          <span className="mr-forkshop-1 shrink-0 truncate text-forkshop-5xs text-forkshop-accent">
+          <span
+            className="mr-forkshop-1 shrink-0 truncate text-forkshop-5xs"
+            style={{ color: agentColor ?? "var(--forkshop-accent, #5b6cff)" }}
+          >
             {agentFileLabel}
           </span>
         )}
@@ -425,17 +459,20 @@ function PageTreeRow({
   selection,
   onSelect,
   activePages,
+  pageColors,
 }: {
   node: PageTreeNode;
   depth: number;
   selection: ForkshopSelection;
   onSelect: (next: ForkshopSelection) => void;
   activePages: ReadonlySet<string>;
+  pageColors: ReadonlyMap<string, string>;
 }) {
   const [expanded, setExpanded] = useState(false);
   const hasChildren = node.children.length > 0;
   const active = selection.kind === "page" && selection.path === node.path;
   const agentActive = node.isRoute && activePages.has(node.path);
+  const agentColor = agentActive ? pageColors.get(node.path) : undefined;
   const agentFileLabel = agentActive ? pageFileLabel(node.path) : undefined;
 
   // When the active page lives inside this row's subtree, expand so the
@@ -462,6 +499,7 @@ function PageTreeRow({
         // TODO: deferred — isDraft (Task 13 / Ravineo-specific drafts.ts)
         draft={false}
         agentActive={agentActive}
+        agentColor={agentColor}
         agentFileLabel={agentFileLabel}
         onClick={() => {
           if (node.isRoute) {
@@ -483,6 +521,7 @@ function PageTreeRow({
               selection={selection}
               onSelect={onSelect}
               activePages={activePages}
+              pageColors={pageColors}
             />
           ))}
         </>
@@ -491,9 +530,15 @@ function PageTreeRow({
   );
 }
 
-function rowVariant(agentActive: boolean, active: boolean): string {
-  if (agentActive)
-    return "bg-forkshop-accent/10 text-forkshop-accent hover:bg-forkshop-accent/20";
+function rowVariant(agentActive: boolean, active: boolean, hasAgentColor = false): string {
+  if (agentActive) {
+    // With a known agent color, the inline `color` style takes over for the
+    // label and the dot/filename get their color via the same source. Skip
+    // the brand-accent text class so it doesn't override the inline color.
+    return hasAgentColor
+      ? "hover:bg-forkshop-surface-2"
+      : "bg-forkshop-accent/10 text-forkshop-accent hover:bg-forkshop-accent/20";
+  }
   if (active) return "bg-forkshop-surface-2 font-semibold text-forkshop-fg";
   return "text-forkshop-fg-muted hover:bg-forkshop-surface-2 hover:text-forkshop-fg";
 }

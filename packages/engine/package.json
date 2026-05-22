@@ -1,6 +1,6 @@
 {
   "name": "@forkshop/engine",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "private": false,
   "license": "FSL-1.1-Apache-2.0",
   "description": "Forkshop's canvas + sidebar engine for Next.js + Tailwind projects.",

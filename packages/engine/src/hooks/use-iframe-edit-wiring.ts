@@ -78,7 +78,7 @@ export function useIframeEditWiring({
   onSaveEdit,
   onSwitchEdit,
   onDiscardEdit,
-  getCanvasZoom,
+  canvasZoom,
   editableSet,
 }: {
   iframe: HTMLIFrameElement | null | undefined
@@ -89,9 +89,23 @@ export function useIframeEditWiring({
   onSaveEdit: () => void
   onSwitchEdit: (newElement: Element) => void
   onDiscardEdit: () => void
-  getCanvasZoom?: () => number
+  /** Current canvas zoom. Pushed onto the iframe's documentElement as the
+   *  `--canvas-zoom` CSS variable so in-iframe outlines (live-text, EditorLink)
+   *  can counter-scale via `calc(X / var(--canvas-zoom, 1))`. */
+  canvasZoom?: number
   editableSet?: Set<string>
 }) {
+  // Keep --canvas-zoom in sync inside the iframe. Fires on every canvasZoom
+  // change so live-text outlines, EditorLink overlays, and any other in-iframe
+  // chrome that counter-scales via the var stays visually constant as the
+  // user zooms the canvas.
+  useEffect(() => {
+    if (!iframe || canvasZoom === undefined) return
+    const doc = iframe.contentDocument
+    if (!doc) return
+    doc.documentElement.style.setProperty("--canvas-zoom", String(canvasZoom))
+  }, [iframe, canvasZoom])
+
   useEffect(() => {
     if (!iframe) return
     const iframeElement = iframe
@@ -157,11 +171,10 @@ export function useIframeEditWiring({
       iframeDocument.head.append(styleAgent)
 
       // Seed the canvas zoom variable so edit/inspect outline widths read at a
-      // consistent thickness immediately. The host keeps this in sync on every
-      // transform change.
-      const initialZoom = getCanvasZoom?.()
-      if (initialZoom !== undefined) {
-        iframeDocument.documentElement.style.setProperty("--canvas-zoom", String(initialZoom))
+      // consistent thickness immediately. The reactive effect above keeps it
+      // in sync on every transform change.
+      if (canvasZoom !== undefined) {
+        iframeDocument.documentElement.style.setProperty("--canvas-zoom", String(canvasZoom))
       }
 
       const propagateNavigation = () => {
@@ -183,6 +196,17 @@ export function useIframeEditWiring({
 
       mouseoverHandler = (event) => {
         if (!active || editingActive) return
+        // Option held → EditorLink owns the interaction. Clear any existing
+        // edit-hover state so the blue ring disappears while the user is in
+        // "open in editor" mode.
+        if ((event as MouseEvent).altKey) {
+          if (lastHover) {
+            delete lastHover.dataset.editHover
+            delete lastHover.dataset.editLocked
+            lastHover = undefined
+          }
+          return
+        }
         const target = event.target as HTMLElement | null
         if (lastHover && lastHover !== target) {
           delete lastHover.dataset.editHover
@@ -220,6 +244,9 @@ export function useIframeEditWiring({
         // we'd capture and turn a Cmd-click on text into an edit-mode entry.
         const mouseEvent = event as MouseEvent
         if (mouseEvent.metaKey || mouseEvent.ctrlKey) return
+        // Option held → EditorLink (mounted in the iframed app) handles the
+        // click and navigates to source. Don't enter edit mode or save.
+        if (mouseEvent.altKey) return
         if (editingActive) {
           const editingElement = iframeDocument.querySelector("[data-editing]")
           if (editingElement && target && editingElement.contains(target)) return
@@ -398,7 +425,7 @@ export function useIframeEditWiring({
     onSaveEdit,
     onSwitchEdit,
     onDiscardEdit,
-    getCanvasZoom,
+    canvasZoom,
     editableSet,
   ])
 }
